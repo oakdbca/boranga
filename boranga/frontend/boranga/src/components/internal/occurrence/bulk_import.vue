@@ -11,6 +11,16 @@
                         Some help text about the import process.
                     </alert>
                 </div>
+
+                <div class="progress mb-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+                        :style="`width: ${progressPercentage}%;`"
+                        :aria-valuenow="progressPercentage" aria-valuemin="0"
+                        aria-valuemax="100">{{
+                            progressPercentage }}%
+                    </div>
+                </div>
+
                 <div class="mb-3">
                     <div class="card">
                         <div class="card-body">
@@ -286,7 +296,8 @@ export default {
             selectedErrors: '',
             schema_versions: [],
             selected_schema_version: null,
-            importFileErrors: null
+            importFileErrors: null,
+            progressPercentage: 0,
         }
     },
     components: {
@@ -453,12 +464,33 @@ export default {
             this.fetchQueuedImports();
             this.fetchFailedImports();
             this.fetchCompletedImports();
+        },
+        initialiseWebSocket() {
+            // Create a new WebSocket.
+            this.socket = new WebSocket(`ws://${window.location.host}/ws/occurrence_report_bulk_imports/`);
+
+            // Handle any errors that occur.
+            this.socket.onerror = function (error) {
+                console.log('WebSocket Error: ' + error);
+            };
+
+            // Show a connected message when the WebSocket is opened.
+            this.socket.onopen = function (event) {
+                console.log('Connected to: ' + event.currentTarget.url);
+            };
+
+            // Handle messages sent by the server.
+            this.socket.onmessage = function (event) {
+                console.log('Received: ' + event.data);
+                this.progressPercentage = JSON.parse(event.data).percentage_complete;
+            };
         }
     },
     created() {
         this.fetchSchemas();
         this.fetchImports();
         this.fetchCurrentlyRunningImports();
+        this.initialiseWebSocket();
     },
     mounted() {
         this.form = document.getElementById('bulk-import-form');
