@@ -105,6 +105,8 @@ if SHOW_DEBUG_TOOLBAR:
 
 STATIC_URL = "/static/"
 
+INSTALLED_APPS.insert(0, "daphne")
+
 INSTALLED_APPS += [
     "webtemplate_dbca",
     "boranga",
@@ -131,8 +133,10 @@ INSTALLED_APPS += [
     "django_filters",
 ]
 
+
 ADD_REVERSION_ADMIN = True
 
+ASGI_APPLICATION = "boranga.asgi.application"
 WSGI_APPLICATION = "boranga.wsgi.application"
 
 if DEBUG:
