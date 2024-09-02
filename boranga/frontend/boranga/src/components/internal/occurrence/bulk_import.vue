@@ -14,8 +14,7 @@
 
                 <div class="progress mb-3">
                     <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
-                        :style="`width: ${progressPercentage}%;`"
-                        :aria-valuenow="progressPercentage" aria-valuemin="0"
+                        :style="`width: ${progressPercentage}%;`" :aria-valuenow="progressPercentage" aria-valuemin="0"
                         aria-valuemax="100">{{
                             progressPercentage }}%
                     </div>
@@ -106,8 +105,7 @@
                                             <td class="text-truncate" style="max-width: 350px;">{{
                                                 queuedImport.file_name }}</td>
                                             <td>{{ queuedImport.file_size_megabytes }} MB</td>
-                                            <td class="text-end pe-3">{{ queuedImport.rows ? queuedImport.rows : 'Not
-                                                Counted' }}</td>
+                                            <td class="text-end pe-3">{{ queuedImport.rows ? queuedImport.rows : 'Not Counted' }}</td>
                                             <td>{{ queuedImport.estimated_processing_time_human_readable }}</td>
                                         </tr>
                                     </tbody>
@@ -298,6 +296,7 @@ export default {
             selected_schema_version: null,
             importFileErrors: null,
             progressPercentage: 0,
+            enablePolling: false,
         }
     },
     components: {
@@ -466,23 +465,32 @@ export default {
             this.fetchCompletedImports();
         },
         initialiseWebSocket() {
+            let vm = this;
             // Create a new WebSocket.
-            this.socket = new WebSocket(`ws://${window.location.host}/ws/occurrence_report_bulk_imports/`);
+            vm.socket = new WebSocket(`ws://${window.location.host}/ws/occurrence_report_bulk_imports/`);
 
             // Handle any errors that occur.
-            this.socket.onerror = function (error) {
-                console.log('WebSocket Error: ' + error);
+            vm.socket.onerror = function (error) {
+                console.log('WebSocket Error: ' + JSON.stringify(error, ["message", "arguments", "type", "name"]));
             };
 
             // Show a connected message when the WebSocket is opened.
-            this.socket.onopen = function (event) {
+            vm.socket.onopen = function (event) {
                 console.log('Connected to: ' + event.currentTarget.url);
+                vm.socket.send(
+                    JSON.stringify({
+                        'message': 'Hello from the client!'
+                    })
+                );
             };
 
             // Handle messages sent by the server.
-            this.socket.onmessage = function (event) {
+            vm.socket.onmessage = function (event) {
                 console.log('Received: ' + event.data);
-                this.progressPercentage = JSON.parse(event.data).percentage_complete;
+                vm.progressPercentage = JSON.parse(event.data).message;
+                if (vm.progressPercentage === 100) {
+                    vm.socket.close();
+                }
             };
         }
     },
@@ -494,16 +502,23 @@ export default {
     },
     mounted() {
         this.form = document.getElementById('bulk-import-form');
-        this.timer = setInterval(() => {
-            this.fetchImports()
-        }, 5000)
-        this.currentlyRunningTimer = setInterval(() => {
-            this.fetchCurrentlyRunningImports()
-        }, 1000)
+        if (this.enablePolling) {
+            this.timer = setInterval(() => {
+                this.fetchImports()
+            }, 5000)
+            this.currentlyRunningTimer = setInterval(() => {
+                this.fetchCurrentlyRunningImports()
+            }, 1000)
+        }
     },
     beforeDestroy() {
-        clearInterval(this.timer)
-        clearInterval(this.currentlyRunningTimer)
+        if(this.socket) {
+            this.socket.close();
+        }
+        if (this.enablePolling) {
+            clearInterval(this.timer)
+            clearInterval(this.currentlyRunningTimer)
+        }
     }
 }
 </script>
