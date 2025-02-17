@@ -3,45 +3,45 @@ import logging
 import os
 import sys
 
-import confy
-from confy import env
 from decouple import Csv, config
 
 logger = logging.getLogger(__name__)
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if os.path.exists(BASE_DIR + "/.env"):
-    confy.read_environment_file(BASE_DIR + "/.env")
 os.environ.setdefault("BASE_DIR", BASE_DIR)
 
 from ledger_api_client.settings_base import *  # noqa: F403
 
-WORKING_FROM_HOME = env("WORKING_FROM_HOME", False)
+WORKING_FROM_HOME = config("WORKING_FROM_HOME", default=False, cast=bool)
 
 ROOT_URLCONF = "boranga.urls"
 SITE_ID = 1
-DEPT_DOMAINS = env("DEPT_DOMAINS", ["dpaw.wa.gov.au", "dbca.wa.gov.au"])
-SYSTEM_MAINTENANCE_WARNING = env("SYSTEM_MAINTENANCE_WARNING", 24)  # hours
-DISABLE_EMAIL = env("DISABLE_EMAIL", False)
-SHOW_TESTS_URL = env("SHOW_TESTS_URL", False)
-SHOW_DEBUG_TOOLBAR = env("SHOW_DEBUG_TOOLBAR", False)
-BUILD_TAG = env(
-    "BUILD_TAG", hashlib.md5(os.urandom(32)).hexdigest()
+DEPT_DOMAINS = config(
+    "DEPT_DOMAINS", default="dpaw.wa.gov.au,dbca.wa.gov.au", cast=Csv()
+)
+SYSTEM_MAINTENANCE_WARNING = config(
+    "SYSTEM_MAINTENANCE_WARNING", default=24, cast=int
+)  # hours
+DISABLE_EMAIL = config("DISABLE_EMAIL", default=False, cast=bool)
+SHOW_TESTS_URL = config("SHOW_TESTS_URL", default=False, cast=bool)
+SHOW_DEBUG_TOOLBAR = config("SHOW_DEBUG_TOOLBAR", default=False, cast=bool)
+BUILD_TAG = config(
+    "BUILD_TAG", default=hashlib.md5(os.urandom(32)).hexdigest()
 )  # URL of the Dev app.js served by webpack & express
 TIME_ZONE = "Australia/Perth"
 
-SILENCE_SYSTEM_CHECKS = env("SILENCE_SYSTEM_CHECKS", False)
+SILENCE_SYSTEM_CHECKS = config("SILENCE_SYSTEM_CHECKS", default=False, cast=bool)
 if SILENCE_SYSTEM_CHECKS:
     SILENCED_SYSTEM_CHECKS = ["fields.W903", "fields.W904", "debug_toolbar.W004"]
 
 TEMPLATE_TITLE = "Boranga System"
 LEDGER_TEMPLATE = "bootstrap5"
-EMAIL_DELIVERY = env("EMAIL_DELIVERY", "off")
-EMAIL_INSTANCE = env("EMAIL_INSTANCE", "DEV")
+EMAIL_DELIVERY = config("EMAIL_DELIVERY", default="off")
+EMAIL_INSTANCE = config("EMAIL_INSTANCE", default="DEV")
 
 # Use these two admin group names as they are referred to in dbca templates
-DJANGO_ADMIN_GROUP = env("DJANGO_ADMIN_GROUP", "Django Admin")
+DJANGO_ADMIN_GROUP = config("DJANGO_ADMIN_GROUP", default="Django Admin")
 # ----------------------------------------------
 
 GROUP_NAME_CONSERVATION_STATUS_ASSESSOR = "Conservation Status Assessors"
@@ -82,7 +82,7 @@ GROUPS_THAT_ALLOW_INTERNAL_MEMBERS_ONLY = [
     g for g in GROUP_NAME_CHOICES if g != GROUP_NAME_EXTERNAL_CONTRIBUTOR
 ]
 
-if env("CONSOLE_EMAIL_BACKEND", False):
+if config("CONSOLE_EMAIL_BACKEND", default=False, cast=bool):
     EMAIL_BACKEND = "wagov_utils.components.utils.email_backend.EmailBackend"
 
 
@@ -195,42 +195,51 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024
 
 # Department details
 SYSTEM_NAME = "Boranga System"
-SYSTEM_NAME_SHORT = env("SYSTEM_NAME_SHORT", "BGA")
-SITE_PREFIX = env("SITE_PREFIX")
-SITE_DOMAIN = env("SITE_DOMAIN")
+SYSTEM_NAME_SHORT = config("SYSTEM_NAME_SHORT", default="BGA")
+SITE_PREFIX = config("SITE_PREFIX")
+SITE_DOMAIN = config("SITE_DOMAIN")
 
 # These are used for converting between internal and external urls
 # This is useful when generating urls for emails when the current request user
 # is external and the link needs to be internal or vis versa
 # To get email links to work locally, set SITE_SUBDOMAIN_INTERNAL_SUFFIX=None in .env
-SITE_RANCHER_CLUSTER = env("SITE_RANCHER_CLUSTER", None)
-SITE_SUBDOMAIN_INTERNAL_SUFFIX = env("SITE_SUBDOMAIN_INTERNAL_SUFFIX", "-internal")
+SITE_RANCHER_CLUSTER = config("SITE_RANCHER_CLUSTER", default="")
+SITE_SUBDOMAIN_INTERNAL_SUFFIX = config(
+    "SITE_SUBDOMAIN_INTERNAL_SUFFIX", default="-internal"
+)
 if SITE_RANCHER_CLUSTER:
     SITE_SUBDOMAIN_INTERNAL_SUFFIX += "-" + SITE_RANCHER_CLUSTER
 
 
-SUPPORT_EMAIL = env("SUPPORT_EMAIL", "bio@" + SITE_DOMAIN).lower()
-DEP_URL = env("DEP_URL", "www." + SITE_DOMAIN)
-DEP_PHONE = env("DEP_PHONE", "(08) 9219 9978")
-DEP_PHONE_SUPPORT = env("DEP_PHONE_SUPPORT", "(08) 9219 9000")
-DEP_FAX = env("DEP_FAX", "(08) 9423 8242")
-DEP_POSTAL = env(
-    "DEP_POSTAL", "Locked Bag 104, Bentley Delivery Centre, Western Australia 6983"
+SUPPORT_EMAIL = config("SUPPORT_EMAIL", default="bio@" + SITE_DOMAIN).lower()
+DEP_URL = config("DEP_URL", default="www." + SITE_DOMAIN)
+DEP_PHONE = config("DEP_PHONE", default="(08) 9219 9978")
+DEP_PHONE_SUPPORT = config("DEP_PHONE_SUPPORT", default="(08) 9219 9000")
+DEP_FAX = config("DEP_FAX", default="(08) 9423 8242")
+DEP_POSTAL = config(
+    "DEP_POSTAL",
+    default="Locked Bag 104, Bentley Delivery Centre, Western Australia 6983",
 )
-DEP_NAME = env("DEP_NAME", "Department of Biodiversity, Conservation and Attractions")
-DEP_NAME_SHORT = env("DEP_NAME_SHORT", "DBCA")
-BRANCH_NAME = env("BRANCH_NAME", "Tourism and Concessions Branch")
-DEP_ADDRESS = env("DEP_ADDRESS", "17 Dick Perry Avenue, Kensington WA 6151")
-SITE_URL = env("SITE_URL", "https://" + SITE_PREFIX + "." + SITE_DOMAIN)
-PUBLIC_URL = env("PUBLIC_URL", SITE_URL)
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "no-reply@" + SITE_DOMAIN).lower()
-MEDIA_APP_DIR = env("MEDIA_APP_DIR", "boranga")
-CRON_RUN_AT_TIMES = env("CRON_RUN_AT_TIMES", "04:05")
-CRON_EMAIL = env("CRON_EMAIL", "cron@" + SITE_DOMAIN).lower()
+DEP_NAME = config(
+    "DEP_NAME", default="Department of Biodiversity, Conservation and Attractions"
+)
+DEP_NAME_SHORT = config("DEP_NAME_SHORT", default="DBCA")
+BRANCH_NAME = config("BRANCH_NAME", default="Tourism and Concessions Branch")
+DEP_ADDRESS = config("DEP_ADDRESS", default="17 Dick Perry Avenue, Kensington WA 6151")
+SITE_URL = config("SITE_URL", default="https://" + SITE_PREFIX + "." + SITE_DOMAIN)
+PUBLIC_URL = config("PUBLIC_URL", default=SITE_URL)
+DEFAULT_FROM_EMAIL = config(
+    "DEFAULT_FROM_EMAIL", default="no-reply@" + SITE_DOMAIN
+).lower()
+MEDIA_APP_DIR = config("MEDIA_APP_DIR", default="boranga")
+CRON_RUN_AT_TIMES = config("CRON_RUN_AT_TIMES", default="04:05")
+CRON_EMAIL = config("CRON_EMAIL", default="cron@" + SITE_DOMAIN).lower()
 EMAIL_FROM = DEFAULT_FROM_EMAIL
 CRON_NOTIFICATION_EMAIL = ""
 if NOTIFICATION_EMAIL:
-    CRON_NOTIFICATION_EMAIL = env("CRON_NOTIFICATION_EMAIL", NOTIFICATION_EMAIL).lower()
+    CRON_NOTIFICATION_EMAIL = config(
+        "CRON_NOTIFICATION_EMAIL", default=NOTIFICATION_EMAIL
+    ).lower()
 
 CRON_CLASSES = [
     "appmonitor_client.cron.CronJobAppMonitorClient",
@@ -239,8 +248,6 @@ CRON_CLASSES = [
     "boranga.cron.CronJobOCRProcessBulkImportQueue",
 ]
 
-
-BASE_URL = env("BASE_URL")
 
 # Additional logging for boranga
 LOGGING["loggers"]["boranga"] = {"handlers": ["file"], "level": "INFO"}
@@ -279,19 +286,21 @@ if len(GIT_COMMIT_HASH) == 0:
     if len(GIT_COMMIT_HASH) == 0:
         logger.error("No git hash available to tag urls for pinned caching")
 
-APPLICATION_VERSION = env("APPLICATION_VERSION", "1.0.0") + "-" + GIT_COMMIT_HASH[:7]
+APPLICATION_VERSION = (
+    config("APPLICATION_VERSION", default="1.0.0") + "-" + GIT_COMMIT_HASH[:7]
+)
 
 RUNNING_DEVSERVER = len(sys.argv) > 1 and sys.argv[1] == "runserver"
 
-SECURE_CROSS_ORIGIN_OPENER_POLICY = env(
+SECURE_CROSS_ORIGIN_OPENER_POLICY = config(
     "SECURE_CROSS_ORIGIN_OPENER_POLICY",
-    "same-origin",
+    default="same-origin",
 )
 
 # Sentry settings
-SENTRY_DSN = env("SENTRY_DSN", default=None)
-SENTRY_SAMPLE_RATE = env("SENTRY_SAMPLE_RATE", default=1.0)  # Error sampling rate
-SENTRY_TRANSACTION_SAMPLE_RATE = env(
+SENTRY_DSN = config("SENTRY_DSN", default="")
+SENTRY_SAMPLE_RATE = config("SENTRY_SAMPLE_RATE", default=1.0)  # Error sampling rate
+SENTRY_TRANSACTION_SAMPLE_RATE = config(
     "SENTRY_TRANSACTION_SAMPLE_RATE", default=0.0
 )  # Transaction sampling
 if not RUNNING_DEVSERVER and SENTRY_DSN and EMAIL_INSTANCE:
@@ -316,21 +325,22 @@ LEDGER_UI_ACCOUNTS_MANAGEMENT_KEYS = []
 for am in LEDGER_UI_ACCOUNTS_MANAGEMENT:
     LEDGER_UI_ACCOUNTS_MANAGEMENT_KEYS.append(list(am.keys())[0])
 
-RECENT_REFERRAL_COUNT = env("RECENT_REFERRAL_COUNT", 5)
+RECENT_REFERRAL_COUNT = config("RECENT_REFERRAL_COUNT", default=5)
 
 #  ------------- NOMOS JSON file url --------------
-NOMOS_BLOB_URL = env("NOMOS_BLOB_URL")
+NOMOS_BLOB_URL = config("NOMOS_BLOB_URL")
 
-GIS_SERVER_URL = env(
-    "GIS_SERVER_URL", "https://kaartdijin-boodja-geoserver.dbca.wa.gov.au/geoserver/ows"
+GIS_SERVER_URL = config(
+    "GIS_SERVER_URL",
+    default="https://kaartdijin-boodja-geoserver.dbca.wa.gov.au/geoserver/ows",
 )
 
 # Proxy prefix for basic authentication
-BASIC_AUTH_PROXY_PREFIX = env("BASIC_AUTH_PROXY_PREFIX", "kb-proxy/")
+BASIC_AUTH_PROXY_PREFIX = config("BASIC_AUTH_PROXY_PREFIX", default="kb-proxy/")
 
 # Set USE_X_FORWARDED_HOST env to True to ensure that if the request is https
 # then urls generated for file fields are also https
-USE_X_FORWARDED_HOST = env("USE_X_FORWARDED_HOST", False)
+USE_X_FORWARDED_HOST = config("USE_X_FORWARDED_HOST", default=False, cast=bool)
 if USE_X_FORWARDED_HOST:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
@@ -349,7 +359,7 @@ DJANGO_VITE = {
         "static_url_prefix": STATIC_URL_PREFIX,
     }
 }
-VUE3_ENTRY_SCRIPT = env(
+VUE3_ENTRY_SCRIPT = config(
     "VUE3_ENTRY_SCRIPT",
     default="src/main.js",  # This path will be auto prefixed with the static_url_prefix from DJANGO_VITE above
 )  # Path of the vue3 entry point script served by vite
@@ -501,12 +511,12 @@ COMMONWEALTH_CONSERVATION_LISTS = [COMMONWEALTH_CONSERVATION_LIST_EPBC]
 # As it causes a permission exception when using azure network drives
 FILE_UPLOAD_PERMISSIONS = None
 
-OCR_BULK_IMPORT_TASK_TIMEOUT_SECONDS = env(
-    "OCR_BULK_IMPORT_TASK_TIMEOUT_SECONDS", 60 * 5
+OCR_BULK_IMPORT_TASK_TIMEOUT_SECONDS = config(
+    "OCR_BULK_IMPORT_TASK_TIMEOUT_SECONDS", default=60 * 5, cast=int
 )  # Default = 5 minutes
 
-OCR_BULK_IMPORT_PROCESS_TASKS_IMMEDIATELY = env(
-    "OCR_BULK_IMPORT_PROCESS_TASKS_IMMEDIATELY", False
+OCR_BULK_IMPORT_PROCESS_TASKS_IMMEDIATELY = config(
+    "OCR_BULK_IMPORT_PROCESS_TASKS_IMMEDIATELY", default=False, cast=bool
 )  # used to make testing easier (i.e. set to True in local env) NEVER set to True in production!
 
 OCR_BULK_IMPORT_LOOKUP_TABLE_DISPLAY_FIELDS = [
@@ -516,10 +526,10 @@ OCR_BULK_IMPORT_LOOKUP_TABLE_DISPLAY_FIELDS = [
     "code",
 ]
 
-OCR_BULK_IMPORT_LOOKUP_TABLE_RECORD_LIMIT = env(
-    "OCR_BULK_IMPORT_LOOKUP_TABLE_RECORD_LIMIT", 30
+OCR_BULK_IMPORT_LOOKUP_TABLE_RECORD_LIMIT = config(
+    "OCR_BULK_IMPORT_LOOKUP_TABLE_RECORD_LIMIT", default=30, cast=int
 )
 
-OCR_BULK_IMPORT_M2M_DELIMITER = env("OCR_BULK_IMPORT_M2M_DELIMITER", "||")
+OCR_BULK_IMPORT_M2M_DELIMITER = config("OCR_BULK_IMPORT_M2M_DELIMITER", default="||")
 
 CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", default="", cast=Csv())
