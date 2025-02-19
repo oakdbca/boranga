@@ -45,6 +45,13 @@
         "vue-router": "^4.0",
         "vue-select": "^4.0.0-beta.6"
     },
+    "overrides": {
+        "vite": {
+            "dependencies": {
+                "esbuild": "^0.25.0"
+            }
+        }
+    },
     "engines": {
         "node": ">= 20.0.0",
         "npm": ">= 10.0.0"
