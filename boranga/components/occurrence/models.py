@@ -7408,7 +7408,7 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
                 .distinct()[: random.randint(1, 3)]
             )
 
-            return ",".join(random_values)
+            return settings.OCR_BULK_IMPORT_M2M_DELIMITER.join(random_values)
 
         if isinstance(field, MultiSelectField):
             model_class = self.django_import_content_type.model_class()
