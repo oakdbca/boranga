@@ -2403,7 +2403,7 @@ class CSExternalRefereeInviteViewSet(
 
     def get_queryset(self):
         qs = super().get_queryset()
-        if not is_internal(self.request) or self.request.user.is_superuser:
+        if not is_internal(self.request):
             qs = CSExternalRefereeInvite.objects.none()
         return qs
 
