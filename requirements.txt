@@ -51,6 +51,7 @@ gunicorn~=23.0
 ipython~=8.22
 jedi~=0.19
 mixer~=7.2
+nh3~=0.2.1
 numpy~=1.26
 openpyxl~=3.1
 pandas~=2.2

@@ -1182,7 +1182,6 @@ class BaseOccurrenceReportSerializer(serializers.ModelSerializer):
             "reference",
             "applicant_details",
             # 'assigned_approver',
-            "deficiency_data",
             "assessor_data",
             "location",
             "habitat_composition",
@@ -1454,6 +1453,9 @@ class InternalOccurrenceReportSerializer(OccurrenceReportSerializer):
     community_migrated_id = serializers.CharField(
         source="community.taxonomy.community_migrated_id", allow_null=True
     )
+    occurrence_number = serializers.CharField(
+        source="occurrence.occurrence_number", allow_null=True
+    )
 
     class Meta:
         model = OccurrenceReport
@@ -1486,7 +1488,6 @@ class InternalOccurrenceReportSerializer(OccurrenceReportSerializer):
             "reference",
             "applicant_details",
             "allowed_assessors",
-            "deficiency_data",
             "assessor_data",
             "location",
             "habitat_composition",
@@ -1502,6 +1503,7 @@ class InternalOccurrenceReportSerializer(OccurrenceReportSerializer):
             "label",
             "model_name",
             "occurrence",
+            "occurrence_number",
             "current_assessor",
             "assigned_approver",
             "proposed_decline_status",
@@ -2210,7 +2212,6 @@ class SaveOccurrenceReportSerializer(BaseOccurrenceReportSerializer):
             "can_user_edit",
             "can_user_view",
             "reference",
-            "deficiency_data",
             "assessor_data",
             "site",
             "observation_date",
@@ -2918,7 +2919,7 @@ class OCCObservationDetailSerializer(serializers.ModelSerializer):
 
 class OCCPlantCountSerializer(serializers.ModelSerializer):
     copied_ocr = serializers.SerializerMethodField()
-    obs_date = serializers.DateField(format="%Y-%m-%d %H:%M:%S", allow_null=True)
+    obs_date = serializers.DateField(format="%Y-%m-%d", allow_null=True)
     plant_count_method = serializers.CharField(
         source="plant_count_method.name", allow_null=True
     )

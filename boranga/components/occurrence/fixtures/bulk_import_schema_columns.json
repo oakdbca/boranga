@@ -97,22 +97,6 @@
   },
   {
     "model": "boranga.occurrencereportbulkimportschemacolumn",
-    "pk": 2208,
-    "fields": {
-      "order": 7,
-      "schema": 119,
-      "django_import_content_type": ["boranga", "occurrencereport"],
-      "django_import_field_name": "deficiency_data",
-      "django_lookup_field_name": null,
-      "xlsx_column_header_name": "OCR Deficiency Data",
-      "xlsx_data_validation_allow_blank": true,
-      "is_editable": true,
-      "default_value": null,
-      "is_emailuser_column": false
-    }
-  },
-  {
-    "model": "boranga.occurrencereportbulkimportschemacolumn",
     "pk": 2209,
     "fields": {
       "order": 8,
@@ -2673,22 +2657,6 @@
   },
   {
     "model": "boranga.occurrencereportbulkimportschemacolumn",
-    "pk": 2530,
-    "fields": {
-      "order": 7,
-      "schema": 127,
-      "django_import_content_type": ["boranga", "occurrencereport"],
-      "django_import_field_name": "deficiency_data",
-      "django_lookup_field_name": null,
-      "xlsx_column_header_name": "OCR Deficiency Data",
-      "xlsx_data_validation_allow_blank": true,
-      "is_editable": true,
-      "default_value": null,
-      "is_emailuser_column": false
-    }
-  },
-  {
-    "model": "boranga.occurrencereportbulkimportschemacolumn",
     "pk": 2531,
     "fields": {
       "order": 8,
@@ -4314,22 +4282,6 @@
       "django_lookup_field_name": null,
       "xlsx_column_header_name": "OCR Processing Status",
       "xlsx_data_validation_allow_blank": false,
-      "is_editable": true,
-      "default_value": null,
-      "is_emailuser_column": false
-    }
-  },
-  {
-    "model": "boranga.occurrencereportbulkimportschemacolumn",
-    "pk": 2665,
-    "fields": {
-      "order": 7,
-      "schema": 128,
-      "django_import_content_type": ["boranga", "occurrencereport"],
-      "django_import_field_name": "deficiency_data",
-      "django_lookup_field_name": null,
-      "xlsx_column_header_name": "OCR Deficiency Data",
-      "xlsx_data_validation_allow_blank": true,
       "is_editable": true,
       "default_value": null,
       "is_emailuser_column": false

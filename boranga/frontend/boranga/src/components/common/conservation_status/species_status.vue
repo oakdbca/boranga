@@ -1398,35 +1398,10 @@
                             <div class="row mb-0 pb-0">
                                 <div class="col rounded">
                                     <div
-                                        v-if="deficiencyVisibility"
-                                        class="row"
-                                    >
-                                        <div class="col">
-                                            <div class="form-floating m-3">
-                                                <textarea
-                                                    id="assessor_deficiencies"
-                                                    v-model="
-                                                        conservation_status_obj.deficiency_data
-                                                    "
-                                                    :disabled="
-                                                        deficiency_readonly
-                                                    "
-                                                    class="form-control"
-                                                    placeholder="Deficiency Comments"
-                                                />
-                                                <label
-                                                    for="assessor_deficiencies"
-                                                    class="form-label"
-                                                    >Deficiency Comments</label
-                                                >
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div
                                         v-if="assessorCommentVisibility"
                                         class="row"
                                     >
-                                        <div class="col">
+                                        <div class="col mt-3">
                                             <div class="form-floating m-3 mt-1">
                                                 <textarea
                                                     id="assessor_comment"
@@ -1623,9 +1598,6 @@ export default {
                 )
             );
         },
-        deficiencyVisibility: function () {
-            return this.conservation_status_obj.assessor_mode.assessor_box_view;
-        },
         assessorCommentVisibility: function () {
             return this.conservation_status_obj.assessor_mode.assessor_box_view;
         },
@@ -1728,17 +1700,6 @@ export default {
             return Boolean(
                 this.conservation_status_obj.conservation_status_under_review
             );
-        },
-        deficiency_readonly: function () {
-            return !this.is_external &&
-                !this.conservation_status_obj.can_user_edit &&
-                this.conservation_status_obj.assessor_mode.assessor_level ==
-                    'assessor' &&
-                this.conservation_status_obj.assessor_mode.has_assessor_mode &&
-                !this.conservation_status_obj.assessor_mode
-                    .status_without_assessor
-                ? false
-                : true;
         },
         assessor_comment_readonly: function () {
             return !this.is_external &&

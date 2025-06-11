@@ -4853,6 +4853,7 @@ class OccurrenceViewSet(
             "soil_condition_list": soil_condition_list,
             "drainage_list": drainage_list,
             "intensity_list": intensity_list,
+            "species_list_relates_to_list": species_list_relates_to_list,
         }
         res_json = json.dumps(res_json)
         return HttpResponse(res_json, content_type="application/json")

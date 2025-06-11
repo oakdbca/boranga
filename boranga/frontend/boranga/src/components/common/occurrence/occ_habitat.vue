@@ -616,33 +616,14 @@
         >
             <div class="row mb-3">
                 <label for="" class="col-sm-6 control-label"
-                    >Vegetation Structure - Layer 1 (Ground Layer):</label
+                    >Vegetation Structure - Layer 4 (Upper Layer):</label
                 >
                 <div class="col-sm-9">
                     <textarea
-                        id="vegetation_structure_text_1"
+                        id="vegetation_structure_text_4"
                         v-model="
                             occurrence_obj.vegetation_structure
-                                .vegetation_structure_layer_one
-                        "
-                        :disabled="isReadOnly"
-                        type="text"
-                        row="2"
-                        class="form-control"
-                        placeholder=""
-                    />
-                </div>
-            </div>
-            <div class="row mb-3">
-                <label for="" class="col-sm-6 control-label"
-                    >Vegetation Structure - Layer 2 (Lower Layer):</label
-                >
-                <div class="col-sm-9">
-                    <textarea
-                        id="vegetation_structure_text_2"
-                        v-model="
-                            occurrence_obj.vegetation_structure
-                                .vegetation_structure_layer_two
+                                .vegetation_structure_layer_four
                         "
                         :disabled="isReadOnly"
                         type="text"
@@ -673,14 +654,33 @@
             </div>
             <div class="row mb-3">
                 <label for="" class="col-sm-6 control-label"
-                    >Vegetation Structure - Layer 4 (Upper Layer):</label
+                    >Vegetation Structure - Layer 2 (Lower Layer):</label
                 >
                 <div class="col-sm-9">
                     <textarea
-                        id="vegetation_structure_text_4"
+                        id="vegetation_structure_text_2"
                         v-model="
                             occurrence_obj.vegetation_structure
-                                .vegetation_structure_layer_four
+                                .vegetation_structure_layer_two
+                        "
+                        :disabled="isReadOnly"
+                        type="text"
+                        row="2"
+                        class="form-control"
+                        placeholder=""
+                    />
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="" class="col-sm-6 control-label"
+                    >Vegetation Structure - Layer 1 (Ground Layer):</label
+                >
+                <div class="col-sm-9">
+                    <textarea
+                        id="vegetation_structure_text_1"
+                        v-model="
+                            occurrence_obj.vegetation_structure
+                                .vegetation_structure_layer_one
                         "
                         :disabled="isReadOnly"
                         type="text"

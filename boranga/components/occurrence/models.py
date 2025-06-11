@@ -346,7 +346,6 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
     )
 
     proposed_decline_status = models.BooleanField(default=False)
-    deficiency_data = models.TextField(null=True, blank=True)  # deficiency comment
     assessor_data = models.TextField(null=True, blank=True)  # assessor comment
     approver_comment = models.TextField(blank=True)
     internal_application = models.BooleanField(default=False)
@@ -7346,7 +7345,7 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
 
         if isinstance(field, models.ForeignKey):
             related_model_qs = self.filtered_related_model_qs
-
+            logger.debug(f" -- field: {field}, related_model_qs: {related_model_qs}")
             # Special case for species or community
             # Ensure only species or communities that have occurrences are selected
             # in case the schema includes the occurrence model (quite likely)
@@ -7408,7 +7407,7 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
                 .distinct()[: random.randint(1, 3)]
             )
 
-            return ",".join(random_values)
+            return settings.OCR_BULK_IMPORT_M2M_DELIMITER.join(random_values)
 
         if isinstance(field, MultiSelectField):
             model_class = self.django_import_content_type.model_class()

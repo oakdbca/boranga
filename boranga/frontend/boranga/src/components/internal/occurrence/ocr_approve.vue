@@ -206,9 +206,14 @@ export default {
                                 vm.errorString = data;
                                 return;
                             }
+                            let successText = `Occurrence Report: ${vm.occurrence_report_number} has been successfully approved`;
+                            if (data.occurrence_number) {
+                                successText += ` and is assigned to ${data.occurrence_number}`;
+                            }
+                            successText += '.';
                             swal.fire({
                                 title: 'Occurrence Report Successfully Approved',
-                                text: `Occurrence Report: ${vm.occurrence_report_number} has been successfully approved.`,
+                                text: successText,
                                 icon: 'success',
                                 customClass: {
                                     confirmButton: 'btn btn-primary',

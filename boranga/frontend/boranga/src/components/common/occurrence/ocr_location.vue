@@ -278,8 +278,7 @@
                     <template v-else>
                         <input
                             v-model="
-                                occurrence_report_obj.location
-                                    .coordinate_source_id
+                                occurrence_report_obj.location.coordinate_source
                             "
                             class="form-control"
                             type="text"
@@ -478,16 +477,6 @@ export default {
             district_list: [],
             filtered_district_list: [],
 
-            deficiency_readonly:
-                !this.is_external &&
-                !this.occurrence_report_obj.can_user_edit &&
-                this.occurrence_report_obj.assessor_mode.assessor_level ==
-                    'assessor' &&
-                this.occurrence_report_obj.assessor_mode.has_assessor_mode &&
-                !this.occurrence_report_obj.assessor_mode
-                    .status_without_assessor
-                    ? false
-                    : true,
             assessor_comment_readonly:
                 !this.is_external &&
                 !this.occurrence_report_obj.can_user_edit &&
@@ -507,9 +496,6 @@ export default {
         };
     },
     computed: {
-        deficiencyVisibility: function () {
-            return this.occurrence_report_obj.assessor_mode.assessor_box_view;
-        },
         assessorCommentVisibility: function () {
             return this.occurrence_report_obj.assessor_mode.assessor_box_view;
         },

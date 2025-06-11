@@ -215,6 +215,7 @@
                 :occurrence_id="occurrence_obj.id"
                 :is_external="is_external"
                 :is-read-only="isReadOnly"
+                @update-animal-observation="updateAnimalObservation"
                 @mounted="populateAnimalObservationLookups"
             >
             </AnimalObservation>
@@ -859,6 +860,9 @@ export default {
                 id: null,
                 name: null,
             });
+        },
+        updateAnimalObservation: function (data) {
+            this.occurrence_obj.animal_observation = data;
         },
     },
 };

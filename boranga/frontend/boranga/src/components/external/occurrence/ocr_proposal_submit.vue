@@ -5,10 +5,7 @@
                 <div class="row justify-content-center">
                     <div class="col-9 p-3 border rounded">
                         <template v-if="isOCRProposal">
-                            <h3>
-                                Occurrence Report Proposal Submitted
-                                Successfully
-                            </h3>
+                            <h3>Occurrence Report Submitted Successfully</h3>
                             <div class="mb-3">
                                 <strong
                                     >Your
@@ -21,7 +18,10 @@
                                 <tbody>
                                     <tr>
                                         <td>
-                                            <strong>Proposal Number:</strong>
+                                            <strong
+                                                >Occurrence Report
+                                                Number:</strong
+                                            >
                                         </td>
                                         <td>
                                             {{

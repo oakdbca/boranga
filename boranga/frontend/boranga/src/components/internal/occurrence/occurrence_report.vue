@@ -715,6 +715,7 @@
             "
             :occurrence="occurrence_report.occurrence"
             :group_type_id="occurrence_report.group_type_id"
+            :ocr_for_occ_name="occurrence_report.ocr_for_occ_name"
             @refresh-from-response="refreshFromResponse"
         >
         </ProposeAppprove>
