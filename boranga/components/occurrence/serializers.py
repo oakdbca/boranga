@@ -2919,7 +2919,7 @@ class OCCObservationDetailSerializer(serializers.ModelSerializer):
 
 class OCCPlantCountSerializer(serializers.ModelSerializer):
     copied_ocr = serializers.SerializerMethodField()
-    obs_date = serializers.DateField(format="%Y-%m-%d %H:%M:%S", allow_null=True)
+    obs_date = serializers.DateField(format="%Y-%m-%d", allow_null=True)
     plant_count_method = serializers.CharField(
         source="plant_count_method.name", allow_null=True
     )
