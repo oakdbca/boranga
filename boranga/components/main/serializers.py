@@ -1,5 +1,6 @@
 import logging
 
+import nh3
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.fields.related import ForeignKey, ManyToManyField, OneToOneField
@@ -17,6 +18,31 @@ from boranga.helpers import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+class NH3SanitizeMixin:
+    """
+    Sanitizes all CharField inputs using nh3 before validation
+    and also before adding to the response.
+    """
+
+    def to_internal_value(self, data):
+        data = data.copy()
+        for field_name, field in self.fields.items():
+            if isinstance(field, serializers.CharField):
+                value = data.get(field_name)
+                if isinstance(value, str):
+                    data[field_name] = nh3.clean(value)
+        return super().to_internal_value(data)
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        for field_name, field in self.fields.items():
+            if isinstance(field, serializers.CharField):
+                value = rep.get(field_name)
+                if isinstance(value, str):
+                    rep[field_name] = nh3.clean(value)
+        return rep
 
 
 class CommunicationLogEntrySerializer(serializers.ModelSerializer):
