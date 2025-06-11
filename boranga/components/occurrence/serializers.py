@@ -1453,6 +1453,9 @@ class InternalOccurrenceReportSerializer(OccurrenceReportSerializer):
     community_migrated_id = serializers.CharField(
         source="community.taxonomy.community_migrated_id", allow_null=True
     )
+    occurrence_number = serializers.CharField(
+        source="occurrence.occurrence_number", allow_null=True
+    )
 
     class Meta:
         model = OccurrenceReport
@@ -1500,6 +1503,7 @@ class InternalOccurrenceReportSerializer(OccurrenceReportSerializer):
             "label",
             "model_name",
             "occurrence",
+            "occurrence_number",
             "current_assessor",
             "assigned_approver",
             "proposed_decline_status",
