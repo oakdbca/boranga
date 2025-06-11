@@ -18,27 +18,7 @@
                         <div class="row">
                             <div class="col rounded">
                                 <div class="row">
-                                    <div class="col">
-                                        <div class="form-floating m-3">
-                                            <textarea
-                                                id="assessor_deficiencies"
-                                                v-model="
-                                                    occurrence_report_obj.deficiency_data
-                                                "
-                                                :disabled="deficiency_readonly"
-                                                class="form-control"
-                                                placeholder="Deficiency Comments"
-                                            />
-                                            <label
-                                                for="assessor_deficiencies"
-                                                class="form-label"
-                                                >Deficiency Comments</label
-                                            >
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col">
+                                    <div class="col mt-3">
                                         <div class="form-floating m-3 mt-1">
                                             <textarea
                                                 id="assessor_comment"
@@ -564,17 +544,6 @@ export default {
         },
         csrf_token: function () {
             return helpers.getCookie('csrftoken');
-        },
-        deficiency_readonly: function () {
-            return !this.is_external &&
-                !this.occurrence_report_obj.can_user_edit &&
-                this.occurrence_report_obj.assessor_mode.assessor_level ==
-                    'assessor' &&
-                this.occurrence_report_obj.assessor_mode.has_assessor_mode &&
-                !this.occurrence_report_obj.assessor_mode
-                    .status_without_assessor
-                ? false
-                : true;
         },
         assessor_comment_readonly: function () {
             return !this.is_external &&

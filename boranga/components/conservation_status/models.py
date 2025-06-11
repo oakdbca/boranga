@@ -644,7 +644,6 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
     # so that when locked the record returns to the correct status
     prev_processing_status = models.CharField(max_length=30, blank=True, null=True)
     proposed_decline_status = models.BooleanField(default=False)
-    deficiency_data = models.TextField(null=True, blank=True)  # deficiency comment
     assessor_data = models.TextField(null=True, blank=True)  # assessor comment
 
     # When the CS proposal is sent back to the assessor this comment is used
