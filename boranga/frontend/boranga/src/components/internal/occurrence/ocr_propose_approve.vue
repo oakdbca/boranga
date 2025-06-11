@@ -38,7 +38,6 @@
                                     >Create New Occurrence</label
                                 >
                             </div>
-                            occurrence_name: {{ occurrence_name }}
                             <div class="form-check form-check-inline">
                                 <input
                                     id="create_new_occurrence_existing"
