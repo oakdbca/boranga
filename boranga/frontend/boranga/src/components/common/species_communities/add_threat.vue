@@ -753,11 +753,7 @@ export default {
             if (this.date_observed_minimum) {
                 if (
                     new Date(this.threatObj.date_observed) <
-                    new Date(
-                        new Date(this.date_observed_minimum).toLocaleDateString(
-                            'en-AU'
-                        )
-                    )
+                    new Date(new Date(this.date_observed_minimum))
                 ) {
                     this.threatObj.date_observed = new Date(
                         this.date_observed_minimum
