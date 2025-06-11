@@ -38,6 +38,7 @@
                                     >Create New Occurrence</label
                                 >
                             </div>
+                            occurrence_name: {{ occurrence_name }}
                             <div class="form-check form-check-inline">
                                 <input
                                     id="create_new_occurrence_existing"
@@ -246,6 +247,10 @@ export default {
         occurrence: {
             type: Object,
         },
+        ocr_for_occ_name: {
+            type: String,
+            required: false,
+        },
     },
     data: function () {
         return {
@@ -285,6 +290,11 @@ export default {
     watch: {
         isModalOpen: function (value) {
             if (value) {
+                if (this.ocr_for_occ_name) {
+                    this.propose_approve.new_occurrence_name =
+                        this.ocr_for_occ_name;
+                }
+
                 if (
                     this.occurrence !== null &&
                     this.occurrence.id !== undefined &&
