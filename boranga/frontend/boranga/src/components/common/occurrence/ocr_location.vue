@@ -278,8 +278,7 @@
                     <template v-else>
                         <input
                             v-model="
-                                occurrence_report_obj.location
-                                    .coordinate_source_id
+                                occurrence_report_obj.location.coordinate_source
                             "
                             class="form-control"
                             type="text"
