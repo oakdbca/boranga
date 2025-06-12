@@ -2758,7 +2758,19 @@ class AssociatedSpeciesTaxonomy(models.Model):
         null=True,
         related_name="associated_species_taxonomy",
     )
+    species_role = models.ForeignKey(
+        SpeciesRole,
+        on_delete=models.PROTECT,
+        null=True,
+        related_name="associated_species_taxonomy",
+    )
     comments = models.TextField(blank=True, null=True)
+
+    class Meta:
+        app_label = "boranga"
+
+    def __str__(self):
+        return str(self.taxonomy)
 
 
 class OCRAssociatedSpecies(models.Model):
