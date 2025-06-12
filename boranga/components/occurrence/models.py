@@ -2733,6 +2733,34 @@ class SpeciesListRelatesTo(OrderedModel, ArchivableModel):
         return str(self.name)
 
 
+class SpeciesRole(OrderedModel, ArchivableModel):
+    objects = OrderedArchivableManager()
+
+    name = models.CharField(
+        max_length=250,
+        blank=False,
+        null=False,
+        unique=True,
+        validators=[no_commas_validator],
+    )
+
+    class Meta(OrderedModel.Meta):
+        app_label = "boranga"
+
+    def __str__(self):
+        return str(self.name)
+
+
+class AssociatedSpeciesTaxonomy(models.Model):
+    taxonomy = models.ForeignKey(
+        Taxonomy,
+        on_delete=models.PROTECT,
+        null=True,
+        related_name="associated_species_taxonomy",
+    )
+    comments = models.TextField(blank=True, null=True)
+
+
 class OCRAssociatedSpecies(models.Model):
     BULK_IMPORT_ABBREVIATION = "ocrspe"
 
