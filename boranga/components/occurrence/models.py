@@ -2755,7 +2755,7 @@ class AssociatedSpeciesTaxonomy(models.Model):
     taxonomy = models.ForeignKey(
         Taxonomy,
         on_delete=models.PROTECT,
-        null=True,
+        null=False,
         related_name="associated_species_taxonomy",
     )
     species_role = models.ForeignKey(
