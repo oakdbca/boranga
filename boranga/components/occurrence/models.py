@@ -2799,7 +2799,7 @@ class OCRAssociatedSpecies(models.Model):
         blank=True,
         related_name="associated_species",
     )
-    related_species = models.ManyToManyField(Taxonomy, blank=True)
+    # related_species = models.ManyToManyField(AssociatedSpeciesTaxonomy, blank=True)
 
     class Meta:
         app_label = "boranga"
