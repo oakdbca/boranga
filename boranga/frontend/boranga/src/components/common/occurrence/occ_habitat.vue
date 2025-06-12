@@ -868,9 +868,9 @@
                 ref="related_species"
                 :is-read-only="isReadOnly"
                 :occurrence_obj="occurrence_obj"
+                class="mb-3"
             />
-
-            <div class="row mt-3 mb-3">
+            <div class="row border-top mb-3 pt-3">
                 <div class="col-sm-3">
                     <label for="related_species" class="control-label"
                         >Comment</label
