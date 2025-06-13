@@ -5089,7 +5089,7 @@ class OCCAssociatedSpecies(models.Model):
     )
     comment = models.TextField(blank=True)
 
-    related_species = models.ManyToManyField(Taxonomy, blank=True)
+    # related_species = models.ManyToManyField(Taxonomy, blank=True)
 
     class Meta:
         app_label = "boranga"
