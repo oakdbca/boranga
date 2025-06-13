@@ -31,7 +31,7 @@ from rest_framework_datatables.pagination import DatatablesPageNumberPagination
 
 from boranga import settings
 from boranga.components.conservation_status.serializers import SendReferralSerializer
-from boranga.components.main.api import search_datums
+from boranga.components.main.api import NoPaginationListMixin, search_datums
 from boranga.components.main.permissions import CommsLogPermission
 from boranga.components.main.related_item import RelatedItemsSerializer
 from boranga.components.main.utils import validate_threat_request
@@ -40,6 +40,7 @@ from boranga.components.occurrence.filters import OccurrenceReportReferralFilter
 from boranga.components.occurrence.mixins import DatumSearchMixin
 from boranga.components.occurrence.models import (
     AnimalHealth,
+    AssociatedSpeciesTaxonomy,
     CoordinateSource,
     CountedSubject,
     Datum,
@@ -110,9 +111,11 @@ from boranga.components.occurrence.models import (
     SoilCondition,
     SoilType,
     SpeciesListRelatesTo,
+    SpeciesRole,
     WildStatus,
 )
 from boranga.components.occurrence.permissions import (
+    AssociatedSpeciesTaxonomyPermission,
     ExternalOccurrenceReportObjectPermission,
     ExternalOccurrenceReportPermission,
     IsOccurrenceReportReferee,
@@ -125,6 +128,7 @@ from boranga.components.occurrence.permissions import (
     OccurrenceReportReassignDraftPermission,
 )
 from boranga.components.occurrence.serializers import (
+    AssociatedSpeciesTaxonomySerializer,
     BackToAssessorSerializer,
     CreateOccurrenceReportSerializer,
     CreateOccurrenceSerializer,
@@ -194,6 +198,8 @@ from boranga.components.occurrence.serializers import (
     SaveOCRPlantCountSerializer,
     SaveOCRVegetationStructureSerializer,
     SiteGeometrySerializer,
+    SpeciesRoleSerializer,
+    UpdateAssociatedSpeciesTaxonomySerializer,
 )
 from boranga.components.occurrence.utils import (
     get_all_related_species,
@@ -794,7 +800,6 @@ class OccurrenceReportViewSet(
             section_fields = section_value._meta.get_fields()
 
             for i in section_fields:
-                logger.debug(f"Processing field: {i.name} of type {type(i)}")
                 if (
                     i.name == "id"
                     or i.name == "occurrence_report"
@@ -853,7 +858,7 @@ class OccurrenceReportViewSet(
         res_json = json.dumps(res_json)
         return HttpResponse(res_json, content_type="application/json")
 
-    @detail_route(methods=["get"], detail=True)
+    @detail_route(methods=["post"], detail=True)
     def add_related_species(self, request, *args, **kwargs):
 
         instance = self.get_object()
@@ -862,21 +867,30 @@ class OccurrenceReportViewSet(
         else:
             raise serializers.ValidationError("Associated Species does not exist")
 
-        taxon_id = request.GET.get("species")
+        taxonomy_id = request.data.get("taxonomy_id", None)
+
+        if not taxonomy_id:
+            raise serializers.ValidationError("taxonomy_id is required in POST data")
 
         try:
-            taxon = Taxonomy.objects.get(id=taxon_id)
+            taxon = Taxonomy.objects.get(id=taxonomy_id)
         except Taxonomy.DoesNotExist:
             raise serializers.ValidationError("Species does not exist")
 
-        if taxon not in related_species.all():
-            related_species.add(taxon)
-        else:
-            raise serializers.ValidationError("Species already added")
+        if instance.associated_species.related_species.filter(taxonomy=taxon).exists():
+            raise serializers.ValidationError(
+                f"Species: {taxon.scientific_name} already added to "
+                f"Occurrence Report: {instance.occurrence_report_number}"
+            )
+
+        associated_species_taxonomy = AssociatedSpeciesTaxonomy.objects.create(
+            taxonomy=taxon
+        )
+        related_species.add(associated_species_taxonomy)
 
         instance.save(version_user=request.user)
 
-        serializer = TaxonomySerializer(
+        serializer = AssociatedSpeciesTaxonomySerializer(
             related_species, many=True, context={"request": request}
         )
 
@@ -885,30 +899,38 @@ class OccurrenceReportViewSet(
 
         return Response(serializer.data)
 
-    @detail_route(methods=["get"], detail=True)
+    @detail_route(methods=["DELETE"], detail=True)
     def remove_related_species(self, request, *args, **kwargs):
-
+        # TODO: Since this has been restructured we may need to add archiving instead of deleting records
+        # Previously this end point was using "GET" method, which was misleading as it was actually removing
+        # a related species relationship in the database.
+        # That wasn't so bad at the time as it was just a relationship (we could be recreated without data loss)
+        # however now there is more associated data.
         instance = self.get_object()
         if instance.associated_species:
             related_species = instance.associated_species.related_species
         else:
             raise serializers.ValidationError("Associated Species does not exist")
 
-        taxon_id = request.GET.get("species")
+        related_species_id = request.data.get("related_species_id")
 
         try:
-            taxon = Taxonomy.objects.get(id=taxon_id)
-        except Taxonomy.DoesNotExist:
-            raise serializers.ValidationError("Species does not exist")
+            associated_species_taxonomy = AssociatedSpeciesTaxonomy.objects.get(
+                id=related_species_id
+            )
+        except AssociatedSpeciesTaxonomy.DoesNotExist:
+            raise serializers.ValidationError(
+                "AssociatedSpeciesTaxonomy does not exist"
+            )
 
-        if taxon in related_species.all():
-            related_species.remove(taxon)
+        if associated_species_taxonomy in related_species.all():
+            related_species.remove(associated_species_taxonomy)
         else:
             raise serializers.ValidationError("Species not related")
 
         instance.save(version_user=request.user)
 
-        serializer = TaxonomySerializer(
+        serializer = AssociatedSpeciesTaxonomySerializer(
             related_species, many=True, context={"request": request}
         )
 
@@ -920,12 +942,9 @@ class OccurrenceReportViewSet(
     @detail_route(methods=["get"], detail=True)
     def get_related_species(self, request, *args, **kwargs):
         instance = self.get_object()
-        if hasattr(instance, "associated_species"):
-            related_species = instance.associated_species.related_species
-        else:
-            related_species = Taxonomy.objects.none()
-        serializer = TaxonomySerializer(
-            related_species, many=True, context={"request": request}
+        serializer = AssociatedSpeciesTaxonomySerializer(
+            instance.associated_species.related_species.all(),
+            many=True,
         )
         return Response(serializer.data)
 
@@ -1766,7 +1785,6 @@ class OccurrenceReportViewSet(
         # ocr geometry data to save seperately
         geometry_data = proposal_data.get("ocr_geometry", None)
         if geometry_data:
-            logger.debug(f"geometry_data: {geometry_data}")
             save_geometry(request, instance, geometry_data, "occurrence_report")
         serializer = SaveOccurrenceReportSerializer(
             instance, data=proposal_data, partial=True
@@ -6195,3 +6213,34 @@ class OccurrenceReportBulkImportSchemaColumnViewSet(
             SchemaColumnLookupFilter.LOOKUP_FILTER_TYPES,
             status=status.HTTP_200_OK,
         )
+
+
+class AssociatedSpeciesTaxonomyViewSet(
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.ListModelMixin,
+):
+    queryset = AssociatedSpeciesTaxonomy.objects.all()
+    serializer_class = AssociatedSpeciesTaxonomySerializer
+    permission_classes = [AssociatedSpeciesTaxonomyPermission]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if is_contributor(self.request) and not is_internal(self.request):
+            return qs.filter(
+                ocrassociatedspecies__occurrence_report__submitter=self.request.user.id
+            )
+        if not is_internal(self.request):
+            return qs.none()
+        return qs
+
+    def get_serializer_class(self):
+        if self.action == "update":
+            return UpdateAssociatedSpeciesTaxonomySerializer
+        return super().get_serializer_class()
+
+
+class SpeciesRoleViewSet(viewsets.ReadOnlyModelViewSet, NoPaginationListMixin):
+    queryset = SpeciesRole.objects.all()
+    serializer_class = SpeciesRoleSerializer
