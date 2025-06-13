@@ -16,7 +16,9 @@
 
             <div class="col-sm-3">
                 <button
-                    :disabled="isReadOnly || adding_species"
+                    :disabled="
+                        isReadOnly || adding_species || !selected_taxonomy_id
+                    "
                     type="button"
                     class="btn btn-primary mb-2"
                     @click.prevent="addRelatedSpecies"
@@ -39,11 +41,7 @@
                         class="form-control"
                     />
                 </template>
-                <template
-                    v-else-if="
-                        selected_common_name && selected_common_name.length > 0
-                    "
-                >
+                <template v-else>
                     <template
                         v-for="commonName in selected_common_name"
                         :key="commonName"
@@ -141,7 +139,7 @@ export default {
                             result += `<span class="badge bg-primary me-2">${name.trim()}</span>`;
                         });
                     } else {
-                        result = '<span class="badge bg-secondary">None</span>';
+                        result = '';
                     }
                     return type == 'export' ? value : result;
                 },
@@ -150,6 +148,14 @@ export default {
         column_conservation_status: function () {
             return {
                 data: 'conservation_status',
+                orderable: true,
+                searchable: true,
+                visible: true,
+            };
+        },
+        column_species_role: function () {
+            return {
+                data: 'species_role',
                 orderable: true,
                 searchable: true,
                 visible: true,
@@ -213,6 +219,7 @@ export default {
                 vm.column_scientific_name,
                 vm.column_common_name,
                 vm.column_conservation_status,
+                vm.column_species_role,
                 vm.column_is_current,
                 vm.column_kingdom,
                 vm.column_comments,
@@ -253,6 +260,7 @@ export default {
                 'Scientific Name',
                 'Common Name(s)',
                 'Conservation Status',
+                'Species Role',
                 'Is Current',
                 'Kingdom',
                 'Comments',
@@ -322,7 +330,6 @@ export default {
                             vm.$nextTick(() => {
                                 vm.initialiseCommonNameLookup();
                             });
-                            vm.adding_species = false;
                             if (
                                 vm.occurrence_report_obj.processing_status ==
                                 'Unlocked'
@@ -332,7 +339,6 @@ export default {
                         },
                         (error) => {
                             console.log(error);
-                            vm.adding_species = false;
                         }
                     )
                     .finally(() => {
@@ -503,10 +509,11 @@ export default {
                     $('#' + vm.scientific_name_lookup)
                         .append(newOption)
                         .trigger('change');
+                    $(vm.$refs[vm.select_common_name]).select2('destroy');
                     vm.$nextTick(() => {
-                        $(vm.$refs[vm.select_common_name]).select2('destroy');
+                        vm.selected_common_name =
+                            e.params.data.common_names_list;
                     });
-                    vm.selected_common_name = e.params.data.common_names_list;
                 })
                 .on('select2:unselect', function () {
                     vm.selected_common_name = null;
