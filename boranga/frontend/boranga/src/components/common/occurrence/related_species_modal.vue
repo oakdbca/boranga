@@ -340,6 +340,7 @@ export default {
                         vm.errors = data;
                         return;
                     }
+                    vm.$parent.updatedRelatedSpecies();
                     swal.fire({
                         icon: 'success',
                         title: 'Success',
@@ -352,7 +353,6 @@ export default {
                     }).then((result) => {
                         if (result.isConfirmed) {
                             vm.close();
-                            vm.$parent.updatedRelatedSpecies();
                         }
                     });
                 })
