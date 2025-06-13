@@ -216,7 +216,6 @@ from boranga.components.spatial.utils import (
     transform_json_geometry,
 )
 from boranga.components.species_and_communities.models import GroupType, Taxonomy
-from boranga.components.species_and_communities.serializers import TaxonomySerializer
 from boranga.helpers import (
     is_contributor,
     is_customer,
@@ -879,7 +878,7 @@ class OccurrenceReportViewSet(
 
         if instance.associated_species.related_species.filter(taxonomy=taxon).exists():
             raise serializers.ValidationError(
-                f"Species: {taxon.scientific_name} already added to "
+                f"Related Species: {taxon.scientific_name} already added to "
                 f"Occurrence Report: {instance.occurrence_report_number}"
             )
 
@@ -4119,65 +4118,87 @@ class OccurrenceViewSet(
 
         return Response(data)
 
-    @detail_route(methods=["get"], detail=True)
+    @detail_route(methods=["post"], detail=True)
     def add_related_species(self, request, *args, **kwargs):
+
         instance = self.get_object()
-        if hasattr(instance, "associated_species"):
+        if instance.associated_species:
             related_species = instance.associated_species.related_species
         else:
             raise serializers.ValidationError("Associated Species does not exist")
 
-        taxon_id = request.GET.get("species")
+        taxonomy_id = request.data.get("taxonomy_id", None)
+
+        if not taxonomy_id:
+            raise serializers.ValidationError("taxonomy_id is required in POST data")
 
         try:
-            taxon = Taxonomy.objects.get(id=taxon_id)
+            taxon = Taxonomy.objects.get(id=taxonomy_id)
         except Taxonomy.DoesNotExist:
             raise serializers.ValidationError("Species does not exist")
 
-        if taxon not in related_species.all():
-            related_species.add(taxon)
+        if instance.associated_species.related_species.filter(taxonomy=taxon).exists():
+            raise serializers.ValidationError(
+                f"Related Species: {taxon.scientific_name} already added to "
+                f"Occurrence: {instance.occurrence_number}"
+            )
+
+        associated_species_taxonomy = AssociatedSpeciesTaxonomy.objects.create(
+            taxonomy=taxon
+        )
+        related_species.add(associated_species_taxonomy)
 
         instance.save(version_user=request.user)
 
-        serializer = TaxonomySerializer(
+        serializer = AssociatedSpeciesTaxonomySerializer(
             related_species, many=True, context={"request": request}
         )
+
         return Response(serializer.data)
 
-    @detail_route(methods=["get"], detail=True)
+    @detail_route(methods=["DELETE"], detail=True)
     def remove_related_species(self, request, *args, **kwargs):
+        # TODO: Since this has been restructured we may need to add archiving instead of deleting records
+        # Previously this end point was using "GET" method, which was misleading as it was actually removing
+        # a related species relationship in the database.
+        # That wasn't so bad at the time as it was just a relationship (which could be recreated without data loss)
+        # however now there is more associated data.
         instance = self.get_object()
-        if hasattr(instance, "associated_species"):
+        if instance.associated_species:
             related_species = instance.associated_species.related_species
         else:
             raise serializers.ValidationError("Associated Species does not exist")
 
-        taxon_id = request.GET.get("species")
+        related_species_id = request.data.get("related_species_id")
 
         try:
-            taxon = Taxonomy.objects.get(id=taxon_id)
-        except Taxonomy.DoesNotExist:
-            raise serializers.ValidationError("Species does not exist")
+            associated_species_taxonomy = AssociatedSpeciesTaxonomy.objects.get(
+                id=related_species_id
+            )
+        except AssociatedSpeciesTaxonomy.DoesNotExist:
+            raise serializers.ValidationError(
+                "AssociatedSpeciesTaxonomy does not exist"
+            )
 
-        if taxon in related_species.all():
-            related_species.remove(taxon)
+        if associated_species_taxonomy in related_species.all():
+            related_species.remove(associated_species_taxonomy)
+        else:
+            raise serializers.ValidationError("Species not related")
 
         instance.save(version_user=request.user)
 
-        serializer = TaxonomySerializer(
+        serializer = AssociatedSpeciesTaxonomySerializer(
             related_species, many=True, context={"request": request}
         )
+
         return Response(serializer.data)
 
     @detail_route(methods=["get"], detail=True)
     def get_related_species(self, request, *args, **kwargs):
         instance = self.get_object()
-        if hasattr(instance, "associated_species"):
-            related_species = instance.associated_species.related_species
-        else:
-            related_species = Taxonomy.objects.none()
-        serializer = TaxonomySerializer(
-            related_species, many=True, context={"request": request}
+        serializer = AssociatedSpeciesTaxonomySerializer(
+            instance.associated_species.related_species.all(),
+            many=True,
         )
         return Response(serializer.data)
 
