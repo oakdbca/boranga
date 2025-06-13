@@ -904,7 +904,7 @@ class OccurrenceReportViewSet(
         # TODO: Since this has been restructured we may need to add archiving instead of deleting records
         # Previously this end point was using "GET" method, which was misleading as it was actually removing
         # a related species relationship in the database.
-        # That wasn't so bad at the time as it was just a relationship (we could be recreated without data loss)
+        # That wasn't so bad at the time as it was just a relationship (which could be recreated without data loss)
         # however now there is more associated data.
         instance = self.get_object()
         if instance.associated_species:
