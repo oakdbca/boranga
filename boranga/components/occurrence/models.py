@@ -56,7 +56,10 @@ from rest_framework import serializers
 from taggit.managers import TaggableManager
 
 from boranga import exceptions
-from boranga.components.conservation_status.models import ProposalAmendmentReason
+from boranga.components.conservation_status.models import (
+    ConservationStatus,
+    ProposalAmendmentReason,
+)
 from boranga.components.main.models import (
     AbstractOrderedList,
     ArchivableModel,
@@ -2771,6 +2774,34 @@ class AssociatedSpeciesTaxonomy(models.Model):
 
     def __str__(self):
         return str(self.taxonomy)
+
+    @property
+    def common_name(self):
+        return self.taxonomy.vernaculars.values_list("vernacular_name", flat=True)
+
+    @property
+    def is_current(self):
+        return self.taxonomy.name_currency.lower() == "true"
+
+    @property
+    def conservation_status(self):
+        species = Species.objects.filter(taxonomy=self.taxonomy).first()
+        current_conservation_status = ConservationStatus.objects.filter(
+            species=species,
+            processing_status=ConservationStatus.PROCESSING_STATUS_APPROVED,
+        ).first()
+        if not current_conservation_status:
+            return ""
+
+        return (
+            current_conservation_status.wa_legislative_category.code
+            if current_conservation_status.wa_legislative_category
+            else (
+                current_conservation_status.wa_priority_category.code
+                if current_conservation_status.wa_priority_category
+                else ""
+            )
+        )
 
 
 class OCRAssociatedSpecies(models.Model):
