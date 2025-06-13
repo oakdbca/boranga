@@ -279,6 +279,10 @@ export default {
                     this.$refs.ocr_threats.adjust_table_width();
                 } else if (el.id == 'pills-documents-tab') {
                     this.$refs.ocr_documents.adjust_table_width();
+                } else if (el.id == 'pills-habitat-tab') {
+                    this.$refs.ocr_habitat.$refs.related_species.$refs.related_species_datatable.vmDataTable.columns
+                        .adjust()
+                        .responsive.recalc();
                 }
             });
         });
