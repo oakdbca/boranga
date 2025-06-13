@@ -767,7 +767,7 @@ export default {
     },
     computed: {
         defaultApplicationStatus: function () {
-            return this.is_for_agenda ? 'ready_for_agenda' : 'approved';
+            return this.is_for_agenda ? 'ready_for_agenda' : 'all';
         },
         filterApplied: function () {
             if (

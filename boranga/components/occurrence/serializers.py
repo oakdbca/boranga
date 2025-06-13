@@ -18,6 +18,7 @@ from boranga.components.main.serializers import (
 )
 from boranga.components.main.utils import get_geometry_source
 from boranga.components.occurrence.models import (
+    AssociatedSpeciesTaxonomy,
     BufferGeometry,
     Datum,
     GeometryType,
@@ -71,6 +72,7 @@ from boranga.components.occurrence.models import (
     SchemaColumnLookupFilter,
     SchemaColumnLookupFilterValue,
     SoilType,
+    SpeciesRole,
 )
 from boranga.components.spatial.utils import wkb_to_geojson
 from boranga.components.species_and_communities.models import (
@@ -4309,3 +4311,52 @@ class OccurrenceReportBulkImportTaskSerializer(serializers.ModelSerializer):
                 "An import task with exactly the same file contents has already been completed."
             )
         return super().create(validated_data)
+
+
+class AssociatedSpeciesTaxonomySerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    scientific_name = serializers.CharField(
+        source="taxonomy.scientific_name", read_only=True
+    )
+    kingdom_name = serializers.CharField(source="taxonomy.kingdom_name", read_only=True)
+    species_role = serializers.CharField(
+        source="species_role.name", read_only=True, allow_null=True
+    )
+
+    class Meta:
+        model = AssociatedSpeciesTaxonomy
+        fields = (
+            "id",
+            "scientific_name",
+            "common_name",
+            "conservation_status",
+            "species_role_id",
+            "species_role",
+            "is_current",
+            "kingdom_name",
+            "comments",
+            "taxonomy",
+        )
+
+
+class UpdateAssociatedSpeciesTaxonomySerializer(serializers.ModelSerializer):
+    species_role_id = serializers.IntegerField(required=False, allow_null=True)
+
+    class Meta:
+        model = AssociatedSpeciesTaxonomy
+        fields = (
+            "id",
+            "species_role_id",
+            "comments",
+        )
+        read_only_fields = ("id",)
+
+
+class SpeciesRoleSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    name = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = SpeciesRole
+        fields = ("id", "name")
+        read_only_fields = ("id",)

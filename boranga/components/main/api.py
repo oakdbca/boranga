@@ -207,3 +207,15 @@ class GetListItems(views.APIView):
         serializer = AbstractOrderedListSerializer(model.objects.active(), many=True)
 
         return Response(serializer.data)
+
+
+class NoPaginationListMixin:
+    def get_paginated_response(self, data):
+        if "no_pagination" == self.action:
+            return data
+        return super().get_paginated_response(data)
+
+    @action(detail=False, methods=["get"], url_path="no-pagination")
+    def no_pagination(self, request):
+        serializer = self.get_serializer(self.get_queryset(), many=True)
+        return Response(serializer.data)

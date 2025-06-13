@@ -868,7 +868,7 @@ class CommunitiesFilterBackend(DatatablesFilterBackend):
         # filter_community_name
         filter_community_name = request.GET.get("filter_community_name")
         if filter_community_name and not filter_community_name.lower() == "all":
-            queryset = queryset.filter(taxonomy=filter_community_name)
+            queryset = queryset.filter(id=filter_community_name)
 
         filter_application_status = request.GET.get("filter_application_status")
         if filter_application_status and not filter_application_status.lower() == "all":

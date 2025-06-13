@@ -47,6 +47,7 @@ from boranga.components.occurrence.models import (
     SoilCondition,
     SoilType,
     SpeciesListRelatesTo,
+    SpeciesRole,
     WildStatus,
 )
 from boranga.components.spatial.utils import wkb_to_geojson
@@ -744,6 +745,18 @@ class SpeciesListRelatesToAdmin(
     ordering = ("order",)
 
 
+class SpeciesRoleAdmin(
+    CsvExportMixin,
+    ArchivableModelAdminMixin,
+    OrderedModelAdmin,
+    DeleteProtectedModelAdmin,
+):
+    list_display = ["name", "move_up_down_links"]
+    list_filter = ["archived"]
+    search_fields = ["name"]
+    ordering = ("order",)
+
+
 # Each of the following models will be available to Django Admin.
 
 admin.site.register(AnimalHealth, AnimalHealthAdmin)
@@ -780,4 +793,5 @@ admin.site.register(SoilColour, SoilColourAdmin)
 admin.site.register(SoilCondition, SoilConditionAdmin)
 admin.site.register(SoilType, SoilTypeAdmin)
 admin.site.register(SpeciesListRelatesTo, SpeciesListRelatesToAdmin)
+admin.site.register(SpeciesRole, SpeciesRoleAdmin)
 admin.site.register(WildStatus, WildStatusAdmin)

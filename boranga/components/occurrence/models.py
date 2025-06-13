@@ -56,7 +56,10 @@ from rest_framework import serializers
 from taggit.managers import TaggableManager
 
 from boranga import exceptions
-from boranga.components.conservation_status.models import ProposalAmendmentReason
+from boranga.components.conservation_status.models import (
+    ConservationStatus,
+    ProposalAmendmentReason,
+)
 from boranga.components.main.models import (
     AbstractOrderedList,
     ArchivableModel,
@@ -2733,6 +2736,74 @@ class SpeciesListRelatesTo(OrderedModel, ArchivableModel):
         return str(self.name)
 
 
+class SpeciesRole(OrderedModel, ArchivableModel):
+    objects = OrderedArchivableManager()
+
+    name = models.CharField(
+        max_length=250,
+        blank=False,
+        null=False,
+        unique=True,
+        validators=[no_commas_validator],
+    )
+
+    class Meta(OrderedModel.Meta):
+        app_label = "boranga"
+
+    def __str__(self):
+        return str(self.name)
+
+
+class AssociatedSpeciesTaxonomy(models.Model):
+    taxonomy = models.ForeignKey(
+        Taxonomy,
+        on_delete=models.PROTECT,
+        null=False,
+        related_name="associated_species_taxonomy",
+    )
+    species_role = models.ForeignKey(
+        SpeciesRole,
+        on_delete=models.PROTECT,
+        null=True,
+        related_name="associated_species_taxonomy",
+    )
+    comments = models.TextField(blank=True, null=True)
+
+    class Meta:
+        app_label = "boranga"
+
+    def __str__(self):
+        return str(self.taxonomy)
+
+    @property
+    def common_name(self):
+        return self.taxonomy.vernaculars.values_list("vernacular_name", flat=True)
+
+    @property
+    def is_current(self):
+        return self.taxonomy.name_currency.lower() == "true"
+
+    @property
+    def conservation_status(self):
+        species = Species.objects.filter(taxonomy=self.taxonomy).first()
+        current_conservation_status = ConservationStatus.objects.filter(
+            species=species,
+            processing_status=ConservationStatus.PROCESSING_STATUS_APPROVED,
+        ).first()
+        if not current_conservation_status:
+            return ""
+
+        return (
+            current_conservation_status.wa_legislative_category.code
+            if current_conservation_status.wa_legislative_category
+            else (
+                current_conservation_status.wa_priority_category.code
+                if current_conservation_status.wa_priority_category
+                else ""
+            )
+        )
+
+
 class OCRAssociatedSpecies(models.Model):
     BULK_IMPORT_ABBREVIATION = "ocrspe"
 
@@ -2759,7 +2830,7 @@ class OCRAssociatedSpecies(models.Model):
         blank=True,
         related_name="associated_species",
     )
-    related_species = models.ManyToManyField(Taxonomy, blank=True)
+    related_species = models.ManyToManyField(AssociatedSpeciesTaxonomy, blank=True)
 
     class Meta:
         app_label = "boranga"
@@ -5018,7 +5089,7 @@ class OCCAssociatedSpecies(models.Model):
     )
     comment = models.TextField(blank=True)
 
-    related_species = models.ManyToManyField(Taxonomy, blank=True)
+    related_species = models.ManyToManyField(AssociatedSpeciesTaxonomy, blank=True)
 
     class Meta:
         app_label = "boranga"

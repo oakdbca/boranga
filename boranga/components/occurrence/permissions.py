@@ -565,3 +565,45 @@ class OccurrenceObjectPermission(BasePermission):
             return self.is_authorised_to_update(request, occurrence)
 
         return False
+
+
+class AssociatedSpeciesTaxonomyPermission(BasePermission):
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+
+        if request.user.is_superuser:
+            return True
+
+        return (
+            is_contributor(request)
+            or is_readonly_user(request)
+            or is_conservation_status_assessor(request)
+            or is_conservation_status_approver(request)
+            or is_species_communities_approver(request)
+            or is_occurrence_assessor(request)
+            or is_occurrence_approver(request)
+        )
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        if obj.ocrassociatedspecies_set.exists():
+            root_parent_record = obj.ocrassociatedspecies_set.first().occurrence_report
+
+        elif obj.occassociatedspecies_set.exists():
+            root_parent_record = obj.occassociatedspecies_set.first().occurrence
+        else:
+            raise serializers.ValidationError(
+                "No associated species found for this object."
+            )
+
+        if not root_parent_record:
+            return False
+
+        return (
+            is_occurrence_assessor(request)
+            or is_occurrence_approver(request)
+            or root_parent_record.submitter == request.user.id
+        )
