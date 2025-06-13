@@ -592,9 +592,8 @@ class AssociatedSpeciesTaxonomyPermission(BasePermission):
         if obj.ocrassociatedspecies_set.exists():
             root_parent_record = obj.ocrassociatedspecies_set.first().occurrence_report
 
-        # TODO Add support for OCCAssociatedSpecies
-        # elif obj.occassociatedspecies_set.exists():
-        #     pass
+        elif obj.occassociatedspecies_set.exists():
+            root_parent_record = obj.occassociatedspecies_set.first().occurrence
         else:
             raise serializers.ValidationError(
                 "No associated species found for this object."
