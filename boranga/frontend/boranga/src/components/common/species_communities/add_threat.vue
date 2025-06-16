@@ -489,11 +489,13 @@
                                             v-model="threatObj.date_observed"
                                             :disabled="isReadOnly"
                                             type="date"
-                                            :min="date_observed_minimum"
+                                            min="1990-01-01"
                                             :max="
-                                                new Date()
-                                                    .toISOString()
-                                                    .split('T')[0]
+                                                date_observed_maximum
+                                                    ? date_observed_maximum
+                                                    : new Date()
+                                                          .toISOString()
+                                                          .split('T')[0]
                                             "
                                             class="form-control"
                                             name="date_observed"
@@ -593,9 +595,8 @@ export default {
             required: false,
         },
         // 'YYYY-MM-DD' format
-        date_observed_minimum: {
+        date_observed_maximum: {
             type: String,
-            default: '1990-01-01',
         },
     },
     data: function () {
@@ -750,13 +751,13 @@ export default {
                     },
                 });
             }
-            if (this.date_observed_minimum) {
+            if (this.date_observed_maximum) {
                 if (
-                    new Date(this.threatObj.date_observed) <
-                    new Date(new Date(this.date_observed_minimum))
+                    new Date(this.threatObj.date_observed) >
+                    new Date(new Date(this.date_observed_maximum))
                 ) {
                     this.threatObj.date_observed = new Date(
-                        this.date_observed_minimum
+                        this.date_observed_maximum
                     )
                         .toISOString()
                         .split('T')[0];
@@ -766,9 +767,9 @@ export default {
                     swal.fire({
                         title: 'Error',
                         text:
-                            'Date observed cannot be before ' +
+                            'Date observed cannot be after ' +
                             new Date(
-                                this.date_observed_minimum
+                                this.date_observed_maximum
                             ).toLocaleDateString('en-AU'),
                         icon: 'error',
                         customClass: {
@@ -790,7 +791,7 @@ export default {
                     title: 'Error',
                     text:
                         'Date observed cannot be before ' +
-                        new Date(this.date_observed_minimum).toLocaleDateString(
+                        new Date(this.date_observed_maximum).toLocaleDateString(
                             'en-AU'
                         ),
                     icon: 'error',
