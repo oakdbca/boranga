@@ -525,8 +525,8 @@ export default {
                 },
             ];
             columns = [
-                vm.column_number,
                 vm.column_id,
+                vm.column_number,
                 vm.column_occurrence,
                 vm.column_community_name,
                 vm.column_observation_date_time,
