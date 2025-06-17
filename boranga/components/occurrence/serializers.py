@@ -4340,7 +4340,12 @@ class AssociatedSpeciesTaxonomySerializer(serializers.ModelSerializer):
 
 
 class UpdateAssociatedSpeciesTaxonomySerializer(serializers.ModelSerializer):
-    species_role_id = serializers.IntegerField(required=False, allow_null=True)
+    species_role_id = serializers.IntegerField(
+        write_only=True, required=False, allow_null=True
+    )
+    comments = serializers.CharField(
+        allow_blank=True, required=False, allow_null=True, write_only=True
+    )
 
     class Meta:
         model = AssociatedSpeciesTaxonomy
