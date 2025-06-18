@@ -171,8 +171,8 @@
                     class="mb-3"
                 />
 
-                <Submission
-                    v-if="canSeeSubmission"
+                <ActivatedBy
+                    v-if="canSeeActivatedBy"
                     :submitter_first_name="submitter_first_name"
                     :submitter_last_name="submitter_last_name"
                     :lodgement_date="species_community.lodgement_date"
@@ -601,7 +601,7 @@
 </template>
 <script>
 import CommsLogs from '@common-utils/comms_logs.vue';
-import Submission from '@common-utils/submission.vue';
+import ActivatedBy from '@common-utils/activated_by.vue';
 import ProposalSpeciesCommunities from '@/components/form_species_communities.vue';
 import SpeciesSplit from './species_split.vue';
 import SpeciesCombine from './species_combine.vue';
@@ -615,7 +615,7 @@ export default {
     name: 'InternalSpeciesCommunity',
     components: {
         CommsLogs,
-        Submission,
+        ActivatedBy,
         ProposalSpeciesCommunities,
         SpeciesSplit,
         SpeciesCombine,
@@ -729,7 +729,7 @@ export default {
                 return '';
             }
         },
-        canSeeSubmission: function () {
+        canSeeActivatedBy: function () {
             return (
                 this.species_community &&
                 this.species_community.submitter &&

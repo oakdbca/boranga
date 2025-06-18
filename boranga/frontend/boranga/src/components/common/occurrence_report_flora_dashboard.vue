@@ -366,7 +366,7 @@ export default {
                 data: 'id',
                 orderable: true,
                 searchable: false,
-                visible: true,
+                visible: false,
                 name: 'id',
             };
         },
