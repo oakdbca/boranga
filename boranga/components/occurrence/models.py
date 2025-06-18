@@ -4188,12 +4188,19 @@ class Occurrence(RevisionedMixin):
 
     def activate(self, request):
         self.validate_activate()
-        if (
-            is_occurrence_approver(request)
-            and self.processing_status == Occurrence.PROCESSING_STATUS_DRAFT
-        ):
-            self.processing_status = Occurrence.PROCESSING_STATUS_ACTIVE
-            self.save(version_user=request.user)
+        if not is_occurrence_approver(request):
+            raise exceptions.OccurrenceNotAuthorized(
+                "You do not have permission to activate this occurrence."
+            )
+        if not self.processing_status == Occurrence.PROCESSING_STATUS_DRAFT:
+            raise exceptions.OccurrenceNotAuthorized(
+                "Occurrence is not in draft state, cannot be activated."
+            )
+
+        self.processing_status = Occurrence.PROCESSING_STATUS_ACTIVE
+        self.submitter = request.user.id
+        self.lodgement_date = timezone.now()
+        self.save(version_user=request.user)
 
         # Log proposal action
         self.log_user_action(
