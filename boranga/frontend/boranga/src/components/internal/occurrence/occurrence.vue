@@ -32,8 +32,8 @@
                             class="mb-3"
                         />
 
-                        <Submission
-                            v-if="canSeeSubmission"
+                        <ActivatedBy
+                            v-if="canSeeActivatedBy"
                             :submitter_first_name="submitter_first_name"
                             :submitter_last_name="submitter_last_name"
                             :lodgement_date="occurrence.lodgement_date"
@@ -253,7 +253,7 @@
 </template>
 <script>
 import CommsLogs from '@common-utils/comms_logs.vue';
-import Submission from '@common-utils/submission.vue';
+import ActivatedBy from '@common-utils/activated_by.vue';
 import ProposalOccurrence from '@/components/form_occurrence.vue';
 
 // import OccurrenceSplit from './occurrence_split.vue'
@@ -265,7 +265,7 @@ export default {
     name: 'InternalOccurrenceDetail',
     components: {
         CommsLogs,
-        Submission,
+        ActivatedBy,
         ProposalOccurrence,
         // OccurrenceSplit,
         OccurrenceCombine,
@@ -339,7 +339,7 @@ export default {
                 return '';
             }
         },
-        canSeeSubmission: function () {
+        canSeeActivatedBy: function () {
             //return this.proposal && (this.proposal.processing_status != 'With Assessor (Requirements)' && this.proposal.processing_status != 'With Approver' && !this.isFinalised)
             //return this.proposal && (this.proposal.processing_status != 'With Assessor (Requirements)')
             return true;
