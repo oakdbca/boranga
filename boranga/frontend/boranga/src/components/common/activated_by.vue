@@ -1,6 +1,6 @@
 <template>
     <div class="card card-default">
-        <div class="card-header">Actviation Details</div>
+        <div class="card-header">Activation Details</div>
         <div class="card-body py-2">
             <strong>Activated by</strong><br />
             {{ submitter_first_name }}
