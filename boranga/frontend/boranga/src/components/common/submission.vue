@@ -12,7 +12,8 @@
         <div v-if="lodgement_date" class="card-body border-top py-2">
             <strong>Submitted on</strong><br />
             {{ formatDateDay(lodgement_date) }}
-            <span class="fw-light">at</span> {{ formatDateDay(lodgement_date) }}
+            <span class="fw-light">at</span>
+            {{ formatDateTime(lodgement_date) }}
         </div>
         <div v-if="enableHistory" class="card-body border-top py-2">
             <table class="table small-table">
