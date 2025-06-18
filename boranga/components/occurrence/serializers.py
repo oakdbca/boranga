@@ -1816,7 +1816,7 @@ class SaveBeforeSubmitOCRHabitatConditionSerializer(SaveOCRHabitatConditionSeria
         for field in habitat_conditions_fields:
             total += Decimal(attrs.get(field, Decimal("0.00")))
         total = total.quantize(Decimal("0.00"))
-        if total != Decimal("100.00"):
+        if total != Decimal("100.00") and total != Decimal("0.00"):
             raise serializers.ValidationError(
                 "The sum of habitat conditions must equal 100. Currently they equal %s."
                 % total

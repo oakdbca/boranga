@@ -1262,7 +1262,10 @@ export default {
         },
         validateKeigheryScaleTotal: function () {
             let vm = this;
-            if (vm.keigheryScaleTotal != (100.0).toFixed(2)) {
+            if (
+                vm.keigheryScaleTotal != (100.0).toFixed(2) &&
+                vm.keigheryScaleTotal != (0.0).toFixed(2)
+            ) {
                 swal.fire({
                     title: 'Keighery Scale Total Error',
                     text:
