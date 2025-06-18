@@ -3789,6 +3789,10 @@ class Occurrence(RevisionedMixin):
     )
 
     submitter = models.IntegerField(null=True)  # EmailUserRO
+    lodgement_date = models.DateTimeField(
+        blank=True, null=True
+    )  # DateTime when the occurrence was activated
+
     wild_status = models.ForeignKey(
         WildStatus, on_delete=models.PROTECT, null=True, blank=True
     )
