@@ -2528,10 +2528,14 @@ class OCRHabitatComposition(models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._meta.get_field("land_form").choices = tuple(
-            LandForm.objects.values_list("id", "name")
+            LandForm.objects.annotate(
+                id_str=Cast("id", CharField()),
+            ).values_list("id_str", "name")
         )
         self._meta.get_field("soil_type").choices = tuple(
-            SoilType.objects.values_list("id", "name")
+            SoilType.objects.annotate(
+                id_str=Cast("id", CharField()),
+            ).values_list("id_str", "name")
         )
 
 
@@ -3086,7 +3090,12 @@ class OCRPlantCount(models.Model):
         app_label = "boranga"
 
     def save(self, *args, **kwargs):
-        # Set fields to None based on count status field
+        if self.occurrence_report.migrated_from_id:
+            # IMPORTANT: If the occurrence report is migrated, do not modify counts
+            # This is to preserve the original data from the migration
+            return super().save(*args, **kwargs)
+
+        # For non migrated occurrences, set fields to None based on count status field
         if self.count_status == settings.COUNT_STATUS_NOT_COUNTED:
             self.detailed_alive_mature = None
             self.detailed_dead_mature = None
@@ -3338,11 +3347,18 @@ class OCRAnimalObservation(models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._meta.get_field("primary_detection_method").choices = tuple(
-            PrimaryDetectionMethod.objects.values_list("id", "name")
+            PrimaryDetectionMethod.objects.annotate(
+                id_str=Cast("id", CharField()),
+            ).values_list("id_str", "name")
         )
 
     def save(self, *args, **kwargs):
-        # Set fields to None based on count status field
+        if self.occurrence_report.migrated_from_id:
+            # IMPORTANT: If the occurrence report is migrated, do not modify counts
+            # This is to preserve the original data from the migration
+            return super().save(*args, **kwargs)
+
+        # For non migrated occurrences, set fields to None based on count status field
         if self.count_status == settings.COUNT_STATUS_NOT_COUNTED:
             for st in self.STATES:
                 for a in self.AGES:
@@ -4904,10 +4920,14 @@ class OCCHabitatComposition(models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._meta.get_field("land_form").choices = tuple(
-            LandForm.objects.values_list("id", "name")
+            LandForm.objects.annotate(
+                id_str=Cast("id", CharField()),
+            ).values_list("id_str", "name")
         )
         self._meta.get_field("soil_type").choices = tuple(
-            SoilType.objects.values_list("id", "name")
+            SoilType.objects.annotate(
+                id_str=Cast("id", CharField()),
+            ).values_list("id_str", "name")
         )
 
 
@@ -5214,7 +5234,12 @@ class OCCPlantCount(models.Model):
         return str(self.occurrence)
 
     def save(self, *args, **kwargs):
-        # Set fields to None based on count status field
+        if self.occurrence.migrated_from_id:
+            # IMPORTANT: If the occurrence is migrated, do not modify counts
+            # This is to preserve the original data from the migration
+            return super().save(*args, **kwargs)
+
+        # For non migrated occurrences, set fields to None based on count status field
         if self.count_status == settings.COUNT_STATUS_NOT_COUNTED:
             self.detailed_alive_mature = None
             self.detailed_dead_mature = None
@@ -5332,11 +5357,18 @@ class OCCAnimalObservation(models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._meta.get_field("primary_detection_method").choices = tuple(
-            PrimaryDetectionMethod.objects.values_list("id", "name")
+            PrimaryDetectionMethod.objects.annotate(
+                id_str=Cast("id", CharField()),
+            ).values_list("id_str", "name")
         )
 
     def save(self, *args, **kwargs):
-        # Set fields to None based on count status field
+        if self.occurrence.migrated_from_id:
+            # IMPORTANT: If the occurrence is migrated, do not modify counts
+            # This is to preserve the original data from the migration
+            return super().save(*args, **kwargs)
+
+        # For non migrated occurrences, set fields to None based on count status field
         if self.count_status == settings.COUNT_STATUS_NOT_COUNTED:
             for st in self.STATES:
                 for a in self.AGES:
