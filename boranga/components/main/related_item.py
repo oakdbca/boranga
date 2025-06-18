@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from boranga.components.main.serializers import BaseSerializer
 from boranga.helpers import is_internal
 
 
@@ -35,7 +36,7 @@ class RelatedItem:
         return f"{self.identifier}"
 
 
-class RelatedItemsSerializer(serializers.Serializer):
+class RelatedItemsSerializer(BaseSerializer):
     model_name = serializers.CharField()
     identifier = serializers.CharField()
     descriptor = serializers.CharField()

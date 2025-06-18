@@ -15,6 +15,8 @@ from boranga.components.conservation_status.models import (
     CSExternalRefereeInvite,
 )
 from boranga.components.main.serializers import (
+    BaseModelSerializer,
+    BaseSerializer,
     CommunicationLogEntrySerializer,
     EmailUserSerializer,
 )
@@ -37,7 +39,7 @@ logger = logging.getLogger("boranga")
 
 
 # Serializer used for species and communities forms
-class BasicConservationStatusSerializer(serializers.ModelSerializer):
+class BasicConservationStatusSerializer(BaseModelSerializer):
     wa_legislative_list = serializers.CharField(
         source="wa_legislative_list.code", allow_null=True
     )
@@ -96,7 +98,7 @@ class BasicConservationStatusSerializer(serializers.ModelSerializer):
         ).exists()
 
 
-class ListConservationStatusSerializer(serializers.ModelSerializer):
+class ListConservationStatusSerializer(BaseModelSerializer):
     scientific_name = serializers.CharField(
         source="species_taxonomy.scientific_name", allow_null=True
     )
@@ -144,7 +146,7 @@ class ListConservationStatusSerializer(serializers.ModelSerializer):
         return is_new_external_contributor(obj.submitter)
 
 
-class ListSpeciesConservationStatusSerializer(serializers.ModelSerializer):
+class ListSpeciesConservationStatusSerializer(BaseModelSerializer):
     group_type = serializers.SerializerMethodField()
     species_number = serializers.SerializerMethodField()
     scientific_name = serializers.CharField(
@@ -343,7 +345,7 @@ class ListSpeciesConservationStatusSerializer(serializers.ModelSerializer):
         return ""
 
 
-class ListCommunityConservationStatusSerializer(serializers.ModelSerializer):
+class ListCommunityConservationStatusSerializer(BaseModelSerializer):
     group_type = serializers.SerializerMethodField()
     community_number = serializers.SerializerMethodField()
     community_migrated_id = serializers.SerializerMethodField()
@@ -535,7 +537,7 @@ class ListCommunityConservationStatusSerializer(serializers.ModelSerializer):
         return ""
 
 
-class BaseConservationStatusSerializer(serializers.ModelSerializer):
+class BaseConservationStatusSerializer(BaseModelSerializer):
     readonly = serializers.SerializerMethodField(read_only=True)
     group_type = serializers.SerializerMethodField(read_only=True)
     group_type_id = serializers.SerializerMethodField(read_only=True)
@@ -738,7 +740,7 @@ class CreateConservationStatusSerializer(BaseConservationStatusSerializer):
         )
 
 
-class ConservationStatusProposalReferralSerializer(serializers.ModelSerializer):
+class ConservationStatusProposalReferralSerializer(BaseModelSerializer):
     referral = serializers.SerializerMethodField()
     processing_status = serializers.CharField(source="get_processing_status_display")
     referral_comment = serializers.SerializerMethodField()
@@ -756,7 +758,7 @@ class ConservationStatusProposalReferralSerializer(serializers.ModelSerializer):
         return serializer.data
 
 
-class CSExternalRefereeInviteSerializer(serializers.ModelSerializer):
+class CSExternalRefereeInviteSerializer(BaseModelSerializer):
     conservation_status_id = serializers.IntegerField(required=False)
     full_name = serializers.CharField(read_only=True)
 
@@ -773,13 +775,13 @@ class CSExternalRefereeInviteSerializer(serializers.ModelSerializer):
         ]
 
 
-class ConservationStatusDeclinedDetailsSerializer(serializers.ModelSerializer):
+class ConservationStatusDeclinedDetailsSerializer(BaseModelSerializer):
     class Meta:
         model = ConservationStatusDeclinedDetails
         fields = "__all__"
 
 
-class ConservationStatusIssuanceApprovalDetailsSerializer(serializers.ModelSerializer):
+class ConservationStatusIssuanceApprovalDetailsSerializer(BaseModelSerializer):
     effective_from_date = serializers.DateField(
         format="%Y-%m-%d", required=False, allow_null=True
     )
@@ -793,7 +795,7 @@ class ConservationStatusIssuanceApprovalDetailsSerializer(serializers.ModelSeria
         )
 
 
-class CurrentConservationStatusSerializer(serializers.ModelSerializer):
+class CurrentConservationStatusSerializer(BaseModelSerializer):
     """Used in the serializer below so we can easily reference all the required fields
     for the current conservation status in the internal conservation status serializer
     without having to add lots of serializer method fields."""
@@ -1317,7 +1319,7 @@ class SaveCommunityConservationStatusSerializer(BaseConservationStatusSerializer
         read_only_fields = ("id",)
 
 
-class ConservationStatusUserActionSerializer(serializers.ModelSerializer):
+class ConservationStatusUserActionSerializer(BaseModelSerializer):
     who = serializers.SerializerMethodField()
 
     class Meta:
@@ -1342,7 +1344,7 @@ class ConservationStatusLogEntrySerializer(CommunicationLogEntrySerializer):
         return [[d.name, d._file.url] for d in obj.documents.all()]
 
 
-class SendReferralSerializer(serializers.Serializer):
+class SendReferralSerializer(BaseSerializer):
     email = serializers.EmailField(allow_blank=True)
     text = serializers.CharField(allow_blank=True)
 
@@ -1367,7 +1369,7 @@ class SendReferralSerializer(serializers.Serializer):
         return data
 
 
-class DTConservationStatusReferralSerializer(serializers.ModelSerializer):
+class DTConservationStatusReferralSerializer(BaseModelSerializer):
     processing_status = serializers.CharField(source="get_processing_status_display")
     conservation_status_id = serializers.IntegerField(source="conservation_status.id")
     conservation_status_lodgement_date = serializers.CharField(
@@ -1516,7 +1518,7 @@ class ConservationStatusReferralProposalSerializer(
         }
 
 
-class ConservationStatusReferralSerializer(serializers.ModelSerializer):
+class ConservationStatusReferralSerializer(BaseModelSerializer):
     processing_status = serializers.CharField(source="get_processing_status_display")
     can_be_completed = serializers.BooleanField()
     sent_by = serializers.SerializerMethodField()
@@ -1541,14 +1543,14 @@ class ConservationStatusReferralSerializer(serializers.ModelSerializer):
         return None
 
 
-class ConservationStatusAmendmentRequestDocumentSerializer(serializers.ModelSerializer):
+class ConservationStatusAmendmentRequestDocumentSerializer(BaseModelSerializer):
     class Meta:
         model = ConservationStatusAmendmentRequestDocument
         fields = ("id", "name", "_file")
         # fields = '__all__'
 
 
-class ConservationStatusAmendmentRequestSerializer(serializers.ModelSerializer):
+class ConservationStatusAmendmentRequestSerializer(BaseModelSerializer):
     # reason = serializers.SerializerMethodField()
     cs_amendment_request_documents = (
         ConservationStatusAmendmentRequestDocumentSerializer(many=True, read_only=True)
@@ -1559,7 +1561,7 @@ class ConservationStatusAmendmentRequestSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class ConservationStatusAmendmentRequestDisplaySerializer(serializers.ModelSerializer):
+class ConservationStatusAmendmentRequestDisplaySerializer(BaseModelSerializer):
     cs_amendment_request_documents = (
         ConservationStatusAmendmentRequestDocumentSerializer(many=True, read_only=True)
     )
@@ -1578,12 +1580,12 @@ class ConservationStatusAmendmentRequestDisplaySerializer(serializers.ModelSeria
         ]
 
 
-class ProposedDeclineSerializer(serializers.Serializer):
+class ProposedDeclineSerializer(BaseSerializer):
     reason = serializers.CharField()
     cc_email = serializers.CharField(required=False, allow_null=True)
 
 
-class ProposedApprovalSerializer(serializers.Serializer):
+class ProposedApprovalSerializer(BaseSerializer):
     effective_from_date = serializers.DateField()
     effective_to_date = serializers.DateField(required=False, allow_null=True)
     details = serializers.CharField()
@@ -1602,7 +1604,7 @@ class ProposedApprovalSerializer(serializers.Serializer):
         return data
 
 
-class ConservationStatusDocumentSerializer(serializers.ModelSerializer):
+class ConservationStatusDocumentSerializer(BaseModelSerializer):
     document_category_name = serializers.SerializerMethodField()
     document_sub_category_name = serializers.SerializerMethodField()
     can_action = serializers.SerializerMethodField()
@@ -1645,7 +1647,7 @@ class ConservationStatusDocumentSerializer(serializers.ModelSerializer):
         )
 
 
-class SaveConservationStatusDocumentSerializer(serializers.ModelSerializer):
+class SaveConservationStatusDocumentSerializer(BaseModelSerializer):
     class Meta:
         model = ConservationStatusDocument
         fields = (

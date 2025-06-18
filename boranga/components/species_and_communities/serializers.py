@@ -7,6 +7,8 @@ from boranga.components.conservation_status.serializers import (
     BasicConservationStatusSerializer,
 )
 from boranga.components.main.serializers import (
+    BaseModelSerializer,
+    BaseSerializer,
     CommunicationLogEntrySerializer,
     EmailUserSerializer,
 )
@@ -45,7 +47,7 @@ from boranga.ledger_api_utils import retrieve_email_user
 logger = logging.getLogger("boranga")
 
 
-class ListSpeciesSerializer(serializers.ModelSerializer):
+class ListSpeciesSerializer(BaseModelSerializer):
     group_type = serializers.SerializerMethodField()
     scientific_name = serializers.SerializerMethodField()
     common_name = serializers.SerializerMethodField()
@@ -219,7 +221,7 @@ class ListSpeciesSerializer(serializers.ModelSerializer):
         return ""
 
 
-class ListCommunitiesSerializer(serializers.ModelSerializer):
+class ListCommunitiesSerializer(BaseModelSerializer):
     group_type = serializers.SerializerMethodField()
     community_migrated_id = serializers.SerializerMethodField()
     community_name = serializers.SerializerMethodField()
@@ -364,7 +366,7 @@ class ListCommunitiesSerializer(serializers.ModelSerializer):
         return ""
 
 
-class TaxonomySerializer(serializers.ModelSerializer):
+class TaxonomySerializer(BaseModelSerializer):
     # text is added as need for select2 format
     text = serializers.SerializerMethodField()
     common_name = serializers.SerializerMethodField()
@@ -445,7 +447,7 @@ class CommonNameTaxonomySerializer(TaxonomySerializer):
         return super().get_common_name(obj)
 
 
-class SpeciesConservationAttributesSerializer(serializers.ModelSerializer):
+class SpeciesConservationAttributesSerializer(BaseModelSerializer):
 
     class Meta:
         model = SpeciesConservationAttributes
@@ -503,7 +505,7 @@ class SpeciesConservationAttributesSerializer(serializers.ModelSerializer):
             )
 
 
-class SaveSpeciesConservationAttributesSerializer(serializers.ModelSerializer):
+class SaveSpeciesConservationAttributesSerializer(BaseModelSerializer):
     species_id = serializers.IntegerField(
         required=False, allow_null=True, write_only=True
     )
@@ -578,7 +580,7 @@ class SaveSpeciesConservationAttributesSerializer(serializers.ModelSerializer):
         )
 
 
-class SpeciesDistributionSerializer(serializers.ModelSerializer):
+class SpeciesDistributionSerializer(BaseModelSerializer):
 
     class Meta:
         model = SpeciesDistribution
@@ -596,7 +598,7 @@ class SpeciesDistributionSerializer(serializers.ModelSerializer):
         )
 
 
-class SaveSpeciesDistributionSerializer(serializers.ModelSerializer):
+class SaveSpeciesDistributionSerializer(BaseModelSerializer):
     species_id = serializers.IntegerField(
         required=False, allow_null=True, write_only=True
     )
@@ -618,7 +620,7 @@ class SaveSpeciesDistributionSerializer(serializers.ModelSerializer):
         )
 
 
-class SpeciesPublishingStatusSerializer(serializers.ModelSerializer):
+class SpeciesPublishingStatusSerializer(BaseModelSerializer):
     public_status = serializers.SerializerMethodField()
 
     class Meta:
@@ -639,7 +641,7 @@ class SpeciesPublishingStatusSerializer(serializers.ModelSerializer):
         return "Private"
 
 
-class SaveSpeciesPublishingStatusSerializer(serializers.ModelSerializer):
+class SaveSpeciesPublishingStatusSerializer(BaseModelSerializer):
 
     species_id = serializers.IntegerField(
         required=False, allow_null=True, write_only=True
@@ -664,7 +666,7 @@ class SaveSpeciesPublishingStatusSerializer(serializers.ModelSerializer):
         return "Private"
 
 
-class BaseSpeciesSerializer(serializers.ModelSerializer):
+class BaseSpeciesSerializer(BaseModelSerializer):
     readonly = serializers.SerializerMethodField(read_only=True)
     group_type = serializers.SerializerMethodField(read_only=True)
     conservation_status = serializers.SerializerMethodField()
@@ -923,7 +925,7 @@ class InternalSpeciesSerializer(BaseSpeciesSerializer):
         return obj.has_user_edit_mode(request)
 
 
-class CommunityDistributionSerializer(serializers.ModelSerializer):
+class CommunityDistributionSerializer(BaseModelSerializer):
 
     class Meta:
         model = CommunityDistribution
@@ -943,7 +945,7 @@ class CommunityDistributionSerializer(serializers.ModelSerializer):
         )
 
 
-class SaveCommunityDistributionSerializer(serializers.ModelSerializer):
+class SaveCommunityDistributionSerializer(BaseModelSerializer):
     community_id = serializers.IntegerField(
         required=False, allow_null=True, write_only=True
     )
@@ -971,7 +973,7 @@ class SaveCommunityDistributionSerializer(serializers.ModelSerializer):
         )
 
 
-class CommunityConservationAttributesSerializer(serializers.ModelSerializer):
+class CommunityConservationAttributesSerializer(BaseModelSerializer):
     class Meta:
         model = CommunityConservationAttributes
         fields = (
@@ -992,7 +994,7 @@ class CommunityConservationAttributesSerializer(serializers.ModelSerializer):
         )
 
 
-class SaveCommunityConservationAttributesSerializer(serializers.ModelSerializer):
+class SaveCommunityConservationAttributesSerializer(BaseModelSerializer):
     community_id = serializers.IntegerField(
         required=False, allow_null=True, write_only=True
     )
@@ -1020,7 +1022,7 @@ class SaveCommunityConservationAttributesSerializer(serializers.ModelSerializer)
         )
 
 
-class CommunityTaxonomySerializer(serializers.ModelSerializer):
+class CommunityTaxonomySerializer(BaseModelSerializer):
     text = serializers.SerializerMethodField()
 
     class Meta:
@@ -1041,7 +1043,7 @@ class CommunityTaxonomySerializer(serializers.ModelSerializer):
         return obj.community_name
 
 
-class SaveCommunityTaxonomySerializer(serializers.ModelSerializer):
+class SaveCommunityTaxonomySerializer(BaseModelSerializer):
     community_id = serializers.IntegerField(
         required=False, allow_null=True, write_only=True
     )
@@ -1060,7 +1062,7 @@ class SaveCommunityTaxonomySerializer(serializers.ModelSerializer):
         )
 
 
-class CommunityPublishingStatusSerializer(serializers.ModelSerializer):
+class CommunityPublishingStatusSerializer(BaseModelSerializer):
     public_status = serializers.SerializerMethodField()
 
     class Meta:
@@ -1081,7 +1083,7 @@ class CommunityPublishingStatusSerializer(serializers.ModelSerializer):
         return "Private"
 
 
-class SaveCommunityPublishingStatusSerializer(serializers.ModelSerializer):
+class SaveCommunityPublishingStatusSerializer(BaseModelSerializer):
 
     community_id = serializers.IntegerField(
         required=False, allow_null=True, write_only=True
@@ -1106,7 +1108,7 @@ class SaveCommunityPublishingStatusSerializer(serializers.ModelSerializer):
         return "Private"
 
 
-class BaseCommunitySerializer(serializers.ModelSerializer):
+class BaseCommunitySerializer(BaseModelSerializer):
     species = serializers.SerializerMethodField()
     group_type = serializers.SerializerMethodField(read_only=True)
     taxonomy_details = serializers.SerializerMethodField()
@@ -1267,7 +1269,7 @@ class CommunitySerializer(BaseCommunitySerializer):
             return None
 
 
-class SimpleCommunityDisplaySerializer(serializers.ModelSerializer):
+class SimpleCommunityDisplaySerializer(BaseModelSerializer):
     community_name = serializers.CharField(
         source="taxonomy.community_name", read_only=True
     )
@@ -1464,7 +1466,7 @@ class SaveCommunitySerializer(BaseCommunitySerializer):
         return super().to_internal_value(data)
 
 
-class RenameCommunitySerializer(serializers.Serializer):
+class RenameCommunitySerializer(BaseSerializer):
     community_name = serializers.CharField(required=True)
     community_migrated_id = serializers.CharField(required=True)
     community_description = serializers.CharField(
@@ -1506,13 +1508,13 @@ class CreateCommunitySerializer(BaseCommunitySerializer):
         return instance, data
 
 
-class DocumentSerializer(serializers.ModelSerializer):
+class DocumentSerializer(BaseModelSerializer):
     class Meta:
         model = SpeciesDocument
         fields = ("id", "name", "_file")
 
 
-class SpeciesDocumentSerializer(serializers.ModelSerializer):
+class SpeciesDocumentSerializer(BaseModelSerializer):
     document_category_name = serializers.SerializerMethodField()
     document_sub_category_name = serializers.SerializerMethodField()
 
@@ -1544,7 +1546,7 @@ class SpeciesDocumentSerializer(serializers.ModelSerializer):
             return obj.document_sub_category.document_sub_category_name
 
 
-class SaveSpeciesDocumentSerializer(serializers.ModelSerializer):
+class SaveSpeciesDocumentSerializer(BaseModelSerializer):
     class Meta:
         model = SpeciesDocument
         fields = (
@@ -1577,7 +1579,7 @@ class SaveSpeciesDocumentSerializer(serializers.ModelSerializer):
             return instance
 
 
-class CommunityDocumentSerializer(serializers.ModelSerializer):
+class CommunityDocumentSerializer(BaseModelSerializer):
     document_category_name = serializers.SerializerMethodField()
     document_sub_category_name = serializers.SerializerMethodField()
 
@@ -1609,7 +1611,7 @@ class CommunityDocumentSerializer(serializers.ModelSerializer):
             return obj.document_sub_category.document_sub_category_name
 
 
-class SaveCommunityDocumentSerializer(serializers.ModelSerializer):
+class SaveCommunityDocumentSerializer(BaseModelSerializer):
     class Meta:
         model = CommunityDocument
         fields = (
@@ -1654,7 +1656,7 @@ class SpeciesLogEntrySerializer(CommunicationLogEntrySerializer):
         return [[d.name, d._file.url] for d in obj.documents.all()]
 
 
-class SpeciesUserActionSerializer(serializers.ModelSerializer):
+class SpeciesUserActionSerializer(BaseModelSerializer):
     who = serializers.SerializerMethodField()
 
     class Meta:
@@ -1667,7 +1669,7 @@ class SpeciesUserActionSerializer(serializers.ModelSerializer):
         return fullname
 
 
-class ConservationThreatSerializer(serializers.ModelSerializer):
+class ConservationThreatSerializer(BaseModelSerializer):
     threat_category = serializers.SerializerMethodField()
     threat_agent = serializers.SerializerMethodField()
     current_impact_name = serializers.SerializerMethodField()
@@ -1722,7 +1724,7 @@ class ConservationThreatSerializer(serializers.ModelSerializer):
             return obj.potential_threat_onset.name
 
 
-class SaveConservationThreatSerializer(serializers.ModelSerializer):
+class SaveConservationThreatSerializer(BaseModelSerializer):
     threat_category_id = serializers.IntegerField(
         required=False, allow_null=True, write_only=True
     )
@@ -1776,7 +1778,7 @@ class CommunityLogEntrySerializer(CommunicationLogEntrySerializer):
         return [[d.name, d._file.url] for d in obj.documents.all()]
 
 
-class CommunityUserActionSerializer(serializers.ModelSerializer):
+class CommunityUserActionSerializer(BaseModelSerializer):
     who = serializers.SerializerMethodField()
 
     class Meta:
@@ -1789,13 +1791,13 @@ class CommunityUserActionSerializer(serializers.ModelSerializer):
         return fullname
 
 
-class DistrictSerializer(serializers.ModelSerializer):
+class DistrictSerializer(BaseModelSerializer):
     class Meta:
         model = District
         fields = ("id", "name", "code")
 
 
-class RegionSerializer(serializers.ModelSerializer):
+class RegionSerializer(BaseModelSerializer):
     districts = DistrictSerializer(many=True)
 
     class Meta:

@@ -11,6 +11,8 @@ from taggit.serializers import TaggitSerializer, TagListSerializerField
 
 from boranga.components.conservation_status.models import ConservationStatus
 from boranga.components.main.serializers import (
+    BaseModelSerializer,
+    BaseSerializer,
     CommunicationLogEntrySerializer,
     EmailUserSerializer,
     IntegerFieldEmptytoNullSerializerMixin,
@@ -97,7 +99,7 @@ from boranga.ledger_api_utils import retrieve_email_user
 logger = logging.getLogger("boranga")
 
 
-class OccurrenceSerializer(serializers.ModelSerializer):
+class OccurrenceSerializer(BaseModelSerializer):
     processing_status = serializers.CharField(source="get_processing_status_display")
     scientific_name = serializers.CharField(
         source="species.taxonomy.scientific_name", allow_null=True
@@ -254,7 +256,7 @@ class OccurrenceSerializer(serializers.ModelSerializer):
         return serializer.data
 
 
-class ListOccurrenceReportSerializer(serializers.ModelSerializer):
+class ListOccurrenceReportSerializer(BaseModelSerializer):
     group_type = serializers.SerializerMethodField()
     scientific_name = serializers.SerializerMethodField()
     community_name = serializers.SerializerMethodField()
@@ -325,7 +327,7 @@ class ListOccurrenceReportSerializer(serializers.ModelSerializer):
         return obj.can_user_edit(request)
 
 
-class ListInternalOccurrenceReportSerializer(serializers.ModelSerializer):
+class ListInternalOccurrenceReportSerializer(BaseModelSerializer):
     scientific_name = serializers.SerializerMethodField()
     community_name = serializers.SerializerMethodField()
     submitter = serializers.SerializerMethodField()
@@ -498,7 +500,7 @@ class ListInternalOccurrenceReportSerializer(serializers.ModelSerializer):
         return obj.ocr_geometry.filter(show_on_map=True).exists()
 
 
-class OCRHabitatCompositionSerializer(serializers.ModelSerializer):
+class OCRHabitatCompositionSerializer(BaseModelSerializer):
     land_form = serializers.MultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
     )
@@ -558,7 +560,7 @@ class OCRHabitatCompositionSerializer(serializers.ModelSerializer):
         ]
 
 
-class OCRHabitatConditionSerializer(serializers.ModelSerializer):
+class OCRHabitatConditionSerializer(BaseModelSerializer):
     obs_date = serializers.DateField(format="%Y-%m-%d", allow_null=True)
 
     class Meta:
@@ -576,7 +578,7 @@ class OCRHabitatConditionSerializer(serializers.ModelSerializer):
         )
 
 
-class OCRVegetationStructureSerializer(serializers.ModelSerializer):
+class OCRVegetationStructureSerializer(BaseModelSerializer):
 
     class Meta:
         model = OCRVegetationStructure
@@ -590,7 +592,7 @@ class OCRVegetationStructureSerializer(serializers.ModelSerializer):
         )
 
 
-class OCRFireHistorySerializer(serializers.ModelSerializer):
+class OCRFireHistorySerializer(BaseModelSerializer):
     last_fire_estimate = serializers.DateField(format="%Y-%m")
     intensity = serializers.CharField(source="intensity.name", allow_null=True)
 
@@ -606,7 +608,7 @@ class OCRFireHistorySerializer(serializers.ModelSerializer):
         )
 
 
-class OCRAssociatedSpeciesSerializer(serializers.ModelSerializer):
+class OCRAssociatedSpeciesSerializer(BaseModelSerializer):
     species_list_relates_to = serializers.CharField(
         source="species_list_relates_to.name", allow_null=True
     )
@@ -623,7 +625,7 @@ class OCRAssociatedSpeciesSerializer(serializers.ModelSerializer):
         )
 
 
-class OCRObservationDetailSerializer(serializers.ModelSerializer):
+class OCRObservationDetailSerializer(BaseModelSerializer):
     observation_method = serializers.CharField(
         source="observation_method.name", allow_null=True
     )
@@ -641,7 +643,7 @@ class OCRObservationDetailSerializer(serializers.ModelSerializer):
         )
 
 
-class OCRPlantCountSerializer(serializers.ModelSerializer):
+class OCRPlantCountSerializer(BaseModelSerializer):
     obs_date = serializers.DateField(format="%Y-%m-%d", allow_null=True)
     plant_count_method = serializers.CharField(
         source="plant_count_method.name", allow_null=True
@@ -700,7 +702,7 @@ class OCRPlantCountSerializer(serializers.ModelSerializer):
         )
 
 
-class OCRAnimalObservationSerializer(serializers.ModelSerializer):
+class OCRAnimalObservationSerializer(BaseModelSerializer):
 
     primary_detection_method = serializers.MultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
@@ -769,7 +771,7 @@ class OCRAnimalObservationSerializer(serializers.ModelSerializer):
         )
 
 
-class OCRIdentificationSerializer(serializers.ModelSerializer):
+class OCRIdentificationSerializer(BaseModelSerializer):
     permit_type = serializers.CharField(
         source="permit_type.name", read_only=True, allow_null=True
     )
@@ -804,7 +806,7 @@ class OCRIdentificationSerializer(serializers.ModelSerializer):
         )
 
 
-class OCRLocationSerializer(serializers.ModelSerializer):
+class OCRLocationSerializer(BaseModelSerializer):
     has_boundary = serializers.SerializerMethodField()
     has_points = serializers.SerializerMethodField()
     coordinate_source = serializers.CharField(
@@ -854,7 +856,7 @@ class OCRLocationSerializer(serializers.ModelSerializer):
         )
 
 
-class BaseTypeSerializer(serializers.Serializer):
+class BaseTypeSerializer(BaseSerializer):
     model_class = serializers.SerializerMethodField()
     model_id = serializers.SerializerMethodField()
 
@@ -952,7 +954,7 @@ class OccurrenceReportGeometrySerializer(BaseTypeSerializer, GeoFeatureModelSeri
         return None
 
 
-class ListOCRReportMinimalSerializer(serializers.ModelSerializer):
+class ListOCRReportMinimalSerializer(BaseModelSerializer):
     ocr_geometry = OccurrenceReportGeometrySerializer(many=True, read_only=True)
     label = serializers.SerializerMethodField(read_only=True)
     processing_status_display = serializers.CharField(
@@ -998,7 +1000,7 @@ class ListOCRReportMinimalSerializer(serializers.ModelSerializer):
         return None
 
 
-class OccurrenceUserActionSerializer(serializers.ModelSerializer):
+class OccurrenceUserActionSerializer(BaseModelSerializer):
     who = serializers.SerializerMethodField()
 
     class Meta:
@@ -1108,13 +1110,13 @@ class ListOccurrenceSerializer(OccurrenceSerializer):
         return obj.can_user_edit(request)
 
 
-class ObservationTimeSerializer(serializers.ModelSerializer):
+class ObservationTimeSerializer(BaseModelSerializer):
     class Meta:
         model = ObservationTime
         fields = ("id", "name", "order", "archived")
 
 
-class BaseOccurrenceReportSerializer(serializers.ModelSerializer):
+class BaseOccurrenceReportSerializer(BaseModelSerializer):
     readonly = serializers.SerializerMethodField(read_only=True)
     group_type = serializers.SerializerMethodField(read_only=True)
     # group_type_id = serializers.SerializerMethodField(read_only=True)
@@ -1363,13 +1365,13 @@ class CreateOccurrenceSerializer(OccurrenceSerializer):
         )
 
 
-class OccurrenceReportDeclinedDetailsSerializer(serializers.ModelSerializer):
+class OccurrenceReportDeclinedDetailsSerializer(BaseModelSerializer):
     class Meta:
         model = OccurrenceReportDeclinedDetails
         fields = "__all__"
 
 
-class OccurrenceReportApprovalDetailsSerializer(serializers.ModelSerializer):
+class OccurrenceReportApprovalDetailsSerializer(BaseModelSerializer):
     occurrence_number = serializers.CharField(
         source="occurrence.occurrence_number", allow_null=True
     )
@@ -1384,7 +1386,7 @@ class OccurrenceReportApprovalDetailsSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class OccurrenceReportProposalReferralSerializer(serializers.ModelSerializer):
+class OccurrenceReportProposalReferralSerializer(BaseModelSerializer):
     referral = serializers.SerializerMethodField()
     processing_status = serializers.CharField(source="get_processing_status_display")
     referral_comment = serializers.SerializerMethodField()
@@ -1403,7 +1405,7 @@ class OccurrenceReportProposalReferralSerializer(serializers.ModelSerializer):
         return serializer.data
 
 
-class OCRExternalRefereeInviteSerializer(serializers.ModelSerializer):
+class OCRExternalRefereeInviteSerializer(BaseModelSerializer):
     occurrence_report_id = serializers.IntegerField(required=False)
     full_name = serializers.CharField(read_only=True)
 
@@ -1626,7 +1628,7 @@ class InternalOccurrenceReportSerializer(OccurrenceReportSerializer):
         return is_new_external_contributor(obj.submitter)
 
 
-class DTOccurrenceReportReferralSerializer(serializers.ModelSerializer):
+class DTOccurrenceReportReferralSerializer(BaseModelSerializer):
     occurrence_report_number = serializers.CharField(
         source="occurrence_report.occurrence_report_number", allow_null=True
     )
@@ -1705,7 +1707,7 @@ class OccurrenceReportReferralProposalSerializer(InternalOccurrenceReportSeriali
         }
 
 
-class OccurrenceReportReferralSerializer(serializers.ModelSerializer):
+class OccurrenceReportReferralSerializer(BaseModelSerializer):
     processing_status = serializers.CharField(source="get_processing_status_display")
     can_be_completed = serializers.BooleanField()
     sent_by = serializers.SerializerMethodField()
@@ -1728,7 +1730,7 @@ class OccurrenceReportReferralSerializer(serializers.ModelSerializer):
         return None
 
 
-class SaveOCRHabitatCompositionSerializer(serializers.ModelSerializer):
+class SaveOCRHabitatCompositionSerializer(BaseModelSerializer):
     # write_only removed from below as the serializer will not return that field in serializer.data
     occurrence_report_id = serializers.IntegerField(required=False, allow_null=True)
     land_form = serializers.MultipleChoiceField(
@@ -1768,7 +1770,7 @@ class SaveOCRHabitatCompositionSerializer(serializers.ModelSerializer):
         ).choices
 
 
-class SaveOCRHabitatConditionSerializer(serializers.ModelSerializer):
+class SaveOCRHabitatConditionSerializer(BaseModelSerializer):
     # occurrence_report_id = serializers.IntegerField(required=False, allow_null=True, write_only= True)
     # write_only removed from below as the serializer will not return that field in serializer.data
     occurrence_report_id = serializers.IntegerField(required=False, allow_null=True)
@@ -1824,7 +1826,7 @@ class SaveBeforeSubmitOCRHabitatConditionSerializer(SaveOCRHabitatConditionSeria
         return attrs
 
 
-class SaveOCRVegetationStructureSerializer(serializers.ModelSerializer):
+class SaveOCRVegetationStructureSerializer(BaseModelSerializer):
     # write_only removed from below as the serializer will not return that field in serializer.data
     occurrence_report_id = serializers.IntegerField(required=False, allow_null=True)
 
@@ -1840,7 +1842,7 @@ class SaveOCRVegetationStructureSerializer(serializers.ModelSerializer):
         )
 
 
-class SaveOCRFireHistorySerializer(serializers.ModelSerializer):
+class SaveOCRFireHistorySerializer(BaseModelSerializer):
     # occurrence_report_id = serializers.IntegerField(required=False, allow_null=True, write_only= True)
     # write_only removed from below as the serializer will not return that field in serializer.data
     last_fire_estimate = serializers.DateField(
@@ -1860,7 +1862,7 @@ class SaveOCRFireHistorySerializer(serializers.ModelSerializer):
         )
 
 
-class SaveOCRAssociatedSpeciesSerializer(serializers.ModelSerializer):
+class SaveOCRAssociatedSpeciesSerializer(BaseModelSerializer):
     occurrence_report_id = serializers.IntegerField(required=False, allow_null=True)
     species_list_relates_to_id = serializers.IntegerField(
         required=False, allow_null=True
@@ -1877,7 +1879,7 @@ class SaveOCRAssociatedSpeciesSerializer(serializers.ModelSerializer):
         )
 
 
-class SaveOCRObservationDetailSerializer(serializers.ModelSerializer):
+class SaveOCRObservationDetailSerializer(BaseModelSerializer):
     occurrence_report_id = serializers.IntegerField(required=False, allow_null=True)
     observation_method_id = serializers.IntegerField(required=False, allow_null=True)
 
@@ -1894,7 +1896,7 @@ class SaveOCRObservationDetailSerializer(serializers.ModelSerializer):
 
 
 class SaveOCRPlantCountSerializer(
-    IntegerFieldEmptytoNullSerializerMixin, serializers.ModelSerializer
+    IntegerFieldEmptytoNullSerializerMixin, BaseModelSerializer
 ):
     occurrence_report_id = serializers.IntegerField(required=False, allow_null=True)
     plant_count_method_id = serializers.IntegerField(required=False, allow_null=True)
@@ -1944,7 +1946,7 @@ class SaveOCRPlantCountSerializer(
 
 
 class SaveOCRAnimalObservationSerializer(
-    IntegerFieldEmptytoNullSerializerMixin, serializers.ModelSerializer
+    IntegerFieldEmptytoNullSerializerMixin, BaseModelSerializer
 ):
     occurrence_report_id = serializers.IntegerField(required=False, allow_null=True)
     primary_detection_method = serializers.MultipleChoiceField(
@@ -1998,7 +2000,7 @@ class SaveOCRAnimalObservationSerializer(
         )
 
 
-class SaveOCRIdentificationSerializer(serializers.ModelSerializer):
+class SaveOCRIdentificationSerializer(BaseModelSerializer):
     occurrence_report_id = serializers.IntegerField(required=False, allow_null=True)
     identification_certainty_id = serializers.IntegerField(
         required=False, allow_null=True
@@ -2024,7 +2026,7 @@ class SaveOCRIdentificationSerializer(serializers.ModelSerializer):
         )
 
 
-class SaveOCRLocationSerializer(serializers.ModelSerializer):
+class SaveOCRLocationSerializer(BaseModelSerializer):
     region_id = serializers.IntegerField(required=False, allow_null=True)
     district_id = serializers.IntegerField(required=False, allow_null=True)
     occurrence_report_id = serializers.IntegerField(required=True, allow_null=False)
@@ -2072,7 +2074,7 @@ class SaveOCRLocationSerializer(serializers.ModelSerializer):
         )
 
 
-class OCRObserverDetailSerializer(serializers.ModelSerializer):
+class OCRObserverDetailSerializer(BaseModelSerializer):
     role = serializers.CharField(source="role.item", allow_null=True, read_only=True)
     role_id = serializers.IntegerField(allow_null=False, required=True)
     category = serializers.CharField(
@@ -2232,7 +2234,7 @@ class SaveOccurrenceReportSerializer(BaseOccurrenceReportSerializer):
         return super().to_internal_value(data)
 
 
-class OccurrenceReportUserActionSerializer(serializers.ModelSerializer):
+class OccurrenceReportUserActionSerializer(BaseModelSerializer):
     who = serializers.SerializerMethodField()
 
     class Meta:
@@ -2257,7 +2259,7 @@ class OccurrenceReportLogEntrySerializer(CommunicationLogEntrySerializer):
         return [[d.name, d._file.url] for d in obj.documents.all()]
 
 
-class OccurrenceReportDocumentSerializer(serializers.ModelSerializer):
+class OccurrenceReportDocumentSerializer(BaseModelSerializer):
     document_category_name = serializers.SerializerMethodField()
     document_sub_category_name = serializers.SerializerMethodField()
 
@@ -2290,7 +2292,7 @@ class OccurrenceReportDocumentSerializer(serializers.ModelSerializer):
             return obj.document_sub_category.document_sub_category_name
 
 
-class SaveOccurrenceReportDocumentSerializer(serializers.ModelSerializer):
+class SaveOccurrenceReportDocumentSerializer(BaseModelSerializer):
     class Meta:
         model = OccurrenceReportDocument
         fields = (
@@ -2319,8 +2321,8 @@ class SaveOccurrenceReportDocumentSerializer(serializers.ModelSerializer):
                     and field_name not in self.Meta.read_only_fields
                 ):
                     setattr(instance, field_name, validated_data[field_name])
-            instance.save(*args, **kwargs)
-            return instance
+            self.instance = instance
+            return super().save(*args, **kwargs)
 
 
 class InternalSaveOccurrenceReportDocumentSerializer(
@@ -2334,7 +2336,7 @@ class InternalSaveOccurrenceReportDocumentSerializer(
         read_only_fields = SaveOccurrenceReportDocumentSerializer.Meta.read_only_fields
 
 
-class OccurrenceDocumentSerializer(serializers.ModelSerializer):
+class OccurrenceDocumentSerializer(BaseModelSerializer):
     document_category_name = serializers.SerializerMethodField()
     document_sub_category_name = serializers.SerializerMethodField()
 
@@ -2366,7 +2368,7 @@ class OccurrenceDocumentSerializer(serializers.ModelSerializer):
             return obj.document_sub_category.document_sub_category_name
 
 
-class SaveOccurrenceDocumentSerializer(serializers.ModelSerializer):
+class SaveOccurrenceDocumentSerializer(BaseModelSerializer):
     class Meta:
         model = OccurrenceDocument
         fields = (
@@ -2399,7 +2401,7 @@ class SaveOccurrenceDocumentSerializer(serializers.ModelSerializer):
             return instance
 
 
-class OCRConservationThreatSerializer(serializers.ModelSerializer):
+class OCRConservationThreatSerializer(BaseModelSerializer):
     threat_category = serializers.SerializerMethodField()
     threat_agent = serializers.SerializerMethodField()
     current_impact_name = serializers.SerializerMethodField()
@@ -2454,7 +2456,7 @@ class OCRConservationThreatSerializer(serializers.ModelSerializer):
             return obj.potential_threat_onset.name
 
 
-class SaveOCRConservationThreatSerializer(serializers.ModelSerializer):
+class SaveOCRConservationThreatSerializer(BaseModelSerializer):
 
     threat_category_id = serializers.IntegerField(
         required=False, allow_null=True, write_only=True
@@ -2499,13 +2501,13 @@ class SaveOCRConservationThreatSerializer(serializers.ModelSerializer):
             return instance
 
 
-class OccurrenceReportAmendmentRequestDocumentSerializer(serializers.ModelSerializer):
+class OccurrenceReportAmendmentRequestDocumentSerializer(BaseModelSerializer):
     class Meta:
         model = OccurrenceReportAmendmentRequestDocument
         fields = ("id", "name", "_file")
 
 
-class OccurrenceReportAmendmentRequestSerializer(serializers.ModelSerializer):
+class OccurrenceReportAmendmentRequestSerializer(BaseModelSerializer):
     amendment_request_documents = OccurrenceReportAmendmentRequestDocumentSerializer(
         many=True, read_only=True
     )
@@ -2524,7 +2526,7 @@ class OccurrenceReportAmendmentRequestSerializer(serializers.ModelSerializer):
         ]
 
 
-class OCCConservationThreatSerializer(serializers.ModelSerializer):
+class OCCConservationThreatSerializer(BaseModelSerializer):
     threat_category = serializers.SerializerMethodField()
     threat_agent = serializers.SerializerMethodField()
     current_impact_name = serializers.SerializerMethodField()
@@ -2592,7 +2594,7 @@ class OCCConservationThreatSerializer(serializers.ModelSerializer):
             return obj.occurrence_report_threat.threat_number
 
 
-class SaveOCCConservationThreatSerializer(serializers.ModelSerializer):
+class SaveOCCConservationThreatSerializer(BaseModelSerializer):
 
     threat_category_id = serializers.IntegerField(
         required=False, allow_null=True, write_only=True
@@ -2641,23 +2643,23 @@ class SaveOCCConservationThreatSerializer(serializers.ModelSerializer):
             return instance
 
 
-class ProposeDeclineSerializer(serializers.Serializer):
+class ProposeDeclineSerializer(BaseSerializer):
     reason = serializers.CharField()
     cc_email = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
 
-class BackToAssessorSerializer(serializers.Serializer):
+class BackToAssessorSerializer(BaseSerializer):
     reason = serializers.CharField()
 
 
-class ProposeApproveSerializer(serializers.Serializer):
+class ProposeApproveSerializer(BaseSerializer):
     occurrence_id = serializers.IntegerField(allow_null=True)
     new_occurrence_name = serializers.CharField(allow_blank=True)
     details = serializers.CharField()
     cc_email = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
 
-class SaveOccurrenceSerializer(serializers.ModelSerializer):
+class SaveOccurrenceSerializer(BaseModelSerializer):
     species_id = serializers.IntegerField(
         required=False, allow_null=True, write_only=True
     )
@@ -2728,7 +2730,7 @@ class SaveOccurrenceSerializer(serializers.ModelSerializer):
         return super().to_internal_value(data)
 
 
-class OCCHabitatCompositionSerializer(serializers.ModelSerializer):
+class OCCHabitatCompositionSerializer(BaseModelSerializer):
 
     land_form = serializers.MultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
@@ -2781,7 +2783,7 @@ class OCCHabitatCompositionSerializer(serializers.ModelSerializer):
             )
 
 
-class OCCHabitatConditionSerializer(serializers.ModelSerializer):
+class OCCHabitatConditionSerializer(BaseModelSerializer):
 
     copied_ocr = serializers.SerializerMethodField()
     obs_date = serializers.DateField(format="%Y-%m-%d", allow_null=True)
@@ -2808,7 +2810,7 @@ class OCCHabitatConditionSerializer(serializers.ModelSerializer):
             )
 
 
-class OCCVegetationStructureSerializer(serializers.ModelSerializer):
+class OCCVegetationStructureSerializer(BaseModelSerializer):
 
     copied_ocr = serializers.SerializerMethodField()
 
@@ -2831,7 +2833,7 @@ class OCCVegetationStructureSerializer(serializers.ModelSerializer):
             )
 
 
-class SaveOCCVegetationStructureSerializer(serializers.ModelSerializer):
+class SaveOCCVegetationStructureSerializer(BaseModelSerializer):
     # write_only removed from below as the serializer will not return that field in serializer.data
     occurrence_id = serializers.IntegerField(required=False, allow_null=True)
 
@@ -2847,7 +2849,7 @@ class SaveOCCVegetationStructureSerializer(serializers.ModelSerializer):
         )
 
 
-class OCCFireHistorySerializer(serializers.ModelSerializer):
+class OCCFireHistorySerializer(BaseModelSerializer):
     last_fire_estimate = serializers.DateField(format="%Y-%m")
     copied_ocr = serializers.SerializerMethodField()
     intensity = serializers.CharField(source="intensity.name", allow_null=True)
@@ -2871,7 +2873,7 @@ class OCCFireHistorySerializer(serializers.ModelSerializer):
             )
 
 
-class OCCAssociatedSpeciesSerializer(serializers.ModelSerializer):
+class OCCAssociatedSpeciesSerializer(BaseModelSerializer):
 
     copied_ocr = serializers.SerializerMethodField()
 
@@ -2892,7 +2894,7 @@ class OCCAssociatedSpeciesSerializer(serializers.ModelSerializer):
             )
 
 
-class OCCObservationDetailSerializer(serializers.ModelSerializer):
+class OCCObservationDetailSerializer(BaseModelSerializer):
 
     copied_ocr = serializers.SerializerMethodField()
     observation_method = serializers.CharField(
@@ -2919,7 +2921,7 @@ class OCCObservationDetailSerializer(serializers.ModelSerializer):
             )
 
 
-class OCCPlantCountSerializer(serializers.ModelSerializer):
+class OCCPlantCountSerializer(BaseModelSerializer):
     copied_ocr = serializers.SerializerMethodField()
     obs_date = serializers.DateField(format="%Y-%m-%d", allow_null=True)
     plant_count_method = serializers.CharField(
@@ -2984,7 +2986,7 @@ class OCCPlantCountSerializer(serializers.ModelSerializer):
             return obj.copied_ocr_plant_count.occurrence_report.occurrence_report_number
 
 
-class OCCAnimalObservationSerializer(serializers.ModelSerializer):
+class OCCAnimalObservationSerializer(BaseModelSerializer):
 
     primary_detection_method = serializers.MultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
@@ -3061,7 +3063,7 @@ class OCCAnimalObservationSerializer(serializers.ModelSerializer):
             )
 
 
-class OCCIdentificationSerializer(serializers.ModelSerializer):
+class OCCIdentificationSerializer(BaseModelSerializer):
     permit_type = serializers.CharField(
         source="permit_type.name", read_only=True, allow_null=True
     )
@@ -3104,7 +3106,7 @@ class OCCIdentificationSerializer(serializers.ModelSerializer):
             )
 
 
-class OCCContactDetailSerializer(serializers.ModelSerializer):
+class OCCContactDetailSerializer(BaseModelSerializer):
 
     class Meta:
         model = OCCContactDetail
@@ -3138,7 +3140,7 @@ class OCCContactDetailSerializer(serializers.ModelSerializer):
             return instance
 
 
-class SaveOCCHabitatCompositionSerializer(serializers.ModelSerializer):
+class SaveOCCHabitatCompositionSerializer(BaseModelSerializer):
     # write_only removed from below as the serializer will not return that field in serializer.data
     occurrence_id = serializers.IntegerField(required=False, allow_null=True)
     land_form = serializers.MultipleChoiceField(
@@ -3178,7 +3180,7 @@ class SaveOCCHabitatCompositionSerializer(serializers.ModelSerializer):
         ).choices
 
 
-class SaveOCCHabitatConditionSerializer(serializers.ModelSerializer):
+class SaveOCCHabitatConditionSerializer(BaseModelSerializer):
     # occurrence_id = serializers.IntegerField(required=False, allow_null=True, write_only= True)
     # write_only removed from below as the serializer will not return that field in serializer.data
     occurrence_id = serializers.IntegerField(required=False, allow_null=True)
@@ -3199,7 +3201,7 @@ class SaveOCCHabitatConditionSerializer(serializers.ModelSerializer):
         )
 
 
-class SaveOCCFireHistorySerializer(serializers.ModelSerializer):
+class SaveOCCFireHistorySerializer(BaseModelSerializer):
     # occurrence_id = serializers.IntegerField(required=False, allow_null=True, write_only= True)
     # write_only removed from below as the serializer will not return that field in serializer.data
     last_fire_estimate = serializers.DateField(
@@ -3219,7 +3221,7 @@ class SaveOCCFireHistorySerializer(serializers.ModelSerializer):
         )
 
 
-class SaveOCCAssociatedSpeciesSerializer(serializers.ModelSerializer):
+class SaveOCCAssociatedSpeciesSerializer(BaseModelSerializer):
     occurrence_id = serializers.IntegerField(required=False, allow_null=True)
 
     class Meta:
@@ -3232,7 +3234,7 @@ class SaveOCCAssociatedSpeciesSerializer(serializers.ModelSerializer):
         )
 
 
-class SaveOCCObservationDetailSerializer(serializers.ModelSerializer):
+class SaveOCCObservationDetailSerializer(BaseModelSerializer):
     occurrence_id = serializers.IntegerField(required=False, allow_null=True)
     observation_method_id = serializers.IntegerField(required=False, allow_null=True)
 
@@ -3249,7 +3251,7 @@ class SaveOCCObservationDetailSerializer(serializers.ModelSerializer):
 
 
 class SaveOCCPlantCountSerializer(
-    IntegerFieldEmptytoNullSerializerMixin, serializers.ModelSerializer
+    IntegerFieldEmptytoNullSerializerMixin, BaseModelSerializer
 ):
     occurrence_id = serializers.IntegerField(required=False, allow_null=True)
     plant_count_method_id = serializers.IntegerField(required=False, allow_null=True)
@@ -3299,7 +3301,7 @@ class SaveOCCPlantCountSerializer(
 
 
 class SaveOCCAnimalObservationSerializer(
-    IntegerFieldEmptytoNullSerializerMixin, serializers.ModelSerializer
+    IntegerFieldEmptytoNullSerializerMixin, BaseModelSerializer
 ):
     occurrence_id = serializers.IntegerField(required=False, allow_null=True)
     primary_detection_method = serializers.MultipleChoiceField(
@@ -3355,7 +3357,7 @@ class SaveOCCAnimalObservationSerializer(
         )
 
 
-class SaveOCCIdentificationSerializer(serializers.ModelSerializer):
+class SaveOCCIdentificationSerializer(BaseModelSerializer):
     occurrence_id = serializers.IntegerField(required=False, allow_null=True)
     identification_certainty_id = serializers.IntegerField(
         required=False, allow_null=True
@@ -3381,7 +3383,7 @@ class SaveOCCIdentificationSerializer(serializers.ModelSerializer):
         )
 
 
-class OCCLocationSerializer(serializers.ModelSerializer):
+class OCCLocationSerializer(BaseModelSerializer):
     has_boundary = serializers.SerializerMethodField()
     has_points = serializers.SerializerMethodField()
     copied_ocr = serializers.SerializerMethodField()
@@ -3584,7 +3586,7 @@ class OccurrenceGeometrySerializer(BaseTypeSerializer, GeoFeatureModelSerializer
         return None
 
 
-class ListOCCMinimalSerializer(serializers.ModelSerializer):
+class ListOCCMinimalSerializer(BaseModelSerializer):
     occ_geometry = OccurrenceGeometrySerializer(many=True, read_only=True)
     label = serializers.SerializerMethodField(read_only=True)
     processing_status_display = serializers.CharField(
@@ -3629,7 +3631,7 @@ class ListOCCMinimalSerializer(serializers.ModelSerializer):
         return None
 
 
-class SaveOCCLocationSerializer(serializers.ModelSerializer):
+class SaveOCCLocationSerializer(BaseModelSerializer):
     region_id = serializers.IntegerField(required=False, allow_null=True)
     district_id = serializers.IntegerField(required=False, allow_null=True)
     occurrence_id = serializers.IntegerField(required=False, allow_null=True)
@@ -3695,7 +3697,7 @@ class OccurrenceGeometrySaveSerializer(GeoFeatureModelSerializer):
         read_only_fields = ("id",)
 
 
-class BaseOccurrenceTenureSerializer(serializers.ModelSerializer):
+class BaseOccurrenceTenureSerializer(BaseModelSerializer):
     vesting = serializers.SerializerMethodField()
     purpose = serializers.SerializerMethodField()
     featureid = serializers.SerializerMethodField()
@@ -3811,7 +3813,7 @@ class ListOccurrenceTenureSerializer(BaseOccurrenceTenureSerializer):
             return obj.historical_occurrence
 
 
-class OccurrenceTenureSaveSerializer(serializers.ModelSerializer):
+class OccurrenceTenureSaveSerializer(BaseModelSerializer):
     vesting_id = serializers.IntegerField(required=False, allow_null=True)
     purpose_id = serializers.IntegerField(required=False, allow_null=True)
 
@@ -3845,7 +3847,7 @@ class OccurrenceTenureSaveSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Cannot create new Occurrence Tenure")
 
 
-class OccurrenceSiteSerializer(serializers.ModelSerializer):
+class OccurrenceSiteSerializer(BaseModelSerializer):
 
     occurrence_number = serializers.SerializerMethodField()
     related_occurrence_report_numbers = serializers.SerializerMethodField()
@@ -3920,7 +3922,7 @@ class OccurrenceSiteSerializer(serializers.ModelSerializer):
             return datum
 
 
-class SaveOccurrenceSiteSerializer(serializers.ModelSerializer):
+class SaveOccurrenceSiteSerializer(BaseModelSerializer):
 
     class Meta:
         model = OccurrenceSite
@@ -4034,7 +4036,7 @@ class SiteGeometrySerializer(GeoFeatureModelSerializer):
         return None
 
 
-class SchemaColumnLookupFilterValueNestedSerializer(serializers.ModelSerializer):
+class SchemaColumnLookupFilterValueNestedSerializer(BaseModelSerializer):
     id = serializers.IntegerField(allow_null=True, required=False)
     filter_value = serializers.CharField(
         allow_null=True, allow_blank=True, required=False
@@ -4047,7 +4049,7 @@ class SchemaColumnLookupFilterValueNestedSerializer(serializers.ModelSerializer)
         validators = []  # Validation is done in the top parent serializer
 
 
-class SchemaColumnLookupFilterNestedSerializer(serializers.ModelSerializer):
+class SchemaColumnLookupFilterNestedSerializer(BaseModelSerializer):
     id = serializers.IntegerField(allow_null=True, required=False)
     values = SchemaColumnLookupFilterValueNestedSerializer(
         many=True, allow_null=True, required=False
@@ -4060,16 +4062,14 @@ class SchemaColumnLookupFilterNestedSerializer(serializers.ModelSerializer):
         validators = []  # Validation is done in the top parent serializer
 
 
-class OccurrenceReportBulkImportSchemaColumnSerializer(serializers.ModelSerializer):
+class OccurrenceReportBulkImportSchemaColumnSerializer(BaseModelSerializer):
     class Meta:
         model = OccurrenceReportBulkImportSchemaColumn
         fields = "__all__"
         read_only_fields = ("id",)
 
 
-class OccurrenceReportBulkImportSchemaColumnNestedSerializer(
-    serializers.ModelSerializer
-):
+class OccurrenceReportBulkImportSchemaColumnNestedSerializer(BaseModelSerializer):
     id = serializers.IntegerField(allow_null=True, required=False)
     order = serializers.IntegerField()
     foreign_key_count = serializers.IntegerField(read_only=True)
@@ -4101,7 +4101,7 @@ class OccurrenceReportBulkImportSchemaColumnNestedSerializer(
         return request.user.is_superuser or is_django_admin(request)
 
 
-class OccurrenceReportBulkImportSchemaListSerializer(serializers.ModelSerializer):
+class OccurrenceReportBulkImportSchemaListSerializer(BaseModelSerializer):
     tags = TagListSerializerField(allow_null=True, required=False)
     group_type_display = serializers.CharField(source="group_type.name", read_only=True)
     version = serializers.CharField(read_only=True)
@@ -4233,7 +4233,7 @@ class OccurrenceReportBulkImportSchemaOccurrenceApproverSerializer(
         read_only_fields = ("id",)
 
 
-class OccurrenceReportBulkImportTaskSerializer(serializers.ModelSerializer):
+class OccurrenceReportBulkImportTaskSerializer(BaseModelSerializer):
     estimated_processing_time_human_readable = serializers.CharField(read_only=True)
     total_time_taken_human_readable = serializers.CharField(read_only=True)
     file_size_megabytes = serializers.CharField(read_only=True)
@@ -4313,7 +4313,7 @@ class OccurrenceReportBulkImportTaskSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-class AssociatedSpeciesTaxonomySerializer(serializers.ModelSerializer):
+class AssociatedSpeciesTaxonomySerializer(BaseModelSerializer):
     id = serializers.IntegerField(read_only=True)
     scientific_name = serializers.CharField(
         source="taxonomy.scientific_name", read_only=True
@@ -4339,7 +4339,7 @@ class AssociatedSpeciesTaxonomySerializer(serializers.ModelSerializer):
         )
 
 
-class UpdateAssociatedSpeciesTaxonomySerializer(serializers.ModelSerializer):
+class UpdateAssociatedSpeciesTaxonomySerializer(BaseModelSerializer):
     species_role_id = serializers.IntegerField(
         write_only=True, required=False, allow_null=True
     )
@@ -4357,7 +4357,7 @@ class UpdateAssociatedSpeciesTaxonomySerializer(serializers.ModelSerializer):
         read_only_fields = ("id",)
 
 
-class SpeciesRoleSerializer(serializers.ModelSerializer):
+class SpeciesRoleSerializer(BaseModelSerializer):
     id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(read_only=True)
 

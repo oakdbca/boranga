@@ -3,6 +3,7 @@ import logging
 from rest_framework import serializers
 
 from boranga.components.main.serializers import (
+    BaseModelSerializer,
     CommunicationLogEntrySerializer,
     EmailUserSerializer,
 )
@@ -27,7 +28,7 @@ from boranga.ledger_api_utils import retrieve_email_user
 logger = logging.getLogger(__name__)
 
 
-class ListMeetingSerializer(serializers.ModelSerializer):
+class ListMeetingSerializer(BaseModelSerializer):
     location = serializers.SerializerMethodField()
     processing_status = serializers.CharField(source="get_processing_status_display")
     can_user_edit = serializers.SerializerMethodField()
@@ -65,7 +66,7 @@ class ListMeetingSerializer(serializers.ModelSerializer):
         return obj.can_user_edit and is_conservation_status_approver(request)
 
 
-class CreateMeetingSerializer(serializers.ModelSerializer):
+class CreateMeetingSerializer(BaseModelSerializer):
 
     class Meta:
         model = Meeting
@@ -73,7 +74,7 @@ class CreateMeetingSerializer(serializers.ModelSerializer):
         read_only_fields = ("id",)
 
 
-class ListAgendaItemSerializer(serializers.ModelSerializer):
+class ListAgendaItemSerializer(BaseModelSerializer):
     group_type = serializers.SerializerMethodField(read_only=True)
     conservation_status_number = serializers.SerializerMethodField(read_only=True)
     scientific_name = serializers.SerializerMethodField(read_only=True)
@@ -121,7 +122,7 @@ class ListAgendaItemSerializer(serializers.ModelSerializer):
             return ""
 
 
-class AgendaItemSerializer(serializers.ModelSerializer):
+class AgendaItemSerializer(BaseModelSerializer):
     class Meta:
         model = AgendaItem
         fields = (
@@ -133,7 +134,7 @@ class AgendaItemSerializer(serializers.ModelSerializer):
         read_only_fields = ("order", "id")
 
 
-class MeetingSerializer(serializers.ModelSerializer):
+class MeetingSerializer(BaseModelSerializer):
     processing_status_display = serializers.SerializerMethodField(read_only=True)
     submitter = serializers.SerializerMethodField(read_only=True)
     start_date = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
@@ -261,7 +262,7 @@ class MeetingSerializer(serializers.ModelSerializer):
         return obj.can_user_reinstate
 
 
-class SaveMeetingSerializer(serializers.ModelSerializer):
+class SaveMeetingSerializer(BaseModelSerializer):
     location_id = serializers.IntegerField(
         required=False, allow_null=True, write_only=True
     )
@@ -289,7 +290,7 @@ class SaveMeetingSerializer(serializers.ModelSerializer):
         read_only_fields = ("id",)
 
 
-class EditMeetingSerializer(serializers.ModelSerializer):
+class EditMeetingSerializer(BaseModelSerializer):
 
     class Meta:
         model = Meeting
@@ -319,7 +320,7 @@ class MeetingLogEntrySerializer(CommunicationLogEntrySerializer):
         return [[d.name, d._file.url] for d in obj.documents.all()]
 
 
-class MeetingUserActionSerializer(serializers.ModelSerializer):
+class MeetingUserActionSerializer(BaseModelSerializer):
     who = serializers.SerializerMethodField()
 
     class Meta:
@@ -332,7 +333,7 @@ class MeetingUserActionSerializer(serializers.ModelSerializer):
         return fullname
 
 
-class MinutesSerializer(serializers.ModelSerializer):
+class MinutesSerializer(BaseModelSerializer):
     document_category_name = serializers.SerializerMethodField()
     document_sub_category_name = serializers.SerializerMethodField()
 
@@ -364,7 +365,7 @@ class MinutesSerializer(serializers.ModelSerializer):
             return obj.document_sub_category.document_sub_category_name
 
 
-class SaveMinutesSerializer(serializers.ModelSerializer):
+class SaveMinutesSerializer(BaseModelSerializer):
     class Meta:
         model = Minutes
         fields = (
@@ -397,7 +398,7 @@ class SaveMinutesSerializer(serializers.ModelSerializer):
             return instance
 
 
-class CommitteeMembersSerializer(serializers.ModelSerializer):
+class CommitteeMembersSerializer(BaseModelSerializer):
 
     class Meta:
         model = CommitteeMembers
@@ -405,7 +406,7 @@ class CommitteeMembersSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "email")
 
 
-class CommitteeSerializer(serializers.ModelSerializer):
+class CommitteeSerializer(BaseModelSerializer):
 
     class Meta:
         model = Committee
