@@ -1276,6 +1276,7 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
     def copy(self, request_user_id):
         ocr_copy = OccurrenceReport.objects.get(id=self.id)
         ocr_copy.pk = None
+        ocr_copy.migrated_from_id = None
         ocr_copy.processing_status = OccurrenceReport.PROCESSING_STATUS_DRAFT
         ocr_copy.customer_status = OccurrenceReport.CUSTOMER_STATUS_DRAFT
         ocr_copy.occurrence_report_number = ""
