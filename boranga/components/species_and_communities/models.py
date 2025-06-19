@@ -20,6 +20,7 @@ from pyproj import Geod
 
 from boranga.components.main.models import (
     ArchivableModel,
+    BaseModel,
     CommunicationsLogEntry,
     Document,
     OrderedArchivableManager,
@@ -54,7 +55,7 @@ def update_community_comms_log_filename(instance, filename):
     return f"{settings.MEDIA_APP_DIR}/community/{instance.log_entry.community.id}/communications/{filename}"
 
 
-class Region(models.Model):
+class Region(BaseModel):
     name = models.CharField(
         unique=True, default=None, max_length=200, validators=[no_commas_validator]
     )
@@ -68,7 +69,7 @@ class Region(models.Model):
         return self.name
 
 
-class District(models.Model):
+class District(BaseModel):
     name = models.CharField(
         unique=True, max_length=200, validators=[no_commas_validator]
     )
@@ -86,7 +87,7 @@ class District(models.Model):
         return self.name
 
 
-class GroupType(models.Model):
+class GroupType(BaseModel):
     """
     The three types of group managed by Boranga: fauna, flora and communities. These are the basis
     for all other models in Species and Communities.
@@ -136,7 +137,7 @@ class GroupType(models.Model):
         ).value_list("kingdom_name", flat=True)
 
 
-class Kingdom(models.Model):
+class Kingdom(BaseModel):
     """
     create GroupType related Kingdoms matching the NOMOS api kingdom name
     """
@@ -158,7 +159,7 @@ class Kingdom(models.Model):
         return self.kingdom_name
 
 
-class Genus(models.Model):
+class Genus(BaseModel):
     """
     # list derived from WACensus
 
@@ -179,7 +180,7 @@ class Genus(models.Model):
         return str(self.name)
 
 
-class TaxonomyRank(models.Model):
+class TaxonomyRank(BaseModel):
     """
     Description from wacensus, to get the Kingdomwise taxon rank for particular taxon_name_id
 
@@ -203,7 +204,7 @@ class TaxonomyRank(models.Model):
         return str(self.rank_name)
 
 
-class Taxonomy(models.Model):
+class Taxonomy(BaseModel):
     """
     Description from wacensus, to get the main name then fill in everything else
 
@@ -286,7 +287,7 @@ class Taxonomy(models.Model):
             return ""
 
 
-class TaxonVernacular(models.Model):
+class TaxonVernacular(BaseModel):
     """
     Common Name for Taxon i.e Species(flora/Fauna)
     Used by:
@@ -308,7 +309,7 @@ class TaxonVernacular(models.Model):
         return str(self.vernacular_name)
 
 
-class TaxonPreviousName(models.Model):
+class TaxonPreviousName(BaseModel):
     """
     Previous Name(old name) of taxon
     """
@@ -326,7 +327,7 @@ class TaxonPreviousName(models.Model):
         return str(self.previous_scientific_name)
 
 
-class ClassificationSystem(models.Model):
+class ClassificationSystem(BaseModel):
     """
     Classification Suystem for a taxon
 
@@ -345,7 +346,7 @@ class ClassificationSystem(models.Model):
         return str(self.class_desc)
 
 
-class InformalGroup(models.Model):
+class InformalGroup(BaseModel):
     """
     Classification informal group of taxon which is also derived from taxon
     """
@@ -1070,7 +1071,7 @@ class SpeciesLogDocument(Document):
     class Meta:
         app_label = "boranga"
 
-    def get_parent_instance(self) -> models.Model:
+    def get_parent_instance(self) -> BaseModel:
         return self.log_entry
 
 
@@ -1146,7 +1147,7 @@ class SpeciesUserAction(UserAction):
     )
 
 
-class SpeciesDistribution(models.Model):
+class SpeciesDistribution(BaseModel):
     """
     All the different locations where this species can be found.
 
@@ -1872,7 +1873,7 @@ class Community(RevisionedMixin):
         return new_community
 
 
-class CommunityTaxonomy(models.Model):
+class CommunityTaxonomy(BaseModel):
     """
     Description from wacensus, to get the main name then fill in everything else
 
@@ -1918,7 +1919,7 @@ class CommunityLogDocument(Document):
     class Meta:
         app_label = "boranga"
 
-    def get_parent_instance(self) -> models.Model:
+    def get_parent_instance(self) -> BaseModel:
         return self.log_entry
 
 
@@ -1980,7 +1981,7 @@ class CommunityUserAction(UserAction):
     )
 
 
-class CommunityDistribution(models.Model):
+class CommunityDistribution(BaseModel):
     """
     All the different locations where this community can be found.
 
@@ -2146,7 +2147,7 @@ class SpeciesDocument(Document):
         else:
             super().save(*args, **kwargs)
 
-    def get_parent_instance(self) -> models.Model:
+    def get_parent_instance(self) -> BaseModel:
         return self.species
 
     @transaction.atomic
@@ -2218,7 +2219,7 @@ class CommunityDocument(Document):
         else:
             super().save(*args, **kwargs)
 
-    def get_parent_instance(self) -> models.Model:
+    def get_parent_instance(self) -> BaseModel:
         return self.community
 
     @transaction.atomic
@@ -2434,7 +2435,7 @@ class ConservationThreat(RevisionedMixin):
             return self.community.community_number
 
 
-class SpeciesPublishingStatus(models.Model):
+class SpeciesPublishingStatus(BaseModel):
     """
     The public publishing status of a species instance and its sections.
 
@@ -2467,7 +2468,7 @@ class SpeciesPublishingStatus(models.Model):
         return str(self.species)
 
 
-class CommunityPublishingStatus(models.Model):
+class CommunityPublishingStatus(BaseModel):
     """
     The public publishing status of a community instance and its sections.
 
@@ -2563,7 +2564,7 @@ class PostFireHabitatInteraction(OrderedModel, ArchivableModel):
         return str(self.name)
 
 
-class SpeciesConservationAttributes(models.Model):
+class SpeciesConservationAttributes(BaseModel):
     """
     Species conservation attributes data.
 
@@ -2668,7 +2669,7 @@ class SpeciesConservationAttributes(models.Model):
         return string
 
 
-class CommunityConservationAttributes(models.Model):
+class CommunityConservationAttributes(BaseModel):
     """
     Community conservation attributes data.
 
@@ -2717,7 +2718,7 @@ class CommunityConservationAttributes(models.Model):
         return string
 
 
-class SystemEmailGroup(models.Model):
+class SystemEmailGroup(BaseModel):
     AREA_CONSERVATION_STATUS = "conservation_status"
     AREA_OCCURRENCE = "occurrence"
     AREA_CHOICES = [
@@ -2780,7 +2781,7 @@ class SystemEmailGroup(models.Model):
         return group.email_address_list
 
 
-class SystemEmail(models.Model):
+class SystemEmail(BaseModel):
     system_email_group = models.ForeignKey(
         SystemEmailGroup, on_delete=models.PROTECT, null=False, blank=False
     )

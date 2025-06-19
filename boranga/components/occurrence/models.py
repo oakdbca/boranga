@@ -63,6 +63,7 @@ from boranga.components.conservation_status.models import (
 from boranga.components.main.models import (
     AbstractOrderedList,
     ArchivableModel,
+    BaseModel,
     CommunicationsLogEntry,
     Document,
     OrderedArchivableManager,
@@ -1423,7 +1424,7 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
         return ocr_copy
 
 
-class OccurrenceReportDeclinedDetails(models.Model):
+class OccurrenceReportDeclinedDetails(BaseModel):
     occurrence_report = models.OneToOneField(
         OccurrenceReport, on_delete=models.CASCADE, related_name="declined_details"
     )
@@ -1435,7 +1436,7 @@ class OccurrenceReportDeclinedDetails(models.Model):
         app_label = "boranga"
 
 
-class OccurrenceReportApprovalDetails(models.Model):
+class OccurrenceReportApprovalDetails(BaseModel):
     BULK_IMPORT_ABBREVIATION = "ocrapp"
 
     occurrence_report = models.OneToOneField(
@@ -1503,7 +1504,7 @@ class OccurrenceReportLogDocument(Document):
     class Meta:
         app_label = "boranga"
 
-    def get_parent_instance(self) -> models.Model:
+    def get_parent_instance(self) -> BaseModel:
         return self.log_entry
 
 
@@ -1590,7 +1591,7 @@ def update_occurrence_report_referral_doc_filename(instance, filename):
     )
 
 
-class OccurrenceReportProposalRequest(models.Model):
+class OccurrenceReportProposalRequest(BaseModel):
     occurrence_report = models.ForeignKey(OccurrenceReport, on_delete=models.CASCADE)
     text = models.TextField(blank=True)
 
@@ -1691,11 +1692,11 @@ class OccurrenceReportAmendmentRequestDocument(Document):
     )
     input_name = models.CharField(max_length=255, null=True, blank=True)
 
-    def get_parent_instance(self) -> models.Model:
+    def get_parent_instance(self) -> BaseModel:
         return self.occurrence_report_amendment_request
 
 
-class OccurrenceReportReferral(models.Model):
+class OccurrenceReportReferral(BaseModel):
     SENT_CHOICE_FROM_ASSESSOR = 1
     SENT_CHOICE_FROM_REFERRAL = 2
 
@@ -2013,7 +2014,7 @@ class LocationAccuracy(OrderedModel, ArchivableModel):
 
 
 # NOTE: this and OCCLocation have a number of unused fields that should be removed
-class OCRLocation(models.Model):
+class OCRLocation(BaseModel):
     BULK_IMPORT_ABBREVIATION = "ocrloc"
 
     """
@@ -2077,7 +2078,7 @@ class GeometryManager(models.Manager):
         )
 
 
-class GeometryBase(models.Model):
+class GeometryBase(BaseModel):
     """
     Base class for geometry models
     """
@@ -2228,7 +2229,7 @@ class GeometryBase(models.Model):
         return [source.__str__() for qs in self.source_of_objects() for source in qs]
 
 
-class DrawnByGeometry(models.Model):
+class DrawnByGeometry(BaseModel):
     drawn_by = models.IntegerField(blank=True, null=True)  # EmailUserRO
     last_updated_by = models.IntegerField(blank=True, null=True)  # EmailUserRO
 
@@ -2480,7 +2481,7 @@ class SoilCondition(OrderedModel, ArchivableModel):
         return str(self.name)
 
 
-class OCRHabitatComposition(models.Model):
+class OCRHabitatComposition(BaseModel):
     BULK_IMPORT_ABBREVIATION = "ocrhab"
     """
     Habitat data  for occurrence report
@@ -2539,7 +2540,7 @@ class OCRHabitatComposition(models.Model):
         )
 
 
-class OCRHabitatCondition(models.Model):
+class OCRHabitatCondition(BaseModel):
     BULK_IMPORT_ABBREVIATION = "ocrhq"
     """
     Habitat Condition data for occurrence report
@@ -2631,7 +2632,7 @@ class OCRHabitatCondition(models.Model):
         return f"OCRHabitat Condition: {self.id} for Occurrence Report: {self.occurrence_report}"
 
 
-class OCRVegetationStructure(models.Model):
+class OCRVegetationStructure(BaseModel):
     BULK_IMPORT_ABBREVIATION = "ocrveg"
 
     """
@@ -2689,7 +2690,7 @@ class Intensity(OrderedModel, ArchivableModel):
         return str(self.name)
 
 
-class OCRFireHistory(models.Model):
+class OCRFireHistory(BaseModel):
     BULK_IMPORT_ABBREVIATION = "ocrfh"
 
     """
@@ -2758,7 +2759,7 @@ class SpeciesRole(OrderedModel, ArchivableModel):
         return str(self.name)
 
 
-class AssociatedSpeciesTaxonomy(models.Model):
+class AssociatedSpeciesTaxonomy(BaseModel):
     taxonomy = models.ForeignKey(
         Taxonomy,
         on_delete=models.PROTECT,
@@ -2808,7 +2809,7 @@ class AssociatedSpeciesTaxonomy(models.Model):
         )
 
 
-class OCRAssociatedSpecies(models.Model):
+class OCRAssociatedSpecies(BaseModel):
     BULK_IMPORT_ABBREVIATION = "ocrspe"
 
     """
@@ -2870,7 +2871,7 @@ class ObservationMethod(OrderedModel, ArchivableModel):
         return str(self.name)
 
 
-class OCRObservationDetail(models.Model):
+class OCRObservationDetail(BaseModel):
     BULK_IMPORT_ABBREVIATION = "ocrobs"
 
     """
@@ -3011,7 +3012,7 @@ class PlantCondition(OrderedModel, ArchivableModel):
         return str(self.name)
 
 
-class OCRPlantCount(models.Model):
+class OCRPlantCount(BaseModel):
     BULK_IMPORT_ABBREVIATION = "ocrnum"
 
     """
@@ -3259,7 +3260,7 @@ class SecondarySign(OrderedModel, ArchivableModel):
         return str(self.name)
 
 
-class OCRAnimalObservation(models.Model):
+class OCRAnimalObservation(BaseModel):
     BULK_IMPORT_ABBREVIATION = "ocrnum"
 
     """
@@ -3503,7 +3504,7 @@ class PermitType(OrderedModel, ArchivableModel):
         return str(self.name)
 
 
-class OCRIdentification(models.Model):
+class OCRIdentification(BaseModel):
     BULK_IMPORT_ABBREVIATION = "ocrid"
 
     """
@@ -3583,7 +3584,7 @@ class OccurrenceReportDocument(Document):
         else:
             super().save(*args, **kwargs)
 
-    def get_parent_instance(self) -> models.Model:
+    def get_parent_instance(self) -> BaseModel:
         return self.occurrence_report
 
     @transaction.atomic
@@ -3630,12 +3631,12 @@ class OccurrenceReportShapefileDocument(Document):
     class Meta:
         app_label = "boranga"
 
-    def get_parent_instance(self) -> models.Model:
+    def get_parent_instance(self) -> BaseModel:
         return self.occurrence_report
 
     def delete(self, *args, **kwargs):
         # By pass the custom delete method in super and just do a regular delete
-        models.Model.delete(self, *args, **kwargs)
+        BaseModel.delete(self, *args, **kwargs)
 
 
 class OCRConservationThreat(RevisionedMixin):
@@ -4590,7 +4591,7 @@ class OccurrenceLogDocument(Document):
     class Meta:
         app_label = "boranga"
 
-    def get_parent_instance(self) -> models.Model:
+    def get_parent_instance(self) -> BaseModel:
         return self.log_entry
 
 
@@ -4666,7 +4667,7 @@ class OccurrenceDocument(Document):
         else:
             super().save(*args, **kwargs)
 
-    def get_parent_instance(self) -> models.Model:
+    def get_parent_instance(self) -> BaseModel:
         return self.occurrence
 
     @transaction.atomic
@@ -4687,7 +4688,7 @@ class OccurrenceDocument(Document):
         self.save(*args, **kwargs)
 
 
-class OCCLocation(models.Model):
+class OCCLocation(BaseModel):
     """
     Location data  for occurrence
 
@@ -4883,7 +4884,7 @@ class OCCConservationThreat(RevisionedMixin):
         return self.occurrence.occurrence_number
 
 
-class OCCHabitatComposition(models.Model):
+class OCCHabitatComposition(BaseModel):
     """
     Habitat data for occurrence
 
@@ -4942,7 +4943,7 @@ class OCCHabitatComposition(models.Model):
         )
 
 
-class OCCHabitatCondition(models.Model):
+class OCCHabitatCondition(BaseModel):
     """
     Habitat Condition data for occurrence
 
@@ -5036,7 +5037,7 @@ class OCCHabitatCondition(models.Model):
         return str(self.occurrence)
 
 
-class OCCVegetationStructure(models.Model):
+class OCCVegetationStructure(BaseModel):
     """
     Vegetation Structure data for occurrence
 
@@ -5067,7 +5068,7 @@ class OCCVegetationStructure(models.Model):
         return str(self.occurrence)
 
 
-class OCCFireHistory(models.Model):
+class OCCFireHistory(BaseModel):
     """
     Fire History data for occurrence
 
@@ -5099,7 +5100,7 @@ class OCCFireHistory(models.Model):
         return str(self.occurrence)
 
 
-class OCCAssociatedSpecies(models.Model):
+class OCCAssociatedSpecies(BaseModel):
     """
     Associated Species data for occurrence
 
@@ -5129,7 +5130,7 @@ class OCCAssociatedSpecies(models.Model):
         return str(self.occurrence)
 
 
-class OCCObservationDetail(models.Model):
+class OCCObservationDetail(BaseModel):
     """
     Observation Details data for occurrence
 
@@ -5162,7 +5163,7 @@ class OCCObservationDetail(models.Model):
         return str(self.occurrence)
 
 
-class OCCPlantCount(models.Model):
+class OCCPlantCount(BaseModel):
     """
     Plant Count data for occurrence
 
@@ -5279,7 +5280,7 @@ class OCCPlantCount(models.Model):
         super().save(*args, **kwargs)
 
 
-class OCCAnimalObservation(models.Model):
+class OCCAnimalObservation(BaseModel):
     """
     Animal Observation data for occurrence
 
@@ -5423,7 +5424,7 @@ class OCCAnimalObservation(models.Model):
         return total
 
 
-class OCCIdentification(models.Model):
+class OCCIdentification(BaseModel):
     """
     Identification data for occurrence
 
@@ -5467,7 +5468,7 @@ class OCCIdentification(models.Model):
         return str(self.occurrence)
 
 
-class OCRExternalRefereeInvite(models.Model):
+class OCRExternalRefereeInvite(BaseModel):
     email = models.EmailField()
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
@@ -6653,7 +6654,7 @@ class OccurrenceReportBulkImportTask(ArchivableModel):
         self.save()
 
 
-class OccurrenceReportBulkImportSchema(models.Model):
+class OccurrenceReportBulkImportSchema(BaseModel):
     group_type = models.ForeignKey(
         GroupType, on_delete=models.PROTECT, null=False, blank=False
     )
@@ -8358,7 +8359,7 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
         return cell_value, errors_added
 
 
-class SchemaColumnLookupFilter(models.Model):
+class SchemaColumnLookupFilter(BaseModel):
     schema_column = models.ForeignKey(
         OccurrenceReportBulkImportSchemaColumn,
         related_name="lookup_filters",
@@ -8424,7 +8425,7 @@ class SchemaColumnLookupFilter(models.Model):
         return f"{self.schema_column} - {self.filter_field_name}"
 
 
-class SchemaColumnLookupFilterValue(models.Model):
+class SchemaColumnLookupFilterValue(BaseModel):
     lookup_filter = models.ForeignKey(
         SchemaColumnLookupFilter,
         related_name="values",

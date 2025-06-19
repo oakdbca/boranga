@@ -14,6 +14,7 @@ from ledger_api_client.ledger_models import EmailUserRO as EmailUser
 from ledger_api_client.managed_models import SystemGroup
 from multiselectfield import MultiSelectField
 
+from boranga.components.main.models import BaseModel
 from boranga.settings import (
     DJANGO_ADMIN_GROUP,
     GROUP_NAME_CONSERVATION_STATUS_APPROVER,
@@ -473,9 +474,9 @@ def get_openpyxl_data_validation_type_for_django_field(field, column=None):
 def clone_model(
     source_model_class: models.base.ModelBase,
     target_model_class: models.base.ModelBase,
-    source_model: models.Model,
+    source_model: BaseModel,
     save: bool = False,
-) -> models.Model:
+) -> BaseModel:
     """
     Copies field values from source_model to a new instance of target_model_class.
 
@@ -535,7 +536,7 @@ def convert_internal_url_to_external_url(url):
     return url
 
 
-def get_display_field_for_model(model: models.Model) -> str:
+def get_display_field_for_model(model: BaseModel) -> str:
     """
     Returns the field name to display for a model in the admin list display.
     """

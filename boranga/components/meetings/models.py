@@ -12,6 +12,7 @@ from ordered_model.models import OrderedModel
 from boranga.components.conservation_status.models import ConservationStatus
 from boranga.components.main.models import (
     ArchivableModel,
+    BaseModel,
     CommunicationsLogEntry,
     Document,
     OrderedArchivableManager,
@@ -86,7 +87,7 @@ class CommitteeMembers(OrderedModel, ArchivableModel):
         return str(self.email)
 
 
-class Meeting(models.Model):
+class Meeting(BaseModel):
     """
     A list of conservation status for a species is executed during Meetings or Committee Meetings.
     It is necessary to capture these changes and the meetings that caused the change.
@@ -331,7 +332,7 @@ class MeetingLogDocument(Document):
     class Meta:
         app_label = "boranga"
 
-    def get_parent_instance(self) -> models.Model:
+    def get_parent_instance(self) -> BaseModel:
         return self.log_entry
 
 
@@ -433,7 +434,7 @@ class Minutes(Document):
         else:
             super().save(*args, **kwargs)
 
-    def get_parent_instance(self) -> models.Model:
+    def get_parent_instance(self) -> BaseModel:
         return self.meeting
 
     @transaction.atomic
