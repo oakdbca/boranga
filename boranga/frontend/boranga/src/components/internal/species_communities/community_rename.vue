@@ -361,6 +361,7 @@ import alert from '@vue-utils/alert.vue';
 import FormSpeciesCommunities from '@/components/form_species_communities.vue';
 import FormSection from '@/components/forms/section_toggle.vue';
 import { api_endpoints } from '@/utils/hooks.js';
+import { toRaw } from 'vue';
 
 export default {
     name: 'CommunityRename',
@@ -401,7 +402,7 @@ export default {
             if (val) {
                 this.$nextTick(() => {
                     this.new_community = structuredClone(
-                        this.species_community_original
+                        toRaw(this.species_community_original)
                     );
                     this.new_community.id = null;
                     this.new_community.community_number = '';
