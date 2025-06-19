@@ -1,6 +1,6 @@
 <template id="bootstrap-modal">
     <div v-show="show" :transition="transition">
-        <div class="modal" @click.self="clickMask">
+        <div class="modal" data-bs-keyboard="false" data-bs-backdrop="static">
             <div class="modal-dialog" :class="modalClass">
                 <div class="modal-content">
                     <!--Header-->
@@ -14,7 +14,6 @@
                             <button
                                 type="button"
                                 class="btn-close btn-close-white"
-                                data-bs-dismiss="modal"
                                 aria-label="Close"
                                 @click="cancel"
                             ></button>
@@ -31,6 +30,7 @@
                                 v-if="showCancel"
                                 type="button"
                                 :class="cancelClass"
+                                aria-label="Close"
                                 @click="cancel"
                             >
                                 {{ cancelText }}
@@ -116,6 +116,10 @@ export default {
             type: Boolean,
             default: false,
         },
+        dataLossWarningOnCancel: {
+            type: Boolean,
+            default: true,
+        },
     },
     data() {
         return {
@@ -168,12 +172,26 @@ export default {
             }
         },
         cancel() {
-            this.$emit('cancel');
-            this.$parent.close();
-        },
-        clickMask() {
-            if (!this.force) {
-                this.cancel();
+            if (!this.dataLossWarningOnCancel) {
+                this.$parent.close();
+            } else {
+                swal.fire({
+                    title: 'Are you sure you want to close this modal?',
+                    text: 'You will lose any unsaved changes.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, close it',
+                    cancelButtonText: 'Return to modal',
+                    reverseButtons: true,
+                    customClass: {
+                        confirmButton: 'btn btn-primary',
+                        cancelButton: 'btn btn-secondary',
+                    },
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.$parent.close();
+                    }
+                });
             }
         },
     },
