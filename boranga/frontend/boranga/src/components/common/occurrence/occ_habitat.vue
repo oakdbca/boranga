@@ -1172,7 +1172,6 @@ export default {
                 .val(vm.occurrence_obj.habitat_composition.land_form)
                 .trigger('change.select2');
             vm.$refs.related_species.reload();
-            vm.calcKeigheryTotal();
         },
         updateHabitatCompositionDetails: function () {
             let vm = this;
