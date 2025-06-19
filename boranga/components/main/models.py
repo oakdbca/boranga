@@ -2,6 +2,7 @@ import logging
 import os
 from abc import ABCMeta, abstractmethod
 
+import nh3
 from django.apps import apps
 from django.conf import settings
 from django.core.cache import cache
@@ -20,11 +21,37 @@ model_type = models.base.ModelBase
 logger = logging.getLogger(__name__)
 
 
+class Nh3SanitizationModelMixin:
+    """
+    Mixin to sanitize all CharField and TextField string values using nh3 before saving.
+    """
+
+    def save(self, *args, **kwargs):
+        # Sanitize CharField and TextField values
+        for field in self._meta.get_fields():
+            if isinstance(field, (models.CharField, models.TextField)):
+                value = getattr(self, field.name, None)
+                if isinstance(value, str):
+                    setattr(self, field.name, nh3.clean(value))
+        super().save(*args, **kwargs)
+
+
+class BaseModel(Nh3SanitizationModelMixin, models.Model):
+    """
+    Base model class that all models should inherit from.
+    It provides a common interface for saving and retrieving models.
+    """
+
+    class Meta:
+        abstract = True
+        app_label = "boranga"
+
+
 class AbstractModelMeta(ABCMeta, model_type):
     pass
 
 
-class RevisionedMixin(models.Model):
+class RevisionedMixin(BaseModel):
     """
     A model tracked by reversion through the save method.
     """
@@ -71,7 +98,7 @@ class RevisionedMixin(models.Model):
         abstract = True
 
 
-class UserAction(models.Model):
+class UserAction(BaseModel):
     who = models.IntegerField()  # EmailUserRO
     when = models.DateTimeField(null=False, blank=False, auto_now_add=True)
     what = models.TextField(blank=False)
@@ -86,7 +113,7 @@ class UserAction(models.Model):
         app_label = "boranga"
 
 
-class CommunicationsLogEntry(models.Model):
+class CommunicationsLogEntry(BaseModel):
     TYPE_CHOICES = [
         ("email", "Email"),
         ("phone", "Phone Call"),
@@ -120,7 +147,7 @@ class CommunicationsLogEntry(models.Model):
         app_label = "boranga"
 
 
-class FileExtensionWhitelist(models.Model):
+class FileExtensionWhitelist(BaseModel):
 
     name = models.CharField(
         max_length=16,
@@ -229,7 +256,7 @@ class Document(RevisionedMixin, metaclass=AbstractModelMeta):
         self.save()
 
     @abstractmethod
-    def get_parent_instance(self) -> models.Model:
+    def get_parent_instance(self) -> BaseModel:
         raise NotImplementedError(
             "Subclasses of Document must implement a get_parent_instance method"
         )
@@ -264,7 +291,7 @@ class Document(RevisionedMixin, metaclass=AbstractModelMeta):
 
 
 # @python_2_unicode_compatible
-class SystemMaintenance(models.Model):
+class SystemMaintenance(BaseModel):
     name = models.CharField(max_length=100)
     description = models.TextField()
     start_date = models.DateTimeField()
@@ -292,7 +319,7 @@ class SystemMaintenance(models.Model):
         )
 
 
-class UserSystemSettings(models.Model):
+class UserSystemSettings(BaseModel):
     user = models.IntegerField(unique=True)  # EmailUserRO
     area_of_interest = models.ForeignKey(
         "GroupType", on_delete=models.PROTECT, null=True, blank=True
@@ -311,7 +338,7 @@ class ArchivableManager(models.Manager):
         return super().get_queryset().filter(archived=True)
 
 
-class ArchivableModel(models.Model):
+class ArchivableModel(BaseModel):
     objects = ArchivableManager()
 
     archived = models.BooleanField(default=False)

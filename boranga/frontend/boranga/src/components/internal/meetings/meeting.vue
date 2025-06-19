@@ -319,7 +319,6 @@ export default {
             saveExitMeeting: false,
             submitMeeting: false,
             schedelingMeeting: false,
-            completingMeeting: false,
             submitting: false,
             DATE_TIME_FORMAT: 'DD/MM/YYYY HH:mm:ss',
             comms_url: helpers.add_endpoint_json(
@@ -755,7 +754,6 @@ export default {
                 });
                 return false;
             }
-            vm.completeMeeting = true;
             swal.fire({
                 title: 'Complete Meeting',
                 text: 'Are you sure you want to complete this meeting?',
@@ -767,48 +765,42 @@ export default {
                     cancelButton: 'btn btn-secondary',
                 },
                 reverseButtons: true,
-            }).then(
-                async (swalresult) => {
-                    if (swalresult.isConfirmed) {
-                        await vm.save_before_submit();
-                        if (!vm.saveError) {
-                            let payload = new Object();
-                            Object.assign(payload, vm.meeting_obj);
-                            fetch(
-                                helpers.add_endpoint_json(
-                                    api_endpoints.meeting,
-                                    vm.meeting_obj.id + '/complete_meeting'
-                                ),
-                                {
-                                    method: 'PUT',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify(payload),
-                                }
-                            ).then(
-                                async (response) => {
-                                    vm.meeting_obj = await response.json();
-                                    vm.completingMeeting = false;
+            }).then(async (swalresult) => {
+                if (swalresult.isConfirmed) {
+                    await vm.save_before_submit();
+                    if (!vm.saveError) {
+                        let payload = new Object();
+                        Object.assign(payload, vm.meeting_obj);
+                        fetch(
+                            helpers.add_endpoint_json(
+                                api_endpoints.meeting,
+                                vm.meeting_obj.id + '/complete_meeting'
+                            ),
+                            {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
                                 },
-                                (err) => {
-                                    swal.fire({
-                                        title: 'Complete Error',
-                                        text: helpers.apiVueResourceError(err),
-                                        icon: 'error',
-                                        customClass: {
-                                            confirmButton: 'btn btn-primary',
-                                        },
-                                    });
-                                }
-                            );
-                        }
+                                body: JSON.stringify(payload),
+                            }
+                        ).then(
+                            async (response) => {
+                                vm.meeting_obj = await response.json();
+                            },
+                            (err) => {
+                                swal.fire({
+                                    title: 'Complete Error',
+                                    text: helpers.apiVueResourceError(err),
+                                    icon: 'error',
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary',
+                                    },
+                                });
+                            }
+                        );
                     }
-                },
-                () => {
-                    vm.completingMeeting = false;
                 }
-            );
+            });
         },
         discardMeeting: function () {
             let vm = this;

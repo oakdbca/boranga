@@ -27,6 +27,7 @@ from boranga.components.conservation_status.email import (
 )
 from boranga.components.main.models import (
     ArchivableModel,
+    BaseModel,
     CommunicationsLogEntry,
     Document,
     OrderedArchivableManager,
@@ -2112,7 +2113,7 @@ class ConservationStatusLogDocument(Document):
     class Meta:
         app_label = "boranga"
 
-    def get_parent_instance(self) -> models.Model:
+    def get_parent_instance(self) -> BaseModel:
         return self.log_entry
 
 
@@ -2259,7 +2260,7 @@ class ConservationStatusDocument(Document):
         self.save(*args, **kwargs)
 
 
-class ConservationStatusDeclinedDetails(models.Model):
+class ConservationStatusDeclinedDetails(BaseModel):
     conservation_status = models.OneToOneField(
         ConservationStatus, on_delete=models.CASCADE
     )
@@ -2271,7 +2272,7 @@ class ConservationStatusDeclinedDetails(models.Model):
         app_label = "boranga"
 
 
-class ConservationStatusIssuanceApprovalDetails(models.Model):
+class ConservationStatusIssuanceApprovalDetails(BaseModel):
     conservation_status = models.OneToOneField(
         ConservationStatus, on_delete=models.CASCADE
     )
@@ -2292,7 +2293,7 @@ class ConservationStatusIssuanceApprovalDetails(models.Model):
         app_label = "boranga"
 
 
-class ConservationStatusReferral(models.Model):
+class ConservationStatusReferral(BaseModel):
     PROCESSING_STATUS_WITH_REFERRAL = "with_referral"
     PROCESSING_STATUS_RECALLED = "recalled"
     PROCESSING_STATUS_COMPLETED = "completed"
@@ -2575,7 +2576,7 @@ class ConservationStatusReferral(models.Model):
         )
 
 
-class ConservationStatusProposalRequest(models.Model):
+class ConservationStatusProposalRequest(BaseModel):
     conservation_status = models.ForeignKey(
         ConservationStatus, on_delete=models.CASCADE
     )
@@ -2694,11 +2695,11 @@ class ConservationStatusAmendmentRequestDocument(Document):
     )
     input_name = models.CharField(max_length=255, null=True, blank=True)
 
-    def get_parent_instance(self) -> models.Model:
+    def get_parent_instance(self) -> BaseModel:
         return self.conservation_status_amendment_request
 
 
-class CSExternalRefereeInvite(models.Model):
+class CSExternalRefereeInvite(BaseModel):
     email = models.EmailField()
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)

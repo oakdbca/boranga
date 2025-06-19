@@ -1,12 +1,13 @@
-from django.db import models
 from django.contrib.gis.db import models as gis_models
 from django.core.cache import cache
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
 
 from boranga import settings
+from boranga.components.main.models import BaseModel
 
 
-class GeoserverUrl(models.Model):
+class GeoserverUrl(BaseModel):
     url = models.CharField(max_length=255, unique=True)
     wms_version = models.CharField(max_length=10, default="1.3.0")
 
@@ -24,7 +25,7 @@ class GeoserverUrl(models.Model):
         return f"{self.url}/?SERVICE=WMS&VERSION={self.wms_version}&REQUEST=GetCapabilities"
 
 
-class TileLayer(models.Model):
+class TileLayer(BaseModel):
     SERVICE_WMS = "wms"
     SERVICE_WMTS = "wmts"
     SERVICE_CHOICES = (
@@ -124,7 +125,7 @@ class TileLayer(models.Model):
         super().save(*args, **kwargs)
 
 
-class Proxy(models.Model):
+class Proxy(BaseModel):
     request_path = models.CharField(max_length=255)
     proxy_url = models.CharField(max_length=255)
     basic_auth_enabled = models.BooleanField(default=False)
@@ -151,7 +152,7 @@ class Proxy(models.Model):
         super().save(*args, **kwargs)
 
 
-class PlausibilityGeometry(models.Model):
+class PlausibilityGeometry(BaseModel):
     OCCURRENCE_GEOMETRY = "OccurrenceGeometry"
     OCCURRENCE_REPORT_GEOMETRY = "OccurrenceReportGeometry"
     CHECK_FOR_GEOMETRY_CHOICES = (

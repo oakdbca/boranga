@@ -4,6 +4,8 @@ from django.db import models
 from django.db.models import F, Max, Min
 from django.utils.translation import gettext as _
 
+from boranga.components.main.models import BaseModel
+
 """
 Convert a string containing module.submodule.classname to a Class.
 """
@@ -18,7 +20,7 @@ def _order_model_get_class(classpath):
     return m
 
 
-class OrderedModelBase(models.Model):
+class OrderedModelBase(BaseModel):
     """
     An abstract model that allows objects to be ordered relative to each other.
     Usage (See ``OrderedModel``):

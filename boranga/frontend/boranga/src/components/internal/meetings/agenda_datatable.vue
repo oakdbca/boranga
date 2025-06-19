@@ -5,6 +5,7 @@
             transition="modal fade"
             :title="title"
             large
+            :data-loss-warning-on-cancel="false"
             @ok="ok()"
             @cancel="cancel()"
         >

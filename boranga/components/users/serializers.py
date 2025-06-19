@@ -13,6 +13,7 @@ from boranga.components.main.models import (
     Document,
     UserSystemSettings,
 )
+from boranga.components.main.serializers import BaseModelSerializer, BaseSerializer
 from boranga.components.occurrence.models import OccurrenceReportReferral
 from boranga.components.users.models import (
     EmailUserAction,
@@ -32,26 +33,26 @@ from boranga.helpers import (
 logger = logging.getLogger(__name__)
 
 
-class DocumentSerializer(serializers.ModelSerializer):
+class DocumentSerializer(BaseModelSerializer):
 
     class Meta:
         model = Document
         fields = ("id", "description", "file", "name", "uploaded_date")
 
 
-class UserAddressSerializer(serializers.ModelSerializer):
+class UserAddressSerializer(BaseModelSerializer):
     class Meta:
         model = Address
         fields = ("id", "line1", "locality", "state", "country", "postcode")
 
 
-class UserSystemSettingsSerializer(serializers.ModelSerializer):
+class UserSystemSettingsSerializer(BaseModelSerializer):
     class Meta:
         model = UserSystemSettings
         fields = ["area_of_interest"]
 
 
-class UserFilterSerializer(serializers.ModelSerializer):
+class UserFilterSerializer(BaseModelSerializer):
     name = serializers.SerializerMethodField()
 
     class Meta:
@@ -62,7 +63,7 @@ class UserFilterSerializer(serializers.ModelSerializer):
         return obj.get_full_name()
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(BaseModelSerializer):
     residential_address = UserAddressSerializer()
     personal_details = serializers.SerializerMethodField()
     address_details = serializers.SerializerMethodField()
@@ -156,7 +157,7 @@ class UserSerializer(serializers.ModelSerializer):
         return OccurrenceReportReferral.objects.filter(referral=obj.id).count()
 
 
-class PersonalSerializer(serializers.ModelSerializer):
+class PersonalSerializer(BaseModelSerializer):
     class Meta:
         model = EmailUser
         fields = (
@@ -166,7 +167,7 @@ class PersonalSerializer(serializers.ModelSerializer):
         )
 
 
-class ContactSerializer(serializers.ModelSerializer):
+class ContactSerializer(BaseModelSerializer):
     class Meta:
         model = EmailUser
         fields = (
@@ -192,7 +193,7 @@ class ContactSerializer(serializers.ModelSerializer):
         return obj
 
 
-class EmailUserActionSerializer(serializers.ModelSerializer):
+class EmailUserActionSerializer(BaseModelSerializer):
     who = serializers.CharField(source="who.get_full_name")
 
     class Meta:
@@ -200,13 +201,13 @@ class EmailUserActionSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class EmailUserCommsSerializer(serializers.ModelSerializer):
+class EmailUserCommsSerializer(BaseModelSerializer):
     class Meta:
         model = EmailUserLogEntry
         fields = "__all__"
 
 
-class CommunicationLogEntrySerializer(serializers.ModelSerializer):
+class CommunicationLogEntrySerializer(BaseModelSerializer):
     customer = serializers.PrimaryKeyRelatedField(
         queryset=EmailUser.objects.all(), required=False
     )
@@ -245,13 +246,13 @@ class EmailUserLogEntrySerializer(CommunicationLogEntrySerializer):
         return [[d.name, d._file.url] for d in obj.documents.all()]
 
 
-class SubmitterCategorySerializer(serializers.ModelSerializer):
+class SubmitterCategorySerializer(BaseModelSerializer):
     class Meta:
         model = SubmitterCategory
         fields = ("id", "name")
 
 
-class SubmitterInformationSerializer(serializers.ModelSerializer):
+class SubmitterInformationSerializer(BaseModelSerializer):
     submitter_category_name = serializers.CharField(
         source="submitter_category.name", read_only=True, allow_null=True
     )
@@ -285,7 +286,7 @@ class SubmitterInformationSerializer(serializers.ModelSerializer):
         return ret
 
 
-class OutstandingReferralSerializer(serializers.Serializer):
+class OutstandingReferralSerializer(BaseSerializer):
     id = serializers.IntegerField()
     parent_id = serializers.IntegerField()
     number = serializers.CharField()

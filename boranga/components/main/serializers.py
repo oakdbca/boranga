@@ -20,7 +20,7 @@ from boranga.helpers import (
 logger = logging.getLogger(__name__)
 
 
-class NH3SanitizeMixin:
+class NH3SanitizeSerializerMixin:
     """
     Sanitizes all CharField inputs using nh3 before validation
     and also before adding to the response.
@@ -45,7 +45,49 @@ class NH3SanitizeMixin:
         return rep
 
 
-class CommunicationLogEntrySerializer(serializers.ModelSerializer):
+class AbsoluteFileUrlSerializerMixin:
+    """
+    Mixin to make all FileField and ImageField URLs absolute using request.build_absolute_uri.
+    This is main to ensure that file urls include the same scheme as the request
+    """
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get("request")
+        if request:
+            for field_name, field in self.fields.items():
+                if isinstance(field, (serializers.FileField, serializers.ImageField)):
+                    url = data.get(field_name)
+                    if url and not url.startswith("http"):
+                        data[field_name] = request.build_absolute_uri(url)
+        return data
+
+
+class BaseModelSerializer(
+    NH3SanitizeSerializerMixin,
+    AbsoluteFileUrlSerializerMixin,
+    serializers.ModelSerializer,
+):
+    """
+    Base serializer that applies NH3 sanitization and absolute URL conversion.
+    """
+
+    class Meta:
+        abstract = True
+
+
+class BaseSerializer(
+    NH3SanitizeSerializerMixin, AbsoluteFileUrlSerializerMixin, serializers.Serializer
+):
+    """
+    Base serializer that applies NH3 sanitization and absolute URL conversion.
+    """
+
+    class Meta:
+        abstract = True
+
+
+class CommunicationLogEntrySerializer(BaseModelSerializer):
     customer = serializers.PrimaryKeyRelatedField(
         queryset=EmailUser.objects.all(), required=False
     )
@@ -71,7 +113,7 @@ class CommunicationLogEntrySerializer(serializers.ModelSerializer):
         return [[d.name, d._file.url] for d in obj.documents.all()]
 
 
-class EmailUserROSerializerForReferral(serializers.ModelSerializer):
+class EmailUserROSerializerForReferral(BaseModelSerializer):
     name = serializers.SerializerMethodField()
     telephone = serializers.CharField(source="phone_number")
     mobile_phone = serializers.CharField(source="mobile_number")
@@ -91,7 +133,7 @@ class EmailUserROSerializerForReferral(serializers.ModelSerializer):
         return user.get_full_name()
 
 
-class EmailUserSerializer(serializers.ModelSerializer):
+class EmailUserSerializer(BaseModelSerializer):
     fullname = serializers.SerializerMethodField()
 
     class Meta:
@@ -123,7 +165,7 @@ class LimitedEmailUserSerializer(EmailUserSerializer):
         ]
 
 
-class HelpTextEntrySerializer(serializers.ModelSerializer):
+class HelpTextEntrySerializer(BaseModelSerializer):
     user_can_administer = serializers.SerializerMethodField()
 
     class Meta:
@@ -140,7 +182,7 @@ class HelpTextEntrySerializer(serializers.ModelSerializer):
         return is_django_admin(self.context["request"])
 
 
-class ContentTypeSerializer(serializers.ModelSerializer):
+class ContentTypeSerializer(BaseModelSerializer):
     model_fields = serializers.SerializerMethodField()
     model_verbose_name = serializers.SerializerMethodField()
     model_abbreviation = serializers.SerializerMethodField()
@@ -224,7 +266,7 @@ class ContentTypeSerializer(serializers.ModelSerializer):
         return model_fields
 
 
-class AbstractOrderedListSerializer(serializers.Serializer):
+class AbstractOrderedListSerializer(BaseSerializer):
     id = serializers.IntegerField()
     order = serializers.IntegerField()
     item = serializers.CharField()

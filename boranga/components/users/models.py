@@ -9,6 +9,7 @@ from ordered_model.models import OrderedModel
 
 from boranga.components.main.models import (
     ArchivableModel,
+    BaseModel,
     CommunicationsLogEntry,
     Document,
     OrderedArchivableManager,
@@ -55,7 +56,7 @@ class SubmitterCategory(OrderedModel, ArchivableModel):
         return list(cls.objects.all().values("id", "name"))
 
 
-class SubmitterInformation(models.Model):
+class SubmitterInformation(BaseModel):
     BULK_IMPORT_ABBREVIATION = "ocrsub"
 
     email_user = models.IntegerField(blank=True, null=True)
@@ -108,7 +109,7 @@ class SubmitterInformationModelMixin:
         self.submitter_information = submitter_information
 
 
-class ExternalContributorBlacklist(models.Model):
+class ExternalContributorBlacklist(BaseModel):
     email = models.EmailField(unique=True)
     reason = models.TextField()
     datetime_created = models.DateTimeField(auto_now_add=True)
@@ -195,7 +196,7 @@ class EmailUserLogDocument(Document):
     class Meta:
         app_label = "boranga"
 
-    def get_parent_instance(self) -> models.Model:
+    def get_parent_instance(self) -> BaseModel:
         return self.log_entry
 
 

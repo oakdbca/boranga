@@ -4,8 +4,9 @@
             transition="modal fade"
             :title="title"
             large
+            :data-loss-warning-on-cancel="isReadOnly || viewMode"
             @ok="ok()"
-            @cancel="close()"
+            @cancel="cancel"
         >
             <div
                 v-if="
@@ -166,7 +167,7 @@
                     <button
                         type="button"
                         class="btn btn-secondary me-2"
-                        @click="close()"
+                        @click="cancel()"
                     >
                         Cancel
                     </button>
@@ -305,6 +306,29 @@ export default {
             if ($(vm.form).valid()) {
                 vm.sendData();
             }
+        },
+        cancel: function () {
+            if (this.isReadOnly || this.viewMode) {
+                this.close();
+                return;
+            }
+            swal.fire({
+                title: 'Are you sure you want to close this modal?',
+                text: 'You will lose any unsaved changes.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, close it',
+                cancelButtonText: 'Return to modal',
+                reverseButtons: true,
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-secondary',
+                },
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    this.close();
+                }
+            });
         },
         close: function () {
             this.isModalOpen = false;
