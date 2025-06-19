@@ -368,7 +368,7 @@ class InformalGroup(BaseModel):
         app_label = "boranga"
 
     def __str__(self):
-        return str(self.classification_system_fk.class_desc)
+        return f"{self.classification_system_fk.class_desc} {self.taxonomy.scientific_name} "
 
 
 class Species(RevisionedMixin):
