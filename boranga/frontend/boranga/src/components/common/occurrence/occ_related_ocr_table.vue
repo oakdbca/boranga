@@ -318,37 +318,57 @@ export default {
         },
         copySection: function (id, merge) {
             let vm = this;
-            vm.errors = false;
-
-            let formData = new FormData();
-
-            let data = {
-                occurrence_report_id: id,
-                section: vm.section_type,
-                merge: merge,
-            };
-            formData.append('data', JSON.stringify(data));
-
-            fetch(
-                helpers.add_endpoint_json(
-                    api_endpoints.occurrence,
-                    vm.occurrence_obj.id + '/copy_ocr_section'
-                ),
-                {
-                    method: 'POST',
-                    body: formData,
-                }
-            ).then(
-                async (response) => {
-                    const data = await response.json();
-                    vm.$refs.related_ocr_datatable.vmDataTable.ajax.reload();
-                    vm.$emit('copyUpdate', data, vm.section_type);
+            swal.fire({
+                title: 'Copy Section',
+                text: `Are you sure you want to ${
+                    merge
+                        ? 'merge this section data with the Occurrence?'
+                        : 'replace the data in this section of the Occurrence?'
+                } `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Copy Section',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true,
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-secondary',
                 },
-                (error) => {
-                    vm.errors = true;
-                    vm.errorString = helpers.apiVueResourceError(error);
+            }).then(async (swalresult) => {
+                if (swalresult.isConfirmed) {
+                    vm.errors = false;
+
+                    let formData = new FormData();
+
+                    let data = {
+                        occurrence_report_id: id,
+                        section: vm.section_type,
+                        merge: merge,
+                    };
+                    formData.append('data', JSON.stringify(data));
+
+                    fetch(
+                        helpers.add_endpoint_json(
+                            api_endpoints.occurrence,
+                            vm.occurrence_obj.id + '/copy_ocr_section'
+                        ),
+                        {
+                            method: 'POST',
+                            body: formData,
+                        }
+                    ).then(
+                        async (response) => {
+                            const data = await response.json();
+                            vm.$refs.related_ocr_datatable.vmDataTable.ajax.reload();
+                            vm.$emit('copyUpdate', data, vm.section_type);
+                        },
+                        (error) => {
+                            vm.errors = true;
+                            vm.errorString = helpers.apiVueResourceError(error);
+                        }
+                    );
                 }
-            );
+            });
         },
         adjust_table_width: function () {
             if (this.$refs.related_ocr_datatable) {
