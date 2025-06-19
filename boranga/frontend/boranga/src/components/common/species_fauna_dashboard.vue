@@ -595,7 +595,7 @@ export default {
                     'Number',
                     'Scientific Name',
                     'Common Name',
-                    'Phylo Group',
+                    'Phylo Group(s)',
                     'Family',
                     'Genera',
                     'Region',
@@ -614,7 +614,7 @@ export default {
                     'Number',
                     'Scientific Name',
                     'Common Name',
-                    'Phylo Group',
+                    'Phylo Group(s)',
                     'Family',
                     'Genera',
                     'Region',
@@ -686,9 +686,18 @@ export default {
                 orderable: true,
                 searchable: true,
                 visible: true,
-                render: function (value, type) {
-                    let result = helpers.dtPopover(value, 30, 'hover');
-                    return type == 'export' ? value : result;
+                render: function (data, type, full) {
+                    let html = '';
+                    if (full.phylogenetic_group) {
+                        for (
+                            let i = 0;
+                            i < full.phylogenetic_group.length;
+                            i++
+                        ) {
+                            html += `<span class="badge bg-primary me-2">${full.phylogenetic_group[i]}</span>`;
+                        }
+                    }
+                    return html;
                 },
                 name: 'taxonomy__informal_groups__classification_system_fk__class_desc',
             };

@@ -4,6 +4,7 @@
             transition="modal fade"
             :title="'OCC ' + occNumber + ' ' + sectionTypeDisplay"
             large
+            :data-loss-warning-on-cancel="false"
             @ok="ok()"
             @cancel="close()"
         >

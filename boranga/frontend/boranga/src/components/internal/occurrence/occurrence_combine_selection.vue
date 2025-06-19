@@ -16,6 +16,7 @@
                 :section-type="section_type"
                 :occ-number="sectionOCCId"
                 :section-obj="sectionObj"
+                :data-loss-warning-on-cancel="false"
             />
         </div>
     </div>

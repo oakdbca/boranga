@@ -143,7 +143,23 @@ export default {
             }
         },
         cancel: function () {
-            this.close();
+            swal.fire({
+                title: 'Are you sure you want to close this modal?',
+                text: 'You will lose any unsaved changes.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, close it',
+                cancelButtonText: 'Return to modal',
+                reverseButtons: true,
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-secondary',
+                },
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    this.close();
+                }
+            });
         },
         close: function () {
             this.isModalOpen = false;

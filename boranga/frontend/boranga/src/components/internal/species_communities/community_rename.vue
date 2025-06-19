@@ -6,7 +6,7 @@
             :title="title"
             extra-large
             @ok="ok()"
-            @cancel="close"
+            @cancel="cancel"
         >
             <div class="container-fluid">
                 <div class="row">
@@ -345,7 +345,7 @@
                     <button
                         type="button"
                         class="btn btn-secondary"
-                        @click="close"
+                        @click="cancel"
                     >
                         Cancel
                     </button>
@@ -443,6 +443,25 @@ export default {
             this.new_community.taxonomy_details.name_comments =
                 this.species_community_original.taxonomy_details.name_comments;
             this.$refs.community_name.focus();
+        },
+        cancel: function () {
+            swal.fire({
+                title: 'Are you sure you want to close this modal?',
+                text: 'You will lose any unsaved changes.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, close it',
+                cancelButtonText: 'Return to modal',
+                reverseButtons: true,
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-secondary',
+                },
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    this.close();
+                }
+            });
         },
         close: function () {
             this.isModalOpen = false;

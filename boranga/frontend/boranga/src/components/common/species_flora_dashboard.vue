@@ -705,7 +705,7 @@ export default {
                             i < full.phylogenetic_group.length;
                             i++
                         ) {
-                            html += `<span class="badge bg-primary">${full.phylogenetic_group[i]}</span>`;
+                            html += `<span class="badge bg-primary me-2">${full.phylogenetic_group[i]}</span>`;
                         }
                     }
                     return html;
