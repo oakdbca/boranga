@@ -4,7 +4,7 @@
             ref="collapsible_filters"
             component_title="Filters"
             class="mb-2"
-            @created="collapsible_component_mounted"
+            :show-warning-icon="filterApplied"
         >
             <div class="row">
                 <div class="col-md-3">
@@ -531,14 +531,6 @@ export default {
                 vm.filterCSRefFloraApplicationStatus
             );
         },
-        filterApplied: function () {
-            if (this.$refs.collapsible_filters) {
-                // Collapsible component exists
-                this.$refs.collapsible_filters.show_warning_icon(
-                    this.filterApplied
-                );
-            }
-        },
     },
     mounted: function () {
         let vm = this;
@@ -628,11 +620,6 @@ export default {
         });
     },
     methods: {
-        collapsible_component_mounted: function () {
-            this.$refs.collapsible_filters.show_warning_icon(
-                this.filterApplied
-            );
-        },
         initialiseScientificNameLookup: function () {
             let vm = this;
             $(vm.$refs.cs_ref_scientific_name_lookup)

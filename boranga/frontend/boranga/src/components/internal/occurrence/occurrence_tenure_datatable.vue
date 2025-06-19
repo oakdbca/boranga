@@ -4,7 +4,7 @@
             ref="collapsible_filters"
             component_title="Filters"
             :collapsed="!filterApplied"
-            @created="collapsible_component_mounted"
+            :show-warning-icon="filterApplied"
         >
             <div class="row">
                 <div class="col-md-3">
@@ -421,13 +421,6 @@ export default {
             );
             sessionStorage.setItem(this.filterPurposeCache, this.filterPurpose);
         },
-        filterApplied: function () {
-            if (this.$refs.collapsible_filters) {
-                this.$refs.collapsible_filters.show_warning_icon(
-                    this.filterApplied
-                );
-            }
-        },
     },
     mounted: function () {
         this.$nextTick(() => {
@@ -524,11 +517,6 @@ export default {
                     console.error('Error:', error);
                 });
             this.$emit('edit-tenure-details', id);
-        },
-        collapsible_component_mounted: function () {
-            this.$refs.collapsible_filters.show_warning_icon(
-                this.filterApplied
-            );
         },
         /**
          * Initialises the select2 dropdown for this filter lookup

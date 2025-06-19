@@ -4,7 +4,7 @@
             ref="collapsible_filters"
             component_title="Filters"
             class="mb-2"
-            @created="collapsible_component_mounted"
+            :show-warning-icon="filterApplied"
         >
             <div class="row">
                 <div class="col-md-3">
@@ -1396,14 +1396,6 @@ export default {
                 vm.filterCSCommunitySubmitterCategory
             );
         },
-        filterApplied: function () {
-            if (this.$refs.collapsible_filters) {
-                // Collapsible component exists
-                this.$refs.collapsible_filters.show_warning_icon(
-                    this.filterApplied
-                );
-            }
-        },
     },
     mounted: function () {
         let vm = this;
@@ -1472,11 +1464,6 @@ export default {
             this.$nextTick(() => {
                 this.$refs.community_conservation_status_history.isModalOpen = true;
             });
-        },
-        collapsible_component_mounted: function () {
-            this.$refs.collapsible_filters.show_warning_icon(
-                this.filterApplied
-            );
         },
         initialiseCommunityNameLookup: function () {
             let vm = this;

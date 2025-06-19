@@ -1718,9 +1718,6 @@ export default {
     },
     mounted: function () {
         let vm = this;
-        if (!this.is_external && vm.$refs.assessment_comments) {
-            vm.$refs.assessment_comments.show_warning_icon(false);
-        }
         this.$nextTick(() => {
             vm.initialiseCommunityNameLookup();
         });

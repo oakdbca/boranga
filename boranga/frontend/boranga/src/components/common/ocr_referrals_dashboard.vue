@@ -4,7 +4,7 @@
             ref="collapsible_filters"
             component_title="Filters"
             class="mb-2"
-            @created="collapsible_component_mounted"
+            :show-warning-icon="filterApplied"
         >
             <div class="row">
                 <div class="col-md-4">
@@ -456,13 +456,6 @@ export default {
                 vm.filterOCRReferralsStatus
             );
         },
-        filterApplied: function () {
-            if (this.$refs.collapsible_filters) {
-                this.$refs.collapsible_filters.show_warning_icon(
-                    this.filterApplied
-                );
-            }
-        },
     },
     mounted: function () {
         let vm = this;
@@ -533,11 +526,6 @@ export default {
             this.$nextTick(() => {
                 this.$refs.occurrence_report_history.isModalOpen = true;
             });
-        },
-        collapsible_component_mounted: function () {
-            this.$refs.collapsible_filters.show_warning_icon(
-                this.filterApplied
-            );
         },
         initialiseOccurrenceLookup: function () {
             let vm = this;
