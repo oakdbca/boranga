@@ -20,7 +20,7 @@ from boranga.helpers import (
 logger = logging.getLogger(__name__)
 
 
-class NH3SanitizeMixin:
+class NH3SanitizeSerializerMixin:
     """
     Sanitizes all CharField inputs using nh3 before validation
     and also before adding to the response.
@@ -45,7 +45,7 @@ class NH3SanitizeMixin:
         return rep
 
 
-class AbsoluteFileUrlMixin:
+class AbsoluteFileUrlSerializerMixin:
     """
     Mixin to make all FileField and ImageField URLs absolute using request.build_absolute_uri.
     This is main to ensure that file urls include the same scheme as the request
@@ -64,7 +64,9 @@ class AbsoluteFileUrlMixin:
 
 
 class BaseModelSerializer(
-    NH3SanitizeMixin, AbsoluteFileUrlMixin, serializers.ModelSerializer
+    NH3SanitizeSerializerMixin,
+    AbsoluteFileUrlSerializerMixin,
+    serializers.ModelSerializer,
 ):
     """
     Base serializer that applies NH3 sanitization and absolute URL conversion.
@@ -74,7 +76,9 @@ class BaseModelSerializer(
         abstract = True
 
 
-class BaseSerializer(NH3SanitizeMixin, AbsoluteFileUrlMixin, serializers.Serializer):
+class BaseSerializer(
+    NH3SanitizeSerializerMixin, AbsoluteFileUrlSerializerMixin, serializers.Serializer
+):
     """
     Base serializer that applies NH3 sanitization and absolute URL conversion.
     """
