@@ -484,8 +484,14 @@ export default {
                     this.$refs.occurrence_report.$refs.ocr_location.incrementComponentMapKey();
                 });
                 vm.isSaved = true;
+                vm.$nextTick(() => {
+                    vm.resetDirtyState();
+                });
                 return data;
             });
+        },
+        resetDirtyState: function () {
+            this.$refs.occurrence_report.resetDirtyState();
         },
         save_exit: async function () {
             let vm = this;

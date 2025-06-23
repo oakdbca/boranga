@@ -1225,7 +1225,7 @@ export default {
                 swal.fire({
                     title: 'Keighery Scale Total Error',
                     text:
-                        'Keighery Scale total should be 100%. Currently the total is ' +
+                        'Keighery Scale total should be either 0% or 100%. Currently the total is ' +
                         vm.keigheryScaleTotal +
                         '%.',
                     icon: 'error',

@@ -864,10 +864,29 @@ export default {
             plant_condition_list: [],
             counted_subject_list: [],
             updatingPlantCountDetails: false,
+            originalPlantCount: JSON.stringify(this.plant_count), // to check if the plant count details are changed
         };
     },
-    computed: {},
-    watch: {},
+    emits: ['update-plant-count', 'dirty'],
+    computed: {
+        isPlantCountDirty: function () {
+            let vm = this;
+            return JSON.stringify(vm.plant_count) !== vm.originalPlantCount;
+        },
+        isDirty: function () {
+            return this.isPlantCountDirty;
+        },
+    },
+    watch: {
+        isDirty: function (newValue) {
+            let vm = this;
+            if (newValue) {
+                vm.$emit('dirty', true);
+            } else {
+                vm.$emit('dirty', false);
+            }
+        },
+    },
     created: async function () {
         let vm = this;
         const response = await fetch(
@@ -898,7 +917,9 @@ export default {
         });
     },
     methods: {
-        eventListeners: function () {},
+        resetDirtyState: function () {
+            this.originalPlantCount = JSON.stringify(this.plant_count);
+        },
         updatePlantCountDetails: function () {
             let vm = this;
             vm.updatingPlantCountDetails = true;
@@ -920,8 +941,8 @@ export default {
                 }
             ).then(
                 async (response) => {
+                    const data = await response.json();
                     if (!response.ok) {
-                        const data = await response.json();
                         swal.fire({
                             title: 'Error',
                             text: JSON.stringify(data),
@@ -932,6 +953,8 @@ export default {
                         });
                         return;
                     }
+                    vm.$emit('update-plant-count', data);
+                    vm.originalPlantCount = JSON.stringify(data);
                     vm.updatingPlantCountDetails = false;
                     swal.fire({
                         title: 'Saved',

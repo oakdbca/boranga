@@ -773,7 +773,7 @@ export default {
             default: false,
         },
     },
-    emits: ['update-animal-observation'],
+    emits: ['update-animal-observation', 'dirty'],
     data: function () {
         return {
             //----list of values dictionary
@@ -785,7 +785,20 @@ export default {
             updatingAnimalOnservationDetails: false,
             total_seen: 0,
             listOfAnimalValuesDict: {},
+            originalAnimalObservation: JSON.stringify(this.animal_observation),
         };
+    },
+    computed: {
+        isAnimalObservationDirty: function () {
+            let vm = this;
+            return (
+                JSON.stringify(vm.animal_observation) !==
+                vm.originalAnimalObservation
+            );
+        },
+        isDirty: function () {
+            return this.isAnimalObservationDirty;
+        },
     },
     watch: {
         animal_observation: function () {
@@ -793,10 +806,17 @@ export default {
             $(vm.$refs.primary_detection_select)
                 .val(vm.animal_observation.primary_detection_method)
                 .trigger('change.select2');
-            //$(vm.$refs.secondary_sign_select).val(vm.animal_observation.secondary_sign).trigger('change.select2');
             $(vm.$refs.reproductive_state_select)
                 .val(vm.animal_observation.reproductive_state)
                 .trigger('change.select2');
+        },
+        isDirty: function (newValue) {
+            let vm = this;
+            if (newValue) {
+                vm.$emit('dirty', true);
+            } else {
+                vm.$emit('dirty', false);
+            }
         },
     },
     created: async function () {
@@ -840,6 +860,11 @@ export default {
         vm.calculateTotalNumberSeen();
     },
     methods: {
+        resetDirtyState: function () {
+            this.originalAnimalObservation = JSON.stringify(
+                this.animal_observation
+            );
+        },
         calculateTotalNumberSeen: function () {
             let vm = this;
             vm.total_seen = 0;
@@ -936,6 +961,7 @@ export default {
                             throw new Error(data);
                         }
                         vm.$emit('update-animal-observation', data);
+                        vm.originalAnimalObservation = JSON.stringify(data);
                         swal.fire({
                             title: 'Saved',
                             text: 'Animal Observation details have been saved',

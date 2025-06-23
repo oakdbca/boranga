@@ -4,6 +4,11 @@
             :form-collapse="false"
             label="Habitat Composition"
             :Index="habitatCompositionBody"
+            :subtitle="habitatCompositionIsDirty ? 'Unsaved Changes' : ''"
+            :subtitle-class="
+                habitatCompositionIsDirty ? 'text-warning ms-auto' : ''
+            "
+            :show-subtitle-icon="true"
         >
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label">Land Form:</label>
@@ -393,6 +398,11 @@
             :form-collapse="false"
             label="Habitat Condition"
             :Index="habitatConditionBody"
+            :subtitle="habitatConditionIsDirty ? 'Unsaved Changes' : ''"
+            :subtitle-class="
+                habitatConditionIsDirty ? 'text-warning ms-auto' : ''
+            "
+            :show-subtitle-icon="true"
         >
             <label for="" class="col-lg-3 control-label fs-5 fw-bold mb-3"
                 >Keighery Scale</label
@@ -613,6 +623,11 @@
             :form-collapse="false"
             label="Vegetation Structure"
             :Index="vegetationStructureBody"
+            :subtitle="vegetationStructureIsDirty ? 'Unsaved Changes' : ''"
+            :subtitle-class="
+                vegetationStructureIsDirty ? 'text-warning ms-auto' : ''
+            "
+            :show-subtitle-icon="true"
         >
             <div class="row mb-3">
                 <label for="" class="col-sm-6 control-label"
@@ -716,6 +731,9 @@
             :form-collapse="false"
             label="Fire History"
             :Index="fireHistoryBody"
+            :subtitle="fireHistoryIsDirty ? 'Unsaved Changes' : ''"
+            :subtitle-class="fireHistoryIsDirty ? 'text-warning ms-auto' : ''"
+            :show-subtitle-icon="true"
         >
             <label for="" class="col-lg-3 control-label fs-5 fw-bold"
                 >Last Fire History</label
@@ -841,6 +859,11 @@
             :form-collapse="false"
             label="Associated Species"
             :Index="associatedSpeciesBody"
+            :subtitle="associatedSpeciesIsDirty ? 'Unsaved Changes' : ''"
+            :subtitle-class="
+                associatedSpeciesIsDirty ? 'text-warning ms-auto' : ''
+            "
+            :show-subtitle-icon="true"
         >
             <div class="row mb-3 border-bottom pb-3">
                 <label for="" class="col-sm-3 control-label"
@@ -998,6 +1021,21 @@ export default {
             vegetationStructureBody: 'vegetationStructureBody' + uuid(),
             fireHistoryBody: 'fireHistoryBody' + uuid(),
             associatedSpeciesBody: 'associatedSpeciesBody' + uuid(),
+            originalHabitatComposition: JSON.stringify(
+                vm.occurrence_report_obj.habitat_composition
+            ),
+            originalHabitatCondition: JSON.stringify(
+                vm.occurrence_report_obj.habitat_condition
+            ),
+            originalVegetationStructure: JSON.stringify(
+                vm.occurrence_report_obj.vegetation_structure
+            ),
+            originalFireHistory: JSON.stringify(
+                vm.occurrence_report_obj.fire_history
+            ),
+            originalAssociatedSpecies: JSON.stringify(
+                vm.occurrence_report_obj.associated_species
+            ),
             //---to show fields related to Fauna
             isFauna:
                 vm.occurrence_report_obj.group_type === 'fauna' ? true : false,
@@ -1040,6 +1078,57 @@ export default {
                         .completely_degraded
                 )
             ).toFixed(2);
+        },
+        habitatCompositionIsDirty: function () {
+            return (
+                JSON.stringify(
+                    this.occurrence_report_obj.habitat_composition
+                ) != this.originalHabitatComposition
+            );
+        },
+        habitatConditionIsDirty: function () {
+            return (
+                JSON.stringify(this.occurrence_report_obj.habitat_condition) !=
+                this.originalHabitatCondition
+            );
+        },
+        vegetationStructureIsDirty: function () {
+            return (
+                JSON.stringify(
+                    this.occurrence_report_obj.vegetation_structure
+                ) != this.originalVegetationStructure
+            );
+        },
+        fireHistoryIsDirty: function () {
+            return (
+                JSON.stringify(this.occurrence_report_obj.fire_history) !=
+                this.originalFireHistory
+            );
+        },
+        associatedSpeciesIsDirty: function () {
+            return (
+                JSON.stringify(this.occurrence_report_obj.associated_species) !=
+                this.originalAssociatedSpecies
+            );
+        },
+        isDirty: function () {
+            return (
+                this.habitatCompositionIsDirty ||
+                this.habitatConditionIsDirty ||
+                this.vegetationStructureIsDirty ||
+                this.fireHistoryIsDirty ||
+                this.associatedSpeciesIsDirty
+            );
+        },
+    },
+    emits: ['dirty'],
+    watch: {
+        isDirty: function (newValue) {
+            if (newValue) {
+                this.$emit('dirty', true);
+            } else {
+                this.$emit('dirty', false);
+            }
         },
     },
     created: async function () {
@@ -1094,6 +1183,23 @@ export default {
         vm.initialiseSoilTypeSelect();
     },
     methods: {
+        resetDirtyState: function () {
+            this.originalHabitatComposition = JSON.stringify(
+                this.occurrence_report_obj.habitat_composition
+            );
+            this.originalHabitatCondition = JSON.stringify(
+                this.occurrence_report_obj.habitat_condition
+            );
+            this.originalVegetationStructure = JSON.stringify(
+                this.occurrence_report_obj.vegetation_structure
+            );
+            this.originalFireHistory = JSON.stringify(
+                this.occurrence_report_obj.fire_history
+            );
+            this.originalAssociatedSpecies = JSON.stringify(
+                this.occurrence_report_obj.associated_species
+            );
+        },
         eventListeners: function () {
             let vm = this;
             $(vm.$refs.flowering_period_select)
@@ -1244,6 +1350,9 @@ export default {
                 }
                 vm.updatingHabitatCompositionDetails = false;
                 vm.occurrence_report_obj.habitat_composition = data;
+                vm.originalHabitatComposition = JSON.stringify(
+                    vm.occurrence_report_obj.habitat_composition
+                );
                 swal.fire({
                     title: 'Saved',
                     text: 'Habitat Composition details have been saved',
@@ -1259,27 +1368,6 @@ export default {
                     }
                 });
             });
-        },
-        validateKeigheryScaleTotal: function () {
-            let vm = this;
-            if (
-                vm.keigheryScaleTotal != (100.0).toFixed(2) &&
-                vm.keigheryScaleTotal != (0.0).toFixed(2)
-            ) {
-                swal.fire({
-                    title: 'Keighery Scale Total Error',
-                    text:
-                        'Keighery Scale total should be 100%. Currently the total is ' +
-                        vm.keigheryScaleTotal +
-                        '%.',
-                    icon: 'error',
-                    customClass: {
-                        confirmButton: 'btn btn-primary',
-                    },
-                });
-                return false;
-            }
-            return true;
         },
         updateHabitatConditionDetails: function () {
             let vm = this;
@@ -1325,8 +1413,10 @@ export default {
                     vm.updatingHabitatConditionDetails = false;
                 }
                 vm.updatingHabitatConditionDetails = false;
-                vm.occurrence_report_obj.habitat_condition =
-                    await response.json();
+                vm.occurrence_report_obj.habitat_condition = data;
+                vm.originalHabitatCondition = JSON.stringify(
+                    vm.occurrence_report_obj.habitat_condition
+                );
                 swal.fire({
                     title: 'Saved',
                     text: 'Habitat Condition details have been saved',
@@ -1365,6 +1455,9 @@ export default {
                     vm.updatingVegetationStructure = false;
                     vm.occurrence_report_obj.vegetation_structure =
                         await response.json();
+                    vm.originalVegetationStructure = JSON.stringify(
+                        vm.occurrence_report_obj.vegetation_structure
+                    );
                     swal.fire({
                         title: 'Saved',
                         text: 'Vegetation Structure details have been saved',
@@ -1417,6 +1510,9 @@ export default {
                     vm.updatingFireHistoryDetails = false;
                     vm.occurrence_report_obj.fire_history =
                         await response.json();
+                    vm.originalFireHistory = JSON.stringify(
+                        vm.occurrence_report_obj.fire_history
+                    );
                     swal.fire({
                         title: 'Saved',
                         text: 'Fire History details have been saved',
@@ -1472,6 +1568,9 @@ export default {
                     vm.updatingAssociatedSpeciesDetails = false;
                     vm.occurrence_report_obj.associated_species =
                         await response.json();
+                    vm.originalAssociatedSpecies = JSON.stringify(
+                        vm.occurrence_report_obj.associated_species
+                    );
                     swal.fire({
                         title: 'Saved',
                         text: 'Associated Species details have been saved',
@@ -1516,6 +1615,27 @@ export default {
                 }
                 this.occurrence_report_obj.habitat_condition[key] = newValue;
             }
+        },
+        validateKeigheryScaleTotal: function () {
+            let vm = this;
+            if (
+                vm.keigheryScaleTotal != (100.0).toFixed(2) &&
+                vm.keigheryScaleTotal != (0.0).toFixed(2)
+            ) {
+                swal.fire({
+                    title: 'Keighery Scale Total Error',
+                    text:
+                        'Keighery Scale total should be either 0% or 100%. Currently the total is ' +
+                        vm.keigheryScaleTotal +
+                        '%.',
+                    icon: 'error',
+                    customClass: {
+                        confirmButton: 'btn btn-primary',
+                    },
+                });
+                return false;
+            }
+            return true;
         },
     },
 };

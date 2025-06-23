@@ -1258,7 +1258,13 @@ export default {
                     false
                 );
                 vm.$refs.occurrence_report.$refs.ocr_location.incrementComponentMapKey();
+                vm.$nextTick(() => {
+                    vm.resetDirtyState();
+                });
             });
+        },
+        resetDirtyState: function () {
+            this.$refs.occurrence_report.resetDirtyState();
         },
         save_exit: async function () {
             let vm = this;

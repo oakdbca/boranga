@@ -39,13 +39,18 @@
                         id="pills-location-tab"
                         class="nav-link active"
                         data-bs-toggle="pill"
+                        data-target-id="ocr_location"
                         :href="'#' + locationBody"
                         role="tab"
                         :aria-controls="locationBody"
                         aria-selected="true"
-                        @click="tabClicked('location')"
                     >
-                        Location
+                        Location<template v-if="tabDirtyMap['ocr_location']"
+                            ><i
+                                class="bi bi-exclamation-circle-fill text-warning ms-2"
+                                title="This tab has unsaved changes"
+                            ></i
+                        ></template>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -53,12 +58,17 @@
                         id="pills-habitat-tab"
                         class="nav-link"
                         data-bs-toggle="pill"
+                        data-target-id="ocr_habitat"
                         :href="'#' + habitatBody"
                         role="tab"
                         aria-selected="false"
-                        @click="tabClicked('habitat')"
                     >
-                        Habitat
+                        Habitat<template v-if="tabDirtyMap['ocr_habitat']"
+                            ><i
+                                class="bi bi-exclamation-circle-fill text-warning ms-2"
+                                title="This tab has unsaved changes"
+                            ></i
+                        ></template>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -66,12 +76,18 @@
                         id="pills-observation-tab"
                         class="nav-link"
                         data-bs-toggle="pill"
+                        data-target-id="ocr_observation"
                         :href="'#' + observationBody"
                         role="tab"
                         aria-selected="false"
-                        @click="tabClicked('observation')"
                     >
-                        Observation
+                        Observation<template
+                            v-if="tabDirtyMap['ocr_observation']"
+                            ><i
+                                class="bi bi-exclamation-circle-fill text-warning ms-2"
+                                title="This tab has unsaved changes"
+                            ></i
+                        ></template>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -79,10 +95,10 @@
                         id="pills-documents-tab"
                         class="nav-link"
                         data-bs-toggle="pill"
+                        data-target-id="ocr_documents"
                         :href="'#' + documentBody"
                         role="tab"
                         aria-selected="false"
-                        @click="tabClicked('documents')"
                     >
                         Documents
                     </a>
@@ -92,10 +108,10 @@
                         id="pills-threats-tab"
                         class="nav-link"
                         data-bs-toggle="pill"
+                        data-target-id="ocr_threats"
                         :href="'#' + threatBody"
                         role="tab"
                         aria-selected="false"
-                        @click="tabClicked('threats')"
                     >
                         Threats
                     </a>
@@ -109,7 +125,7 @@
                     aria-labelledby="pills-location-tab"
                 >
                     <OCRLocation
-                        id="ocrLocation"
+                        id="ocr_location"
                         :key="reloadcount"
                         ref="ocr_location"
                         :is_external="is_external"
@@ -118,6 +134,7 @@
                         :occurrence_report_obj="occurrence_report_obj"
                         :referral="referral"
                         @refresh-from-response="refreshFromResponse"
+                        @dirty="onTabDirtyChange('ocr_location', $event)"
                     >
                     </OCRLocation>
                 </div>
@@ -128,12 +145,13 @@
                     aria-labelledby="pills-habitat-tab"
                 >
                     <OCRHabitat
-                        id="ocrhabitat"
+                        id="ocr_habitat"
                         :key="reloadcount"
                         ref="ocr_habitat"
                         :is_internal="is_internal"
                         :is_external="is_external"
                         :occurrence_report_obj="occurrence_report_obj"
+                        @dirty="onTabDirtyChange('ocr_habitat', $event)"
                     >
                     </OCRHabitat>
                 </div>
@@ -144,12 +162,13 @@
                     aria-labelledby="pills-observation-tab"
                 >
                     <OCRObservation
-                        id="ocrObservation"
+                        id="ocr_observation"
                         :key="reloadcount"
                         ref="ocr_observation"
                         :is_internal="is_internal"
                         :is_external="is_external"
                         :occurrence_report_obj="occurrence_report_obj"
+                        @dirty="onTabDirtyChange('ocr_observation', $event)"
                     >
                     </OCRObservation>
                 </div>
@@ -160,7 +179,7 @@
                     aria-labelledby="pills-documents-tab"
                 >
                     <OCRDocuments
-                        id="ocrDocuments"
+                        id="ocr_documents"
                         :key="reloadcount"
                         ref="ocr_documents"
                         :is_internal="is_internal"
@@ -176,7 +195,7 @@
                     aria-labelledby="pills-threats-tab"
                 >
                     <OCRThreats
-                        id="ocrThreats"
+                        id="ocr_threats"
                         :key="reloadcount"
                         ref="ocr_threats"
                         :is_internal="is_internal"
@@ -253,6 +272,14 @@ export default {
             threatBody: 'threatBody' + uuid(),
             documentBody: 'documentBody' + uuid(),
             relatedItemBody: 'relatedItemBody' + uuid(),
+            tabDirtyMap: {
+                ocr_location: false,
+                ocr_habitat: false,
+                ocr_observation: false,
+                ocr_documents: false,
+                ocr_threats: false,
+            },
+            allowTabChange: false,
         };
     },
     computed: {
@@ -286,9 +313,70 @@ export default {
                 }
             });
         });
+        document.querySelectorAll('[data-bs-toggle="pill"]').forEach((el) => {
+            el.addEventListener('show.bs.tab', this.beforeBsTabShown);
+        });
+    },
+    beforeUnmount() {
+        document.querySelectorAll('[data-bs-toggle="pill"]').forEach((el) => {
+            el.removeEventListener('show.bs.tab', this.beforeBsTabShown);
+        });
     },
     methods: {
-        tabClicked: function () {},
+        resetDirtyState: function () {
+            this.tabDirtyMap = {
+                ocr_location: false,
+                ocr_habitat: false,
+                ocr_observation: false,
+                ocr_documents: false,
+                ocr_threats: false,
+            };
+            for (const key in this.tabDirtyMap) {
+                if (this.$refs[key].resetDirtyState) {
+                    this.$refs[key].resetDirtyState();
+                }
+            }
+        },
+        onTabDirtyChange(tabKey, isDirty) {
+            this.tabDirtyMap[tabKey] = isDirty;
+        },
+        isAnyTabDirty() {
+            return Object.values(this.tabDirtyMap).some(Boolean);
+        },
+        beforeBsTabShown(event) {
+            let vm = this;
+            // If the tab being navigated away from is not dirty, allow the tab change
+            if (
+                !vm.tabDirtyMap[
+                    event.relatedTarget.getAttribute('data-target-id')
+                ]
+            ) {
+                return;
+            }
+            // Flag required to prevent infinite loop when switching tabs
+            if (vm.allowTabChange) {
+                vm.allowTabChange = false;
+                return;
+            }
+            event.preventDefault();
+            swal.fire({
+                title: 'Unsaved Changes',
+                text: 'You have unsaved changes. Are you sure you want to switch tabs?',
+                icon: 'question',
+                showCancelButton: true,
+                reverseButtons: true,
+                confirmButtonText: 'Switch Tabs',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-secondary',
+                },
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    vm.allowTabChange = true;
+                    bootstrap.Tab.getOrCreateInstance(event.target).show();
+                }
+            });
+        },
         refreshFromResponse: function () {
             this.$emit('refreshFromResponse');
         },
