@@ -90,6 +90,7 @@
                 @refresh-occurrence-report="refreshOccurrenceReport()"
                 @refresh-from-response="refreshFromResponse"
                 @save-occurrence-report="save_before_submit()"
+                @dirty="isDirty = $event"
             >
             </ProposalOccurrenceReport>
 
@@ -329,6 +330,7 @@ export default {
             newText: '',
             pBody: 'pBody',
             missing_fields: [],
+            isDirty: false,
             isSaved: false,
         };
     },
@@ -615,15 +617,10 @@ export default {
             return newText;
         },
         leaving: function (e) {
-            e.preventDefault();
-
-            let vm = this;
-            var dialogText = 'You have some unsaved changes.';
-            if (!vm.ocr_proposal_readonly && !vm.submitting) {
-                e.returnValue = dialogText;
-                return dialogText;
-            } else {
-                return null;
+            if (this.isDirty) {
+                e.preventDefault();
+                e.returnValue = ''; // Required for Chrome
+                // The browser will show its own confirmation dialog
             }
         },
         highlight_missing_fields: function () {
