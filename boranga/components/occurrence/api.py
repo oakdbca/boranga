@@ -952,7 +952,9 @@ class OccurrenceReportViewSet(
             "GET",
         ],
         detail=False,
-        permission_classes=[OccurrenceReportPermission],
+        permission_classes=[
+            OccurrenceReportPermission | ExternalOccurrenceReportPermission
+        ],
     )
     def observation_times(self, request, *args, **kwargs):
         """used for Occurrence Report external form"""
