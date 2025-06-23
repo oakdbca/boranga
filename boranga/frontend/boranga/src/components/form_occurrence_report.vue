@@ -259,6 +259,7 @@ export default {
         'refreshFromResponse',
         'refreshOccurrenceReport',
         'saveOccurrenceReport',
+        'dirty',
     ],
     data: function () {
         return {
@@ -281,6 +282,14 @@ export default {
             },
             allowTabChange: false,
         };
+    },
+    watch: {
+        tabDirtyMap: {
+            handler: function () {
+                this.$emit('dirty', this.isAnyTabDirty());
+            },
+            deep: true,
+        },
     },
     computed: {
         show_submitter_contact_details: function () {
