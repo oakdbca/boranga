@@ -117,13 +117,12 @@
                                             class="pull-right"
                                             style="margin-top: 5px"
                                         >
-                                            <router-link
+                                            <button
                                                 class="btn btn-primary"
-                                                :to="{
-                                                    name: 'external-occurrence-report-dash',
-                                                }"
-                                                >Back to Dashboard</router-link
+                                                @click.prevent="backToDashboard"
                                             >
+                                                Back to Dashboard
+                                            </button>
                                         </p>
                                     </div>
                                     <div
@@ -899,6 +898,34 @@ export default {
         },
         refreshOccurrenceReport: function () {
             this.fetchOccurrenceReport(this.$route.params.occurrence_report_id);
+        },
+        backToDashboard: function () {
+            if (this.isDirty) {
+                swal.fire({
+                    title: 'Unsaved Changes',
+                    text: 'You have unsaved changes. Are you sure you want to go back to the dashboard?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    reverseButtons: true,
+                    confirmButtonText: 'Back to Dashboard',
+                    cancelButtonText: 'Cancel',
+                    customClass: {
+                        confirmButton: 'btn btn-primary',
+                        cancelButton: 'btn btn-secondary me-2',
+                    },
+                    buttonsStyling: false,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.$router.push({
+                            name: 'external-occurrence-report-dash',
+                        });
+                    }
+                });
+                return;
+            }
+            this.$router.push({
+                name: 'external-occurrence-report-dash',
+            });
         },
     },
 };
