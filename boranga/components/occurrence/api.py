@@ -167,6 +167,7 @@ from boranga.components.occurrence.serializers import (
     OCRExternalRefereeInviteSerializer,
     OCRObserverDetailLimitedSerializer,
     OCRObserverDetailSerializer,
+    OCRPlantCountSerializer,
     ProposeApproveSerializer,
     ProposeDeclineSerializer,
     SaveBeforeSubmitOCRHabitatConditionSerializer,
@@ -1525,15 +1526,14 @@ class OccurrenceReportViewSet(
             plant_count_instance, data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        new_instance = serializer.save()
 
         if (
             ocr_instance.processing_status
             == OccurrenceReport.PROCESSING_STATUS_UNLOCKED
         ):
             self.unlocked_back_to_assessor()
-
-        return Response(serializer.data)
+        return Response(OCRPlantCountSerializer(new_instance).data)
 
     @list_route(
         methods=[
