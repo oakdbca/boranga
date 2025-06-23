@@ -50,7 +50,6 @@
                         collapse: false,
                         property_display_map: ocrPropertyDisplayMap,
                     }"
-                    @refresh-from-response="refreshFromResponse"
                     @crs-select-search="searchForCRS"
                     @dirty="mapIsDirty = $event"
                 ></MapComponent>
@@ -456,7 +455,7 @@ export default {
             default: false,
         },
     },
-    emits: ['refreshFromResponse', 'dirty'],
+    emits: ['dirty'],
     data: function () {
         let vm = this;
         return {
@@ -748,6 +747,9 @@ export default {
                         }
                     });
                     vm.$refs.component_map.forceToRefreshMap();
+                    vm.$nextTick(() => {
+                        vm.mapIsDirty = false;
+                    });
                 },
                 (error) => {
                     var text = helpers.apiVueResourceError(error);
@@ -768,10 +770,6 @@ export default {
         },
         incrementComponentMapKey: function () {
             this.uuid = uuid();
-        },
-        // eslint-disable-next-line no-unused-vars
-        refreshFromResponse: function (data) {
-            //this.proposal = Object.assign({}, data);
         },
         searchForCRS: function (search, loading) {
             const vm = this;
