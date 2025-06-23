@@ -5,11 +5,14 @@
             :form-collapse="false"
             label="Location"
             Index="occurrence_report_location"
+            :subtitle="isDirty ? 'Unsaved Changes' : ''"
+            :subtitle-class="isDirty ? 'text-warning ms-auto' : ''"
+            :show-subtitle-icon="true"
         >
             <div class="row mb-3">
                 <div class="col">
                     <span class="text-danger">*</span>
-                    <span class="text-muted"
+                    <span class="text-muted ps-1"
                         >You must indicate the location for your occurrence
                         report</span
                     >
@@ -49,6 +52,7 @@
                     }"
                     @refresh-from-response="refreshFromResponse"
                     @crs-select-search="searchForCRS"
+                    @dirty="mapIsDirty = $event"
                 ></MapComponent>
             </div>
 
@@ -91,7 +95,8 @@
             </div>
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label fw-bold"
-                    >Location Description: <span class="text-danger">*</span>
+                    >Location Description:
+                    <span class="text-danger pe-1">*</span>
                     <HelpText
                         section_id="occurrence_report_location_description"
                 /></label>
@@ -414,15 +419,10 @@
 
 <script>
 import { v4 as uuid } from 'uuid';
-// import datatable from '@vue-utils/datatable.vue';
 import FormSection from '@/components/forms/section_toggle.vue';
-//import ObserverDatatable from './observer_datatable.vue';
 import MapComponent from '../component_map.vue';
 import HelpText from '@/components/common/help_text.vue';
 import { api_endpoints, constants, helpers } from '@/utils/hooks';
-// require("select2/dist/css/select2.min.css");
-// require("select2-bootstrap-5-theme/dist/select2-bootstrap-5-theme.min.css")
-// import { VueSelect } from 'vue-select';
 
 export default {
     name: 'OCRLocation',
@@ -430,7 +430,6 @@ export default {
         FormSection,
         HelpText,
         MapComponent,
-        // VueSelect,
     },
     props: {
         occurrence_report_obj: {
@@ -457,7 +456,7 @@ export default {
             default: false,
         },
     },
-    emits: ['refreshFromResponse'],
+    emits: ['refreshFromResponse', 'dirty'],
     data: function () {
         let vm = this;
         return {
@@ -473,6 +472,8 @@ export default {
                     : false,
             //----list of values dictionary
 
+            originalLocation: JSON.stringify(vm.occurrence_report_obj.location),
+            mapIsDirty: false,
             region_list: [],
             district_list: [],
             filtered_district_list: [],
@@ -585,8 +586,25 @@ export default {
 
             return displayMap;
         },
+        locationIsDirty: function () {
+            return (
+                JSON.stringify(this.occurrence_report_obj.location) !=
+                this.originalLocation
+            );
+        },
+        isDirty: function () {
+            return this.mapIsDirty || this.locationIsDirty;
+        },
     },
-    watch: {},
+    watch: {
+        isDirty: function (newValue) {
+            if (newValue) {
+                this.$emit('dirty', true);
+            } else {
+                this.$emit('dirty', false);
+            }
+        },
+    },
     created: async function () {
         let vm = this;
         this.uuid = uuid();
@@ -641,6 +659,11 @@ export default {
         });
     },
     methods: {
+        resetDirtyState: function () {
+            this.originalLocation = JSON.stringify(
+                this.occurrence_report_obj.location
+            );
+        },
         filterDistrict: function (event) {
             this.$nextTick(() => {
                 if (event) {
@@ -706,6 +729,9 @@ export default {
                 async (response) => {
                     vm.updatingLocationDetails = false;
                     vm.occurrence_report_obj.location = await response.json();
+                    vm.originalLocation = JSON.stringify(
+                        vm.occurrence_report_obj.location
+                    );
                     swal.fire({
                         title: 'Saved',
                         text: 'Location details have been saved',
