@@ -4,7 +4,6 @@
             ref="collapsible_filters"
             component_title="Filters"
             class="mb-2"
-            @created="collapsible_component_mounted"
         >
             <div class="row">
                 <div class="col-md-3">
