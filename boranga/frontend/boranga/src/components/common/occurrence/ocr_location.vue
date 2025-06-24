@@ -392,7 +392,6 @@
 
             <div class="row mb-3">
                 <div class="col-sm-12">
-                    <!-- <button v-if="!updatingLocationDetails" class="pull-right btn btn-primary" @click.prevent="updateDetails()" :disabled="!can_update()">Update</button> -->
                     <button
                         v-if="!updatingLocationDetails"
                         class="btn btn-sm float-end"
