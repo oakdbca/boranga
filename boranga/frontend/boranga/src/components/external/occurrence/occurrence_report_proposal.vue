@@ -74,10 +74,10 @@
                 id="scrollspy-heading"
                 class="col-lg-12"
             >
-                <h4>
+                <h3>
                     Occurrence Report - {{ display_group_type }}:
                     {{ occurrence_report_obj.occurrence_report_number }}
-                </h4>
+                </h3>
             </div>
 
             <ProposalOccurrenceReport
