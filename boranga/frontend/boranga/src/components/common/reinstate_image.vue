@@ -6,6 +6,7 @@
             :show-o-k="false"
             cancel-text="Close"
             large
+            :data-loss-warning-on-cancel="false"
             @ok="ok()"
             @cancel="close()"
         >
