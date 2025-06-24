@@ -715,14 +715,27 @@
             </div>
             <div class="row mb-3">
                 <div class="col-sm-12">
-                    <!-- <button v-if="!updatingAnimalOnservationDetails" class="pull-right btn btn-primary" @click.prevent="updateDetails()" :disabled="!can_update()">Update</button> -->
                     <button
                         v-if="!updatingAnimalOnservationDetails"
-                        :disabled="isReadOnly"
-                        class="btn btn-primary btn-sm float-end"
+                        class="btn btn-sm float-end"
+                        :class="{
+                            'btn-primary': animalObservationIsDirty,
+                            'btn-light': !animalObservationIsDirty,
+                            border: !animalObservationIsDirty,
+                        }"
+                        :disabled="isReadOnly || !animalObservationIsDirty"
                         @click.prevent="updateAnimalObservationDetails()"
                     >
-                        Save Section
+                        <template v-if="animalObservationIsDirty"
+                            >Save Section<i
+                                class="bi bi-exclamation-circle-fill text-warning ps-2"
+                            ></i
+                        ></template>
+                        <template v-else
+                            >Saved<i
+                                class="bi bi-check-circle-fill text-success ps-2"
+                            ></i
+                        ></template>
                     </button>
                     <button v-else disabled class="float-end btn btn-primary">
                         Saving
@@ -789,7 +802,7 @@ export default {
         };
     },
     computed: {
-        isAnimalObservationDirty: function () {
+        animalObservationIsDirty: function () {
             let vm = this;
             return (
                 JSON.stringify(vm.animal_observation) !==
@@ -797,7 +810,7 @@ export default {
             );
         },
         isDirty: function () {
-            return this.isAnimalObservationDirty;
+            return this.animalObservationIsDirty;
         },
     },
     watch: {

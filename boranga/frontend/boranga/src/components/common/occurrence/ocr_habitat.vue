@@ -373,14 +373,27 @@
             </div>
             <div class="row mb-3">
                 <div class="col-sm-12">
-                    <!-- <button v-if="!updatingHabitatCompositionDetails" class="pull-right btn btn-primary" @click.prevent="updateDetails()" :disabled="!can_update()">Update</button> -->
                     <button
                         v-if="!updatingHabitatCompositionDetails"
-                        :disabled="isReadOnly"
-                        class="btn btn-primary btn-sm float-end"
+                        class="btn btn-sm float-end"
+                        :class="{
+                            'btn-primary': habitatCompositionIsDirty,
+                            'btn-light': !habitatCompositionIsDirty,
+                            border: !habitatCompositionIsDirty,
+                        }"
+                        :disabled="isReadOnly || !habitatCompositionIsDirty"
                         @click.prevent="updateHabitatCompositionDetails()"
                     >
-                        Save Section
+                        <template v-if="habitatCompositionIsDirty"
+                            >Save Section<i
+                                class="bi bi-exclamation-circle-fill text-warning ps-2"
+                            ></i
+                        ></template>
+                        <template v-else
+                            >Saved<i
+                                class="bi bi-check-circle-fill text-success ps-2"
+                            ></i
+                        ></template>
                     </button>
                     <button v-else disabled class="float-end btn btn-primary">
                         Saving
@@ -601,11 +614,25 @@
                 <div class="col-sm-12">
                     <button
                         v-if="!updatingHabitatConditionDetails"
-                        :disabled="isReadOnly"
-                        class="btn btn-primary btn-sm float-end"
+                        class="btn btn-sm float-end"
+                        :class="{
+                            'btn-primary': habitatConditionIsDirty,
+                            'btn-light': !habitatConditionIsDirty,
+                            border: !habitatConditionIsDirty,
+                        }"
+                        :disabled="isReadOnly || !habitatConditionIsDirty"
                         @click.prevent="updateHabitatConditionDetails()"
                     >
-                        Save Section
+                        <template v-if="habitatConditionIsDirty"
+                            >Save Section<i
+                                class="bi bi-exclamation-circle-fill text-warning ps-2"
+                            ></i
+                        ></template>
+                        <template v-else
+                            >Saved<i
+                                class="bi bi-check-circle-fill text-success ps-2"
+                            ></i
+                        ></template>
                     </button>
                     <button v-else disabled class="float-end btn btn-primary">
                         Saving
@@ -709,11 +736,25 @@
                 <div class="col-sm-12">
                     <button
                         v-if="!updatingVegetationStructure"
-                        :disabled="isReadOnly"
-                        class="btn btn-primary btn-sm float-end"
+                        class="btn btn-sm float-end"
+                        :class="{
+                            'btn-primary': vegetationStructureIsDirty,
+                            'btn-light': !vegetationStructureIsDirty,
+                            border: !vegetationStructureIsDirty,
+                        }"
+                        :disabled="isReadOnly || !vegetationStructureIsDirty"
                         @click.prevent="updateVegetationStructure()"
                     >
-                        Save Section
+                        <template v-if="vegetationStructureIsDirty"
+                            >Save Section<i
+                                class="bi bi-exclamation-circle-fill text-warning ps-2"
+                            ></i
+                        ></template>
+                        <template v-else
+                            >Saved<i
+                                class="bi bi-check-circle-fill text-success ps-2"
+                            ></i
+                        ></template>
                     </button>
                     <button v-else disabled class="float-end btn btn-primary">
                         Saving
@@ -837,11 +878,25 @@
                 <div class="col-sm-12">
                     <button
                         v-if="!updatingFireHistoryDetails"
-                        :disabled="isReadOnly"
-                        class="btn btn-primary btn-sm float-end"
+                        class="btn btn-sm float-end"
+                        :class="{
+                            'btn-primary': fireHistoryIsDirty,
+                            'btn-light': !fireHistoryIsDirty,
+                            border: !fireHistoryIsDirty,
+                        }"
+                        :disabled="isReadOnly || !fireHistoryIsDirty"
                         @click.prevent="updateFireHistoryDetails()"
                     >
-                        Save Section
+                        <template v-if="fireHistoryIsDirty"
+                            >Save Section<i
+                                class="bi bi-exclamation-circle-fill text-warning ps-2"
+                            ></i
+                        ></template>
+                        <template v-else
+                            >Saved<i
+                                class="bi bi-check-circle-fill text-success ps-2"
+                            ></i
+                        ></template>
                     </button>
                     <button v-else disabled class="float-end btn btn-primary">
                         Saving
@@ -966,11 +1021,25 @@
                 <div class="col-sm-12">
                     <button
                         v-if="!updatingAssociatedSpeciesDetails"
-                        :disabled="isReadOnly"
-                        class="btn btn-primary btn-sm float-end"
+                        class="btn btn-sm float-end"
+                        :class="{
+                            'btn-primary': associatedSpeciesIsDirty,
+                            'btn-light': !associatedSpeciesIsDirty,
+                            border: !associatedSpeciesIsDirty,
+                        }"
+                        :disabled="isReadOnly || !associatedSpeciesIsDirty"
                         @click.prevent="updateAssociatedSpeciesDetails()"
                     >
-                        Save Section
+                        <template v-if="associatedSpeciesIsDirty"
+                            >Save Section<i
+                                class="bi bi-exclamation-circle-fill text-warning ps-2"
+                            ></i
+                        ></template>
+                        <template v-else
+                            >Saved<i
+                                class="bi bi-check-circle-fill text-success ps-2"
+                            ></i
+                        ></template>
                     </button>
                     <button v-else disabled class="float-end btn btn-primary">
                         Saving

@@ -800,11 +800,25 @@
             <div class="col-sm-12">
                 <button
                     v-if="!updatingPlantCountDetails"
-                    :disabled="isReadOnly"
-                    class="btn btn-primary btn-sm float-end"
+                    class="btn btn-sm float-end"
+                    :class="{
+                        'btn-primary': plantCountIsDirty,
+                        'btn-light': !plantCountIsDirty,
+                        border: !plantCountIsDirty,
+                    }"
+                    :disabled="isReadOnly || !plantCountIsDirty"
                     @click.prevent="updatePlantCountDetails()"
                 >
-                    Save Section
+                    <template v-if="plantCountIsDirty"
+                        >Save Section<i
+                            class="bi bi-exclamation-circle-fill text-warning ps-2"
+                        ></i
+                    ></template>
+                    <template v-else
+                        >Saved<i
+                            class="bi bi-check-circle-fill text-success ps-2"
+                        ></i
+                    ></template>
                 </button>
                 <button v-else disabled class="float-end btn btn-primary">
                     Saving
@@ -869,12 +883,12 @@ export default {
     },
     emits: ['update-plant-count', 'dirty'],
     computed: {
-        isPlantCountDirty: function () {
+        plantCountIsDirty: function () {
             let vm = this;
             return JSON.stringify(vm.plant_count) !== vm.originalPlantCount;
         },
         isDirty: function () {
-            return this.isPlantCountDirty;
+            return this.plantCountIsDirty;
         },
     },
     watch: {
