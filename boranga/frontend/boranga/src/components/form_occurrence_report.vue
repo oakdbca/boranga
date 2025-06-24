@@ -277,8 +277,6 @@ export default {
                 ocr_location: false,
                 ocr_habitat: false,
                 ocr_observation: false,
-                ocr_documents: false,
-                ocr_threats: false,
             },
             allowTabChange: false,
         };
