@@ -147,7 +147,7 @@ export default {
             observer_detail_url: api_endpoints.observer_detail,
             observer_detail_headers: vm.show_observer_contact_information
                 ? [
-                      'Contact Name',
+                      'Observer Name',
                       'Contact Detail',
                       'Observer Role',
                       'Observer Category',
@@ -156,7 +156,7 @@ export default {
                       'Action',
                   ]
                 : [
-                      'Contact Name',
+                      'Observer Name',
                       'Observer Role',
                       'Observer Category',
                       'Organisation',

@@ -85,7 +85,7 @@ export default {
                 'Number',
                 'Date Modified',
                 'Modified By',
-                'Contact Name',
+                'Observer Name',
                 'Observer Role',
                 'Contact Details',
                 'Organisation',
