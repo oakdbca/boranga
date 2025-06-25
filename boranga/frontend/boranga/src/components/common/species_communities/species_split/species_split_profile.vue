@@ -2095,7 +2095,9 @@ export default {
                     vm.taxon_name_id = '';
                     vm.taxon_previous_name = '';
                     vm.phylogenetic_group = '';
-                    (vm.family = ''), (vm.genus = ''), (vm.name_authority = '');
+                    vm.family = '';
+                    vm.genus = '';
+                    vm.name_authority = '';
                     vm.name_comments = '';
                 })
                 .on('select2:open', function () {
