@@ -198,6 +198,13 @@ export default {
                 }
             );
         },
+        adjust_table_width: function () {
+            if (this.$refs.related_items_datatable !== undefined) {
+                this.$refs.related_items_datatable.vmDataTable.columns
+                    .adjust()
+                    .responsive.recalc();
+            }
+        },
     },
 };
 </script>

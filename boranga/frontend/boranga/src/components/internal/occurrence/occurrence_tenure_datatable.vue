@@ -613,6 +613,13 @@ export default {
                 false
             );
         },
+        adjust_table_width: function () {
+            if (this.$refs.occurrence_tenure_datatable !== undefined) {
+                this.$refs.occurrence_tenure_datatable.vmDataTable.columns
+                    .adjust()
+                    .responsive.recalc();
+            }
+        },
     },
 };
 </script>

@@ -33,7 +33,6 @@
                         />
 
                         <ActivatedBy
-                            v-if="canSeeActivatedBy"
                             :submitter_first_name="submitter_first_name"
                             :submitter_last_name="submitter_last_name"
                             :lodgement_date="occurrence.lodgement_date"
@@ -90,20 +89,6 @@
                                                     "
                                                 >
                                                     Lock</button
-                                                ><br />
-                                            </div>
-                                            <div
-                                                v-if="canClose"
-                                                class="col-sm-12"
-                                            >
-                                                <button
-                                                    style="width: 80%"
-                                                    class="btn btn-primary mb-2"
-                                                    @click.prevent="
-                                                        splitOccurrence()
-                                                    "
-                                                >
-                                                    Split</button
                                                 ><br />
                                             </div>
                                             <div
@@ -172,6 +157,7 @@
                                 ref="occurrence"
                                 :occurrence_obj="occurrence"
                                 @refresh-from-response="refreshFromResponse"
+                                @dirty="isDirty = true"
                             >
                             </ProposalOccurrence>
 
@@ -195,9 +181,7 @@
                                             <button
                                                 class="btn btn-primary me-2 pull-left"
                                                 style="margin-top: 5px"
-                                                @click.prevent="
-                                                    returnToDashboard
-                                                "
+                                                @click.prevent="backToDashboard"
                                             >
                                                 Return to Dashboard
                                             </button>
@@ -239,8 +223,6 @@
                 </div>
             </div>
         </div>
-        <!-- <OccurrenceSplit ref="occurrence_split" :occurrence="occurrence" :is_internal="true"
-            @refreshFromResponse="refreshFromResponse" />-->
         <OccurrenceCombine
             v-if="occurrence"
             ref="occurrence_combine"
@@ -255,10 +237,7 @@
 import CommsLogs from '@common-utils/comms_logs.vue';
 import ActivatedBy from '@common-utils/activated_by.vue';
 import ProposalOccurrence from '@/components/form_occurrence.vue';
-
-// import OccurrenceSplit from './occurrence_split.vue'
 import OccurrenceCombine from './occurrence_combine.vue';
-// import OccurrenceRename from './occurrence_rename.vue'
 
 import { api_endpoints, helpers } from '@/utils/hooks';
 export default {
@@ -267,7 +246,6 @@ export default {
         CommsLogs,
         ActivatedBy,
         ProposalOccurrence,
-        // OccurrenceSplit,
         OccurrenceCombine,
     },
     filters: {
@@ -276,7 +254,6 @@ export default {
         },
     },
     beforeRouteEnter: function (to, from, next) {
-        //if (to.query.group_type_name === 'flora' || to.query.group_type_name === "fauna") {
         fetch(`/api/occurrence/${to.params.occurrence_id}/`).then(
             async (response) => {
                 next(async (vm) => {
@@ -291,6 +268,8 @@ export default {
     data: function () {
         return {
             occurrence: null,
+            original_occurrence: null,
+            saveError: false,
             form: null,
             savingOccurrence: false,
             saveExitOccurrence: false,
@@ -298,9 +277,9 @@ export default {
             imageURL: '',
             isSaved: false,
             combine_key: 0,
-
             DATE_TIME_FORMAT: 'DD/MM/YYYY HH:mm:ss',
             comparing: false,
+            isDirty: false,
         };
     },
     computed: {
@@ -338,11 +317,6 @@ export default {
             } else {
                 return '';
             }
-        },
-        canSeeActivatedBy: function () {
-            //return this.proposal && (this.proposal.processing_status != 'With Assessor (Requirements)' && this.proposal.processing_status != 'With Approver' && !this.isFinalised)
-            //return this.proposal && (this.proposal.processing_status != 'With Assessor (Requirements)')
-            return true;
         },
         hasUserEditMode: function () {
             // Need to check for approved status as to show 'Save changes' button only when edit and not while view
@@ -403,6 +377,12 @@ export default {
             this.fetchOccurrence();
         }
     },
+    mounted: function () {
+        window.addEventListener('beforeunload', this.leaving);
+    },
+    beforeUnmount: function () {
+        window.removeEventListener('beforeunload', this.leaving);
+    },
     updated: function () {
         let vm = this;
         this.$nextTick(() => {
@@ -410,6 +390,13 @@ export default {
         });
     },
     methods: {
+        leaving: function (e) {
+            if (this.isDirty) {
+                e.preventDefault();
+                e.returnValue = ''; // Required for Chrome
+                // The browser will show its own confirmation dialog
+            }
+        },
         jumpToTabs: function () {
             $('html, body').animate(
                 {
@@ -420,9 +407,6 @@ export default {
         },
         save: async function () {
             let vm = this;
-
-            console.log(vm.occurrence);
-
             var missing_data = vm.can_submit('');
             vm.isSaved = false;
             if (missing_data != true) {
@@ -499,7 +483,13 @@ export default {
                 );
                 vm.$refs.occurrence.$refs.occ_location.incrementComponentMapKey();
                 vm.$refs.occurrence.$refs.occ_location.refreshDatatables();
+                vm.$nextTick(() => {
+                    vm.resetDirtyState();
+                });
             });
+        },
+        resetDirtyState: function () {
+            this.$refs.occurrence.resetDirtyState();
         },
         save_exit: async function () {
             let vm = this;
@@ -513,7 +503,6 @@ export default {
                         confirmButton: 'btn btn-primary',
                     },
                 });
-                //vm.paySubmitting=false;
                 return false;
             }
             vm.saveExitOccurrence = true;
@@ -558,7 +547,6 @@ export default {
                     var errorText = helpers.apiVueResourceError(err);
                     swal.fire({
                         title: 'Submit Error',
-                        //helpers.apiVueResourceError(err),
                         text: errorText,
                         icon: 'error',
                         customClass: {
@@ -567,7 +555,6 @@ export default {
                     });
                     vm.submitOccurrence = false;
                     vm.saveError = true;
-                    //return false;
                 }
             );
             return result;
@@ -616,7 +603,6 @@ export default {
                         confirmButton: 'btn btn-primary',
                     },
                 });
-                //vm.paySubmitting=false;
                 return false;
             }
 
@@ -674,12 +660,6 @@ export default {
                     vm.submitOccurrence = false;
                 }
             );
-        },
-        returnToDashboard: function () {
-            let vm = this;
-            vm.$router.push({
-                name: 'internal-occurrence-dash',
-            });
         },
         refreshFromResponse: async function (response) {
             let vm = this;
@@ -940,9 +920,6 @@ export default {
                 }
             });
         },
-        splitOccurrence: async function () {
-            //this.$refs.occurrence_split.isModalOpen = true;
-        },
         combineOccurrence: async function () {
             this.$refs.occurrence_combine.isModalOpen = true;
         },
@@ -956,6 +933,34 @@ export default {
                     console.log(err);
                 }
             );
+        },
+        backToDashboard: function () {
+            if (this.isDirty) {
+                swal.fire({
+                    title: 'Unsaved Changes',
+                    text: 'You have unsaved changes. Are you sure you want to go back to the dashboard?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    reverseButtons: true,
+                    confirmButtonText: 'Back to Dashboard',
+                    cancelButtonText: 'Cancel',
+                    customClass: {
+                        confirmButton: 'btn btn-primary',
+                        cancelButton: 'btn btn-secondary me-2',
+                    },
+                    buttonsStyling: false,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.$router.push({
+                            name: 'internal-occurrence-dash',
+                        });
+                    }
+                });
+                return;
+            }
+            this.$router.push({
+                name: 'internal-occurrence-dash',
+            });
         },
     },
 };

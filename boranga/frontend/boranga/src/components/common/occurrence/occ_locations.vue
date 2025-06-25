@@ -4,6 +4,9 @@
             :form-collapse="false"
             label="Location"
             Index="occurrence_location"
+            :subtitle="isDirty ? 'Unsaved Changes' : ''"
+            :subtitle-class="isDirty ? 'text-warning ms-auto' : ''"
+            :show-subtitle-icon="true"
         >
             <div class="row mb-3">
                 <div class="col">
@@ -118,11 +121,9 @@
                     @crs-select-search="searchForCRS"
                     @toggle-show-hide="toggleShowOnMapLayer"
                     @validate-feature="validateFeature"
+                    @dirty="mapIsDirty = $event"
                 ></MapComponent>
             </div>
-            <!-- @refreshFromResponse="refreshFromResponse" -->
-            <!-- @validate-feature="validateFeature.bind(this)()" -->
-
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label">Region:</label>
                 <div class="col-sm-9">
@@ -284,24 +285,6 @@
                     </template>
                 </div>
             </div>
-
-            <!--
-            <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label"
-                    >Buffer Radius(m) :</label
-                >
-                <div class="col-sm-6">
-                    <input
-                        id="buffer_radius"
-                        v-model="occurrence_obj.location.buffer_radius"
-                        :disabled="isReadOnly"
-                        type="number"
-                        class="form-control ocr_number"
-                        placeholder=""
-                        min="0"
-                    />
-                </div>
-            </div>-->
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label fw-bold"
                     >Location Accuracy:
@@ -375,14 +358,27 @@
             </div>
             <div class="row mb-3">
                 <div class="col-sm-12">
-                    <!-- <button v-if="!updatingLocationDetails" class="pull-right btn btn-primary" @click.prevent="updateDetails()" :disabled="!can_update()">Update</button> -->
                     <button
                         v-if="!updatingLocationDetails"
-                        class="btn btn-primary btn-sm float-end"
-                        :disabled="isReadOnly"
+                        class="btn btn-sm float-end"
+                        :class="{
+                            'btn-primary': isDirty,
+                            'btn-light': !isDirty,
+                            border: !isDirty,
+                        }"
+                        :disabled="isReadOnly || !isDirty"
                         @click.prevent="updateLocationDetails()"
                     >
-                        Save Section
+                        <template v-if="isDirty"
+                            >Save Section<i
+                                class="bi bi-exclamation-circle-fill text-warning ps-2"
+                            ></i
+                        ></template>
+                        <template v-else
+                            >Saved<i
+                                class="bi bi-check-circle-fill text-success ps-2"
+                            ></i
+                        ></template>
                     </button>
                     <button v-else disabled class="float-end btn btn-primary">
                         Saving
@@ -493,8 +489,9 @@ export default {
             default: () => null,
         },
     },
-    emits: [],
+    emits: ['dirty'],
     data() {
+        let vm = this;
         return {
             uuid_component_map: uuid(),
             uuid_datatable_ocr: uuid(),
@@ -515,6 +512,8 @@ export default {
             occurrenceLayerName: 'occurrence_layer',
             bufferLayerName: 'buffer_layer',
             plausibilityGeometryFeatures: [],
+            originalLocation: JSON.stringify(vm.occurrence_obj.location),
+            mapIsDirty: false,
         };
     },
     computed: {
@@ -623,6 +622,24 @@ export default {
             }
             return this.mapContainerId;
         },
+        locationIsDirty: function () {
+            return (
+                JSON.stringify(this.occurrence_obj.location) !=
+                this.originalLocation
+            );
+        },
+        isDirty: function () {
+            return this.mapIsDirty || this.locationIsDirty;
+        },
+    },
+    watch: {
+        isDirty: function (newValue) {
+            if (newValue) {
+                this.$emit('dirty', true);
+            } else {
+                this.$emit('dirty', false);
+            }
+        },
     },
     created: async function () {
         let vm = this;
@@ -725,6 +742,11 @@ export default {
         this.refreshDatatables();
     },
     methods: {
+        resetDirtyState: function () {
+            this.originalLocation = JSON.stringify(
+                this.occurrence_obj.location
+            );
+        },
         filterDistrict: function (event) {
             this.$nextTick(() => {
                 if (event) {
@@ -791,6 +813,9 @@ export default {
                 async (response) => {
                     vm.updatingLocationDetails = false;
                     vm.occurrence_obj.location = await response.json();
+                    vm.originalLocation = JSON.stringify(
+                        vm.occurrence_obj.location
+                    );
                     swal.fire({
                         title: 'Saved',
                         text: 'Location details have been saved',
@@ -803,8 +828,11 @@ export default {
                             vm.$router.go();
                         }
                     });
-                    vm.incrementComponentMapKey();
+                    vm.$refs.component_map.forceToRefreshMap();
                     vm.refreshDatatables();
+                    vm.$nextTick(() => {
+                        vm.mapIsDirty = false;
+                    });
                 },
                 (error) => {
                     var text = helpers.apiVueResourceError(error);
@@ -831,14 +859,14 @@ export default {
         },
         refreshDatatables: function () {
             this.refreshDatatableRelatedOCR();
-            this.uuid_datatable_occ_site = uuid();
-            this.uuid_datatable_occ_tenure = uuid();
+            this.$refs.occurrence_sites_datatable.adjust_table_width();
+            this.$refs.occurrence_tenure_datatable.adjust_table_width();
         },
         refreshDatatableRelatedOCR: function () {
-            this.uuid_datatable_ocr = uuid();
+            this.$refs.related_reports_datatable.adjust_table_width();
         },
         updatedSites: function () {
-            this.incrementComponentMapKey();
+            this.$refs.component_map.forceToRefreshMap();
         },
         searchForCRS: function (search, loading) {
             const vm = this;

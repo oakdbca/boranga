@@ -2060,6 +2060,7 @@ export default {
             activeEditLayer: null,
             optionalLayersActive: false,
             mapMarker: '../../static/boranga_vue/src/assets/map-marker.svg',
+            geojsonSnapshot: null, // A snapshot of the geojson feature collection
             isDirty: false, // Whether the map has unsaved changes
         };
     },
@@ -2430,8 +2431,7 @@ export default {
                 if (this.zoomToFeaturesOnLoad) {
                     this.displayAllFeatures();
                 }
-                this.isDirty = false; // Reset dirty state after loading features
-                this.$emit('dirty', this.isDirty);
+                this.takeSnapshot();
             }
         );
 
@@ -2474,6 +2474,7 @@ export default {
             const features = this.editableFeatureCollection.getArray();
             this.geojsonSnapshot = format.writeFeaturesObject(features);
             this.isDirty = false;
+            this.$emit('dirty', this.isDirty);
         },
         onFeatureChanged() {
             const format = new GeoJSON();
@@ -2597,6 +2598,7 @@ export default {
                 vm.map.addInteraction(vm.undoredo);
                 vm.map.addInteraction(vm.undoredo_forSketch);
                 vm.map.addInteraction(vm.dragbox);
+                vm.takeSnapshot(); // Take a snapshot of the current state of the map
             }
         },
         getFeaturesExtent: function (features) {
@@ -2659,9 +2661,6 @@ export default {
                 $('#basemap_sat').show();
             }
         },
-        // changeLayerVisibility: function (targetLayer) {
-        //     targetLayer.setVisible(!targetLayer.getVisible());
-        // },
         clearMeasurementLayer: function () {
             let vm = this;
             let features = vm.measurementLayer.getSource().getFeatures();
@@ -3343,8 +3342,6 @@ export default {
                     this.editableFeatureCollection.forEach((feature) => {
                         feature.on('change', this.onFeatureChanged);
                     });
-
-                    this.takeSnapshot();
                 });
             }
 

@@ -33,7 +33,7 @@
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label for="">End Date :</label>
+                        <label for="">End Date:</label>
                         <input
                             id="from_end_date"
                             v-model="filterFromMeetingEndDate"
