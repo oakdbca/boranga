@@ -4,7 +4,7 @@
             ref="collapsible_filters"
             component_title="Filters"
             :collapsed="!filterApplied"
-            @created="collapsible_component_mounted"
+            :show-warning-icon="filterApplied"
         >
             <div class="row">
                 <div class="col-md-3">
@@ -421,13 +421,6 @@ export default {
             );
             sessionStorage.setItem(this.filterPurposeCache, this.filterPurpose);
         },
-        filterApplied: function () {
-            if (this.$refs.collapsible_filters) {
-                this.$refs.collapsible_filters.show_warning_icon(
-                    this.filterApplied
-                );
-            }
-        },
     },
     mounted: function () {
         this.$nextTick(() => {
@@ -525,11 +518,6 @@ export default {
                 });
             this.$emit('edit-tenure-details', id);
         },
-        collapsible_component_mounted: function () {
-            this.$refs.collapsible_filters.show_warning_icon(
-                this.filterApplied
-            );
-        },
         /**
          * Initialises the select2 dropdown for this filter lookup
          * @param {String} ref The ref of the select html element
@@ -624,6 +612,13 @@ export default {
                 helpers.enablePopovers,
                 false
             );
+        },
+        adjust_table_width: function () {
+            if (this.$refs.occurrence_tenure_datatable !== undefined) {
+                this.$refs.occurrence_tenure_datatable.vmDataTable.columns
+                    .adjust()
+                    .responsive.recalc();
+            }
         },
     },
 };

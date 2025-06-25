@@ -998,17 +998,16 @@ export default {
             fetch(
                 helpers.add_endpoint_json(
                     api_url,
-                    this.$route.params.species_community_id +
-                        '/reinstate_image',
-                    {
-                        method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                    }
+                    this.$route.params.species_community_id + '/reinstate_image'
                 ),
                 {
-                    pk: image.id,
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        pk: image.id,
+                    }),
                 }
             )
                 .then(async (response) => {

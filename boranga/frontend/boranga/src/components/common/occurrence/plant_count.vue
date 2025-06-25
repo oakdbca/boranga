@@ -174,7 +174,7 @@
         </div>
         <div class="row mb-3">
             <label for="" class="col-sm-3 control-label"
-                >Estimated Population Area(m<sup>2</sup>) :</label
+                >Estimated Population Area(m<sup>2</sup>):</label
             >
             <div class="col-sm-6">
                 <input
@@ -404,7 +404,7 @@
             >
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
-                    >Number alive :</label
+                    >Number alive:</label
                 >
                 <div class="col-sm-6">
                     <input
@@ -420,7 +420,7 @@
             </div>
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
-                    >Number dead :</label
+                    >Number dead:</label
                 >
                 <div class="col-sm-6">
                     <input
@@ -496,7 +496,7 @@
         </div>
         <div class="row mb-3">
             <label for="" class="col-sm-3 control-label"
-                >Number of quadrats surveyed :</label
+                >Number of quadrats surveyed:</label
             >
             <div class="col-sm-6">
                 <input
@@ -512,7 +512,7 @@
         </div>
         <div class="row mb-3">
             <label for="" class="col-sm-3 control-label"
-                >Individual quadrat area (m<sup>2</sup>) :</label
+                >Individual quadrat area (m<sup>2</sup>):</label
             >
             <div class="col-sm-6">
                 <input
@@ -528,7 +528,7 @@
         </div>
         <div class="row mb-3">
             <label for="" class="col-sm-3 control-label"
-                >Total quadrat area (m<sup>2</sup>) :</label
+                >Total quadrat area (m<sup>2</sup>):</label
             >
             <div class="col-sm-6">
                 <input
@@ -544,7 +544,7 @@
         </div>
         <div class="row mb-3">
             <label for="" class="col-sm-3 control-label"
-                >Flowering plants % :</label
+                >Flowering plants (%):</label
             >
             <div class="col-sm-6">
                 <input
@@ -759,7 +759,7 @@
         </div>
         <div class="row mb-3">
             <label for="" class="col-sm-3 control-label"
-                >Pollinator Observations :</label
+                >Pollinator Observations:</label
             >
             <div class="col-sm-9">
                 <textarea
@@ -775,7 +775,7 @@
         </div>
         <div class="row mb-3">
             <label for="" class="col-sm-3 control-label"
-                >Plant Count Comments :</label
+                >Plant Count Comments:</label
             >
             <div class="col-sm-9">
                 <textarea
@@ -800,11 +800,25 @@
             <div class="col-sm-12">
                 <button
                     v-if="!updatingPlantCountDetails"
-                    :disabled="isReadOnly"
-                    class="btn btn-primary btn-sm float-end"
+                    class="btn btn-sm float-end"
+                    :class="{
+                        'btn-primary': plantCountIsDirty,
+                        'btn-light': !plantCountIsDirty,
+                        border: !plantCountIsDirty,
+                    }"
+                    :disabled="isReadOnly || !plantCountIsDirty"
                     @click.prevent="updatePlantCountDetails()"
                 >
-                    Save Section
+                    <template v-if="plantCountIsDirty"
+                        >Save Section<i
+                            class="bi bi-exclamation-circle-fill text-warning ps-2"
+                        ></i
+                    ></template>
+                    <template v-else
+                        >Saved<i
+                            class="bi bi-check-circle-fill text-success ps-2"
+                        ></i
+                    ></template>
                 </button>
                 <button v-else disabled class="float-end btn btn-primary">
                     Saving
@@ -864,10 +878,29 @@ export default {
             plant_condition_list: [],
             counted_subject_list: [],
             updatingPlantCountDetails: false,
+            originalPlantCount: JSON.stringify(this.plant_count), // to check if the plant count details are changed
         };
     },
-    computed: {},
-    watch: {},
+    emits: ['update-plant-count', 'dirty'],
+    computed: {
+        plantCountIsDirty: function () {
+            let vm = this;
+            return JSON.stringify(vm.plant_count) !== vm.originalPlantCount;
+        },
+        isDirty: function () {
+            return this.plantCountIsDirty;
+        },
+    },
+    watch: {
+        isDirty: function (newValue) {
+            let vm = this;
+            if (newValue) {
+                vm.$emit('dirty', true);
+            } else {
+                vm.$emit('dirty', false);
+            }
+        },
+    },
     created: async function () {
         let vm = this;
         const response = await fetch(
@@ -898,7 +931,9 @@ export default {
         });
     },
     methods: {
-        eventListeners: function () {},
+        resetDirtyState: function () {
+            this.originalPlantCount = JSON.stringify(this.plant_count);
+        },
         updatePlantCountDetails: function () {
             let vm = this;
             vm.updatingPlantCountDetails = true;
@@ -920,8 +955,8 @@ export default {
                 }
             ).then(
                 async (response) => {
+                    const data = await response.json();
                     if (!response.ok) {
-                        const data = await response.json();
                         swal.fire({
                             title: 'Error',
                             text: JSON.stringify(data),
@@ -932,6 +967,8 @@ export default {
                         });
                         return;
                     }
+                    vm.$emit('update-plant-count', data);
+                    vm.originalPlantCount = JSON.stringify(data);
                     vm.updatingPlantCountDetails = false;
                     swal.fire({
                         title: 'Saved',

@@ -568,6 +568,7 @@
                         @refresh-from-response="refreshFromResponse"
                         @refresh-occurrence-report="refreshOccurrenceReport()"
                         @save-occurrence-report="save_before_submit()"
+                        @dirty="isDirty = $event"
                     >
                     </ProposalOccurrenceReport>
 
@@ -590,7 +591,7 @@
                                 <button
                                     class="btn btn-primary me-2 pull-left"
                                     style="margin-top: 5px"
-                                    @click.prevent="returnToDashboard"
+                                    @click.prevent="backToDashboard"
                                 >
                                     Return to Dashboard
                                 </button>
@@ -827,6 +828,7 @@ export default {
             contributors: null,
             external_referee_email: '',
             selectedReassignUser: null,
+            isDirty: false,
         };
     },
     computed: {
@@ -1007,11 +1009,16 @@ export default {
         }
     },
     mounted: function () {
-        this.fetchProfile();
-        this.fetchDeparmentUsers();
-        this.$nextTick(() => {
-            this.initialiseContributorsSelect();
+        let vm = this;
+        vm.fetchProfile();
+        vm.fetchDeparmentUsers();
+        vm.$nextTick(() => {
+            vm.initialiseContributorsSelect();
         });
+        window.addEventListener('beforeunload', vm.leaving);
+    },
+    beforeUnmount: function () {
+        window.removeEventListener('beforeunload', this.leaving);
     },
     updated: function () {
         let vm = this;
@@ -1021,6 +1028,13 @@ export default {
         });
     },
     methods: {
+        leaving: function (e) {
+            if (this.isDirty) {
+                e.preventDefault();
+                e.returnValue = ''; // Required for Chrome
+                // The browser will show its own confirmation dialog
+            }
+        },
         jumpToTabs: function () {
             $('html, body').animate(
                 {
@@ -1183,12 +1197,6 @@ export default {
         approve: function () {
             this.$refs.approve.isModalOpen = true;
         },
-        returnToDashboard: function () {
-            let vm = this;
-            vm.$router.push({
-                name: 'internal-occurrence-dash',
-            });
-        },
         save: async function () {
             let vm = this;
             var missing_data = await vm.can_submit('');
@@ -1258,7 +1266,13 @@ export default {
                     false
                 );
                 vm.$refs.occurrence_report.$refs.ocr_location.incrementComponentMapKey();
+                vm.$nextTick(() => {
+                    vm.resetDirtyState();
+                });
             });
+        },
+        resetDirtyState: function () {
+            this.$refs.occurrence_report.resetDirtyState();
         },
         save_exit: async function () {
             let vm = this;
@@ -2239,6 +2253,34 @@ export default {
         },
         refreshOccurrenceReport: function () {
             this.fetchOccurrenceReport(this.$route.params.occurrence_report_id);
+        },
+        backToDashboard: function () {
+            if (this.isDirty) {
+                swal.fire({
+                    title: 'Unsaved Changes',
+                    text: 'You have unsaved changes. Are you sure you want to go back to the dashboard?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    reverseButtons: true,
+                    confirmButtonText: 'Back to Dashboard',
+                    cancelButtonText: 'Cancel',
+                    customClass: {
+                        confirmButton: 'btn btn-primary',
+                        cancelButton: 'btn btn-secondary me-2',
+                    },
+                    buttonsStyling: false,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.$router.push({
+                            name: 'internal-occurrence-dash',
+                        });
+                    }
+                });
+                return;
+            }
+            this.$router.push({
+                name: 'internal-occurrence-dash',
+            });
         },
     },
 };

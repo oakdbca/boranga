@@ -4,7 +4,6 @@
             ref="collapsible_filters"
             component_title="Filters"
             class="mb-2"
-            @created="collapsible_component_mounted"
         >
             <div class="row">
                 <div class="col-md-3">
@@ -446,14 +445,6 @@ export default {
         },
     },
     watch: {
-        filterApplied: function () {
-            if (this.$refs.collapsible_filters) {
-                // Collapsible component exists
-                this.$refs.collapsible_filters.show_warning_icon(
-                    this.filterApplied
-                );
-            }
-        },
         filterThreatSource: function () {
             let vm = this;
             vm.$refs.threats_datatable.vmDataTable.ajax.reload(); // This calls ajax() backend call.
@@ -491,12 +482,6 @@ export default {
         });
     },
     methods: {
-        collapsible_component_mounted: function () {
-            this.$refs.collapsible_filters.show_warning_icon(
-                this.filterApplied
-            );
-        },
-
         fetchFilterLists: function () {
             let vm = this;
 

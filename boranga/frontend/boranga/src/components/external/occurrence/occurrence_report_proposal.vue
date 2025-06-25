@@ -74,10 +74,10 @@
                 id="scrollspy-heading"
                 class="col-lg-12"
             >
-                <h4>
+                <h3>
                     Occurrence Report - {{ display_group_type }}:
                     {{ occurrence_report_obj.occurrence_report_number }}
-                </h4>
+                </h3>
             </div>
 
             <ProposalOccurrenceReport
@@ -90,6 +90,7 @@
                 @refresh-occurrence-report="refreshOccurrenceReport()"
                 @refresh-from-response="refreshFromResponse"
                 @save-occurrence-report="save_before_submit()"
+                @dirty="isDirty = $event"
             >
             </ProposalOccurrenceReport>
 
@@ -116,13 +117,12 @@
                                             class="pull-right"
                                             style="margin-top: 5px"
                                         >
-                                            <router-link
+                                            <button
                                                 class="btn btn-primary"
-                                                :to="{
-                                                    name: 'external-occurrence-report-dash',
-                                                }"
-                                                >Back to Dashboard</router-link
+                                                @click.prevent="backToDashboard"
                                             >
+                                                Back to Dashboard
+                                            </button>
                                         </p>
                                     </div>
                                     <div
@@ -329,6 +329,7 @@ export default {
             newText: '',
             pBody: 'pBody',
             missing_fields: [],
+            isDirty: false,
             isSaved: false,
         };
     },
@@ -484,8 +485,14 @@ export default {
                     this.$refs.occurrence_report.$refs.ocr_location.incrementComponentMapKey();
                 });
                 vm.isSaved = true;
+                vm.$nextTick(() => {
+                    vm.resetDirtyState();
+                });
                 return data;
             });
+        },
+        resetDirtyState: function () {
+            this.$refs.occurrence_report.resetDirtyState();
         },
         save_exit: async function () {
             let vm = this;
@@ -609,15 +616,10 @@ export default {
             return newText;
         },
         leaving: function (e) {
-            e.preventDefault();
-
-            let vm = this;
-            var dialogText = 'You have some unsaved changes.';
-            if (!vm.ocr_proposal_readonly && !vm.submitting) {
-                e.returnValue = dialogText;
-                return dialogText;
-            } else {
-                return null;
+            if (this.isDirty) {
+                e.preventDefault();
+                e.returnValue = ''; // Required for Chrome
+                // The browser will show its own confirmation dialog
             }
         },
         highlight_missing_fields: function () {
@@ -896,6 +898,34 @@ export default {
         },
         refreshOccurrenceReport: function () {
             this.fetchOccurrenceReport(this.$route.params.occurrence_report_id);
+        },
+        backToDashboard: function () {
+            if (this.isDirty) {
+                swal.fire({
+                    title: 'Unsaved Changes',
+                    text: 'You have unsaved changes. Are you sure you want to go back to the dashboard?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    reverseButtons: true,
+                    confirmButtonText: 'Back to Dashboard',
+                    cancelButtonText: 'Cancel',
+                    customClass: {
+                        confirmButton: 'btn btn-primary',
+                        cancelButton: 'btn btn-secondary me-2',
+                    },
+                    buttonsStyling: false,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.$router.push({
+                            name: 'external-occurrence-report-dash',
+                        });
+                    }
+                });
+                return;
+            }
+            this.$router.push({
+                name: 'external-occurrence-report-dash',
+            });
         },
     },
 };

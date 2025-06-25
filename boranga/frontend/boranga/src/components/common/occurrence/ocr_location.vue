@@ -5,11 +5,14 @@
             :form-collapse="false"
             label="Location"
             Index="occurrence_report_location"
+            :subtitle="isDirty ? 'Unsaved Changes' : ''"
+            :subtitle-class="isDirty ? 'text-warning ms-auto' : ''"
+            :show-subtitle-icon="true"
         >
             <div class="row mb-3">
                 <div class="col">
                     <span class="text-danger">*</span>
-                    <span class="text-muted"
+                    <span class="text-muted ps-1"
                         >You must indicate the location for your occurrence
                         report</span
                     >
@@ -47,8 +50,8 @@
                         collapse: false,
                         property_display_map: ocrPropertyDisplayMap,
                     }"
-                    @refresh-from-response="refreshFromResponse"
                     @crs-select-search="searchForCRS"
+                    @dirty="mapIsDirty = $event"
                 ></MapComponent>
             </div>
 
@@ -91,7 +94,8 @@
             </div>
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label fw-bold"
-                    >Location Description: <span class="text-danger">*</span>
+                    >Location Description:
+                    <span class="text-danger pe-1">*</span>
                     <HelpText
                         section_id="occurrence_report_location_description"
                 /></label>
@@ -184,44 +188,6 @@
                     />
                 </div>
             </div>
-
-            <!--<div class="row mb-3">
-                <label for="" class="col-sm-3 control-label">Datum:</label>
-                <div class="col-sm-9">
-                    <VueSelect
-                        v-model="occurrence_report_obj.location.epsg_code"
-                        :options="datum_list"
-                        :reduce="(option) => option.id"
-                        label="name"
-                        :disabled="isReadOnly"
-                        @search="searchForCRS"
-                    >
-                    </VueSelect>
-                </div>
-            </div>
-            <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label"
-                    >Point Coordinate :</label
-                >
-                <div class="col-sm-2">
-                    <input
-                        id="point_coord1"
-                        :disabled="isReadOnly"
-                        type="decimal"
-                        class="form-control ocr_number"
-                        placeholder=""
-                    />
-                </div>
-                <div class="col-sm-2">
-                    <input
-                        id="point_coord2"
-                        :disabled="isReadOnly"
-                        type="decimal"
-                        class="form-control ocr_number"
-                        placeholder=""
-                    />
-                </div>
-            </div>-->
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
                     >Coordinate Source:</label
@@ -287,24 +253,6 @@
                     </template>
                 </div>
             </div>
-
-            <!--
-            <div v-if="canAssess" class="row mb-3">
-                <label for="" class="col-sm-3 control-label"
-                    >Buffer Radius(m) :</label
-                >
-                <div class="col-sm-6">
-                    <input
-                        id="buffer_radius"
-                        v-model="occurrence_report_obj.location.buffer_radius"
-                        :disabled="isReadOnly"
-                        type="number"
-                        class="form-control ocr_number"
-                        placeholder=""
-                        min="0"
-                    />
-                </div>
-            </div>-->
             <div v-if="canAssess" class="row mb-3">
                 <label
                     for=""
@@ -388,14 +336,27 @@
 
             <div class="row mb-3">
                 <div class="col-sm-12">
-                    <!-- <button v-if="!updatingLocationDetails" class="pull-right btn btn-primary" @click.prevent="updateDetails()" :disabled="!can_update()">Update</button> -->
                     <button
                         v-if="!updatingLocationDetails"
-                        class="btn btn-primary btn-sm float-end"
-                        :disabled="isReadOnly"
+                        class="btn btn-sm float-end"
+                        :class="{
+                            'btn-primary': isDirty,
+                            'btn-light': !isDirty,
+                            border: !isDirty,
+                        }"
+                        :disabled="isReadOnly || !isDirty"
                         @click.prevent="updateLocationDetails()"
                     >
-                        Save Section
+                        <template v-if="isDirty"
+                            >Save Section<i
+                                class="bi bi-exclamation-circle-fill text-warning ps-2"
+                            ></i
+                        ></template>
+                        <template v-else
+                            >Saved<i
+                                class="bi bi-check-circle-fill text-success ps-2"
+                            ></i
+                        ></template>
                     </button>
                     <button v-else disabled class="float-end btn btn-primary">
                         Saving
@@ -414,15 +375,10 @@
 
 <script>
 import { v4 as uuid } from 'uuid';
-// import datatable from '@vue-utils/datatable.vue';
 import FormSection from '@/components/forms/section_toggle.vue';
-//import ObserverDatatable from './observer_datatable.vue';
 import MapComponent from '../component_map.vue';
 import HelpText from '@/components/common/help_text.vue';
 import { api_endpoints, constants, helpers } from '@/utils/hooks';
-// require("select2/dist/css/select2.min.css");
-// require("select2-bootstrap-5-theme/dist/select2-bootstrap-5-theme.min.css")
-// import { VueSelect } from 'vue-select';
 
 export default {
     name: 'OCRLocation',
@@ -430,7 +386,6 @@ export default {
         FormSection,
         HelpText,
         MapComponent,
-        // VueSelect,
     },
     props: {
         occurrence_report_obj: {
@@ -457,7 +412,7 @@ export default {
             default: false,
         },
     },
-    emits: ['refreshFromResponse'],
+    emits: ['dirty'],
     data: function () {
         let vm = this;
         return {
@@ -473,6 +428,8 @@ export default {
                     : false,
             //----list of values dictionary
 
+            originalLocation: JSON.stringify(vm.occurrence_report_obj.location),
+            mapIsDirty: false,
             region_list: [],
             district_list: [],
             filtered_district_list: [],
@@ -585,8 +542,25 @@ export default {
 
             return displayMap;
         },
+        locationIsDirty: function () {
+            return (
+                JSON.stringify(this.occurrence_report_obj.location) !=
+                this.originalLocation
+            );
+        },
+        isDirty: function () {
+            return this.mapIsDirty || this.locationIsDirty;
+        },
     },
-    watch: {},
+    watch: {
+        isDirty: function (newValue) {
+            if (newValue) {
+                this.$emit('dirty', true);
+            } else {
+                this.$emit('dirty', false);
+            }
+        },
+    },
     created: async function () {
         let vm = this;
         this.uuid = uuid();
@@ -641,6 +615,11 @@ export default {
         });
     },
     methods: {
+        resetDirtyState: function () {
+            this.originalLocation = JSON.stringify(
+                this.occurrence_report_obj.location
+            );
+        },
         filterDistrict: function (event) {
             this.$nextTick(() => {
                 if (event) {
@@ -706,6 +685,9 @@ export default {
                 async (response) => {
                     vm.updatingLocationDetails = false;
                     vm.occurrence_report_obj.location = await response.json();
+                    vm.originalLocation = JSON.stringify(
+                        vm.occurrence_report_obj.location
+                    );
                     swal.fire({
                         title: 'Saved',
                         text: 'Location details have been saved',
@@ -722,6 +704,9 @@ export default {
                         }
                     });
                     vm.$refs.component_map.forceToRefreshMap();
+                    vm.$nextTick(() => {
+                        vm.mapIsDirty = false;
+                    });
                 },
                 (error) => {
                     var text = helpers.apiVueResourceError(error);
@@ -739,13 +724,6 @@ export default {
                     vm.$refs.component_map.setLoadingMap(false);
                 }
             );
-        },
-        incrementComponentMapKey: function () {
-            this.uuid = uuid();
-        },
-        // eslint-disable-next-line no-unused-vars
-        refreshFromResponse: function (data) {
-            //this.proposal = Object.assign({}, data);
         },
         searchForCRS: function (search, loading) {
             const vm = this;

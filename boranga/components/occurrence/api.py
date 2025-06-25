@@ -142,8 +142,10 @@ from boranga.components.occurrence.serializers import (
     ListOccurrenceTenureSerializer,
     ListOCRReportMinimalSerializer,
     ObservationTimeSerializer,
+    OCCAnimalObservationSerializer,
     OCCConservationThreatSerializer,
     OCCContactDetailSerializer,
+    OCCPlantCountSerializer,
     OccurrenceDocumentSerializer,
     OccurrenceLogEntrySerializer,
     OccurrenceReportAmendmentRequestSerializer,
@@ -163,10 +165,12 @@ from boranga.components.occurrence.serializers import (
     OccurrenceTenureSaveSerializer,
     OccurrenceTenureSerializer,
     OccurrenceUserActionSerializer,
+    OCRAnimalObservationSerializer,
     OCRConservationThreatSerializer,
     OCRExternalRefereeInviteSerializer,
     OCRObserverDetailLimitedSerializer,
     OCRObserverDetailSerializer,
+    OCRPlantCountSerializer,
     ProposeApproveSerializer,
     ProposeDeclineSerializer,
     SaveBeforeSubmitOCRHabitatConditionSerializer,
@@ -952,7 +956,9 @@ class OccurrenceReportViewSet(
             "GET",
         ],
         detail=False,
-        permission_classes=[OccurrenceReportPermission],
+        permission_classes=[
+            OccurrenceReportPermission | ExternalOccurrenceReportPermission
+        ],
     )
     def observation_times(self, request, *args, **kwargs):
         """used for Occurrence Report external form"""
@@ -1523,15 +1529,14 @@ class OccurrenceReportViewSet(
             plant_count_instance, data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        new_instance = serializer.save()
 
         if (
             ocr_instance.processing_status
             == OccurrenceReport.PROCESSING_STATUS_UNLOCKED
         ):
             self.unlocked_back_to_assessor()
-
-        return Response(serializer.data)
+        return Response(OCRPlantCountSerializer(new_instance).data)
 
     @list_route(
         methods=[
@@ -1550,7 +1555,7 @@ class OccurrenceReportViewSet(
             animal_obs_instance, data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        new_instance = serializer.save()
 
         if (
             ocr_instance.processing_status
@@ -1558,7 +1563,7 @@ class OccurrenceReportViewSet(
         ):
             self.unlocked_back_to_assessor()
 
-        return Response(serializer.data)
+        return Response(OCRAnimalObservationSerializer(new_instance).data)
 
     @list_route(
         methods=[
@@ -4748,8 +4753,8 @@ class OccurrenceViewSet(
             plant_count_instance, data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
+        new_instance = serializer.save()
+        return Response(OCCPlantCountSerializer(new_instance).data)
 
     @list_route(
         methods=[
@@ -4767,8 +4772,8 @@ class OccurrenceViewSet(
             animal_obs_instance, data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
+        new_instance = serializer.save()
+        return Response(OCCAnimalObservationSerializer(new_instance).data)
 
     @list_route(
         methods=[

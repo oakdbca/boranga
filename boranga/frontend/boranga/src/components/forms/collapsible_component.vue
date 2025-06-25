@@ -8,7 +8,7 @@
             @click="toggle_filters_button_clicked"
         >
             <div class="me-auto ps-1 title">{{ component_title }}</div>
-            <div class="me-2">
+            <div v-if="showWarningIcon" class="me-2">
                 <i
                     :id="warning_icon_id"
                     :title="warning_icon_title"
@@ -48,6 +48,10 @@ export default {
             type: Boolean,
             default: true,
         },
+        showWarningIcon: {
+            type: Boolean,
+            default: false,
+        },
     },
     data: function () {
         return {
@@ -82,16 +86,6 @@ export default {
                 '#' + this.button_elem_id
             ).hasClass('collapsed');
             this.filters_expanded = !filters_expanded_when_clicked;
-        },
-        show_warning_icon: function (show) {
-            let warning_icon = $('#' + this.warning_icon_id);
-            if (show) {
-                warning_icon.css('opacity', 1);
-                this.warning_icon_title = 'filter(s) applied';
-            } else {
-                warning_icon.css('opacity', 0);
-                this.warning_icon_title = '';
-            }
         },
     },
 };

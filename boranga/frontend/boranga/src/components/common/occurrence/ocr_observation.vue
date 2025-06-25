@@ -4,6 +4,11 @@
             :form-collapse="false"
             label="Observation Details"
             :Index="observationDetailBody"
+            :subtitle="observationDetailIsDirty ? 'Unsaved Changes' : ''"
+            :subtitle-class="
+                observationDetailIsDirty ? 'text-warning ms-auto' : ''
+            "
+            :show-subtitle-icon="true"
         >
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
@@ -137,11 +142,25 @@
                 <div class="col-sm-12">
                     <button
                         v-if="!updatingObservationDetails"
-                        :disabled="isReadOnly"
-                        class="btn btn-primary btn-sm float-end"
+                        class="btn btn-sm float-end"
+                        :class="{
+                            'btn-primary': observationDetailIsDirty,
+                            'btn-light': !observationDetailIsDirty,
+                            border: !observationDetailIsDirty,
+                        }"
+                        :disabled="isReadOnly || !observationDetailIsDirty"
                         @click.prevent="updateObservationDetails()"
                     >
-                        Save Section
+                        <template v-if="observationDetailIsDirty"
+                            >Save Section<i
+                                class="bi bi-exclamation-circle-fill text-warning ps-2"
+                            ></i
+                        ></template>
+                        <template v-else
+                            >Saved<i
+                                class="bi bi-check-circle-fill text-success ps-2"
+                            ></i
+                        ></template>
                     </button>
                     <button v-else disabled class="float-end btn btn-primary">
                         Saving
@@ -161,6 +180,9 @@
             :form-collapse="false"
             label="Plant Count"
             :Index="plantCountBody"
+            :subtitle="plantCountIsDirty ? 'Unsaved Changes' : ''"
+            :subtitle-class="plantCountIsDirty ? 'text-warning ms-auto' : ''"
+            :show-subtitle-icon="true"
         >
             <PlantCount
                 v-if="isFlora"
@@ -172,15 +194,21 @@
                 :occurrence_id="occurrence_report_obj.id"
                 :is_external="is_external"
                 :is-read-only="isReadOnly"
+                @update-plant-count="updatePlantCount"
+                @dirty="plantCountIsDirty = $event"
             >
             </PlantCount>
         </FormSection>
-
         <FormSection
             v-if="isFauna"
             :form-collapse="false"
             label="Animal Observation"
             :Index="animalObsBody"
+            :subtitle="animalObservationIsDirty ? 'Unsaved Changes' : ''"
+            :subtitle-class="
+                animalObservationIsDirty ? 'text-warning ms-auto' : ''
+            "
+            :show-subtitle-icon="true"
         >
             <AnimalObservation
                 v-if="isFauna"
@@ -193,6 +221,7 @@
                 :is_external="is_external"
                 :is-read-only="isReadOnly"
                 @update-animal-observation="updateAnimalObservation"
+                @dirty="animalObservationIsDirty = $event"
             >
             </AnimalObservation>
         </FormSection>
@@ -201,6 +230,11 @@
             :form-collapse="false"
             label="Identification"
             :Index="identificationBody"
+            :subtitle="identificationIsDirty ? 'Unsaved Changes' : ''"
+            :subtitle-class="
+                identificationIsDirty ? 'text-warning ms-auto' : ''
+            "
+            :show-subtitle-icon="true"
         >
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
@@ -568,14 +602,27 @@
             </div>
             <div class="row mb-3">
                 <div class="col-sm-12">
-                    <!-- <button v-if="!updatingHabitatCompositionDetails" class="pull-right btn btn-primary" @click.prevent="updateDetails()" :disabled="!can_update()">Update</button> -->
                     <button
                         v-if="!updatingIdentificationDetails"
-                        :disabled="isReadOnly"
-                        class="btn btn-primary btn-sm float-end"
+                        class="btn btn-sm float-end"
+                        :class="{
+                            'btn-primary': identificationIsDirty,
+                            'btn-light': !identificationIsDirty,
+                            border: !identificationIsDirty,
+                        }"
+                        :disabled="isReadOnly || !identificationIsDirty"
                         @click.prevent="updateIdentificationDetails()"
                     >
-                        Save Section
+                        <template v-if="identificationIsDirty"
+                            >Save Section<i
+                                class="bi bi-exclamation-circle-fill text-warning ps-2"
+                            ></i
+                        ></template>
+                        <template v-else
+                            >Saved<i
+                                class="bi bi-check-circle-fill text-success ps-2"
+                            ></i
+                        ></template>
                     </button>
                     <button v-else disabled class="float-end btn btn-primary">
                         Saving
@@ -628,6 +675,14 @@ export default {
             plantCountBody: 'plantCountBody' + uuid(),
             animalObsBody: 'animalObsBody' + uuid(),
             identificationBody: 'identificationBody' + uuid(),
+            originalObservationDetail: JSON.stringify(
+                vm.occurrence_report_obj.observation_detail
+            ),
+            originalIdentification: JSON.stringify(
+                vm.occurrence_report_obj.identification
+            ),
+            plantCountIsDirty: false,
+            animalObservationIsDirty: false,
             //---to show fields related to Fauna
             isFauna:
                 vm.occurrence_report_obj.group_type === 'fauna' ? true : false,
@@ -653,8 +708,39 @@ export default {
             }
             return this.occurrence_report_obj.readonly;
         },
+        observationDetailIsDirty: function () {
+            let vm = this;
+            return (
+                JSON.stringify(vm.occurrence_report_obj.observation_detail) !==
+                vm.originalObservationDetail
+            );
+        },
+        identificationIsDirty: function () {
+            let vm = this;
+            return (
+                JSON.stringify(vm.occurrence_report_obj.identification) !==
+                vm.originalIdentification
+            );
+        },
+        isDirty: function () {
+            return (
+                this.observationDetailIsDirty ||
+                this.plantCountIsDirty ||
+                this.animalObservationIsDirty ||
+                this.identificationIsDirty
+            );
+        },
     },
-    watch: {},
+    emits: ['dirty'],
+    watch: {
+        isDirty: function (newValue) {
+            if (newValue) {
+                this.$emit('dirty', true);
+            } else {
+                this.$emit('dirty', false);
+            }
+        },
+    },
     created: async function () {
         let vm = this;
         //------fetch list of values
@@ -691,12 +777,21 @@ export default {
             name: null,
         });
     },
-    mounted: function () {
-        let vm = this;
-        vm.eventListeners();
-    },
     methods: {
-        eventListeners: function () {},
+        resetDirtyState: function () {
+            this.originalObservationDetail = JSON.stringify(
+                this.occurrence_report_obj.observation_detail
+            );
+            this.originalIdentification = JSON.stringify(
+                this.occurrence_report_obj.identification
+            );
+            if (this.$refs.plantCountDetail) {
+                this.$refs.plantCountDetail.resetDirtyState();
+            }
+            if (this.$refs.animalObservationDetail) {
+                this.$refs.animalObservationDetail.resetDirtyState();
+            }
+        },
         updateObservationDetails: function () {
             let vm = this;
             vm.updatingObservationDetails = true;
@@ -719,6 +814,9 @@ export default {
                     vm.updatingObservationDetails = false;
                     vm.occurrence_report_obj.observation_detail =
                         await response.json();
+                    vm.originalObservationDetail = JSON.stringify(
+                        vm.occurrence_report_obj.observation_detail
+                    );
                     swal.fire({
                         title: 'Saved',
                         text: 'Observation details have been saved',
@@ -774,6 +872,9 @@ export default {
                     vm.updatingIdentificationDetails = false;
                     vm.occurrence_report_obj.identification =
                         await response.json();
+                    vm.originalIdentification = JSON.stringify(
+                        vm.occurrence_report_obj.identification
+                    );
                     swal.fire({
                         title: 'Saved',
                         text: 'Identification details have been saved',
@@ -805,6 +906,9 @@ export default {
                     vm.updatingIdentificationDetails = false;
                 }
             );
+        },
+        updatePlantCount: function (data) {
+            this.occurrence_report_obj.plant_count = data;
         },
         updateAnimalObservation: function (data) {
             this.occurrence_report_obj.animal_observation = data;

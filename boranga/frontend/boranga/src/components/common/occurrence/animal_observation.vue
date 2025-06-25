@@ -243,7 +243,7 @@
 
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
-                    >Distinctive Features :</label
+                    >Distinctive Features:</label
                 >
                 <div class="col-sm-9">
                     <textarea
@@ -260,7 +260,7 @@
 
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
-                    >Actions Taken :</label
+                    >Actions Taken:</label
                 >
                 <div class="col-sm-9">
                     <textarea
@@ -277,7 +277,7 @@
 
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
-                    >Actions Required :</label
+                    >Actions Required:</label
                 >
                 <div class="col-sm-9">
                     <textarea
@@ -294,7 +294,7 @@
 
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
-                    >Observation Details :</label
+                    >Observation Details:</label
                 >
                 <div class="col-sm-9">
                     <textarea
@@ -651,7 +651,7 @@
                 >
                 <div class="row mb-3">
                     <label for="" class="col-sm-3 control-label"
-                        >Number alive :</label
+                        >Number alive:</label
                     >
                     <div class="col-sm-6">
                         <input
@@ -668,7 +668,7 @@
                 </div>
                 <div class="row mb-3">
                     <label for="" class="col-sm-3 control-label"
-                        >Number dead :</label
+                        >Number dead:</label
                     >
                     <div class="col-sm-6">
                         <input
@@ -715,14 +715,27 @@
             </div>
             <div class="row mb-3">
                 <div class="col-sm-12">
-                    <!-- <button v-if="!updatingAnimalOnservationDetails" class="pull-right btn btn-primary" @click.prevent="updateDetails()" :disabled="!can_update()">Update</button> -->
                     <button
                         v-if="!updatingAnimalOnservationDetails"
-                        :disabled="isReadOnly"
-                        class="btn btn-primary btn-sm float-end"
+                        class="btn btn-sm float-end"
+                        :class="{
+                            'btn-primary': animalObservationIsDirty,
+                            'btn-light': !animalObservationIsDirty,
+                            border: !animalObservationIsDirty,
+                        }"
+                        :disabled="isReadOnly || !animalObservationIsDirty"
                         @click.prevent="updateAnimalObservationDetails()"
                     >
-                        Save Section
+                        <template v-if="animalObservationIsDirty"
+                            >Save Section<i
+                                class="bi bi-exclamation-circle-fill text-warning ps-2"
+                            ></i
+                        ></template>
+                        <template v-else
+                            >Saved<i
+                                class="bi bi-check-circle-fill text-success ps-2"
+                            ></i
+                        ></template>
                     </button>
                     <button v-else disabled class="float-end btn btn-primary">
                         Saving
@@ -773,7 +786,7 @@ export default {
             default: false,
         },
     },
-    emits: ['update-animal-observation'],
+    emits: ['update-animal-observation', 'dirty'],
     data: function () {
         return {
             //----list of values dictionary
@@ -785,7 +798,20 @@ export default {
             updatingAnimalOnservationDetails: false,
             total_seen: 0,
             listOfAnimalValuesDict: {},
+            originalAnimalObservation: JSON.stringify(this.animal_observation),
         };
+    },
+    computed: {
+        animalObservationIsDirty: function () {
+            let vm = this;
+            return (
+                JSON.stringify(vm.animal_observation) !==
+                vm.originalAnimalObservation
+            );
+        },
+        isDirty: function () {
+            return this.animalObservationIsDirty;
+        },
     },
     watch: {
         animal_observation: function () {
@@ -793,10 +819,17 @@ export default {
             $(vm.$refs.primary_detection_select)
                 .val(vm.animal_observation.primary_detection_method)
                 .trigger('change.select2');
-            //$(vm.$refs.secondary_sign_select).val(vm.animal_observation.secondary_sign).trigger('change.select2');
             $(vm.$refs.reproductive_state_select)
                 .val(vm.animal_observation.reproductive_state)
                 .trigger('change.select2');
+        },
+        isDirty: function (newValue) {
+            let vm = this;
+            if (newValue) {
+                vm.$emit('dirty', true);
+            } else {
+                vm.$emit('dirty', false);
+            }
         },
     },
     created: async function () {
@@ -840,6 +873,11 @@ export default {
         vm.calculateTotalNumberSeen();
     },
     methods: {
+        resetDirtyState: function () {
+            this.originalAnimalObservation = JSON.stringify(
+                this.animal_observation
+            );
+        },
         calculateTotalNumberSeen: function () {
             let vm = this;
             vm.total_seen = 0;
@@ -936,6 +974,7 @@ export default {
                             throw new Error(data);
                         }
                         vm.$emit('update-animal-observation', data);
+                        vm.originalAnimalObservation = JSON.stringify(data);
                         swal.fire({
                             title: 'Saved',
                             text: 'Animal Observation details have been saved',

@@ -4,7 +4,7 @@
             ref="collapsible_filters"
             component_title="Filters"
             class="mb-2"
-            @created="collapsible_component_mounted"
+            :show-warning-icon="filterApplied"
         >
             <div class="row">
                 <div class="col-md-3">
@@ -33,7 +33,7 @@
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label for="">End Date :</label>
+                        <label for="">End Date:</label>
                         <input
                             id="from_end_date"
                             v-model="filterFromMeetingEndDate"
@@ -464,13 +464,6 @@ export default {
                 vm.filterMeetingStatus
             );
         },
-        filterApplied: function () {
-            if (this.$refs.collapsible_filters) {
-                this.$refs.collapsible_filters.show_warning_icon(
-                    this.filterApplied
-                );
-            }
-        },
     },
     created: function () {
         let vm = this;
@@ -480,11 +473,6 @@ export default {
         });
     },
     methods: {
-        collapsible_component_mounted: function () {
-            this.$refs.collapsible_filters.show_warning_icon(
-                this.filterApplied
-            );
-        },
         constructMeetingsTable: function () {
             this.$refs.meetings_datatable.vmDataTable.clear().draw();
         },

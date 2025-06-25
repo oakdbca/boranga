@@ -1798,7 +1798,7 @@ class SaveBeforeSubmitOCRHabitatConditionSerializer(SaveOCRHabitatConditionSeria
         if obs_date:
             try:
                 # Check if the date is in the future
-                if obs_date > timezone.now():
+                if obs_date > timezone.now().date():
                     raise serializers.ValidationError(
                         "Count date cannot be in the future."
                     )

@@ -50,7 +50,7 @@ const app = createApp(App);
 
 const fetch = window.fetch;
 window.fetch = ((originalFetch) => {
-    return (...args) => {
+    return async (...args) => {
         if (args.length > 1) {
             if (typeof args[1].body === 'string') {
                 args[1].headers = customHeadersJSON;
@@ -58,8 +58,23 @@ window.fetch = ((originalFetch) => {
                 args[1].headers = customHeaders;
             }
         }
-        const result = originalFetch.apply(this, args);
-        return result;
+        // Await the response to check status
+        const response = await originalFetch.apply(this, args);
+
+        // Handle 401/403 globally
+        if (response.status === 401) {
+            window.location.href =
+                '/login/?next=' + encodeURIComponent(window.location.pathname);
+        } else if (response.status === 403) {
+            swal.fire({
+                icon: 'error',
+                title: 'Access Denied',
+                text: 'You do not have permission to perform this action.',
+            });
+        }
+
+        // Return the response so the caller can process it (e.g., await response.json())
+        return response;
     };
 })(fetch);
 

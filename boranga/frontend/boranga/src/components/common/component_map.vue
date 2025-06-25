@@ -3,11 +3,6 @@
         <div class="justify-content-end align-items-center mb-2">
             <div v-if="mapInfoText.length > 0" class="row">
                 <div class="col-md-6">
-                    <!-- <BootstrapAlert class="mb-0">
-                        // eslint-disable vue/no-v-html
-                        <p><span v-html="mapInfoText"></span></p>
-                        //eslint-enable
-                    </BootstrapAlert> -->
                     <alert type="info"
                         ><strong>
                             <!-- eslint-disable-next-line vue/no-v-html -->
@@ -1371,6 +1366,27 @@
                     </div>
                 </div>
 
+                <div
+                    v-if="isDirty"
+                    id="unsaved-changes-toast"
+                    class="toast align-items-center d-inline-block text-bg-warning border-0 w-auto show position-absolute bottom-0 start-0 mb-2 ms-2"
+                    style="z-index: 100"
+                    role="alert"
+                    aria-live="assertive"
+                    aria-atomic="true"
+                >
+                    <div class="d-flex">
+                        <div
+                            class="toast-body d-flex align-items-center text-warning m-0 p-0 mx-2"
+                        >
+                            <i
+                                class="bi bi-exclamation-circle-fill text-warning me-2"
+                            ></i>
+                            Unsaved changes
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Overlay popup bubble when clicking a DBCA layer feature -->
                 <div
                     v-show="map"
@@ -1661,7 +1677,7 @@ export default {
             default: null,
         },
         /**
-         * A geojson feature collection of features (possibvly related to the context) to display on the map.
+         * A geojson feature collection of features (possibly related to the context) to display on the map.
          */
         featureCollection: {
             type: Object,
@@ -1957,6 +1973,7 @@ export default {
         'features-loaded',
         'toggle-show-hide',
         'crs-select-search',
+        'dirty',
     ],
     data() {
         return {
@@ -2043,6 +2060,8 @@ export default {
             activeEditLayer: null,
             optionalLayersActive: false,
             mapMarker: '../../static/boranga_vue/src/assets/map-marker.svg',
+            geojsonSnapshot: null, // A snapshot of the geojson feature collection
+            isDirty: false, // Whether the map has unsaved changes
         };
     },
     computed: {
@@ -2412,6 +2431,7 @@ export default {
                 if (this.zoomToFeaturesOnLoad) {
                     this.displayAllFeatures();
                 }
+                this.takeSnapshot();
             }
         );
 
@@ -2440,7 +2460,36 @@ export default {
             }
         });
     },
+    beforeUnmount() {
+        // Clean up listeners if needed
+        this.editableFeatureCollection.un('add', this.onFeatureChanged);
+        this.editableFeatureCollection.un('remove', this.onFeatureChanged);
+        this.editableFeatureCollection.forEach((feature) => {
+            feature.un('change', this.onFeatureChanged);
+        });
+    },
     methods: {
+        takeSnapshot() {
+            const format = new GeoJSON();
+            const features = this.editableFeatureCollection.getArray();
+            this.geojsonSnapshot = format.writeFeaturesObject(features);
+            this.isDirty = false;
+            this.$emit('dirty', this.isDirty);
+        },
+        onFeatureChanged() {
+            const format = new GeoJSON();
+            const features = this.editableFeatureCollection.getArray();
+            const currentGeoJSON = format.writeFeaturesObject(features);
+            // Compare current to snapshot
+            this.isDirty =
+                JSON.stringify(currentGeoJSON) !==
+                JSON.stringify(this.geojsonSnapshot);
+            this.$emit('dirty', this.isDirty);
+        },
+        // Call this after saving to reset the dirty state
+        markClean() {
+            this.takeSnapshot();
+        },
         callSetMode: function (mode, subMode = null) {
             this.set_mode(this, mode, subMode);
         },
@@ -2549,6 +2598,7 @@ export default {
                 vm.map.addInteraction(vm.undoredo);
                 vm.map.addInteraction(vm.undoredo_forSketch);
                 vm.map.addInteraction(vm.dragbox);
+                vm.takeSnapshot(); // Take a snapshot of the current state of the map
             }
         },
         getFeaturesExtent: function (features) {
@@ -2611,9 +2661,6 @@ export default {
                 $('#basemap_sat').show();
             }
         },
-        // changeLayerVisibility: function (targetLayer) {
-        //     targetLayer.setVisible(!targetLayer.getVisible());
-        // },
         clearMeasurementLayer: function () {
             let vm = this;
             let features = vm.measurementLayer.getSource().getFeatures();
@@ -3281,6 +3328,20 @@ export default {
                             $('> .ol-layerswitcher-buttons', e.li)
                         );
                     }
+                    // Listen for add/remove on the collection
+                    this.editableFeatureCollection.on(
+                        'add',
+                        this.onFeatureChanged
+                    );
+                    this.editableFeatureCollection.on(
+                        'remove',
+                        this.onFeatureChanged
+                    );
+
+                    // Listen for changes to features (geometry edits, etc.)
+                    this.editableFeatureCollection.forEach((feature) => {
+                        feature.on('change', this.onFeatureChanged);
+                    });
                 });
             }
 

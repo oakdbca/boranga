@@ -23,13 +23,18 @@
                         id="pills-location-tab"
                         class="nav-link active"
                         data-bs-toggle="pill"
+                        data-target-id="occ_location"
                         :href="'#' + locationBody"
                         role="tab"
                         :aria-controls="locationBody"
                         aria-selected="true"
-                        @click="tabClicked()"
                     >
-                        Location
+                        Location<template v-if="tabDirtyMap['occ_location']"
+                            ><i
+                                class="bi bi-exclamation-circle-fill text-warning ms-2"
+                                title="This tab has unsaved changes"
+                            ></i
+                        ></template>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -37,12 +42,17 @@
                         id="pills-habitat-tab"
                         class="nav-link"
                         data-bs-toggle="pill"
+                        data-target-id="occ_habitat"
                         :href="'#' + habitatBody"
                         role="tab"
                         aria-selected="false"
-                        @click="tabClicked()"
                     >
-                        Habitat
+                        Habitat<template v-if="tabDirtyMap['occ_habitat']"
+                            ><i
+                                class="bi bi-exclamation-circle-fill text-warning ms-2"
+                                title="This tab has unsaved changes"
+                            ></i
+                        ></template>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -50,12 +60,18 @@
                         id="pills-observation-tab"
                         class="nav-link"
                         data-bs-toggle="pill"
+                        data-target-id="occ_observation"
                         :href="'#' + observationBody"
                         role="tab"
                         aria-selected="false"
-                        @click="tabClicked()"
                     >
-                        Observation
+                        Observation<template
+                            v-if="tabDirtyMap['occ_observation']"
+                            ><i
+                                class="bi bi-exclamation-circle-fill text-warning ms-2"
+                                title="This tab has unsaved changes"
+                            ></i
+                        ></template>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -66,7 +82,6 @@
                         :href="'#' + documentBody"
                         role="tab"
                         aria-selected="false"
-                        @click="tabClicked()"
                     >
                         Documents
                     </a>
@@ -79,7 +94,6 @@
                         :href="'#' + threatBody"
                         role="tab"
                         aria-selected="false"
-                        @click="tabClicked()"
                     >
                         Threats
                     </a>
@@ -93,7 +107,6 @@
                         role="tab"
                         :aria-controls="relatedItemBody"
                         aria-selected="false"
-                        @click="tabClicked()"
                     >
                         Related Items
                     </a>
@@ -107,7 +120,7 @@
                     aria-labelledby="pills-location-tab"
                 >
                     <OCCLocations
-                        id="occLocation"
+                        id="occ_location"
                         :key="reloadcount"
                         ref="occ_location"
                         :is-external="is_external"
@@ -115,7 +128,7 @@
                         :can-edit-status="canEditStatus"
                         :occurrence_obj="occurrence_obj"
                         :referral="referral"
-                        @refresh-from-response="refreshFromResponse"
+                        @dirty="onTabDirtyChange('occ_location', $event)"
                     >
                     </OCCLocations>
                 </div>
@@ -126,11 +139,12 @@
                     aria-labelledby="pills-habitat-tab"
                 >
                     <OCCHabitat
-                        id="occhabitat"
+                        id="occ_habitat"
                         :key="reloadcount"
                         ref="occ_habitat"
                         :is_internal="is_internal"
                         :occurrence_obj="occurrence_obj"
+                        @dirty="onTabDirtyChange('occ_habitat', $event)"
                     >
                     </OCCHabitat>
                 </div>
@@ -141,11 +155,12 @@
                     aria-labelledby="pills-observation-tab"
                 >
                     <OCCObservation
-                        id="occObservation"
+                        id="occ_observation"
                         :key="reloadcount"
                         ref="occ_observation"
                         :is_internal="is_internal"
                         :occurrence_obj="occurrence_obj"
+                        @dirty="onTabDirtyChange('occ_observation', $event)"
                     >
                     </OCCObservation>
                 </div>
@@ -156,7 +171,7 @@
                     aria-labelledby="pills-documents-tab"
                 >
                     <OCCDocuments
-                        id="occDocuments"
+                        id="occ_documents"
                         :key="reloadcount"
                         ref="occ_documents"
                         :is_internal="is_internal"
@@ -172,7 +187,7 @@
                     aria-labelledby="pills-threats-tab"
                 >
                     <OCCThreats
-                        id="occThreats"
+                        id="occ_threats"
                         :key="reloadcount"
                         ref="occ_threats"
                         :is_internal="is_internal"
@@ -256,7 +271,7 @@ export default {
             default: true,
         },
     },
-    emits: ['refreshFromResponse'],
+    emits: ['dirty'],
     data: function () {
         return {
             values: null,
@@ -270,7 +285,21 @@ export default {
             reportBody: 'reportBody' + uuid(),
             sitesBody: 'sitesBody' + uuid(),
             occurrenceBody: 'occurrenceBody' + uuid(),
+            tabDirtyMap: {
+                occ_location: false,
+                occ_habitat: false,
+                occ_observation: false,
+            },
+            allowTabChange: false,
         };
+    },
+    watch: {
+        tabDirtyMap: {
+            handler: function () {
+                this.$emit('dirty', this.isAnyTabDirty());
+            },
+            deep: true,
+        },
     },
     computed: {
         isCommunity: function () {
@@ -288,23 +317,82 @@ export default {
         },
     },
     mounted: function () {
-        let vm = this;
-        vm.form = document.forms.new_occurrence;
-        vm.eventListener();
+        document.querySelectorAll('a[data-bs-toggle="pill"]').forEach((el) => {
+            el.addEventListener('shown.bs.tab', () => {
+                if (el.id == 'pills-threats-tab') {
+                    this.$refs.occ_threats.adjust_table_width();
+                } else if (el.id == 'pills-documents-tab') {
+                    this.$refs.occ_documents.adjust_table_width();
+                } else if (el.id == 'pills-related-items-tab') {
+                    this.$refs.occurrence_related_items.adjust_table_width();
+                } else if (el.id == 'pills-habitat-tab') {
+                    this.$refs.occ_habitat.$refs.related_species.$refs.related_species_datatable.vmDataTable.columns
+                        .adjust()
+                        .responsive.recalc();
+                }
+            });
+        });
+        document.querySelectorAll('[data-bs-toggle="pill"]').forEach((el) => {
+            el.addEventListener('show.bs.tab', this.beforeBsTabShown);
+        });
+    },
+    beforeUnmount() {
+        document.querySelectorAll('[data-bs-toggle="pill"]').forEach((el) => {
+            el.removeEventListener('show.bs.tab', this.beforeBsTabShown);
+        });
     },
     methods: {
-        //----function to resolve datatable exceeding beyond the div
-        // eslint-disable-next-line no-unused-vars
-        tabClicked: function (param) {
-            this.reloadcount = this.reloadcount + 1;
+        resetDirtyState: function () {
+            this.tabDirtyMap = {
+                occ_location: false,
+                occ_habitat: false,
+                occ_observation: false,
+            };
+            for (const key in this.tabDirtyMap) {
+                if (this.$refs[key].resetDirtyState) {
+                    this.$refs[key].resetDirtyState();
+                }
+            }
         },
-        eventListener: function () {
-            // eslint-disable-next-line no-unused-vars
+        onTabDirtyChange(tabKey, isDirty) {
+            this.tabDirtyMap[tabKey] = isDirty;
+        },
+        isAnyTabDirty() {
+            return Object.values(this.tabDirtyMap).some(Boolean);
+        },
+        beforeBsTabShown(event) {
             let vm = this;
-        },
-        // eslint-disable-next-line no-unused-vars
-        refreshFromResponse: function (data) {
-            //this.$emit('refreshFromResponse', data);
+            // If the tab being navigated away from is not dirty, allow the tab change
+            if (
+                !vm.tabDirtyMap[
+                    event.relatedTarget.getAttribute('data-target-id')
+                ]
+            ) {
+                return;
+            }
+            // Flag required to prevent infinite loop when switching tabs
+            if (vm.allowTabChange) {
+                vm.allowTabChange = false;
+                return;
+            }
+            event.preventDefault();
+            swal.fire({
+                title: 'Unsaved Changes',
+                text: 'You have unsaved changes. Are you sure you want to switch tabs?',
+                icon: 'question',
+                showCancelButton: true,
+                reverseButtons: true,
+                confirmButtonText: 'Switch Tabs',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-secondary',
+                },
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    vm.allowTabChange = true;
+                    bootstrap.Tab.getOrCreateInstance(event.target).show();
+                }
+            });
         },
     },
 };

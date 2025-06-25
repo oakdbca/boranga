@@ -350,12 +350,12 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
     )
 
     proposed_decline_status = models.BooleanField(default=False)
-    assessor_data = models.TextField(null=True, blank=True)  # assessor comment
+    assessor_data = models.TextField(blank=True, default="")  # assessor comment
     approver_comment = models.TextField(blank=True)
     internal_application = models.BooleanField(default=False)
-    site = models.TextField(null=True, blank=True)
-    record_source = models.TextField(null=True, blank=True)
-    comments = models.TextField(null=True, blank=True)
+    site = models.TextField(blank=True, default="")
+    record_source = models.TextField(blank=True, default="")
+    comments = models.TextField(blank=True, default="")
     # Allows the OCR submitter to hint the assessor to which occurrence to assign to
     # without forcefully linking the occurrence to the OCR
     ocr_for_occ_number = models.CharField(max_length=9, blank=True, default="")
@@ -2030,8 +2030,8 @@ class OCRLocation(BaseModel):
     occurrence_report = models.OneToOneField(
         OccurrenceReport, on_delete=models.CASCADE, null=True, related_name="location"
     )
-    location_description = models.TextField(null=True, blank=True)
-    boundary_description = models.TextField(null=True, blank=True)
+    location_description = models.TextField(blank=True, default="")
+    boundary_description = models.TextField(blank=True, default="")
     mapped_boundary = models.BooleanField(null=True, blank=True)
     buffer_radius = models.IntegerField(null=True, blank=True, default=0)
     datum = models.ForeignKey(Datum, on_delete=models.SET_NULL, null=True, blank=True)
@@ -2049,7 +2049,7 @@ class OCRLocation(BaseModel):
     district = models.ForeignKey(
         District, default=None, on_delete=models.CASCADE, null=True, blank=True
     )
-    locality = models.TextField(default=None, null=True, blank=True)
+    locality = models.TextField(blank=True, default="")
 
     class Meta:
         app_label = "boranga"
@@ -2518,8 +2518,8 @@ class OCRHabitatComposition(BaseModel):
     drainage = models.ForeignKey(
         Drainage, on_delete=models.SET_NULL, null=True, blank=True
     )
-    water_quality = models.CharField(max_length=500, null=True, blank=True)
-    habitat_notes = models.CharField(max_length=1000, null=True, blank=True)
+    water_quality = models.CharField(max_length=500, blank=True, default="")
+    habitat_notes = models.CharField(max_length=1000, blank=True, default="")
 
     class Meta:
         app_label = "boranga"
@@ -2652,10 +2652,10 @@ class OCRVegetationStructure(BaseModel):
         related_name="vegetation_structure",
     )
 
-    vegetation_structure_layer_one = models.TextField(null=True, blank=True)
-    vegetation_structure_layer_two = models.TextField(null=True, blank=True)
-    vegetation_structure_layer_three = models.TextField(null=True, blank=True)
-    vegetation_structure_layer_four = models.TextField(null=True, blank=True)
+    vegetation_structure_layer_one = models.TextField(blank=True, default="")
+    vegetation_structure_layer_two = models.TextField(blank=True, default="")
+    vegetation_structure_layer_three = models.TextField(blank=True, default="")
+    vegetation_structure_layer_four = models.TextField(blank=True, default="")
 
     class Meta:
         app_label = "boranga"
@@ -2713,7 +2713,7 @@ class OCRFireHistory(BaseModel):
     intensity = models.ForeignKey(
         Intensity, on_delete=models.SET_NULL, null=True, blank=True
     )
-    comment = models.CharField(max_length=1000, null=True, blank=True)
+    comment = models.CharField(max_length=1000, blank=True, default="")
 
     class Meta:
         app_label = "boranga"
@@ -2773,7 +2773,7 @@ class AssociatedSpeciesTaxonomy(BaseModel):
         null=True,
         related_name="associated_species_taxonomy",
     )
-    comments = models.TextField(blank=True, null=True)
+    comments = models.TextField(blank=True, default="")
 
     class Meta:
         app_label = "boranga"
@@ -2828,7 +2828,7 @@ class OCRAssociatedSpecies(BaseModel):
         null=True,
         related_name="associated_species",
     )
-    comment = models.TextField(blank=True)
+    comment = models.TextField(blank=True, default="")
     species_list_relates_to = models.ForeignKey(
         SpeciesListRelatesTo,
         on_delete=models.PROTECT,
@@ -2895,7 +2895,7 @@ class OCRObservationDetail(BaseModel):
     )
     area_surveyed = models.IntegerField(null=True, blank=True, default=0)
     survey_duration = models.IntegerField(null=True, blank=True, default=0)
-    comments = models.TextField(blank=True)
+    comments = models.TextField(blank=True, default="")
 
     class Meta:
         app_label = "boranga"
@@ -3085,7 +3085,7 @@ class OCRPlantCount(BaseModel):
     ripe_fruit_present = models.BooleanField(null=True, blank=True)
     dehisced_fruit_present = models.BooleanField(null=True, blank=True)
     pollinator_observation = models.CharField(max_length=1000, null=True, blank=True)
-    comment = models.CharField(max_length=1000, null=True, blank=True)
+    comment = models.CharField(max_length=1000, blank=True, default="")
     obs_date = models.DateField(null=True, blank=True)
 
     class Meta:
@@ -3295,11 +3295,11 @@ class OCRAnimalObservation(BaseModel):
         SecondarySign, on_delete=models.SET_NULL, null=True, blank=True
     )
 
-    distinctive_feature = models.CharField(max_length=1000, null=True, blank=True)
-    action_taken = models.CharField(max_length=1000, null=True, blank=True)
-    action_required = models.CharField(max_length=1000, null=True, blank=True)
+    distinctive_feature = models.CharField(max_length=1000, blank=True, default="")
+    action_taken = models.CharField(max_length=1000, blank=True, default="")
+    action_required = models.CharField(max_length=1000, blank=True, default="")
     observation_detail_comment = models.CharField(
-        max_length=1000, null=True, blank=True
+        max_length=1000, blank=True, default=""
     )
 
     count_status = models.CharField(
@@ -3523,7 +3523,7 @@ class OCRIdentification(BaseModel):
         null=True,
         related_name="identification",
     )
-    id_confirmed_by = models.CharField(max_length=1000, null=True, blank=True)
+    id_confirmed_by = models.CharField(max_length=1000, blank=True, default="")
     identification_certainty = models.ForeignKey(
         IdentificationCertainty, on_delete=models.SET_NULL, null=True, blank=True
     )
@@ -3536,10 +3536,10 @@ class OCRIdentification(BaseModel):
     permit_type = models.ForeignKey(
         PermitType, on_delete=models.SET_NULL, null=True, blank=True
     )
-    permit_id = models.CharField(max_length=500, null=True, blank=True)
-    collector_number = models.CharField(max_length=500, null=True, blank=True)
-    barcode_number = models.CharField(max_length=500, null=True, blank=True)
-    identification_comment = models.TextField(null=True, blank=True)
+    permit_id = models.CharField(max_length=500, blank=True, default="")
+    collector_number = models.CharField(max_length=500, blank=True, default="")
+    barcode_number = models.CharField(max_length=500, blank=True, default="")
+    identification_comment = models.TextField(blank=True, default="")
 
     class Meta:
         app_label = "boranga"
@@ -3682,7 +3682,7 @@ class OCRConservationThreat(RevisionedMixin):
         null=True,
         blank=True,
     )
-    comment = models.CharField(max_length=512, blank=True, null=True)
+    comment = models.CharField(max_length=512, blank=True, default="")
     date_observed = models.DateField(blank=True, null=True)
     visible = models.BooleanField(
         default=True
@@ -4705,8 +4705,8 @@ class OCCLocation(BaseModel):
     copied_ocr_location = models.ForeignKey(
         OCRLocation, on_delete=models.SET_NULL, null=True, blank=True
     )
-    location_description = models.TextField(null=True, blank=True)
-    boundary_description = models.TextField(null=True, blank=True)
+    location_description = models.TextField(blank=True, default="")
+    boundary_description = models.TextField(blank=True, default="")
     mapped_boundary = models.BooleanField(null=True, blank=True)
     buffer_radius = models.IntegerField(null=True, blank=True, default=0)
     datum = models.ForeignKey(Datum, on_delete=models.SET_NULL, null=True, blank=True)
@@ -4724,7 +4724,7 @@ class OCCLocation(BaseModel):
     district = models.ForeignKey(
         District, default=None, on_delete=models.CASCADE, null=True, blank=True
     )
-    locality = models.TextField(default=None, null=True, blank=True)
+    locality = models.TextField(blank=True, default="")
 
     class Meta:
         app_label = "boranga"
@@ -4785,11 +4785,11 @@ class OCCContactDetail(RevisionedMixin):
         null=True,
         related_name="contact_detail",
     )
-    contact_name = models.CharField(max_length=250, blank=True, null=True)
-    role = models.CharField(max_length=250, blank=True, null=True)
-    contact = models.CharField(max_length=250, blank=True, null=True)
-    organisation = models.CharField(max_length=250, blank=True, null=True)
-    notes = models.CharField(max_length=512, blank=True, null=True)
+    contact_name = models.CharField(max_length=250, blank=True, default="")
+    role = models.CharField(max_length=250, blank=True, default="")
+    contact = models.CharField(max_length=250, blank=True, default="")
+    organisation = models.CharField(max_length=250, blank=True, default="")
+    notes = models.CharField(max_length=512, blank=True, default="")
     visible = models.BooleanField(default=True)
 
     class Meta:
@@ -4850,7 +4850,7 @@ class OCCConservationThreat(RevisionedMixin):
         null=True,
         blank=True,
     )
-    comment = models.CharField(max_length=512, blank=True, null=True)
+    comment = models.CharField(max_length=512, blank=True, default="")
     date_observed = models.DateField(blank=True, null=True)
     visible = models.BooleanField(
         default=True
@@ -4921,8 +4921,8 @@ class OCCHabitatComposition(BaseModel):
     drainage = models.ForeignKey(
         Drainage, on_delete=models.SET_NULL, null=True, blank=True
     )
-    water_quality = models.CharField(max_length=500, null=True, blank=True)
-    habitat_notes = models.CharField(max_length=1000, null=True, blank=True)
+    water_quality = models.CharField(max_length=500, blank=True, default="")
+    habitat_notes = models.CharField(max_length=1000, blank=True, default="")
 
     class Meta:
         app_label = "boranga"
@@ -5057,10 +5057,10 @@ class OCCVegetationStructure(BaseModel):
     copied_ocr_vegetation_structure = models.ForeignKey(
         OCRVegetationStructure, on_delete=models.SET_NULL, null=True, blank=True
     )
-    vegetation_structure_layer_one = models.TextField(null=True, blank=True)
-    vegetation_structure_layer_two = models.TextField(null=True, blank=True)
-    vegetation_structure_layer_three = models.TextField(null=True, blank=True)
-    vegetation_structure_layer_four = models.TextField(null=True, blank=True)
+    vegetation_structure_layer_one = models.TextField(blank=True, default="")
+    vegetation_structure_layer_two = models.TextField(blank=True, default="")
+    vegetation_structure_layer_three = models.TextField(blank=True, default="")
+    vegetation_structure_layer_four = models.TextField(blank=True, default="")
 
     class Meta:
         app_label = "boranga"
@@ -5092,7 +5092,7 @@ class OCCFireHistory(BaseModel):
     intensity = models.ForeignKey(
         Intensity, on_delete=models.SET_NULL, null=True, blank=True
     )
-    comment = models.CharField(max_length=1000, null=True, blank=True)
+    comment = models.CharField(max_length=1000, blank=True, default="")
 
     class Meta:
         app_label = "boranga"
@@ -5120,7 +5120,7 @@ class OCCAssociatedSpecies(BaseModel):
     copied_ocr_associated_species = models.ForeignKey(
         OCRAssociatedSpecies, on_delete=models.SET_NULL, null=True, blank=True
     )
-    comment = models.TextField(blank=True)
+    comment = models.TextField(blank=True, default="")
 
     related_species = models.ManyToManyField(AssociatedSpeciesTaxonomy, blank=True)
 
@@ -5155,7 +5155,7 @@ class OCCObservationDetail(BaseModel):
     )
     area_surveyed = models.IntegerField(null=True, blank=True, default=0)
     survey_duration = models.IntegerField(null=True, blank=True, default=0)
-    comments = models.TextField(blank=True)
+    comments = models.TextField(blank=True, default="")
 
     class Meta:
         app_label = "boranga"
@@ -5237,7 +5237,7 @@ class OCCPlantCount(BaseModel):
     ripe_fruit_present = models.BooleanField(null=True, blank=True)
     dehisced_fruit_present = models.BooleanField(null=True, blank=True)
     pollinator_observation = models.CharField(max_length=1000, null=True, blank=True)
-    comment = models.CharField(max_length=1000, null=True, blank=True)
+    comment = models.CharField(max_length=1000, blank=True, default="")
     obs_date = models.DateField(null=True, blank=True)
 
     class Meta:
@@ -5316,11 +5316,11 @@ class OCCAnimalObservation(BaseModel):
         SecondarySign, on_delete=models.SET_NULL, null=True, blank=True
     )
 
-    distinctive_feature = models.CharField(max_length=1000, null=True, blank=True)
-    action_taken = models.CharField(max_length=1000, null=True, blank=True)
-    action_required = models.CharField(max_length=1000, null=True, blank=True)
+    distinctive_feature = models.CharField(max_length=1000, blank=True, default="")
+    action_taken = models.CharField(max_length=1000, blank=True, default="")
+    action_required = models.CharField(max_length=1000, blank=True, default="")
     observation_detail_comment = models.CharField(
-        max_length=1000, null=True, blank=True
+        max_length=1000, blank=True, default=""
     )
 
     count_status = models.CharField(
@@ -5444,7 +5444,7 @@ class OCCIdentification(BaseModel):
     copied_ocr_identification = models.ForeignKey(
         OCRIdentification, on_delete=models.SET_NULL, null=True, blank=True
     )
-    id_confirmed_by = models.CharField(max_length=1000, null=True, blank=True)
+    id_confirmed_by = models.CharField(max_length=1000, blank=True, default="")
     identification_certainty = models.ForeignKey(
         IdentificationCertainty, on_delete=models.SET_NULL, null=True, blank=True
     )
@@ -5457,10 +5457,10 @@ class OCCIdentification(BaseModel):
     permit_type = models.ForeignKey(
         PermitType, on_delete=models.SET_NULL, null=True, blank=True
     )
-    permit_id = models.CharField(max_length=500, null=True, blank=True)
-    collector_number = models.CharField(max_length=500, null=True, blank=True)
-    barcode_number = models.CharField(max_length=500, null=True, blank=True)
-    identification_comment = models.TextField(null=True, blank=True)
+    permit_id = models.CharField(max_length=500, blank=True, default="")
+    collector_number = models.CharField(max_length=500, blank=True, default="")
+    barcode_number = models.CharField(max_length=500, blank=True, default="")
+    identification_comment = models.TextField(blank=True, default="")
 
     class Meta:
         app_label = "boranga"

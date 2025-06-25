@@ -8,11 +8,21 @@
                 :aria-controls="section_body_id"
                 @click="toggle_show_hide"
             >
-                <div class="col-11" :style="'color:' + customColor">
+                <div
+                    class="col-11 d-flex align-items-center"
+                    :style="'color:' + customColor"
+                >
                     {{ label }}
-                    <span v-if="subtitle" class="h6" :class="subtitleClass">{{
-                        subtitle
-                    }}</span>
+                    <span
+                        v-if="subtitle"
+                        class="h6 m-0 p-0 ps-2"
+                        :class="subtitleClass"
+                        ><i
+                            v-if="showSubtitleIcon"
+                            :class="subtitleIconClass"
+                        ></i
+                        >{{ subtitle }}</span
+                    >
                     <!-- to display the assessor and referral comments textboxes -->
                     <template v-if="displayCommentSection">
                         <template v-if="!isShowComment">
@@ -70,6 +80,14 @@ export default {
         subtitleClass: {
             type: String,
             default: 'text-muted',
+        },
+        showSubtitleIcon: {
+            type: Boolean,
+            default: false,
+        },
+        subtitleIconClass: {
+            type: String,
+            default: 'bi bi-exclamation-circle-fill text-warning me-2',
         },
         Index: {},
         hideHeader: {},

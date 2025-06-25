@@ -4,6 +4,11 @@
             :form-collapse="false"
             label="Habitat Composition"
             :Index="habitatCompositionBody"
+            :subtitle="habitatCompositionIsDirty ? 'Unsaved Changes' : ''"
+            :subtitle-class="
+                habitatCompositionIsDirty ? 'text-warning ms-auto' : ''
+            "
+            :show-subtitle-icon="true"
         >
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label">Land Form:</label>
@@ -89,7 +94,7 @@
             </div>
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
-                    >Loose Rock % :</label
+                    >Loose Rock (%):</label
                 >
                 <div class="col-sm-6">
                     <input
@@ -368,14 +373,27 @@
             </div>
             <div class="row mb-3">
                 <div class="col-sm-12">
-                    <!-- <button v-if="!updatingHabitatCompositionDetails" class="pull-right btn btn-primary" @click.prevent="updateDetails()" :disabled="!can_update()">Update</button> -->
                     <button
                         v-if="!updatingHabitatCompositionDetails"
-                        :disabled="isReadOnly"
-                        class="btn btn-primary btn-sm float-end"
+                        class="btn btn-sm float-end"
+                        :class="{
+                            'btn-primary': habitatCompositionIsDirty,
+                            'btn-light': !habitatCompositionIsDirty,
+                            border: !habitatCompositionIsDirty,
+                        }"
+                        :disabled="isReadOnly || !habitatCompositionIsDirty"
                         @click.prevent="updateHabitatCompositionDetails()"
                     >
-                        Save Section
+                        <template v-if="habitatCompositionIsDirty"
+                            >Save Section<i
+                                class="bi bi-exclamation-circle-fill text-warning ps-2"
+                            ></i
+                        ></template>
+                        <template v-else
+                            >Saved<i
+                                class="bi bi-check-circle-fill text-success ps-2"
+                            ></i
+                        ></template>
                     </button>
                     <button v-else disabled class="float-end btn btn-primary">
                         Saving
@@ -400,6 +418,11 @@
             :form-collapse="false"
             label="Habitat Condition"
             :Index="habitatConditionBody"
+            :subtitle="habitatConditionIsDirty ? 'Unsaved Changes' : ''"
+            :subtitle-class="
+                habitatConditionIsDirty ? 'text-warning ms-auto' : ''
+            "
+            :show-subtitle-icon="true"
         >
             <label for="" class="col-lg-3 control-label fs-5 fw-bold mb-3"
                 >Keighery Scale</label
@@ -584,11 +607,25 @@
                 <div class="col-sm-12">
                     <button
                         v-if="!updatingHabitatConditionDetails"
-                        :disabled="isReadOnly"
-                        class="btn btn-primary btn-sm float-end"
+                        class="btn btn-sm float-end"
+                        :class="{
+                            'btn-primary': habitatConditionIsDirty,
+                            'btn-light': !habitatConditionIsDirty,
+                            border: !habitatConditionIsDirty,
+                        }"
+                        :disabled="isReadOnly || !habitatConditionIsDirty"
                         @click.prevent="updateHabitatConditionDetails()"
                     >
-                        Save Section
+                        <template v-if="habitatConditionIsDirty"
+                            >Save Section<i
+                                class="bi bi-exclamation-circle-fill text-warning ps-2"
+                            ></i
+                        ></template>
+                        <template v-else
+                            >Saved<i
+                                class="bi bi-check-circle-fill text-success ps-2"
+                            ></i
+                        ></template>
                     </button>
                     <button v-else disabled class="float-end btn btn-primary">
                         Saving
@@ -613,6 +650,11 @@
             :form-collapse="false"
             label="Vegetation Structure"
             :Index="vegetationStructureBody"
+            :subtitle="vegetationStructureIsDirty ? 'Unsaved Changes' : ''"
+            :subtitle-class="
+                vegetationStructureIsDirty ? 'text-warning ms-auto' : ''
+            "
+            :show-subtitle-icon="true"
         >
             <div class="row mb-3">
                 <label for="" class="col-sm-6 control-label"
@@ -708,11 +750,25 @@
                 <div class="col-sm-12">
                     <button
                         v-if="!updatingVegetationStructure"
-                        :disabled="isReadOnly"
-                        class="btn btn-primary btn-sm float-end"
+                        class="btn btn-sm float-end"
+                        :class="{
+                            'btn-primary': vegetationStructureIsDirty,
+                            'btn-light': !vegetationStructureIsDirty,
+                            border: !vegetationStructureIsDirty,
+                        }"
+                        :disabled="isReadOnly || !vegetationStructureIsDirty"
                         @click.prevent="updateVegetationStructure()"
                     >
-                        Save Section
+                        <template v-if="vegetationStructureIsDirty"
+                            >Save Section<i
+                                class="bi bi-exclamation-circle-fill text-warning ps-2"
+                            ></i
+                        ></template>
+                        <template v-else
+                            >Saved<i
+                                class="bi bi-check-circle-fill text-success ps-2"
+                            ></i
+                        ></template>
                     </button>
                     <button v-else disabled class="float-end btn btn-primary">
                         Saving
@@ -737,6 +793,9 @@
             :form-collapse="false"
             label="Fire History"
             :Index="fireHistoryBody"
+            :subtitle="fireHistoryIsDirty ? 'Unsaved Changes' : ''"
+            :subtitle-class="fireHistoryIsDirty ? 'text-warning ms-auto' : ''"
+            :show-subtitle-icon="true"
         >
             <label for="" class="col-lg-3 control-label fs-5 fw-bold"
                 >Last Fire History</label
@@ -812,7 +871,7 @@
                 </div>
             </div>
             <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label">Comments :</label>
+                <label for="" class="col-sm-3 control-label">Comments:</label>
                 <div class="col-sm-9">
                     <textarea
                         id="fire_history_comment"
@@ -841,11 +900,25 @@
                 <div class="col-sm-12">
                     <button
                         v-if="!updatingFireHistoryDetails"
-                        :disabled="isReadOnly"
-                        class="btn btn-primary btn-sm float-end"
+                        class="btn btn-sm float-end"
+                        :class="{
+                            'btn-primary': fireHistoryIsDirty,
+                            'btn-light': !fireHistoryIsDirty,
+                            border: !fireHistoryIsDirty,
+                        }"
+                        :disabled="isReadOnly || !fireHistoryIsDirty"
                         @click.prevent="updateFireHistoryDetails()"
                     >
-                        Save Section
+                        <template v-if="fireHistoryIsDirty"
+                            >Save Section<i
+                                class="bi bi-exclamation-circle-fill text-warning ps-2"
+                            ></i
+                        ></template>
+                        <template v-else
+                            >Saved<i
+                                class="bi bi-check-circle-fill text-success ps-2"
+                            ></i
+                        ></template>
                     </button>
                     <button v-else disabled class="float-end btn btn-primary">
                         Saving
@@ -863,6 +936,11 @@
             :form-collapse="false"
             label="Associated Species"
             :Index="associatedSpeciesBody"
+            :subtitle="associatedSpeciesIsDirty ? 'Unsaved Changes' : ''"
+            :subtitle-class="
+                associatedSpeciesIsDirty ? 'text-warning ms-auto' : ''
+            "
+            :show-subtitle-icon="true"
         >
             <RelatedSpecies
                 ref="related_species"
@@ -907,11 +985,25 @@
                 <div class="col-sm-12">
                     <button
                         v-if="!updatingAssociatedSpeciesDetails"
-                        :disabled="isReadOnly"
-                        class="btn btn-primary btn-sm float-end"
+                        class="btn btn-sm float-end"
+                        :class="{
+                            'btn-primary': associatedSpeciesIsDirty,
+                            'btn-light': !associatedSpeciesIsDirty,
+                            border: !associatedSpeciesIsDirty,
+                        }"
+                        :disabled="isReadOnly || !associatedSpeciesIsDirty"
                         @click.prevent="updateAssociatedSpeciesDetails()"
                     >
-                        Save Section
+                        <template v-if="associatedSpeciesIsDirty"
+                            >Save Section<i
+                                class="bi bi-exclamation-circle-fill text-warning ps-2"
+                            ></i
+                        ></template>
+                        <template v-else
+                            >Saved<i
+                                class="bi bi-check-circle-fill text-success ps-2"
+                            ></i
+                        ></template>
                     </button>
                     <button v-else disabled class="float-end btn btn-primary">
                         Saving
@@ -972,6 +1064,19 @@ export default {
             vegetationStructureBody: 'vegetationStructureBody' + uuid(),
             fireHistoryBody: 'fireHistoryBody' + uuid(),
             associatedSpeciesBody: 'associatedSpeciesBody' + uuid(),
+            originalHabitatComposition: JSON.stringify(
+                vm.occurrence_obj.habitat_composition
+            ),
+            originalHabitatCondition: JSON.stringify(
+                vm.occurrence_obj.habitat_condition
+            ),
+            originalVegetationStructure: JSON.stringify(
+                vm.occurrence_obj.vegetation_structure
+            ),
+            originalFireHistory: JSON.stringify(vm.occurrence_obj.fire_history),
+            originalAssociatedSpecies: JSON.stringify(
+                vm.occurrence_obj.associated_species
+            ),
             //---to show fields related to Fauna
             isFauna: vm.occurrence_obj.group_type === 'fauna' ? true : false,
             //----list of values dictionary
@@ -1007,6 +1112,55 @@ export default {
                     this.occurrence_obj.habitat_condition.completely_degraded
                 )
             ).toFixed(2);
+        },
+        habitatCompositionIsDirty: function () {
+            return (
+                JSON.stringify(this.occurrence_obj.habitat_composition) !=
+                this.originalHabitatComposition
+            );
+        },
+        habitatConditionIsDirty: function () {
+            return (
+                JSON.stringify(this.occurrence_obj.habitat_condition) !=
+                this.originalHabitatCondition
+            );
+        },
+        vegetationStructureIsDirty: function () {
+            return (
+                JSON.stringify(this.occurrence_obj.vegetation_structure) !=
+                this.originalVegetationStructure
+            );
+        },
+        fireHistoryIsDirty: function () {
+            return (
+                JSON.stringify(this.occurrence_obj.fire_history) !=
+                this.originalFireHistory
+            );
+        },
+        associatedSpeciesIsDirty: function () {
+            return (
+                JSON.stringify(this.occurrence_obj.associated_species) !=
+                this.originalAssociatedSpecies
+            );
+        },
+        isDirty: function () {
+            return (
+                this.habitatCompositionIsDirty ||
+                this.habitatConditionIsDirty ||
+                this.vegetationStructureIsDirty ||
+                this.fireHistoryIsDirty ||
+                this.associatedSpeciesIsDirty
+            );
+        },
+    },
+    emits: ['dirty'],
+    watch: {
+        isDirty: function (newValue) {
+            if (newValue) {
+                this.$emit('dirty', true);
+            } else {
+                this.$emit('dirty', false);
+            }
         },
     },
     created: async function () {
@@ -1057,6 +1211,23 @@ export default {
         vm.initialiseSoilTypeSelect();
     },
     methods: {
+        resetDirtyState: function () {
+            this.originalHabitatComposition = JSON.stringify(
+                this.occurrence_obj.habitat_composition
+            );
+            this.originalHabitatCondition = JSON.stringify(
+                this.occurrence_obj.habitat_condition
+            );
+            this.originalVegetationStructure = JSON.stringify(
+                this.occurrence_obj.vegetation_structure
+            );
+            this.originalFireHistory = JSON.stringify(
+                this.occurrence_obj.fire_history
+            );
+            this.originalAssociatedSpecies = JSON.stringify(
+                this.occurrence_obj.associated_species
+            );
+        },
         eventListeners: function () {
             let vm = this;
             $(vm.$refs.flowering_period_select)
@@ -1206,6 +1377,9 @@ export default {
                 }
                 vm.updatingHabitatCompositionDetails = false;
                 vm.occurrence_obj.habitat_composition = data;
+                vm.originalHabitatComposition = JSON.stringify(
+                    vm.occurrence_obj.habitat_composition
+                );
                 swal.fire({
                     title: 'Saved',
                     text: 'Habitat Composition details have been saved',
@@ -1225,7 +1399,7 @@ export default {
                 swal.fire({
                     title: 'Keighery Scale Total Error',
                     text:
-                        'Keighery Scale total should be 100%. Currently the total is ' +
+                        'Keighery Scale total should be either 0% or 100%. Currently the total is ' +
                         vm.keigheryScaleTotal +
                         '%.',
                     icon: 'error',
@@ -1273,6 +1447,9 @@ export default {
                 }
                 vm.updatingHabitatConditionDetails = false;
                 vm.occurrence_obj.habitat_condition = data;
+                vm.originalHabitatCondition = JSON.stringify(
+                    vm.occurrence_obj.habitat_condition
+                );
                 swal.fire({
                     title: 'Saved',
                     text: 'Habitat Condition details have been saved',
@@ -1305,6 +1482,9 @@ export default {
                     vm.updatingVegetationStructure = false;
                     vm.occurrence_obj.vegetation_structure =
                         await response.json();
+                    vm.originalVegetationStructure = JSON.stringify(
+                        vm.occurrence_obj.vegetation_structure
+                    );
                     swal.fire({
                         title: 'Saved',
                         text: 'Vegetation Structure details have been saved',
@@ -1353,6 +1533,9 @@ export default {
                 async (response) => {
                     vm.updatingFireHistoryDetails = false;
                     vm.occurrence_obj.fire_history = await response.json();
+                    vm.originalFireHistory = JSON.stringify(
+                        vm.occurrence_obj.fire_history
+                    );
                     swal.fire({
                         title: 'Saved',
                         text: 'Fire History details have been saved',
@@ -1398,6 +1581,9 @@ export default {
                     vm.updatingAssociatedSpeciesDetails = false;
                     vm.occurrence_obj.associated_species =
                         await response.json();
+                    vm.originalAssociatedSpecies = JSON.stringify(
+                        vm.occurrence_obj.associated_species
+                    );
                     swal.fire({
                         title: 'Saved',
                         text: 'Associated Species details have been saved',

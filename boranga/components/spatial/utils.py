@@ -305,11 +305,7 @@ def save_geometry(
         and 0
         == InstanceGeometry.objects.filter(**{instance_fk_field_name: instance}).count()
     ):
-        # No feature to save and no feature to delete
-        logger.warning(
-            f"{instance_model_name} geometry has no features to save or delete"
-        )
-        return {}
+        return
 
     action = request.data.get("action", None)
 
