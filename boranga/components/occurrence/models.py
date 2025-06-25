@@ -3059,8 +3059,6 @@ class OCRPlantCount(BaseModel):
     detailed_dead_juvenile = models.IntegerField(null=True, blank=True)
     detailed_alive_seedling = models.IntegerField(null=True, blank=True)
     detailed_dead_seedling = models.IntegerField(null=True, blank=True)
-    detailed_alive_unknown = models.IntegerField(null=True, blank=True)
-    detailed_dead_unknown = models.IntegerField(null=True, blank=True)
 
     simple_alive = models.IntegerField(null=True, blank=True)
     simple_dead = models.IntegerField(null=True, blank=True)
@@ -3105,9 +3103,6 @@ class OCRPlantCount(BaseModel):
             self.detailed_dead_juvenile = None
             self.detailed_alive_seedling = None
             self.detailed_dead_seedling = None
-            self.detailed_alive_unknown = None
-            self.detailed_dead_unknown = None
-
             self.simple_alive = None
             self.simple_dead = None
         elif self.count_status == settings.COUNT_STATUS_SIMPLE_COUNT:
@@ -3117,8 +3112,6 @@ class OCRPlantCount(BaseModel):
             self.detailed_dead_juvenile = None
             self.detailed_alive_seedling = None
             self.detailed_dead_seedling = None
-            self.detailed_alive_unknown = None
-            self.detailed_dead_unknown = None
         elif self.count_status == settings.COUNT_STATUS_COUNTED:
             self.simple_alive = None
             self.simple_dead = None
@@ -5211,8 +5204,6 @@ class OCCPlantCount(BaseModel):
     detailed_dead_juvenile = models.IntegerField(null=True, blank=True)
     detailed_alive_seedling = models.IntegerField(null=True, blank=True)
     detailed_dead_seedling = models.IntegerField(null=True, blank=True)
-    detailed_alive_unknown = models.IntegerField(null=True, blank=True)
-    detailed_dead_unknown = models.IntegerField(null=True, blank=True)
 
     simple_alive = models.IntegerField(null=True, blank=True)
     simple_dead = models.IntegerField(null=True, blank=True)
@@ -5260,9 +5251,6 @@ class OCCPlantCount(BaseModel):
             self.detailed_dead_juvenile = None
             self.detailed_alive_seedling = None
             self.detailed_dead_seedling = None
-            self.detailed_alive_unknown = None
-            self.detailed_dead_unknown = None
-
             self.simple_alive = None
             self.simple_dead = None
         elif self.count_status == settings.COUNT_STATUS_SIMPLE_COUNT:
@@ -5272,8 +5260,6 @@ class OCCPlantCount(BaseModel):
             self.detailed_dead_juvenile = None
             self.detailed_alive_seedling = None
             self.detailed_dead_seedling = None
-            self.detailed_alive_unknown = None
-            self.detailed_dead_unknown = None
         elif self.count_status == settings.COUNT_STATUS_COUNTED:
             self.simple_alive = None
             self.simple_dead = None

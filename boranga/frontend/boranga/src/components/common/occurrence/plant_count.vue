@@ -298,7 +298,6 @@
                 <div class="col-sm-2 fw-bold">Mature</div>
                 <div class="col-sm-2 fw-bold">Juvenile</div>
                 <div class="col-sm-2 fw-bold">Seedling</div>
-                <div class="col-sm-2 fw-bold">Unknown</div>
             </div>
             <div class="row mb-3">
                 <div class="col-sm-3 fw-bold">Alive</div>
@@ -335,17 +334,6 @@
                         min="0"
                     />
                 </div>
-                <div class="col-sm-2">
-                    <input
-                        id="alive_unknown"
-                        v-model="plant_count.detailed_alive_unknown"
-                        :disabled="isReadOnly"
-                        type="number"
-                        class="form-control plant_count"
-                        placeholder=""
-                        min="0"
-                    />
-                </div>
             </div>
             <div class="row mb-3">
                 <div class="col-sm-3 fw-bold">Dead</div>
@@ -375,17 +363,6 @@
                     <input
                         id="dead_seedling"
                         v-model="plant_count.detailed_dead_seedling"
-                        :disabled="isReadOnly"
-                        type="number"
-                        class="form-control plant_count"
-                        placeholder=""
-                        min="0"
-                    />
-                </div>
-                <div class="col-sm-2">
-                    <input
-                        id="dead_unknown"
-                        v-model="plant_count.detailed_dead_unknown"
                         :disabled="isReadOnly"
                         type="number"
                         class="form-control plant_count"
