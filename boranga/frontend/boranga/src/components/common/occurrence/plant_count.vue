@@ -174,7 +174,7 @@
         </div>
         <div class="row mb-3">
             <label for="" class="col-sm-3 control-label"
-                >Estimated Population Area(m<sup>2</sup>) :</label
+                >Estimated Population Area(m<sup>2</sup>):</label
             >
             <div class="col-sm-6">
                 <input
@@ -404,7 +404,7 @@
             >
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
-                    >Number alive :</label
+                    >Number alive:</label
                 >
                 <div class="col-sm-6">
                     <input
@@ -420,7 +420,7 @@
             </div>
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
-                    >Number dead :</label
+                    >Number dead:</label
                 >
                 <div class="col-sm-6">
                     <input
@@ -496,7 +496,7 @@
         </div>
         <div class="row mb-3">
             <label for="" class="col-sm-3 control-label"
-                >Number of quadrats surveyed :</label
+                >Number of quadrats surveyed:</label
             >
             <div class="col-sm-6">
                 <input
@@ -512,7 +512,7 @@
         </div>
         <div class="row mb-3">
             <label for="" class="col-sm-3 control-label"
-                >Individual quadrat area (m<sup>2</sup>) :</label
+                >Individual quadrat area (m<sup>2</sup>):</label
             >
             <div class="col-sm-6">
                 <input
@@ -528,7 +528,7 @@
         </div>
         <div class="row mb-3">
             <label for="" class="col-sm-3 control-label"
-                >Total quadrat area (m<sup>2</sup>) :</label
+                >Total quadrat area (m<sup>2</sup>):</label
             >
             <div class="col-sm-6">
                 <input
@@ -544,7 +544,7 @@
         </div>
         <div class="row mb-3">
             <label for="" class="col-sm-3 control-label"
-                >Flowering plants % :</label
+                >Flowering plants (%):</label
             >
             <div class="col-sm-6">
                 <input
@@ -759,7 +759,7 @@
         </div>
         <div class="row mb-3">
             <label for="" class="col-sm-3 control-label"
-                >Pollinator Observations :</label
+                >Pollinator Observations:</label
             >
             <div class="col-sm-9">
                 <textarea
@@ -775,7 +775,7 @@
         </div>
         <div class="row mb-3">
             <label for="" class="col-sm-3 control-label"
-                >Plant Count Comments :</label
+                >Plant Count Comments:</label
             >
             <div class="col-sm-9">
                 <textarea

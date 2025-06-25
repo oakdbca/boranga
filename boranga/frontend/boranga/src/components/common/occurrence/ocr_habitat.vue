@@ -99,7 +99,7 @@
             </div>
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
-                    >Loose Rock % :</label
+                    >Loose Rock (%):</label
                 >
                 <div class="col-sm-6">
                     <input
@@ -861,7 +861,7 @@
                 </div>
             </div>
             <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label">Comments :</label>
+                <label for="" class="col-sm-3 control-label">Comments:</label>
                 <div class="col-sm-9">
                     <textarea
                         id="fire_history_comment"

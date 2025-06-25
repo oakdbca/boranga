@@ -243,7 +243,7 @@
 
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
-                    >Distinctive Features :</label
+                    >Distinctive Features:</label
                 >
                 <div class="col-sm-9">
                     <textarea
@@ -260,7 +260,7 @@
 
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
-                    >Actions Taken :</label
+                    >Actions Taken:</label
                 >
                 <div class="col-sm-9">
                     <textarea
@@ -277,7 +277,7 @@
 
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
-                    >Actions Required :</label
+                    >Actions Required:</label
                 >
                 <div class="col-sm-9">
                     <textarea
@@ -294,7 +294,7 @@
 
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
-                    >Observation Details :</label
+                    >Observation Details:</label
                 >
                 <div class="col-sm-9">
                     <textarea
@@ -651,7 +651,7 @@
                 >
                 <div class="row mb-3">
                     <label for="" class="col-sm-3 control-label"
-                        >Number alive :</label
+                        >Number alive:</label
                     >
                     <div class="col-sm-6">
                         <input
@@ -668,7 +668,7 @@
                 </div>
                 <div class="row mb-3">
                     <label for="" class="col-sm-3 control-label"
-                        >Number dead :</label
+                        >Number dead:</label
                     >
                     <div class="col-sm-6">
                         <input

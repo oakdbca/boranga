@@ -188,44 +188,6 @@
                     />
                 </div>
             </div>
-
-            <!--<div class="row mb-3">
-                <label for="" class="col-sm-3 control-label">Datum:</label>
-                <div class="col-sm-9">
-                    <VueSelect
-                        v-model="occurrence_report_obj.location.epsg_code"
-                        :options="datum_list"
-                        :reduce="(option) => option.id"
-                        label="name"
-                        :disabled="isReadOnly"
-                        @search="searchForCRS"
-                    >
-                    </VueSelect>
-                </div>
-            </div>
-            <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label"
-                    >Point Coordinate :</label
-                >
-                <div class="col-sm-2">
-                    <input
-                        id="point_coord1"
-                        :disabled="isReadOnly"
-                        type="decimal"
-                        class="form-control ocr_number"
-                        placeholder=""
-                    />
-                </div>
-                <div class="col-sm-2">
-                    <input
-                        id="point_coord2"
-                        :disabled="isReadOnly"
-                        type="decimal"
-                        class="form-control ocr_number"
-                        placeholder=""
-                    />
-                </div>
-            </div>-->
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
                     >Coordinate Source:</label
@@ -291,24 +253,6 @@
                     </template>
                 </div>
             </div>
-
-            <!--
-            <div v-if="canAssess" class="row mb-3">
-                <label for="" class="col-sm-3 control-label"
-                    >Buffer Radius(m) :</label
-                >
-                <div class="col-sm-6">
-                    <input
-                        id="buffer_radius"
-                        v-model="occurrence_report_obj.location.buffer_radius"
-                        :disabled="isReadOnly"
-                        type="number"
-                        class="form-control ocr_number"
-                        placeholder=""
-                        min="0"
-                    />
-                </div>
-            </div>-->
             <div v-if="canAssess" class="row mb-3">
                 <label
                     for=""
@@ -780,9 +724,6 @@ export default {
                     vm.$refs.component_map.setLoadingMap(false);
                 }
             );
-        },
-        incrementComponentMapKey: function () {
-            this.uuid = uuid();
         },
         searchForCRS: function (search, loading) {
             const vm = this;
