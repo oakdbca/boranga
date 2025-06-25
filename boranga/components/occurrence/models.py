@@ -974,7 +974,7 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
                     f"Occurrence with id {occurrence_id} does not exist"
                 )
 
-        details = validated_data.get("details", None)
+        details = validated_data.get("details", "")
         new_occurrence_name = validated_data.get("new_occurrence_name", None)
 
         if new_occurrence_name and (
@@ -1449,7 +1449,7 @@ class OccurrenceReportApprovalDetails(BaseModel):
     new_occurrence_name = models.CharField(max_length=200, null=True, blank=True)
     officer = models.IntegerField()  # EmailUserRO
     copy_ocr_comments_to_occ_comments = models.BooleanField(default=True)
-    details = models.TextField(blank=True)
+    details = models.TextField(blank=True, default="")
     cc_email = models.TextField(null=True)
 
     class Meta:
