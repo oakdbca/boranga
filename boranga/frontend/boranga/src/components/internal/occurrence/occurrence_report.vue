@@ -1265,7 +1265,7 @@ export default {
                 vm.$refs.occurrence_report.$refs.ocr_location.$refs.component_map.setLoadingMap(
                     false
                 );
-                vm.$refs.occurrence_report.$refs.ocr_location.incrementComponentMapKey();
+                vm.$refs.occurrence_report.$refs.ocr_location.$refs.component_map.forceToRefreshMap();
                 vm.$nextTick(() => {
                     vm.resetDirtyState();
                 });
