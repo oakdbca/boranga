@@ -695,8 +695,6 @@ class OCRPlantCountSerializer(BaseModelSerializer):
             "detailed_dead_juvenile",
             "detailed_alive_seedling",
             "detailed_dead_seedling",
-            "detailed_alive_unknown",
-            "detailed_dead_unknown",
             "obs_date",
             "count_status",
         )
@@ -1938,8 +1936,6 @@ class SaveOCRPlantCountSerializer(
             "detailed_dead_juvenile",
             "detailed_alive_seedling",
             "detailed_dead_seedling",
-            "detailed_alive_unknown",
-            "detailed_dead_unknown",
             "obs_date",
             "count_status",
         )
@@ -2975,8 +2971,6 @@ class OCCPlantCountSerializer(BaseModelSerializer):
             "detailed_dead_juvenile",
             "detailed_alive_seedling",
             "detailed_dead_seedling",
-            "detailed_alive_unknown",
-            "detailed_dead_unknown",
             "obs_date",
             "count_status",
         )
@@ -3293,8 +3287,6 @@ class SaveOCCPlantCountSerializer(
             "detailed_dead_juvenile",
             "detailed_alive_seedling",
             "detailed_dead_seedling",
-            "detailed_alive_unknown",
-            "detailed_dead_unknown",
             "obs_date",
             "count_status",
         )

@@ -1025,38 +1025,6 @@
   },
   {
     "model": "boranga.occurrencereportbulkimportschemacolumn",
-    "pk": 2319,
-    "fields": {
-      "order": 66,
-      "schema": 119,
-      "django_import_content_type": ["boranga", "ocrplantcount"],
-      "django_import_field_name": "detailed_alive_unknown",
-      "django_lookup_field_name": null,
-      "xlsx_column_header_name": "OCRNUM Detailed Alive Unknown",
-      "xlsx_data_validation_allow_blank": true,
-      "is_editable": true,
-      "default_value": null,
-      "is_emailuser_column": false
-    }
-  },
-  {
-    "model": "boranga.occurrencereportbulkimportschemacolumn",
-    "pk": 2320,
-    "fields": {
-      "order": 67,
-      "schema": 119,
-      "django_import_content_type": ["boranga", "ocrplantcount"],
-      "django_import_field_name": "detailed_dead_unknown",
-      "django_lookup_field_name": null,
-      "xlsx_column_header_name": "OCRNUM Detailed Dead Unknown",
-      "xlsx_data_validation_allow_blank": true,
-      "is_editable": true,
-      "default_value": null,
-      "is_emailuser_column": false
-    }
-  },
-  {
-    "model": "boranga.occurrencereportbulkimportschemacolumn",
     "pk": 2321,
     "fields": {
       "order": 68,
