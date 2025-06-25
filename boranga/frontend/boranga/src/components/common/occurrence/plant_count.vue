@@ -489,18 +489,22 @@
         </div>
         <div class="row mb-3">
             <label for="" class="col-sm-3 control-label"
-                >Individual quadrat area (m<sup>2</sup>):</label
+                >Individual quadrat area:</label
             >
-            <div class="col-sm-6">
-                <input
-                    id="ind_quadrat_area"
-                    v-model="plant_count.individual_quadrat_area"
-                    :disabled="isReadOnly"
-                    type="number"
-                    class="form-control ocr_number"
-                    placeholder=""
-                    min="0"
-                />
+            <div class="col-sm-4">
+                <div class="input-group">
+                    <input
+                        id="ind_quadrat_area"
+                        v-model="plant_count.individual_quadrat_area"
+                        :disabled="isReadOnly"
+                        type="number"
+                        class="form-control"
+                        placeholder=""
+                        min="0.00"
+                        step="0.01"
+                    />
+                    <span class="input-group-text">m<sup>2</sup></span>
+                </div>
             </div>
         </div>
         <div class="row mb-3">

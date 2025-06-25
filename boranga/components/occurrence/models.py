@@ -3073,7 +3073,12 @@ class OCRPlantCount(BaseModel):
     quadrats_present = models.BooleanField(null=True, blank=True)
     quadrats_data_attached = models.BooleanField(null=True, blank=True)
     quadrats_surveyed = models.IntegerField(null=True, blank=True, default=0)
-    individual_quadrat_area = models.IntegerField(null=True, blank=True, default=0)
+    individual_quadrat_area = models.DecimalField(
+        null=True,
+        blank=True,
+        max_digits=12,
+        decimal_places=2,
+    )
     total_quadrat_area = models.IntegerField(null=True, blank=True, default=0)
     flowering_plants_per = models.IntegerField(
         null=True,
@@ -5218,7 +5223,12 @@ class OCCPlantCount(BaseModel):
     quadrats_present = models.BooleanField(null=True, blank=True)
     quadrats_data_attached = models.BooleanField(null=True, blank=True)
     quadrats_surveyed = models.IntegerField(null=True, blank=True, default=0)
-    individual_quadrat_area = models.IntegerField(null=True, blank=True, default=0)
+    individual_quadrat_area = models.DecimalField(
+        null=True,
+        blank=True,
+        max_digits=12,
+        decimal_places=2,
+    )
     total_quadrat_area = models.IntegerField(null=True, blank=True, default=0)
     flowering_plants_per = models.IntegerField(
         null=True,
