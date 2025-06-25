@@ -3862,7 +3862,7 @@
       "order": 84,
       "schema": 127,
       "django_import_content_type": ["boranga", "ocranimalobservation"],
-      "django_import_field_name": "observation_detail_comment",
+      "django_import_field_name": "animal_observation_detail_comment",
       "django_lookup_field_name": null,
       "xlsx_column_header_name": "OCRNUM Observation Detail Comment",
       "xlsx_data_validation_allow_blank": true,

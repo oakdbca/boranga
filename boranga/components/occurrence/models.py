@@ -717,7 +717,9 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
             id=self.submitter_information_id
         )
         self.submitter_information = None
-        self.save(version_user=request.user)  # A new submitter information
+        self.save(
+            version_user=request.user
+        )  # A new submitter information object will be created automatically
         old_submitter_information.delete()
 
         self.log_user_action(
@@ -3296,7 +3298,7 @@ class OCRAnimalObservation(BaseModel):
     distinctive_feature = models.CharField(max_length=1000, blank=True, default="")
     action_taken = models.CharField(max_length=1000, blank=True, default="")
     action_required = models.CharField(max_length=1000, blank=True, default="")
-    observation_detail_comment = models.CharField(
+    animal_observation_detail_comment = models.CharField(
         max_length=1000, blank=True, default=""
     )
 
@@ -5310,7 +5312,7 @@ class OCCAnimalObservation(BaseModel):
     distinctive_feature = models.CharField(max_length=1000, blank=True, default="")
     action_taken = models.CharField(max_length=1000, blank=True, default="")
     action_required = models.CharField(max_length=1000, blank=True, default="")
-    observation_detail_comment = models.CharField(
+    animal_observation_detail_comment = models.CharField(
         max_length=1000, blank=True, default=""
     )
 
