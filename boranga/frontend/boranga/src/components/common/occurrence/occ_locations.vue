@@ -746,6 +746,7 @@ export default {
             this.originalLocation = JSON.stringify(
                 this.occurrence_obj.location
             );
+            this.$refs.component_map.takeSnapshot();
         },
         filterDistrict: function (event) {
             this.$nextTick(() => {
@@ -831,6 +832,7 @@ export default {
                     vm.$refs.component_map.forceToRefreshMap();
                     vm.refreshDatatables();
                     vm.$nextTick(() => {
+                        vm.$refs.component_map.takeSnapshot();
                         vm.mapIsDirty = false;
                     });
                 },
