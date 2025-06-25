@@ -305,8 +305,6 @@ export default {
         },
     },
     mounted: function () {
-        let vm = this;
-        vm.form = document.forms.new_occurrence_report;
         document.querySelectorAll('a[data-bs-toggle="pill"]').forEach((el) => {
             el.addEventListener('shown.bs.tab', () => {
                 if (el.id == 'pills-threats-tab') {
