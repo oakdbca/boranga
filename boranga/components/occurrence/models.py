@@ -713,7 +713,12 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
 
         previous_submitter = EmailUser.objects.get(id=self.submitter)
         self.submitter = new_submitter.id
-        self.save(version_user=request.user)
+        old_submitter_information = SubmitterInformation.objects.filter(
+            id=self.submitter_information_id
+        )
+        self.submitter_information = None
+        self.save(version_user=request.user)  # A new submitter information
+        old_submitter_information.delete()
 
         self.log_user_action(
             OccurrenceReportUserAction.ACTION_REASSIGN_DRAFT_TO_USER.format(
