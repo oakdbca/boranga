@@ -3402,11 +3402,16 @@ class OCRAnimalObservation(BaseModel):
             return None
 
         if self.count_status == settings.COUNT_STATUS_SIMPLE_COUNT:
-            return (
-                self.simple_alive + self.simple_dead
-                if self.simple_alive or self.simple_dead
-                else 0
-            )
+            if self.simple_alive is None and self.simple_dead is None:
+                return None
+
+            if self.simple_alive is not None and self.simple_dead is not None:
+                return self.simple_alive + self.simple_dead
+
+            if self.simple_alive is None:
+                return self.simple_dead
+
+            return self.simple_alive
 
         # If count_status is COUNTED, calculate total from detailed counts
         total = 0
@@ -5432,11 +5437,16 @@ class OCCAnimalObservation(BaseModel):
             return None
 
         if self.count_status == settings.COUNT_STATUS_SIMPLE_COUNT:
-            return (
-                self.simple_alive + self.simple_dead
-                if self.simple_alive or self.simple_dead
-                else 0
-            )
+            if self.simple_alive is None and self.simple_dead is None:
+                return None
+
+            if self.simple_alive is not None and self.simple_dead is not None:
+                return self.simple_alive + self.simple_dead
+
+            if self.simple_alive is None:
+                return self.simple_dead
+
+            return self.simple_alive
 
         # If count_status is COUNTED, calculate total from detailed counts
         total = 0
