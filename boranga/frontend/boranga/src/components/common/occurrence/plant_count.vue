@@ -492,7 +492,7 @@
                 >Individual quadrat area:</label
             >
             <div class="col-sm-4">
-                <div class="input-group">
+                <div class="input-group w-75">
                     <input
                         id="ind_quadrat_area"
                         v-model="plant_count.individual_quadrat_area"
@@ -502,6 +502,14 @@
                         placeholder=""
                         min="0.00"
                         step="0.01"
+                        max="9999999999.99"
+                        @change.prevent="
+                            if ($event.target.value > 9999999999.99) {
+                                plant_count.individual_quadrat_area = 9999999999.99;
+                            } else if ($event.target.value < 0) {
+                                plant_count.individual_quadrat_area = 0;
+                            }
+                        "
                     />
                     <span class="input-group-text">m<sup>2</sup></span>
                 </div>
@@ -525,19 +533,30 @@
         </div>
         <div class="row mb-3">
             <label for="" class="col-sm-3 control-label"
-                >Flowering plants (%):</label
+                >Flowering plants:</label
             >
-            <div class="col-sm-6">
-                <input
-                    id="flow_plant_per"
-                    v-model="plant_count.flowering_plants_per"
-                    :disabled="isReadOnly"
-                    type="number"
-                    class="form-control ocr_number"
-                    placeholder=""
-                    min="0"
-                    max="100"
-                />
+            <div class="col-sm-4">
+                <div class="input-group w-50">
+                    <input
+                        id="flow_plant_per"
+                        v-model="plant_count.flowering_plants_per"
+                        :disabled="isReadOnly"
+                        type="number"
+                        class="form-control ocr_number"
+                        placeholder=""
+                        min="0.00"
+                        max="100.00"
+                        step="0.01"
+                        @change.prevent="
+                            if ($event.target.value > 100) {
+                                plant_count.flowering_plants_per = 100;
+                            } else if ($event.target.value < 0) {
+                                plant_count.flowering_plants_per = 0;
+                            }
+                        "
+                    />
+                    <span class="input-group-text">%</span>
+                </div>
             </div>
         </div>
         <label for="" class="col-lg-3 control-label fs-5 fw-bold"></label>
@@ -934,51 +953,54 @@ export default {
                     },
                     body: JSON.stringify(vm.plant_count),
                 }
-            ).then(
-                async (response) => {
-                    const data = await response.json();
-                    if (!response.ok) {
+            )
+                .then(
+                    async (response) => {
+                        const data = await response.json();
+                        if (!response.ok) {
+                            swal.fire({
+                                title: 'Error',
+                                text: JSON.stringify(data),
+                                icon: 'error',
+                                customClass: {
+                                    confirmButton: 'btn btn-primary',
+                                },
+                            });
+                            return;
+                        }
+                        vm.$emit('update-plant-count', data);
+                        vm.originalPlantCount = JSON.stringify(data);
+
+                        swal.fire({
+                            title: 'Saved',
+                            text: 'Plant Count details have been saved',
+                            icon: 'success',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            },
+                        }).then(() => {
+                            if (vm.processing_status == 'Unlocked') {
+                                vm.$router.go();
+                            }
+                        });
+                    },
+                    (error) => {
+                        var text = helpers.apiVueResourceError(error);
                         swal.fire({
                             title: 'Error',
-                            text: JSON.stringify(data),
+                            text:
+                                'Plant Count details cannot be saved because of the following error: ' +
+                                text,
                             icon: 'error',
                             customClass: {
                                 confirmButton: 'btn btn-primary',
                             },
                         });
-                        return;
                     }
-                    vm.$emit('update-plant-count', data);
-                    vm.originalPlantCount = JSON.stringify(data);
+                )
+                .finally(() => {
                     vm.updatingPlantCountDetails = false;
-                    swal.fire({
-                        title: 'Saved',
-                        text: 'Plant Count details have been saved',
-                        icon: 'success',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
-                    }).then(() => {
-                        if (vm.processing_status == 'Unlocked') {
-                            vm.$router.go();
-                        }
-                    });
-                },
-                (error) => {
-                    var text = helpers.apiVueResourceError(error);
-                    swal.fire({
-                        title: 'Error',
-                        text:
-                            'Plant Count details cannot be saved because of the following error: ' +
-                            text,
-                        icon: 'error',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
-                    });
-                    vm.updatingPlantCountDetails = false;
-                }
-            );
+                });
         },
     },
 };

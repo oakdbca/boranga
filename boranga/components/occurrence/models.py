@@ -2900,7 +2900,13 @@ class OCRObservationDetail(BaseModel):
     observation_method = models.ForeignKey(
         ObservationMethod, on_delete=models.SET_NULL, null=True, blank=True
     )
-    area_surveyed = models.IntegerField(null=True, blank=True, default=0)
+    area_surveyed = models.DecimalField(
+        blank=True,
+        max_digits=14,
+        decimal_places=4,
+        default=Decimal("0.0000"),
+        validators=[MinValueValidator(Decimal("0.0000"))],
+    )
     survey_duration = models.IntegerField(null=True, blank=True, default=0)
     comments = models.TextField(blank=True, default="")
 
@@ -3078,15 +3084,19 @@ class OCRPlantCount(BaseModel):
         blank=True,
         max_digits=12,
         decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.00"))],
     )
     total_quadrat_area = models.IntegerField(null=True, blank=True, default=0)
-    flowering_plants_per = models.IntegerField(
-        null=True,
+    flowering_plants_per = models.DecimalField(
         blank=True,
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[
+            MinValueValidator(Decimal("0.00")),
+            MaxValueValidator(Decimal("100.00")),
+        ],
     )
-
     clonal_reproduction_present = models.BooleanField(null=True, blank=True)
     vegetative_state_present = models.BooleanField(null=True, blank=True)
     flower_bud_present = models.BooleanField(null=True, blank=True)
@@ -5158,7 +5168,13 @@ class OCCObservationDetail(BaseModel):
     observation_method = models.ForeignKey(
         ObservationMethod, on_delete=models.SET_NULL, null=True, blank=True
     )
-    area_surveyed = models.IntegerField(null=True, blank=True, default=0)
+    area_surveyed = models.DecimalField(
+        blank=True,
+        max_digits=14,
+        decimal_places=4,
+        default=Decimal("0.0000"),
+        validators=[MinValueValidator(Decimal("0.0000"))],
+    )
     survey_duration = models.IntegerField(null=True, blank=True, default=0)
     comments = models.TextField(blank=True, default="")
 
@@ -5228,13 +5244,18 @@ class OCCPlantCount(BaseModel):
         blank=True,
         max_digits=12,
         decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.00"))],
     )
     total_quadrat_area = models.IntegerField(null=True, blank=True, default=0)
-    flowering_plants_per = models.IntegerField(
-        null=True,
+    flowering_plants_per = models.DecimalField(
         blank=True,
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[
+            MinValueValidator(Decimal("0.00")),
+            MaxValueValidator(Decimal("100.00")),
+        ],
     )
 
     clonal_reproduction_present = models.BooleanField(null=True, blank=True)

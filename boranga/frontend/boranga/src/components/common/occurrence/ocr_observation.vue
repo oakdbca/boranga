@@ -92,8 +92,9 @@
                             type="number"
                             class="form-control"
                             placeholder=""
-                            min="0"
-                            max="2147483647"
+                            min="0.0000"
+                            max="9999999999.9999"
+                            step="0.0001"
                         />
                         <span class="input-group-text">m<sup>2</sup></span>
                     </div>
@@ -809,45 +810,58 @@ export default {
                         'Content-Type': 'application/json',
                     },
                 }
-            ).then(
-                async (response) => {
-                    vm.updatingObservationDetails = false;
-                    vm.occurrence_report_obj.observation_detail =
-                        await response.json();
-                    vm.originalObservationDetail = JSON.stringify(
-                        vm.occurrence_report_obj.observation_detail
-                    );
-                    swal.fire({
-                        title: 'Saved',
-                        text: 'Observation details have been saved',
-                        icon: 'success',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
-                    }).then(() => {
-                        if (
-                            vm.occurrence_report_obj.processing_status ==
-                            'Unlocked'
-                        ) {
-                            vm.$router.go();
+            )
+                .then(
+                    async (response) => {
+                        const data = await response.json();
+                        if (!response.ok) {
+                            swal.fire({
+                                title: 'Error',
+                                text: JSON.stringify(data),
+                                icon: 'error',
+                                customClass: {
+                                    confirmButton: 'btn btn-primary',
+                                },
+                            });
+                            return;
                         }
-                    });
-                },
-                (error) => {
-                    var text = helpers.apiVueResourceError(error);
-                    swal.fire({
-                        title: 'Error',
-                        text:
-                            'Observation details cannot be saved because of the following error: ' +
-                            text,
-                        icon: 'error',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
-                    });
+                        vm.occurrence_report_obj.observation_detail = data;
+                        vm.originalObservationDetail = JSON.stringify(
+                            vm.occurrence_report_obj.observation_detail
+                        );
+                        swal.fire({
+                            title: 'Saved',
+                            text: 'Observation details have been saved',
+                            icon: 'success',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            },
+                        }).then(() => {
+                            if (
+                                vm.occurrence_report_obj.processing_status ==
+                                'Unlocked'
+                            ) {
+                                vm.$router.go();
+                            }
+                        });
+                    },
+                    (error) => {
+                        var text = helpers.apiVueResourceError(error);
+                        swal.fire({
+                            title: 'Error',
+                            text:
+                                'Observation details cannot be saved because of the following error: ' +
+                                text,
+                            icon: 'error',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            },
+                        });
+                    }
+                )
+                .finally(() => {
                     vm.updatingObservationDetails = false;
-                }
-            );
+                });
         },
         updateIdentificationDetails: function () {
             let vm = this;

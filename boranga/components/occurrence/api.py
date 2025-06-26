@@ -143,8 +143,15 @@ from boranga.components.occurrence.serializers import (
     ListOCRReportMinimalSerializer,
     ObservationTimeSerializer,
     OCCAnimalObservationSerializer,
+    OCCAssociatedSpeciesSerializer,
     OCCConservationThreatSerializer,
     OCCContactDetailSerializer,
+    OCCFireHistorySerializer,
+    OCCHabitatCompositionSerializer,
+    OCCHabitatConditionSerializer,
+    OCCIdentificationSerializer,
+    OCCLocationSerializer,
+    OCCObservationDetailSerializer,
     OCCPlantCountSerializer,
     OccurrenceDocumentSerializer,
     OccurrenceLogEntrySerializer,
@@ -165,12 +172,21 @@ from boranga.components.occurrence.serializers import (
     OccurrenceTenureSaveSerializer,
     OccurrenceTenureSerializer,
     OccurrenceUserActionSerializer,
+    OCCVegetationStructureSerializer,
     OCRAnimalObservationSerializer,
+    OCRAssociatedSpeciesSerializer,
     OCRConservationThreatSerializer,
     OCRExternalRefereeInviteSerializer,
+    OCRFireHistorySerializer,
+    OCRHabitatCompositionSerializer,
+    OCRHabitatConditionSerializer,
+    OCRIdentificationSerializer,
+    OCRLocationSerializer,
+    OCRObservationDetailSerializer,
     OCRObserverDetailLimitedSerializer,
     OCRObserverDetailSerializer,
     OCRPlantCountSerializer,
+    OCRVegetationStructureSerializer,
     ProposeApproveSerializer,
     ProposeDeclineSerializer,
     SaveBeforeSubmitOCRHabitatConditionSerializer,
@@ -1340,7 +1356,7 @@ class OccurrenceReportViewSet(
             location_instance, data=location_data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        new_instance = serializer.save()
 
         if (
             ocr_instance.processing_status
@@ -1348,7 +1364,7 @@ class OccurrenceReportViewSet(
         ):
             self.unlocked_back_to_assessor()
 
-        return Response(serializer.data)
+        return Response(OCRLocationSerializer(new_instance).data)
 
     @list_route(
         methods=[
@@ -1367,7 +1383,7 @@ class OccurrenceReportViewSet(
             habitat_instance, data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        new_instance = serializer.save()
 
         if (
             ocr_instance.processing_status
@@ -1375,7 +1391,7 @@ class OccurrenceReportViewSet(
         ):
             self.unlocked_back_to_assessor()
 
-        return Response(serializer.data)
+        return Response(OCRHabitatCompositionSerializer(new_instance).data)
 
     @list_route(
         methods=[
@@ -1394,7 +1410,7 @@ class OccurrenceReportViewSet(
             habitat_instance, data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        new_instance = serializer.save()
 
         if (
             ocr_instance.processing_status
@@ -1402,7 +1418,7 @@ class OccurrenceReportViewSet(
         ):
             self.unlocked_back_to_assessor()
 
-        return Response(serializer.data)
+        return Response(OCRHabitatConditionSerializer(new_instance).data)
 
     @list_route(
         methods=[
@@ -1421,7 +1437,7 @@ class OccurrenceReportViewSet(
             vegetation_instance, data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        new_instance = serializer.save()
 
         if (
             ocr_instance.processing_status
@@ -1429,7 +1445,7 @@ class OccurrenceReportViewSet(
         ):
             self.unlocked_back_to_assessor()
 
-        return Response(serializer.data)
+        return Response(OCRVegetationStructureSerializer(new_instance).data)
 
     @list_route(
         methods=[
@@ -1448,7 +1464,7 @@ class OccurrenceReportViewSet(
             fire_instance, data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        new_instance = serializer.save()
 
         if (
             ocr_instance.processing_status
@@ -1456,7 +1472,7 @@ class OccurrenceReportViewSet(
         ):
             self.unlocked_back_to_assessor()
 
-        return Response(serializer.data)
+        return Response(OCRFireHistorySerializer(new_instance).data)
 
     @list_route(
         methods=[
@@ -1475,7 +1491,7 @@ class OccurrenceReportViewSet(
             assoc_species_instance, data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        new_instance = serializer.save()
 
         if (
             ocr_instance.processing_status
@@ -1483,7 +1499,7 @@ class OccurrenceReportViewSet(
         ):
             self.unlocked_back_to_assessor()
 
-        return Response(serializer.data)
+        return Response(OCRAssociatedSpeciesSerializer(new_instance).data)
 
     @list_route(
         methods=[
@@ -1502,7 +1518,7 @@ class OccurrenceReportViewSet(
             obs_det_instance, data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        new_instance = serializer.save()
 
         if (
             ocr_instance.processing_status
@@ -1510,7 +1526,7 @@ class OccurrenceReportViewSet(
         ):
             self.unlocked_back_to_assessor()
 
-        return Response(serializer.data)
+        return Response(OCRObservationDetailSerializer(new_instance).data)
 
     @list_route(
         methods=[
@@ -1582,7 +1598,7 @@ class OccurrenceReportViewSet(
             identification_instance, data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        new_instance = serializer.save()
 
         if (
             ocr_instance.processing_status
@@ -1590,7 +1606,7 @@ class OccurrenceReportViewSet(
         ):
             self.unlocked_back_to_assessor()
 
-        return Response(serializer.data)
+        return Response(OCRIdentificationSerializer(new_instance).data)
 
     # used for observer detail datatable
     @detail_route(
@@ -4617,9 +4633,9 @@ class OccurrenceViewSet(
             location_instance, data=location_data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        new_instance = serializer.save()
 
-        return Response(serializer.data)
+        return Response(OCCLocationSerializer(new_instance).data)
 
     @list_route(
         methods=[
@@ -4637,8 +4653,8 @@ class OccurrenceViewSet(
             habitat_instance, data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
+        new_instance = serializer.save()
+        return Response(OCCHabitatCompositionSerializer(new_instance).data)
 
     @list_route(
         methods=[
@@ -4657,9 +4673,9 @@ class OccurrenceViewSet(
             vegetation_instance, data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        new_instance = serializer.save()
 
-        return Response(serializer.data)
+        return Response(OCCVegetationStructureSerializer(new_instance).data)
 
     @list_route(
         methods=[
@@ -4677,8 +4693,8 @@ class OccurrenceViewSet(
             habitat_instance, data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
+        new_instance = serializer.save()
+        return Response(OCCHabitatConditionSerializer(new_instance).data)
 
     @list_route(
         methods=[
@@ -4696,8 +4712,8 @@ class OccurrenceViewSet(
             fire_instance, data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
+        new_instance = serializer.save()
+        return Response(OCCFireHistorySerializer(new_instance).data)
 
     @list_route(
         methods=[
@@ -4715,8 +4731,8 @@ class OccurrenceViewSet(
             assoc_species_instance, data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
+        new_instance = serializer.save()
+        return Response(OCCAssociatedSpeciesSerializer(new_instance).data)
 
     @list_route(
         methods=[
@@ -4734,8 +4750,8 @@ class OccurrenceViewSet(
             obs_det_instance, data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
+        new_instance = serializer.save()
+        return Response(OCCObservationDetailSerializer(new_instance).data)
 
     @list_route(
         methods=[
@@ -4791,8 +4807,8 @@ class OccurrenceViewSet(
             identification_instance, data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
+        new_instance = serializer.save()
+        return Response(OCCIdentificationSerializer(new_instance).data)
 
     # used for Occurrence external form
     @list_route(

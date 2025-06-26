@@ -2651,7 +2651,7 @@ class BackToAssessorSerializer(BaseSerializer):
 class ProposeApproveSerializer(BaseSerializer):
     occurrence_id = serializers.IntegerField(allow_null=True)
     new_occurrence_name = serializers.CharField(allow_blank=True)
-    details = serializers.CharField()
+    details = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     cc_email = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
 
