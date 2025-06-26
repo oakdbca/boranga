@@ -3086,13 +3086,16 @@ class OCRPlantCount(BaseModel):
         decimal_places=2,
     )
     total_quadrat_area = models.IntegerField(null=True, blank=True, default=0)
-    flowering_plants_per = models.IntegerField(
-        null=True,
+    flowering_plants_per = models.DecimalField(
         blank=True,
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[
+            MinValueValidator(Decimal("0.00")),
+            MaxValueValidator(Decimal("100.00")),
+        ],
     )
-
     clonal_reproduction_present = models.BooleanField(null=True, blank=True)
     vegetative_state_present = models.BooleanField(null=True, blank=True)
     flower_bud_present = models.BooleanField(null=True, blank=True)
@@ -5242,11 +5245,15 @@ class OCCPlantCount(BaseModel):
         decimal_places=2,
     )
     total_quadrat_area = models.IntegerField(null=True, blank=True, default=0)
-    flowering_plants_per = models.IntegerField(
-        null=True,
+    flowering_plants_per = models.DecimalField(
         blank=True,
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[
+            MinValueValidator(Decimal("0.00")),
+            MaxValueValidator(Decimal("100.00")),
+        ],
     )
 
     clonal_reproduction_present = models.BooleanField(null=True, blank=True)
