@@ -91,8 +91,9 @@
                             type="number"
                             class="form-control"
                             placeholder=""
-                            min="0"
-                            max="2147483647"
+                            min="0.0000"
+                            max="9999999999.9999"
+                            step="0.0001"
                         />
                         <span class="input-group-text">m<sup>2</sup></span>
                     </div>
@@ -812,38 +813,51 @@ export default {
                     },
                     body: JSON.stringify(vm.occurrence_obj.observation_detail),
                 }
-            ).then(
-                async (response) => {
+            )
+                .then(
+                    async (response) => {
+                        const data = await response.json();
+                        if (!response.ok) {
+                            swal.fire({
+                                title: 'Error',
+                                text: JSON.stringify(data),
+                                icon: 'error',
+                                customClass: {
+                                    confirmButton: 'btn btn-primary',
+                                },
+                            });
+                            return;
+                        }
+                        vm.occurrence_obj.observation_detail = data;
+                        vm.originalObservationDetail = JSON.stringify(
+                            vm.occurrence_obj.observation_detail
+                        );
+                        swal.fire({
+                            title: 'Saved',
+                            text: 'Observation details have been saved',
+                            icon: 'success',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            },
+                        });
+                    },
+                    (error) => {
+                        var text = helpers.apiVueResourceError(error);
+                        swal.fire({
+                            title: 'Error',
+                            text:
+                                'Observation details cannot be saved because of the following error: ' +
+                                text,
+                            icon: 'error',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            },
+                        });
+                    }
+                )
+                .finally(() => {
                     vm.updatingObservationDetails = false;
-                    vm.occurrence_obj.observation_detail =
-                        await response.json();
-                    vm.originalObservationDetail = JSON.stringify(
-                        vm.occurrence_obj.observation_detail
-                    );
-                    swal.fire({
-                        title: 'Saved',
-                        text: 'Observation details have been saved',
-                        icon: 'success',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
-                    });
-                },
-                (error) => {
-                    var text = helpers.apiVueResourceError(error);
-                    swal.fire({
-                        title: 'Error',
-                        text:
-                            'Observation details cannot be saved because of the following error: ' +
-                            text,
-                        icon: 'error',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
-                    });
-                    vm.updatingObservationDetails = false;
-                }
-            );
+                });
         },
         copyUpdate: function (object, section) {
             let vm = this;

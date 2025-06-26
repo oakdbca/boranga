@@ -2900,7 +2900,13 @@ class OCRObservationDetail(BaseModel):
     observation_method = models.ForeignKey(
         ObservationMethod, on_delete=models.SET_NULL, null=True, blank=True
     )
-    area_surveyed = models.IntegerField(null=True, blank=True, default=0)
+    area_surveyed = models.DecimalField(
+        blank=True,
+        max_digits=14,
+        decimal_places=4,
+        default=Decimal("0.0000"),
+        validators=[MinValueValidator(Decimal("0.0000"))],
+    )
     survey_duration = models.IntegerField(null=True, blank=True, default=0)
     comments = models.TextField(blank=True, default="")
 
@@ -5158,7 +5164,13 @@ class OCCObservationDetail(BaseModel):
     observation_method = models.ForeignKey(
         ObservationMethod, on_delete=models.SET_NULL, null=True, blank=True
     )
-    area_surveyed = models.IntegerField(null=True, blank=True, default=0)
+    area_surveyed = models.DecimalField(
+        blank=True,
+        max_digits=14,
+        decimal_places=4,
+        default=Decimal("0.0000"),
+        validators=[MinValueValidator(Decimal("0.0000"))],
+    )
     survey_duration = models.IntegerField(null=True, blank=True, default=0)
     comments = models.TextField(blank=True, default="")
 
