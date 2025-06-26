@@ -502,6 +502,14 @@
                         placeholder=""
                         min="0.00"
                         step="0.01"
+                        max="9999999999.99"
+                        @change.prevent="
+                            if ($event.target.value > 9999999999.99) {
+                                plant_count.individual_quadrat_area = 9999999999.99;
+                            } else if ($event.target.value < 0) {
+                                plant_count.individual_quadrat_area = 0;
+                            }
+                        "
                     />
                     <span class="input-group-text">m<sup>2</sup></span>
                 </div>
