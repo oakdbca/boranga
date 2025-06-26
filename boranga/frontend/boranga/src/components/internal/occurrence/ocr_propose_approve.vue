@@ -193,7 +193,6 @@
                                     type="date"
                                     class="form-control"
                                     name="details"
-                                    required
                                 ></textarea>
                             </div>
                             <div class="mt-3">

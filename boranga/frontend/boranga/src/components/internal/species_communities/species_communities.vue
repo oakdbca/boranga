@@ -1722,59 +1722,77 @@ export default {
         },
         makePrivate: function () {
             let vm = this;
-            let endpoint = api_endpoints.species;
-            if (this.species_community.group_type === 'community') {
-                vm.species_community.publishing_status.community_public = false;
-                endpoint = api_endpoints.community;
-            } else {
-                vm.species_community.publishing_status.species_public = false;
-            }
-            let data = JSON.stringify(vm.species_community.publishing_status);
-            fetch(
-                helpers.add_endpoint_json(
-                    endpoint,
-                    vm.species_community.id + '/update_publishing_status'
-                ),
-                {
-                    method: 'POST',
-                    body: data,
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            ).then(
-                async (response) => {
-                    vm.updatingPublishing = false;
-                    vm.species_community.publishing_status =
-                        await response.json();
-                    vm.species_community_original.publishing_status =
-                        helpers.copyObject(
-                            vm.species_community.publishing_status
-                        );
-                    swal.fire({
-                        title: 'Saved',
-                        text: 'Record has been made private',
-                        icon: 'success',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
-                    });
+            swal.fire({
+                title: 'Make Private',
+                text: 'Are you sure you want to make this record private?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Make Private',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-secondary',
                 },
-                (error) => {
-                    var text = helpers.apiVueResourceError(error);
-                    swal.fire({
-                        title: 'Error',
-                        text:
-                            'Publishing settings cannot be updated because of the following error: ' +
-                            text,
-                        icon: 'error',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
+                reverseButtons: true,
+            }).then((swalresult) => {
+                if (swalresult.isConfirmed) {
+                    let endpoint = api_endpoints.species;
+                    if (this.species_community.group_type === 'community') {
+                        vm.species_community.publishing_status.community_public = false;
+                        endpoint = api_endpoints.community;
+                    } else {
+                        vm.species_community.publishing_status.species_public = false;
+                    }
+                    let data = JSON.stringify(
+                        vm.species_community.publishing_status
+                    );
+                    fetch(
+                        helpers.add_endpoint_json(
+                            endpoint,
+                            vm.species_community.id +
+                                '/update_publishing_status'
+                        ),
+                        {
+                            method: 'POST',
+                            body: data,
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                        }
+                    ).then(
+                        async (response) => {
+                            vm.updatingPublishing = false;
+                            vm.species_community.publishing_status =
+                                await response.json();
+                            vm.species_community_original.publishing_status =
+                                helpers.copyObject(
+                                    vm.species_community.publishing_status
+                                );
+                            swal.fire({
+                                title: 'Saved',
+                                text: 'Record has been made private',
+                                icon: 'success',
+                                customClass: {
+                                    confirmButton: 'btn btn-primary',
+                                },
+                            });
                         },
-                    });
-                    vm.updatingPublishing = false;
+                        (error) => {
+                            var text = helpers.apiVueResourceError(error);
+                            swal.fire({
+                                title: 'Error',
+                                text:
+                                    'Publishing settings cannot be updated because of the following error: ' +
+                                    text,
+                                icon: 'error',
+                                customClass: {
+                                    confirmButton: 'btn btn-primary',
+                                },
+                            });
+                            vm.updatingPublishing = false;
+                        }
+                    );
                 }
-            );
+            });
         },
         onImageLoad: function () {
             this.downloadingImage = false;

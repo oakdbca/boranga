@@ -294,12 +294,14 @@
 
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
-                    >Observation Details:</label
+                    >Animal Observation Comments:</label
                 >
                 <div class="col-sm-9">
                     <textarea
                         id="distinct_features"
-                        v-model="animal_observation.observation_detail_comment"
+                        v-model="
+                            animal_observation.animal_observation_detail_comment
+                        "
                         :disabled="isReadOnly"
                         type="text"
                         row="2"

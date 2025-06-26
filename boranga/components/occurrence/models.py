@@ -713,7 +713,14 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
 
         previous_submitter = EmailUser.objects.get(id=self.submitter)
         self.submitter = new_submitter.id
-        self.save(version_user=request.user)
+        old_submitter_information = SubmitterInformation.objects.filter(
+            id=self.submitter_information_id
+        )
+        self.submitter_information = None
+        self.save(
+            version_user=request.user
+        )  # A new submitter information object will be created automatically
+        old_submitter_information.delete()
 
         self.log_user_action(
             OccurrenceReportUserAction.ACTION_REASSIGN_DRAFT_TO_USER.format(
@@ -974,7 +981,7 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
                     f"Occurrence with id {occurrence_id} does not exist"
                 )
 
-        details = validated_data.get("details", None)
+        details = validated_data.get("details", "")
         new_occurrence_name = validated_data.get("new_occurrence_name", None)
 
         if new_occurrence_name and (
@@ -1449,7 +1456,7 @@ class OccurrenceReportApprovalDetails(BaseModel):
     new_occurrence_name = models.CharField(max_length=200, null=True, blank=True)
     officer = models.IntegerField()  # EmailUserRO
     copy_ocr_comments_to_occ_comments = models.BooleanField(default=True)
-    details = models.TextField(blank=True)
+    details = models.TextField(blank=True, default="")
     cc_email = models.TextField(null=True)
 
     class Meta:
@@ -3059,8 +3066,6 @@ class OCRPlantCount(BaseModel):
     detailed_dead_juvenile = models.IntegerField(null=True, blank=True)
     detailed_alive_seedling = models.IntegerField(null=True, blank=True)
     detailed_dead_seedling = models.IntegerField(null=True, blank=True)
-    detailed_alive_unknown = models.IntegerField(null=True, blank=True)
-    detailed_dead_unknown = models.IntegerField(null=True, blank=True)
 
     simple_alive = models.IntegerField(null=True, blank=True)
     simple_dead = models.IntegerField(null=True, blank=True)
@@ -3068,7 +3073,12 @@ class OCRPlantCount(BaseModel):
     quadrats_present = models.BooleanField(null=True, blank=True)
     quadrats_data_attached = models.BooleanField(null=True, blank=True)
     quadrats_surveyed = models.IntegerField(null=True, blank=True, default=0)
-    individual_quadrat_area = models.IntegerField(null=True, blank=True, default=0)
+    individual_quadrat_area = models.DecimalField(
+        null=True,
+        blank=True,
+        max_digits=12,
+        decimal_places=2,
+    )
     total_quadrat_area = models.IntegerField(null=True, blank=True, default=0)
     flowering_plants_per = models.IntegerField(
         null=True,
@@ -3105,9 +3115,6 @@ class OCRPlantCount(BaseModel):
             self.detailed_dead_juvenile = None
             self.detailed_alive_seedling = None
             self.detailed_dead_seedling = None
-            self.detailed_alive_unknown = None
-            self.detailed_dead_unknown = None
-
             self.simple_alive = None
             self.simple_dead = None
         elif self.count_status == settings.COUNT_STATUS_SIMPLE_COUNT:
@@ -3117,8 +3124,6 @@ class OCRPlantCount(BaseModel):
             self.detailed_dead_juvenile = None
             self.detailed_alive_seedling = None
             self.detailed_dead_seedling = None
-            self.detailed_alive_unknown = None
-            self.detailed_dead_unknown = None
         elif self.count_status == settings.COUNT_STATUS_COUNTED:
             self.simple_alive = None
             self.simple_dead = None
@@ -3298,7 +3303,7 @@ class OCRAnimalObservation(BaseModel):
     distinctive_feature = models.CharField(max_length=1000, blank=True, default="")
     action_taken = models.CharField(max_length=1000, blank=True, default="")
     action_required = models.CharField(max_length=1000, blank=True, default="")
-    observation_detail_comment = models.CharField(
+    animal_observation_detail_comment = models.CharField(
         max_length=1000, blank=True, default=""
     )
 
@@ -5211,8 +5216,6 @@ class OCCPlantCount(BaseModel):
     detailed_dead_juvenile = models.IntegerField(null=True, blank=True)
     detailed_alive_seedling = models.IntegerField(null=True, blank=True)
     detailed_dead_seedling = models.IntegerField(null=True, blank=True)
-    detailed_alive_unknown = models.IntegerField(null=True, blank=True)
-    detailed_dead_unknown = models.IntegerField(null=True, blank=True)
 
     simple_alive = models.IntegerField(null=True, blank=True)
     simple_dead = models.IntegerField(null=True, blank=True)
@@ -5220,7 +5223,12 @@ class OCCPlantCount(BaseModel):
     quadrats_present = models.BooleanField(null=True, blank=True)
     quadrats_data_attached = models.BooleanField(null=True, blank=True)
     quadrats_surveyed = models.IntegerField(null=True, blank=True, default=0)
-    individual_quadrat_area = models.IntegerField(null=True, blank=True, default=0)
+    individual_quadrat_area = models.DecimalField(
+        null=True,
+        blank=True,
+        max_digits=12,
+        decimal_places=2,
+    )
     total_quadrat_area = models.IntegerField(null=True, blank=True, default=0)
     flowering_plants_per = models.IntegerField(
         null=True,
@@ -5260,9 +5268,6 @@ class OCCPlantCount(BaseModel):
             self.detailed_dead_juvenile = None
             self.detailed_alive_seedling = None
             self.detailed_dead_seedling = None
-            self.detailed_alive_unknown = None
-            self.detailed_dead_unknown = None
-
             self.simple_alive = None
             self.simple_dead = None
         elif self.count_status == settings.COUNT_STATUS_SIMPLE_COUNT:
@@ -5272,8 +5277,6 @@ class OCCPlantCount(BaseModel):
             self.detailed_dead_juvenile = None
             self.detailed_alive_seedling = None
             self.detailed_dead_seedling = None
-            self.detailed_alive_unknown = None
-            self.detailed_dead_unknown = None
         elif self.count_status == settings.COUNT_STATUS_COUNTED:
             self.simple_alive = None
             self.simple_dead = None
@@ -5319,7 +5322,7 @@ class OCCAnimalObservation(BaseModel):
     distinctive_feature = models.CharField(max_length=1000, blank=True, default="")
     action_taken = models.CharField(max_length=1000, blank=True, default="")
     action_required = models.CharField(max_length=1000, blank=True, default="")
-    observation_detail_comment = models.CharField(
+    animal_observation_detail_comment = models.CharField(
         max_length=1000, blank=True, default=""
     )
 

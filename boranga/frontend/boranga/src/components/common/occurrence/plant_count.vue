@@ -298,7 +298,6 @@
                 <div class="col-sm-2 fw-bold">Mature</div>
                 <div class="col-sm-2 fw-bold">Juvenile</div>
                 <div class="col-sm-2 fw-bold">Seedling</div>
-                <div class="col-sm-2 fw-bold">Unknown</div>
             </div>
             <div class="row mb-3">
                 <div class="col-sm-3 fw-bold">Alive</div>
@@ -335,17 +334,6 @@
                         min="0"
                     />
                 </div>
-                <div class="col-sm-2">
-                    <input
-                        id="alive_unknown"
-                        v-model="plant_count.detailed_alive_unknown"
-                        :disabled="isReadOnly"
-                        type="number"
-                        class="form-control plant_count"
-                        placeholder=""
-                        min="0"
-                    />
-                </div>
             </div>
             <div class="row mb-3">
                 <div class="col-sm-3 fw-bold">Dead</div>
@@ -375,17 +363,6 @@
                     <input
                         id="dead_seedling"
                         v-model="plant_count.detailed_dead_seedling"
-                        :disabled="isReadOnly"
-                        type="number"
-                        class="form-control plant_count"
-                        placeholder=""
-                        min="0"
-                    />
-                </div>
-                <div class="col-sm-2">
-                    <input
-                        id="dead_unknown"
-                        v-model="plant_count.detailed_dead_unknown"
                         :disabled="isReadOnly"
                         type="number"
                         class="form-control plant_count"
@@ -512,18 +489,22 @@
         </div>
         <div class="row mb-3">
             <label for="" class="col-sm-3 control-label"
-                >Individual quadrat area (m<sup>2</sup>):</label
+                >Individual quadrat area:</label
             >
-            <div class="col-sm-6">
-                <input
-                    id="ind_quadrat_area"
-                    v-model="plant_count.individual_quadrat_area"
-                    :disabled="isReadOnly"
-                    type="number"
-                    class="form-control ocr_number"
-                    placeholder=""
-                    min="0"
-                />
+            <div class="col-sm-4">
+                <div class="input-group">
+                    <input
+                        id="ind_quadrat_area"
+                        v-model="plant_count.individual_quadrat_area"
+                        :disabled="isReadOnly"
+                        type="number"
+                        class="form-control"
+                        placeholder=""
+                        min="0.00"
+                        step="0.01"
+                    />
+                    <span class="input-group-text">m<sup>2</sup></span>
+                </div>
             </div>
         </div>
         <div class="row mb-3">
