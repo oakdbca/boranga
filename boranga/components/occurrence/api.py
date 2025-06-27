@@ -39,7 +39,9 @@ from boranga.components.occurrence.email import send_external_referee_invite_ema
 from boranga.components.occurrence.filters import OccurrenceReportReferralFilterBackend
 from boranga.components.occurrence.mixins import DatumSearchMixin
 from boranga.components.occurrence.models import (
+    AnimalBehaviour,
     AnimalHealth,
+    AreaAssessment,
     AssociatedSpeciesTaxonomy,
     CoordinateSource,
     CountedSubject,
@@ -986,9 +988,7 @@ class OccurrenceReportViewSet(
 
     # used for Occurrence Report Observation external form
     @list_route(
-        methods=[
-            "GET",
-        ],
+        methods=["GET"],
         detail=False,
         permission_classes=[AllowAny],
     )
@@ -1001,164 +1001,71 @@ class OccurrenceReportViewSet(
                 "Group Type is required to return correct list of values"
             )
 
-        observation_method_list = []
-        values = ObservationMethod.objects.active()
-        if values:
-            for val in values:
-                observation_method_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        plant_count_method_list = []
-        values = PlantCountMethod.objects.active()
-        if values:
-            for val in values:
-                plant_count_method_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        plant_count_accuracy_list = []
-        values = PlantCountAccuracy.objects.active()
-        if values:
-            for val in values:
-                plant_count_accuracy_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        plant_condition_list = []
-        values = PlantCondition.objects.active()
-        if values:
-            for val in values:
-                plant_condition_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        counted_subject_list = []
-        values = CountedSubject.objects.active()
-        if values:
-            for val in values:
-                counted_subject_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        primary_detection_method_list = []
-        values = PrimaryDetectionMethod.objects.all()
-        if values:
-            for val in values:
-                if val.archived:
-                    val.name += " (archived)"
-                primary_detection_method_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                        "disabled": val.archived,
-                    }
-                )
-        secondary_sign_list = []
-        values = SecondarySign.objects.active()
-        if values:
-            for val in values:
-                secondary_sign_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        reprod_state_list = []
-        values = ReproductiveState.objects.active()
-        if values:
-            for val in values:
-                reprod_state_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        death_reason_list = []
-        values = DeathReason.objects.active()
-        if values:
-            for val in values:
-                death_reason_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        animal_health_list = []
-        values = AnimalHealth.objects.active()
-        if values:
-            for val in values:
-                animal_health_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        identification_certainty_list = []
-        values = IdentificationCertainty.objects.active()
-        if values:
-            for val in values:
-                identification_certainty_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        sample_type_list = []
-        values = SampleType.objects.active().filter(group_type__name=group_type)
-        if values:
-            for val in values:
-                sample_type_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        sample_dest_list = []
-        values = SampleDestination.objects.active()
-        if values:
-            for val in values:
-                sample_dest_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        permit_type_list = []
-        values = PermitType.objects.active().filter(group_type__name=group_type)
-        if values:
-            for val in values:
-                permit_type_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
+        observation_method_list = list(
+            ObservationMethod.objects.active().values("id", "name")
+        )
+        area_assessment_list = list(
+            AreaAssessment.objects.active().values("id", "name")
+        )
+        plant_count_method_list = list(
+            PlantCountMethod.objects.active().values("id", "name")
+        )
+        plant_count_accuracy_list = list(
+            PlantCountAccuracy.objects.active().values("id", "name")
+        )
+        plant_condition_list = list(
+            PlantCondition.objects.active().values("id", "name")
+        )
+        counted_subject_list = list(
+            CountedSubject.objects.active().values("id", "name")
+        )
+        primary_detection_method_list = list(
+            PrimaryDetectionMethod.objects.all().values("id", "name", "archived")
+        )
+        # Add 'disabled' key for archived items
+        for item in primary_detection_method_list:
+            item["disabled"] = item.pop("archived", False)
+        secondary_sign_list = list(SecondarySign.objects.active().values("id", "name"))
+        animal_behaviour_list = list(
+            AnimalBehaviour.objects.active().values("id", "name")
+        )
+        reprod_state_list = list(
+            ReproductiveState.objects.active().values("id", "name")
+        )
+        death_reason_list = list(DeathReason.objects.active().values("id", "name"))
+        animal_health_list = list(AnimalHealth.objects.active().values("id", "name"))
+        identification_certainty_list = list(
+            IdentificationCertainty.objects.active().values("id", "name")
+        )
+        sample_type_list = list(
+            SampleType.objects.active()
+            .filter(group_type__name=group_type)
+            .values("id", "name")
+        )
+        sample_dest_list = list(SampleDestination.objects.active().values("id", "name"))
+        permit_type_list = list(
+            PermitType.objects.active()
+            .filter(group_type__name=group_type)
+            .values("id", "name")
+        )
+
         res_json = {
-            "observation_method_list": observation_method_list,
-            "plant_count_method_list": plant_count_method_list,
-            "plant_count_accuracy_list": plant_count_accuracy_list,
-            "plant_condition_list": plant_condition_list,
-            "counted_subject_list": counted_subject_list,
-            "primary_detection_method_list": primary_detection_method_list,
-            "secondary_sign_list": secondary_sign_list,
-            "reprod_state_list": reprod_state_list,
-            "death_reason_list": death_reason_list,
+            "animal_behaviour_list": animal_behaviour_list,
             "animal_health_list": animal_health_list,
+            "area_assessment_list": area_assessment_list,
+            "counted_subject_list": counted_subject_list,
+            "death_reason_list": death_reason_list,
             "identification_certainty_list": identification_certainty_list,
-            "sample_type_list": sample_type_list,
-            "sample_dest_list": sample_dest_list,
+            "observation_method_list": observation_method_list,
             "permit_type_list": permit_type_list,
+            "plant_condition_list": plant_condition_list,
+            "plant_count_accuracy_list": plant_count_accuracy_list,
+            "plant_count_method_list": plant_count_method_list,
+            "primary_detection_method_list": primary_detection_method_list,
+            "reprod_state_list": reprod_state_list,
+            "sample_dest_list": sample_dest_list,
+            "sample_type_list": sample_type_list,
+            "secondary_sign_list": secondary_sign_list,
         }
         res_json = json.dumps(res_json)
         return HttpResponse(res_json, content_type="application/json")
@@ -4920,9 +4827,7 @@ class OccurrenceViewSet(
 
     # used for Occurrence Observation external form
     @list_route(
-        methods=[
-            "GET",
-        ],
+        methods=["GET"],
         detail=False,
         permission_classes=[AllowAny],
     )
@@ -4935,164 +4840,71 @@ class OccurrenceViewSet(
                 "Group Type is required to return correct list of values"
             )
 
-        observation_method_list = []
-        values = ObservationMethod.objects.active()
-        if values:
-            for val in values:
-                observation_method_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        plant_count_method_list = []
-        values = PlantCountMethod.objects.active()
-        if values:
-            for val in values:
-                plant_count_method_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        plant_count_accuracy_list = []
-        values = PlantCountAccuracy.objects.active()
-        if values:
-            for val in values:
-                plant_count_accuracy_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        plant_condition_list = []
-        values = PlantCondition.objects.active()
-        if values:
-            for val in values:
-                plant_condition_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        counted_subject_list = []
-        values = CountedSubject.objects.active()
-        if values:
-            for val in values:
-                counted_subject_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        primary_detection_method_list = []
-        values = PrimaryDetectionMethod.objects.all()
-        if values:
-            for val in values:
-                if val.archived:
-                    val.name += " (archived)"
-                primary_detection_method_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                        "disabled": val.archived,
-                    }
-                )
-        secondary_sign_list = []
-        values = SecondarySign.objects.active()
-        if values:
-            for val in values:
-                secondary_sign_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        reprod_state_list = []
-        values = ReproductiveState.objects.active()
-        if values:
-            for val in values:
-                reprod_state_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        death_reason_list = []
-        values = DeathReason.objects.active()
-        if values:
-            for val in values:
-                death_reason_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        animal_health_list = []
-        values = AnimalHealth.objects.active()
-        if values:
-            for val in values:
-                animal_health_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        identification_certainty_list = []
-        values = IdentificationCertainty.objects.active()
-        if values:
-            for val in values:
-                identification_certainty_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        sample_type_list = []
-        values = SampleType.objects.active().filter(group_type__name=group_type)
-        if values:
-            for val in values:
-                sample_type_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        sample_dest_list = []
-        values = SampleDestination.objects.active()
-        if values:
-            for val in values:
-                sample_dest_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        permit_type_list = []
-        values = PermitType.objects.active().filter(group_type__name=group_type)
-        if values:
-            for val in values:
-                permit_type_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
+        observation_method_list = list(
+            ObservationMethod.objects.active().values("id", "name")
+        )
+        area_assessment_list = list(
+            AreaAssessment.objects.active().values("id", "name")
+        )
+        plant_count_method_list = list(
+            PlantCountMethod.objects.active().values("id", "name")
+        )
+        plant_count_accuracy_list = list(
+            PlantCountAccuracy.objects.active().values("id", "name")
+        )
+        plant_condition_list = list(
+            PlantCondition.objects.active().values("id", "name")
+        )
+        counted_subject_list = list(
+            CountedSubject.objects.active().values("id", "name")
+        )
+        primary_detection_method_list = list(
+            PrimaryDetectionMethod.objects.all().values("id", "name", "archived")
+        )
+        # Add 'disabled' key for archived items
+        for item in primary_detection_method_list:
+            item["disabled"] = item.pop("archived", False)
+        secondary_sign_list = list(SecondarySign.objects.active().values("id", "name"))
+        animal_behaviour_list = list(
+            AnimalBehaviour.objects.active().values("id", "name")
+        )
+        reprod_state_list = list(
+            ReproductiveState.objects.active().values("id", "name")
+        )
+        death_reason_list = list(DeathReason.objects.active().values("id", "name"))
+        animal_health_list = list(AnimalHealth.objects.active().values("id", "name"))
+        identification_certainty_list = list(
+            IdentificationCertainty.objects.active().values("id", "name")
+        )
+        sample_type_list = list(
+            SampleType.objects.active()
+            .filter(group_type__name=group_type)
+            .values("id", "name")
+        )
+        sample_dest_list = list(SampleDestination.objects.active().values("id", "name"))
+        permit_type_list = list(
+            PermitType.objects.active()
+            .filter(group_type__name=group_type)
+            .values("id", "name")
+        )
+
         res_json = {
-            "observation_method_list": observation_method_list,
-            "plant_count_method_list": plant_count_method_list,
-            "plant_count_accuracy_list": plant_count_accuracy_list,
-            "plant_condition_list": plant_condition_list,
-            "counted_subject_list": counted_subject_list,
-            "primary_detection_method_list": primary_detection_method_list,
-            "secondary_sign_list": secondary_sign_list,
-            "reprod_state_list": reprod_state_list,
-            "death_reason_list": death_reason_list,
+            "animal_behaviour_list": animal_behaviour_list,
             "animal_health_list": animal_health_list,
+            "area_assessment_list": area_assessment_list,
+            "counted_subject_list": counted_subject_list,
+            "death_reason_list": death_reason_list,
             "identification_certainty_list": identification_certainty_list,
-            "sample_type_list": sample_type_list,
-            "sample_dest_list": sample_dest_list,
+            "observation_method_list": observation_method_list,
             "permit_type_list": permit_type_list,
+            "plant_condition_list": plant_condition_list,
+            "plant_count_accuracy_list": plant_count_accuracy_list,
+            "plant_count_method_list": plant_count_method_list,
+            "primary_detection_method_list": primary_detection_method_list,
+            "reprod_state_list": reprod_state_list,
+            "sample_dest_list": sample_dest_list,
+            "sample_type_list": sample_type_list,
+            "secondary_sign_list": secondary_sign_list,
         }
         res_json = json.dumps(res_json)
         return HttpResponse(res_json, content_type="application/json")
