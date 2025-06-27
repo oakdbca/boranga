@@ -2879,6 +2879,26 @@ class ObservationMethod(OrderedModel, ArchivableModel):
         return str(self.name)
 
 
+class AreaAssessment(OrderedModel, ArchivableModel):
+    objects = OrderedArchivableManager()
+
+    name = models.CharField(
+        max_length=250,
+        blank=False,
+        null=False,
+        unique=True,
+        validators=[no_commas_validator],
+    )
+
+    class Meta(OrderedModel.Meta):
+        app_label = "boranga"
+        verbose_name = "Area Assessment"
+        verbose_name_plural = "Area Assessments"
+
+    def __str__(self):
+        return str(self.name)
+
+
 class OCRObservationDetail(BaseModel):
     BULK_IMPORT_ABBREVIATION = "ocrobs"
 
@@ -2899,6 +2919,9 @@ class OCRObservationDetail(BaseModel):
     )
     observation_method = models.ForeignKey(
         ObservationMethod, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    area_assessment = models.ForeignKey(
+        AreaAssessment, on_delete=models.SET_NULL, null=True, blank=True
     )
     area_surveyed = models.DecimalField(
         blank=True,
@@ -3276,6 +3299,26 @@ class SecondarySign(OrderedModel, ArchivableModel):
         return str(self.name)
 
 
+class AnimalBehaviour(OrderedModel, ArchivableModel):
+    objects = OrderedArchivableManager()
+
+    name = models.CharField(
+        max_length=250,
+        blank=False,
+        null=False,
+        unique=True,
+        validators=[no_commas_validator],
+    )
+
+    class Meta(OrderedModel.Meta):
+        app_label = "boranga"
+        verbose_name = "Animal Behaviour"
+        verbose_name_plural = "Animal Behaviours"
+
+    def __str__(self):
+        return str(self.name)
+
+
 class OCRAnimalObservation(BaseModel):
     BULK_IMPORT_ABBREVIATION = "ocrnum"
 
@@ -3297,6 +3340,12 @@ class OCRAnimalObservation(BaseModel):
     primary_detection_method = MultiSelectField(
         max_length=250, blank=True, choices=[], null=True
     )
+    secondary_sign = models.ForeignKey(
+        SecondarySign, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    animal_behaviour = models.ForeignKey(
+        AnimalBehaviour, on_delete=models.SET_NULL, null=True, blank=True
+    )
     reproductive_state = models.ForeignKey(
         ReproductiveState, on_delete=models.SET_NULL, null=True, blank=True
     )
@@ -3305,9 +3354,6 @@ class OCRAnimalObservation(BaseModel):
     )
     death_reason = models.ForeignKey(
         DeathReason, on_delete=models.SET_NULL, null=True, blank=True
-    )
-    secondary_sign = models.ForeignKey(
-        SecondarySign, on_delete=models.SET_NULL, null=True, blank=True
     )
 
     distinctive_feature = models.CharField(max_length=1000, blank=True, default="")
@@ -3402,11 +3448,16 @@ class OCRAnimalObservation(BaseModel):
             return None
 
         if self.count_status == settings.COUNT_STATUS_SIMPLE_COUNT:
-            return (
-                self.simple_alive + self.simple_dead
-                if self.simple_alive or self.simple_dead
-                else 0
-            )
+            if self.simple_alive is None and self.simple_dead is None:
+                return None
+
+            if self.simple_alive is not None and self.simple_dead is not None:
+                return self.simple_alive + self.simple_dead
+
+            if self.simple_alive is None:
+                return self.simple_dead
+
+            return self.simple_alive
 
         # If count_status is COUNTED, calculate total from detailed counts
         total = 0
@@ -5168,6 +5219,9 @@ class OCCObservationDetail(BaseModel):
     observation_method = models.ForeignKey(
         ObservationMethod, on_delete=models.SET_NULL, null=True, blank=True
     )
+    area_assessment = models.ForeignKey(
+        AreaAssessment, on_delete=models.SET_NULL, null=True, blank=True
+    )
     area_surveyed = models.DecimalField(
         blank=True,
         max_digits=14,
@@ -5327,6 +5381,12 @@ class OCCAnimalObservation(BaseModel):
     primary_detection_method = MultiSelectField(
         max_length=250, blank=True, choices=[], null=True
     )
+    secondary_sign = models.ForeignKey(
+        SecondarySign, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    animal_behaviour = models.ForeignKey(
+        AnimalBehaviour, on_delete=models.SET_NULL, null=True, blank=True
+    )
     reproductive_state = models.ForeignKey(
         ReproductiveState, on_delete=models.SET_NULL, null=True, blank=True
     )
@@ -5335,9 +5395,6 @@ class OCCAnimalObservation(BaseModel):
     )
     death_reason = models.ForeignKey(
         DeathReason, on_delete=models.SET_NULL, null=True, blank=True
-    )
-    secondary_sign = models.ForeignKey(
-        SecondarySign, on_delete=models.SET_NULL, null=True, blank=True
     )
 
     distinctive_feature = models.CharField(max_length=1000, blank=True, default="")
@@ -5432,11 +5489,16 @@ class OCCAnimalObservation(BaseModel):
             return None
 
         if self.count_status == settings.COUNT_STATUS_SIMPLE_COUNT:
-            return (
-                self.simple_alive + self.simple_dead
-                if self.simple_alive or self.simple_dead
-                else 0
-            )
+            if self.simple_alive is None and self.simple_dead is None:
+                return None
+
+            if self.simple_alive is not None and self.simple_dead is not None:
+                return self.simple_alive + self.simple_dead
+
+            if self.simple_alive is None:
+                return self.simple_dead
+
+            return self.simple_alive
 
         # If count_status is COUNTED, calculate total from detailed counts
         total = 0

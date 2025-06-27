@@ -629,6 +629,9 @@ class OCRObservationDetailSerializer(BaseModelSerializer):
     observation_method = serializers.CharField(
         source="observation_method.name", allow_null=True
     )
+    area_assessment = serializers.CharField(
+        source="area_assessment.name", allow_null=True
+    )
 
     class Meta:
         model = OCRObservationDetail
@@ -637,6 +640,8 @@ class OCRObservationDetailSerializer(BaseModelSerializer):
             "occurrence_report_id",
             "observation_method_id",
             "observation_method",
+            "area_assessment_id",
+            "area_assessment",
             "area_surveyed",
             "survey_duration",
             "comments",
@@ -705,9 +710,11 @@ class OCRAnimalObservationSerializer(BaseModelSerializer):
     primary_detection_method = serializers.MultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
     )
-    obs_date = serializers.DateField(format="%Y-%m-%d", allow_null=True)
     secondary_sign_name = serializers.CharField(
         source="secondary_sign.name", allow_null=True
+    )
+    animal_behaviour_name = serializers.CharField(
+        source="animal_behaviour.name", allow_null=True
     )
     reproductive_state_name = serializers.CharField(
         source="reproductive_state.name", allow_null=True
@@ -718,6 +725,7 @@ class OCRAnimalObservationSerializer(BaseModelSerializer):
     death_reason_name = serializers.CharField(
         source="death_reason.name", allow_null=True
     )
+    obs_date = serializers.DateField(format="%Y-%m-%d", allow_null=True)
 
     class Meta:
         model = OCRAnimalObservation
@@ -727,6 +735,8 @@ class OCRAnimalObservationSerializer(BaseModelSerializer):
             "primary_detection_method",
             "secondary_sign",
             "secondary_sign_name",
+            "animal_behaviour",
+            "animal_behaviour_name",
             "reproductive_state",
             "reproductive_state_name",
             "animal_health",
@@ -1880,6 +1890,7 @@ class SaveOCRAssociatedSpeciesSerializer(BaseModelSerializer):
 class SaveOCRObservationDetailSerializer(BaseModelSerializer):
     occurrence_report_id = serializers.IntegerField(required=False, allow_null=True)
     observation_method_id = serializers.IntegerField(required=False, allow_null=True)
+    area_assessment_id = serializers.IntegerField(required=False, allow_null=True)
 
     class Meta:
         model = OCRObservationDetail
@@ -1887,6 +1898,7 @@ class SaveOCRObservationDetailSerializer(BaseModelSerializer):
             "id",
             "occurrence_report_id",
             "observation_method_id",
+            "area_assessment_id",
             "area_surveyed",
             "survey_duration",
             "comments",
@@ -1957,6 +1969,7 @@ class SaveOCRAnimalObservationSerializer(
             "occurrence_report_id",
             "primary_detection_method",
             "secondary_sign",
+            "animal_behaviour",
             "reproductive_state",
             "animal_health",
             "death_reason",
@@ -2896,6 +2909,9 @@ class OCCObservationDetailSerializer(BaseModelSerializer):
     observation_method = serializers.CharField(
         source="observation_method.name", allow_null=True
     )
+    area_assessment = serializers.CharField(
+        source="area_assessment.name", allow_null=True
+    )
 
     class Meta:
         model = OCCObservationDetail
@@ -2905,6 +2921,8 @@ class OCCObservationDetailSerializer(BaseModelSerializer):
             "copied_ocr",
             "observation_method_id",
             "observation_method",
+            "area_assessment_id",
+            "area_assessment",
             "area_surveyed",
             "survey_duration",
             "comments",
@@ -2985,10 +3003,11 @@ class OCCAnimalObservationSerializer(BaseModelSerializer):
     primary_detection_method = serializers.MultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
     )
-    copied_ocr = serializers.SerializerMethodField()
-    obs_date = serializers.DateField(format="%Y-%m-%d", allow_null=True)
     secondary_sign_name = serializers.CharField(
         source="secondary_sign.name", allow_null=True
+    )
+    animal_behaviour_name = serializers.CharField(
+        source="animal_behaviour.name", allow_null=True
     )
     reproductive_state_name = serializers.CharField(
         source="reproductive_state.name", allow_null=True
@@ -2999,6 +3018,8 @@ class OCCAnimalObservationSerializer(BaseModelSerializer):
     death_reason_name = serializers.CharField(
         source="death_reason.name", allow_null=True
     )
+    obs_date = serializers.DateField(format="%Y-%m-%d", allow_null=True)
+    copied_ocr = serializers.SerializerMethodField()
 
     class Meta:
         model = OCCAnimalObservation
@@ -3009,6 +3030,8 @@ class OCCAnimalObservationSerializer(BaseModelSerializer):
             "primary_detection_method",
             "secondary_sign",
             "secondary_sign_name",
+            "animal_behaviour",
+            "animal_behaviour_name",
             "reproductive_state",
             "reproductive_state_name",
             "animal_health",
@@ -3231,6 +3254,7 @@ class SaveOCCAssociatedSpeciesSerializer(BaseModelSerializer):
 class SaveOCCObservationDetailSerializer(BaseModelSerializer):
     occurrence_id = serializers.IntegerField(required=False, allow_null=True)
     observation_method_id = serializers.IntegerField(required=False, allow_null=True)
+    area_assessment_id = serializers.IntegerField(required=False, allow_null=True)
 
     class Meta:
         model = OCCObservationDetail
@@ -3238,6 +3262,7 @@ class SaveOCCObservationDetailSerializer(BaseModelSerializer):
             "id",
             "occurrence_id",
             "observation_method_id",
+            "area_assessment_id",
             "area_surveyed",
             "survey_duration",
             "comments",
@@ -3310,6 +3335,7 @@ class SaveOCCAnimalObservationSerializer(
             "occurrence_id",
             "primary_detection_method",
             "secondary_sign",
+            "animal_behaviour",
             "reproductive_state",
             "animal_health",
             "death_reason",

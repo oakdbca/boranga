@@ -78,6 +78,72 @@
             </div>
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
+                    >Area Assessment:</label
+                >
+                <div class="col-sm-9">
+                    <template v-if="!isReadOnly">
+                        <template
+                            v-if="
+                                area_assessment_list &&
+                                area_assessment_list.length > 0 &&
+                                occurrence_obj.observation_detail
+                                    .area_assessment_id &&
+                                !area_assessment_list
+                                    .map((d) => d.id)
+                                    .includes(
+                                        occurrence_obj.observation_detail
+                                            .area_assessment_id
+                                    )
+                            "
+                        >
+                            <input
+                                v-if="
+                                    occurrence_obj.observation_detail
+                                        .area_assessment
+                                "
+                                type="text"
+                                class="form-control mb-3"
+                                :value="
+                                    occurrence_obj.observation_detail
+                                        .area_assessment + ' (Now Archived)'
+                                "
+                                disabled
+                            />
+                            <div class="mb-3 text-muted">
+                                Change area assessment to:
+                            </div>
+                        </template>
+                        <select
+                            v-model="
+                                occurrence_obj.observation_detail
+                                    .area_assessment_id
+                            "
+                            class="form-select"
+                        >
+                            <option
+                                v-for="area_assessment in area_assessment_list"
+                                :key="area_assessment.id"
+                                :value="area_assessment.id"
+                            >
+                                {{ area_assessment.name }}
+                            </option>
+                        </select>
+                    </template>
+                    <template v-else>
+                        <input
+                            v-model="
+                                occurrence_obj.observation_detail
+                                    .area_assessment
+                            "
+                            class="form-control"
+                            type="text"
+                            :disabled="isReadOnly"
+                        />
+                    </template>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="" class="col-sm-3 control-label"
                     >Area Surveyed:</label
                 >
                 <div class="col-sm-6">
@@ -701,8 +767,8 @@ export default {
             isFlora: vm.occurrence_obj.group_type === 'flora' ? true : false,
             //----list of values dictionary
             listOfValuesDict: {},
-            //scientific_name_list: [],
             observation_method_list: [],
+            area_assessment_list: [],
             identification_certainty_list: [],
             sample_type_list: [],
             sample_dest_list: [],
@@ -758,6 +824,11 @@ export default {
         vm.observation_method_list =
             vm.listOfValuesDict.observation_method_list;
         vm.observation_method_list.splice(0, 0, {
+            id: null,
+            name: null,
+        });
+        vm.area_assessment_list = vm.listOfValuesDict.area_assessment_list;
+        vm.area_assessment_list.splice(0, 0, {
             id: null,
             name: null,
         });

@@ -8,7 +8,9 @@ from boranga.admin import (
     DeleteProtectedModelAdmin,
 )
 from boranga.components.occurrence.models import (
+    AnimalBehaviour,
     AnimalHealth,
+    AreaAssessment,
     BufferGeometry,
     CoordinateSource,
     CountedSubject,
@@ -366,6 +368,30 @@ class OccurrenceTenurePurposeAdmin(
 @admin.register(OccurrenceTenureVesting)
 class OccurrenceTenureVestingAdmin(admin.ModelAdmin):
     pass
+
+
+class AnimalBehaviourAdmin(
+    CsvExportMixin,
+    ArchivableModelAdminMixin,
+    OrderedModelAdmin,
+    DeleteProtectedModelAdmin,
+):
+    list_display = ["name", "move_up_down_links"]
+    list_filter = ["archived"]
+    search_fields = ["name"]
+    ordering = ("order",)
+
+
+class AreaAssessmentAdmin(
+    CsvExportMixin,
+    ArchivableModelAdminMixin,
+    OrderedModelAdmin,
+    DeleteProtectedModelAdmin,
+):
+    list_display = ["name", "move_up_down_links"]
+    list_filter = ["archived"]
+    search_fields = ["name"]
+    ordering = ("order",)
 
 
 class PermitTypeAdmin(
@@ -760,6 +786,8 @@ class SpeciesRoleAdmin(
 # Each of the following models will be available to Django Admin.
 
 admin.site.register(AnimalHealth, AnimalHealthAdmin)
+admin.site.register(AnimalBehaviour, AnimalBehaviourAdmin)
+admin.site.register(AreaAssessment, AreaAssessmentAdmin)
 admin.site.register(CoordinateSource, CoordinateSourceAdmin)
 admin.site.register(CountedSubject, CountedSubjectAdmin)
 admin.site.register(Datum, DatumAdmin)

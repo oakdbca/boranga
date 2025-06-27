@@ -79,6 +79,61 @@
             </div>
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
+                    >Animal Behaviour:</label
+                >
+                <div class="col-sm-9">
+                    <template v-if="!isReadOnly">
+                        <template
+                            v-if="
+                                animal_behaviour_list &&
+                                animal_behaviour_list.length > 0 &&
+                                animal_observation.animal_behaviour &&
+                                !animal_behaviour_list
+                                    .map((d) => d.id)
+                                    .includes(
+                                        animal_observation.animal_behaviour
+                                    )
+                            "
+                        >
+                            <input
+                                v-if="animal_observation.animal_behaviour_name"
+                                type="text"
+                                class="form-control mb-3"
+                                :value="
+                                    animal_observation.animal_behaviour_name +
+                                    ' (Now Archived)'
+                                "
+                                disabled
+                            />
+                            <div class="mb-3 text-muted">
+                                Change animal observation to:
+                            </div>
+                        </template>
+                        <select
+                            v-model="animal_observation.animal_behaviour"
+                            class="form-select"
+                        >
+                            <option
+                                v-for="animal_behaviour in animal_behaviour_list"
+                                :key="animal_behaviour.id"
+                                :value="animal_behaviour.id"
+                            >
+                                {{ animal_behaviour.name }}
+                            </option>
+                        </select>
+                    </template>
+                    <template v-else>
+                        <input
+                            v-model="animal_observation.animal_behaviour_name"
+                            class="form-control"
+                            type="text"
+                            :disabled="isReadOnly"
+                        />
+                    </template>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="" class="col-sm-3 control-label"
                     >Reproductive State:</label
                 >
                 <div class="col-sm-9">
@@ -794,6 +849,7 @@ export default {
             //----list of values dictionary
             primary_detection_method_list: [],
             secondary_sign_list: [],
+            animal_behaviour_list: [],
             reprod_state_list: [],
             death_reason_list: [],
             animal_health_list: [],
@@ -848,6 +904,12 @@ export default {
         });
         vm.secondary_sign_list = vm.listOfAnimalValuesDict.secondary_sign_list;
         vm.secondary_sign_list.splice(0, 0, {
+            id: '',
+            name: '',
+        });
+        vm.animal_behaviour_list =
+            vm.listOfAnimalValuesDict.animal_behaviour_list;
+        vm.animal_behaviour_list.splice(0, 0, {
             id: '',
             name: '',
         });
