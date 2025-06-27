@@ -1369,7 +1369,7 @@
                 <div
                     v-if="isDirty"
                     id="unsaved-changes-toast"
-                    class="toast align-items-center d-inline-block text-bg-warning border-0 w-auto show position-absolute bottom-0 start-0 mb-2 ms-2"
+                    class="toast align-items-center d-inline-block text-bg-warning border-0 w-auto show position-absolute bottom-0 start-50 translate-middle-x mb-2 ms-2"
                     style="z-index: 100"
                     role="alert"
                     aria-live="assertive"
@@ -1604,10 +1604,6 @@
 </template>
 
 <script>
-// @Karsten: TODO - I could not get transform working in vue 3
-// When the transform interaction is activated, the selected feature seems
-// to become unselected. UPDATE: Managed to get the select feature and move
-// working however the rotate, scale and resize still do not work.
 import { v4 as uuid } from 'uuid';
 import { api_endpoints, helpers } from '@/utils/hooks';
 
@@ -1633,10 +1629,14 @@ import { LineString, Point, MultiPoint, Polygon, MultiPolygon } from 'ol/geom';
 import { fromExtent } from 'ol/geom/Polygon';
 import { getArea } from 'ol/sphere.js';
 import { transform as transformCoordinates } from 'ol/proj';
+import { createStringXY } from 'ol/coordinate.js';
+import { defaults as defaultControls } from 'ol/control/defaults.js';
 import GeoJSON from 'ol/format/GeoJSON';
 import Overlay from 'ol/Overlay.js';
 import DragAndDrop from 'ol/interaction/DragAndDrop.js';
 import DragBox from 'ol/interaction/DragBox.js';
+import ScaleLine from 'ol/control/ScaleLine.js';
+import MousePosition from 'ol/control/MousePosition.js';
 import { platformModifierKeyOnly } from 'ol/events/condition.js';
 import MeasureStyles, { formatLength } from '@/components/common/measure.js';
 import FileField from '@/components/forms/filefield_immediate.vue';
@@ -2942,6 +2942,10 @@ export default {
                 evt.preventDefault();
                 vm.processDatatransferEvent(evt);
             });
+            // vm.map.getViewport().addEventListener('dragenter', function (evt) {
+            //     // Prevent default behavior (Prevent file from being opened)
+            //     evt.preventDefault();
+            // });
 
             vm.callSetMode('layer');
             vm.setBaseLayer('street');
@@ -3546,7 +3550,23 @@ export default {
                     margin: 110,
                 },
             });
+            const mousePositionControl = new MousePosition({
+                coordinateFormat: createStringXY(4),
+                projection: 'EPSG:4326',
+                className: 'custom-mouse-position',
+                placeholder: 'Mouse Coordinates',
+            });
             this.map = new Map({
+                controls: defaultControls({
+                    rotate: false,
+                }).extend([
+                    new ScaleLine({
+                        bar: true,
+                        text: true,
+                        minWidth: 140,
+                    }),
+                    mousePositionControl,
+                ]),
                 layers: [baseLayers],
                 overlays: [overlay],
                 target: this.elem_id,
@@ -3554,6 +3574,7 @@ export default {
                     center: [115.95, -31.95],
                     zoom: 7,
                     projection: `EPSG:${this.mapSrid}`,
+                    enableRotation: false,
                 }),
             });
         },
@@ -3613,7 +3634,11 @@ export default {
             }
 
             let selected = null;
+            let lastPointerMove = 0;
             vm.map.on('pointermove', function (evt) {
+                const now = Date.now();
+                if (now - lastPointerMove < 50) return; // 20 FPS max
+                lastPointerMove = now;
                 function isSelectedFeature(selected) {
                     if (!selected) {
                         return false;
@@ -3726,6 +3751,23 @@ export default {
                 }
             });
         },
+        copyMouseCoordinatesToClipboard: function () {
+            // Get the coordinates from the mouse position control
+            const mousePosElem = document.querySelector(
+                '.custom-mouse-position'
+            );
+            const coords = mousePosElem ? mousePosElem.textContent.trim() : '';
+            if (coords) {
+                navigator.clipboard.writeText(coords);
+                swal.fire({
+                    icon: 'success',
+                    title: 'Copied!',
+                    text: `Coordinates "${coords}" copied to clipboard.`,
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+            }
+        },
         initialiseDoubleClickEvent: function () {
             let vm = this;
             vm.map.on('dblclick', function (evt) {
@@ -3765,12 +3807,14 @@ export default {
                     if (pathnames.length === 1) {
                         console.log('already on model details page');
                         vm.redirectingToModelDetails = false;
+                        vm.copyMouseCoordinatesToClipboard();
                     } else {
                         window.open(model_path, '_blank'); // Open in new tab
                         vm.redirectingToModelDetails = false;
                     }
                 } else {
                     vm.redirectingToModelDetails = false;
+                    vm.copyMouseCoordinatesToClipboard();
                 }
             });
         },
@@ -5836,6 +5880,25 @@ export default {
 <style>
 @import '../../../../../static/boranga/css/map.css';
 @import 'ol-ext/dist/ol-ext.css';
+
+.custom-mouse-position {
+    position: absolute;
+    top: 3px;
+    right: 45px;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding-top: 2px;
+    padding-bottom: 2px;
+    z-index: 1000;
+    margin-top: 6px;
+    border-radius: 5px;
+    font-size: 0.8em;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.custom-mouse-position:empty {
+    display: none;
+}
 </style>
 <style scoped>
 #featureToast {
