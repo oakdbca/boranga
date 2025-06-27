@@ -2879,6 +2879,24 @@ class ObservationMethod(OrderedModel, ArchivableModel):
         return str(self.name)
 
 
+class AreaAssessment(OrderedModel, ArchivableModel):
+    objects = OrderedArchivableManager()
+
+    name = models.CharField(
+        max_length=250,
+        blank=False,
+        null=False,
+        unique=True,
+        validators=[no_commas_validator],
+    )
+
+    class Meta(OrderedModel.Meta):
+        app_label = "boranga"
+
+    def __str__(self):
+        return str(self.name)
+
+
 class OCRObservationDetail(BaseModel):
     BULK_IMPORT_ABBREVIATION = "ocrobs"
 
@@ -3260,6 +3278,24 @@ class SecondarySign(OrderedModel, ArchivableModel):
     - AnimalObservation (MultipleSelect)
 
     """
+
+    name = models.CharField(
+        max_length=250,
+        blank=False,
+        null=False,
+        unique=True,
+        validators=[no_commas_validator],
+    )
+
+    class Meta(OrderedModel.Meta):
+        app_label = "boranga"
+
+    def __str__(self):
+        return str(self.name)
+
+
+class AnimalBehaviour(OrderedModel, ArchivableModel):
+    objects = OrderedArchivableManager()
 
     name = models.CharField(
         max_length=250,
