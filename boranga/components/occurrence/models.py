@@ -2892,6 +2892,8 @@ class AreaAssessment(OrderedModel, ArchivableModel):
 
     class Meta(OrderedModel.Meta):
         app_label = "boranga"
+        verbose_name = "Area Assessment"
+        verbose_name_plural = "Area Assessments"
 
     def __str__(self):
         return str(self.name)
@@ -3310,6 +3312,8 @@ class AnimalBehaviour(OrderedModel, ArchivableModel):
 
     class Meta(OrderedModel.Meta):
         app_label = "boranga"
+        verbose_name = "Animal Behaviour"
+        verbose_name_plural = "Animal Behaviours"
 
     def __str__(self):
         return str(self.name)
