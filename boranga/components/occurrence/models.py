@@ -2918,6 +2918,9 @@ class OCRObservationDetail(BaseModel):
     observation_method = models.ForeignKey(
         ObservationMethod, on_delete=models.SET_NULL, null=True, blank=True
     )
+    area_assessment = models.ForeignKey(
+        AreaAssessment, on_delete=models.SET_NULL, null=True, blank=True
+    )
     area_surveyed = models.DecimalField(
         blank=True,
         max_digits=14,
@@ -3333,6 +3336,12 @@ class OCRAnimalObservation(BaseModel):
     primary_detection_method = MultiSelectField(
         max_length=250, blank=True, choices=[], null=True
     )
+    secondary_sign = models.ForeignKey(
+        SecondarySign, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    animal_behaviour = models.ForeignKey(
+        AnimalBehaviour, on_delete=models.SET_NULL, null=True, blank=True
+    )
     reproductive_state = models.ForeignKey(
         ReproductiveState, on_delete=models.SET_NULL, null=True, blank=True
     )
@@ -3341,9 +3350,6 @@ class OCRAnimalObservation(BaseModel):
     )
     death_reason = models.ForeignKey(
         DeathReason, on_delete=models.SET_NULL, null=True, blank=True
-    )
-    secondary_sign = models.ForeignKey(
-        SecondarySign, on_delete=models.SET_NULL, null=True, blank=True
     )
 
     distinctive_feature = models.CharField(max_length=1000, blank=True, default="")
@@ -5209,6 +5215,9 @@ class OCCObservationDetail(BaseModel):
     observation_method = models.ForeignKey(
         ObservationMethod, on_delete=models.SET_NULL, null=True, blank=True
     )
+    area_assessment = models.ForeignKey(
+        AreaAssessment, on_delete=models.SET_NULL, null=True, blank=True
+    )
     area_surveyed = models.DecimalField(
         blank=True,
         max_digits=14,
@@ -5368,6 +5377,12 @@ class OCCAnimalObservation(BaseModel):
     primary_detection_method = MultiSelectField(
         max_length=250, blank=True, choices=[], null=True
     )
+    secondary_sign = models.ForeignKey(
+        SecondarySign, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    animal_behaviour = models.ForeignKey(
+        AnimalBehaviour, on_delete=models.SET_NULL, null=True, blank=True
+    )
     reproductive_state = models.ForeignKey(
         ReproductiveState, on_delete=models.SET_NULL, null=True, blank=True
     )
@@ -5376,9 +5391,6 @@ class OCCAnimalObservation(BaseModel):
     )
     death_reason = models.ForeignKey(
         DeathReason, on_delete=models.SET_NULL, null=True, blank=True
-    )
-    secondary_sign = models.ForeignKey(
-        SecondarySign, on_delete=models.SET_NULL, null=True, blank=True
     )
 
     distinctive_feature = models.CharField(max_length=1000, blank=True, default="")
