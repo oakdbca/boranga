@@ -981,6 +981,7 @@ export default {
         show_save_buttons: function () {
             return (
                 this.occurrence_report &&
+                this.occurrence_report.assessor_mode &&
                 (this.show_submit_button ||
                     this.occurrence_report.assessor_mode.has_assessor_mode ||
                     this.occurrence_report.assessor_mode.has_unlocked_mode)

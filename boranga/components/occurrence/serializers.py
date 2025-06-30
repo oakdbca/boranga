@@ -3,6 +3,8 @@ import logging
 from decimal import Decimal
 
 from django.db import models, transaction
+from django.db.models import CharField
+from django.db.models.functions import Cast
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import serializers
@@ -71,6 +73,8 @@ from boranga.components.occurrence.models import (
     OCRObserverDetail,
     OCRPlantCount,
     OCRVegetationStructure,
+    PrimaryDetectionMethod,
+    ReproductiveState,
     SchemaColumnLookupFilter,
     SchemaColumnLookupFilterValue,
     SoilType,
@@ -731,8 +735,8 @@ class OCRAnimalObservationSerializer(BaseModelSerializer):
     animal_behaviour_name = serializers.CharField(
         source="animal_behaviour.name", allow_null=True
     )
-    reproductive_state_name = serializers.CharField(
-        source="reproductive_state.name", allow_null=True
+    reproductive_state = serializers.MultipleChoiceField(
+        choices=[], allow_null=True, allow_blank=True, required=False
     )
     animal_health_name = serializers.CharField(
         source="animal_health.name", allow_null=True
@@ -753,7 +757,6 @@ class OCRAnimalObservationSerializer(BaseModelSerializer):
             "animal_behaviour",
             "animal_behaviour_name",
             "reproductive_state",
-            "reproductive_state_name",
             "animal_health",
             "animal_health_name",
             "death_reason",
@@ -790,8 +793,13 @@ class OCRAnimalObservationSerializer(BaseModelSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["primary_detection_method"].choices = (
-            OCRAnimalObservation._meta.get_field("primary_detection_method").choices
+            PrimaryDetectionMethod.objects.annotate(
+                id_str=Cast("id", CharField()),
+            ).values_list("id_str", "name")
         )
+        self.fields["reproductive_state"].choices = ReproductiveState.objects.annotate(
+            id_str=Cast("id", CharField()),
+        ).values_list("id_str", "name")
 
 
 class OCRIdentificationSerializer(BaseModelSerializer):
@@ -1975,6 +1983,9 @@ class SaveOCRAnimalObservationSerializer(
     primary_detection_method = serializers.MultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
     )
+    reproductive_state = serializers.MultipleChoiceField(
+        choices=[], allow_null=True, allow_blank=True, required=False
+    )
     obs_date = serializers.DateField(format="%Y-%m-%d", required=False, allow_null=True)
 
     class Meta:
@@ -2020,8 +2031,13 @@ class SaveOCRAnimalObservationSerializer(
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["primary_detection_method"].choices = (
-            OCRAnimalObservation._meta.get_field("primary_detection_method").choices
+            PrimaryDetectionMethod.objects.annotate(
+                id_str=Cast("id", CharField()),
+            ).values_list("id_str", "name")
         )
+        self.fields["reproductive_state"].choices = ReproductiveState.objects.annotate(
+            id_str=Cast("id", CharField()),
+        ).values_list("id_str", "name")
 
 
 class SaveOCRIdentificationSerializer(BaseModelSerializer):
@@ -2808,8 +2824,13 @@ class OCCHabitatCompositionSerializer(BaseModelSerializer):
 
 
 class OCCHabitatConditionSerializer(BaseModelSerializer):
-
     copied_ocr = serializers.SerializerMethodField()
+    pristine = serializers.FloatField(default=0.00)
+    excellent = serializers.FloatField(default=0.00)
+    very_good = serializers.FloatField(default=0.00)
+    good = serializers.FloatField(default=0.00)
+    degraded = serializers.FloatField(default=0.00)
+    completely_degraded = serializers.FloatField(default=0.00)
 
     obs_date = serializers.DateField(format="%Y-%m-%d", allow_null=True)
 
@@ -3028,8 +3049,8 @@ class OCCAnimalObservationSerializer(BaseModelSerializer):
     animal_behaviour_name = serializers.CharField(
         source="animal_behaviour.name", allow_null=True
     )
-    reproductive_state_name = serializers.CharField(
-        source="reproductive_state.name", allow_null=True
+    reproductive_state = serializers.MultipleChoiceField(
+        choices=[], allow_null=True, allow_blank=True, required=False
     )
     animal_health_name = serializers.CharField(
         source="animal_health.name", allow_null=True
@@ -3052,7 +3073,6 @@ class OCCAnimalObservationSerializer(BaseModelSerializer):
             "animal_behaviour",
             "animal_behaviour_name",
             "reproductive_state",
-            "reproductive_state_name",
             "animal_health",
             "animal_health_name",
             "death_reason",
@@ -3089,8 +3109,13 @@ class OCCAnimalObservationSerializer(BaseModelSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["primary_detection_method"].choices = (
-            OCCAnimalObservation._meta.get_field("primary_detection_method").choices
+            PrimaryDetectionMethod.objects.annotate(
+                id_str=Cast("id", CharField()),
+            ).values_list("id_str", "name")
         )
+        self.fields["reproductive_state"].choices = ReproductiveState.objects.annotate(
+            id_str=Cast("id", CharField()),
+        ).values_list("id_str", "name")
 
     def get_copied_ocr(self, obj):
         if obj.copied_ocr_animal_observation:
@@ -3343,6 +3368,9 @@ class SaveOCCAnimalObservationSerializer(
     primary_detection_method = serializers.MultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
     )
+    reproductive_state = serializers.MultipleChoiceField(
+        choices=[], allow_null=True, allow_blank=True, required=False
+    )
     obs_date = serializers.DateField(
         format="%Y-%m-%d %H:%M:%S", required=False, allow_null=True
     )
@@ -3390,8 +3418,13 @@ class SaveOCCAnimalObservationSerializer(
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["primary_detection_method"].choices = (
-            OCCAnimalObservation._meta.get_field("primary_detection_method").choices
+            PrimaryDetectionMethod.objects.annotate(
+                id_str=Cast("id", CharField()),
+            ).values_list("id_str", "name")
         )
+        self.fields["reproductive_state"].choices = ReproductiveState.objects.annotate(
+            id_str=Cast("id", CharField()),
+        ).values_list("id_str", "name")
 
 
 class SaveOCCIdentificationSerializer(BaseModelSerializer):

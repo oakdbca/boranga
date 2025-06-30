@@ -1028,12 +1028,16 @@ export default {
                 id: '',
                 name: '',
             });
-            vm.$refs.animalObservationDetail.reprod_state_list =
-                vm.listOfValuesDict.reprod_state_list;
-            vm.$refs.animalObservationDetail.reprod_state_list.splice(0, 0, {
-                id: '',
-                name: '',
-            });
+            vm.$refs.animalObservationDetail.reproductive_state_list =
+                vm.listOfValuesDict.reproductive_state_list;
+            vm.$refs.animalObservationDetail.reproductive_state_list.splice(
+                0,
+                0,
+                {
+                    id: '',
+                    name: '',
+                }
+            );
             vm.$refs.animalObservationDetail.death_reason_list =
                 vm.listOfValuesDict.death_reason_list;
             vm.$refs.animalObservationDetail.death_reason_list.splice(0, 0, {
