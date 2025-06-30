@@ -168,7 +168,7 @@
                                 ref="occurrence"
                                 :occurrence_obj="occurrence"
                                 @refresh-from-response="refreshFromResponse"
-                                @dirty="isDirty = true"
+                                @dirty="isDirty = $event"
                             >
                             </ProposalOccurrence>
 

@@ -279,7 +279,7 @@
                 :is-read-only="isReadOnly"
                 @mounted="populatePlantCountLookups"
                 @update-plant-count="updatePlantCount"
-                @dirty="plantCountIsDirty = true"
+                @dirty="plantCountIsDirty = $event"
             >
             </PlantCount>
             <RelatedReports
@@ -312,7 +312,7 @@
                 :is-read-only="isReadOnly"
                 @update-animal-observation="updateAnimalObservation"
                 @mounted="populateAnimalObservationLookups"
-                @dirty="animalObservationIsDirty = true"
+                @dirty="animalObservationIsDirty = $event"
             >
             </AnimalObservation>
             <RelatedReports
