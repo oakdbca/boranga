@@ -2834,6 +2834,16 @@ class OccurrenceFilterBackend(DatatablesFilterBackend):
         if filter_group_type and not filter_group_type.lower() == "all":
             queryset = queryset.filter(group_type__name=filter_group_type)
 
+        filter_community_migrated_id = request.GET.get("filter_community_migrated_id")
+
+        if (
+            filter_community_migrated_id
+            and not filter_community_migrated_id.lower() == "all"
+        ):
+            queryset = queryset.filter(
+                community__taxonomy__id=filter_community_migrated_id
+            )
+
         filter_occurrence_name = request.GET.get("filter_occurrence_name")
         if filter_occurrence_name and not filter_occurrence_name.lower() == "all":
             queryset = queryset.filter(occurrence_name=filter_occurrence_name)

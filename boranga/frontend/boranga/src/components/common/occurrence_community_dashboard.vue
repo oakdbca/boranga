@@ -55,6 +55,19 @@
                     </div>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="community_id_lookup">Community ID:</label>
+                        <select
+                            id="community_id_lookup"
+                            ref="community_id_lookup"
+                            name="community_id_lookup"
+                            class="form-control"
+                        />
+                    </div>
+                </div>
+            </div>
         </CollapsibleFilters>
 
         <div v-if="show_add_button" class="col-md-12">
@@ -129,6 +142,11 @@ export default {
             type: Object,
             default: null,
         },
+        filterOCCCommunityMigratedId_cache: {
+            type: String,
+            required: false,
+            default: 'filterOCCCommunityMigratedId',
+        },
         filterOCCCommunityOccurrenceName_cache: {
             type: String,
             required: false,
@@ -162,6 +180,13 @@ export default {
             datatable_id: 'occurrence-community-datatable-' + uuid(),
 
             // selected values for filtering
+            filterOCCCommunityMigratedId: sessionStorage.getItem(
+                this.filterOCCCommunityMigratedId_cache
+            )
+                ? sessionStorage.getItem(
+                      this.filterOCCCommunityMigratedId_cache
+                  )
+                : 'all',
             filterOCCCommunityOccurrenceName: sessionStorage.getItem(
                 this.filterOCCCommunityOccurrenceName_cache
             )
@@ -227,6 +252,7 @@ export default {
         },
         filterApplied: function () {
             if (
+                this.filterOCCCommunityMigratedId === 'all' &&
                 this.filterOCCCommunityOccurrenceName === 'all' &&
                 this.filterOCCCommunityName === 'all' &&
                 this.filterOCCCommunityStatus === 'all' &&
@@ -262,6 +288,7 @@ export default {
                 'Community Name',
                 'Wild Status',
                 'Number of Reports',
+                'Community ID',
                 'Migrated From ID',
                 'Review Due',
                 'Status',
@@ -304,6 +331,23 @@ export default {
                     }
                     return '';
                 },
+            };
+        },
+        column_community_migrated_id: function () {
+            return {
+                data: 'community_migrated_id',
+                orderable: true,
+                searchable: true,
+                visible: true,
+                render: function (data, type, full) {
+                    if (full.community_migrated_id) {
+                        let value = full.community_migrated_id;
+                        let result = helpers.dtPopover(value, 30, 'hover');
+                        return type == 'export' ? value : result;
+                    }
+                    return '';
+                },
+                name: 'community__taxonomy__community_migrated_id',
             };
         },
         column_community_name: function () {
@@ -433,6 +477,7 @@ export default {
                     vm.column_community_name,
                     vm.column_wild_status,
                     vm.column_number_of_reports,
+                    vm.column_community_migrated_id,
                     vm.column_migrated_from_id,
                     vm.column_review_due_date,
                     vm.column_status,
@@ -471,6 +516,8 @@ export default {
                     // adding extra GET params for Custom filtering
                     data: function (d) {
                         d.filter_group_type = vm.group_type_name;
+                        d.filter_community_migrated_id =
+                            vm.filterOCCCommunityMigratedId;
                         d.filter_occurrence_name =
                             vm.filterOCCCommunityOccurrenceName;
                         d.filter_community_name = vm.filterOCCCommunityName;
@@ -498,6 +545,17 @@ export default {
         },
     },
     watch: {
+        filterOCCCommunityMigratedId: function () {
+            let vm = this;
+            vm.$refs.community_occ_datatable.vmDataTable.ajax.reload(
+                helpers.enablePopovers,
+                false
+            ); // This calls ajax() backend call.
+            sessionStorage.setItem(
+                vm.filterOCCCommunityMigratedId_cache,
+                vm.filterOCCCommunityMigratedId
+            );
+        },
         filterOCCCommunityOccurrenceName: function () {
             let vm = this;
             vm.$refs.community_occ_datatable.vmDataTable.ajax.reload(
@@ -568,6 +626,7 @@ export default {
         this.$nextTick(() => {
             vm.initialiseOccurrenceNameLookup();
             vm.initialiseCommunityNameLookup();
+            vm.initialiseCommunityIdLookup();
             vm.addEventListeners();
             var newOption = null;
             // -- to set the select2 field with the session value if exists onload()
@@ -601,6 +660,20 @@ export default {
                     true
                 );
                 $('#occ_community_name_lookup').append(newOption);
+            }
+            if (
+                sessionStorage.getItem('filterOCCCommunityMigratedId') !=
+                    'all' &&
+                sessionStorage.getItem('filterOCCCommunityMigratedId') != null
+            ) {
+                // contructor new Option(text, value, defaultSelected, selected)
+                newOption = new Option(
+                    sessionStorage.getItem('filterOCCCommunityMigratedIdText'),
+                    vm.filterOCCCommunityMigratedId,
+                    false,
+                    true
+                );
+                $('#community_id_lookup').append(newOption);
             }
         });
     },
@@ -693,6 +766,49 @@ export default {
                     const searchField = $(
                         '[aria-controls="select2-occ_community_name_lookup-results"]'
                     );
+                    searchField[0].focus();
+                });
+        },
+        initialiseCommunityIdLookup: function () {
+            let vm = this;
+            $(vm.$refs.community_id_lookup)
+                .select2({
+                    minimumInputLength: 1,
+                    theme: 'bootstrap-5',
+                    allowClear: true,
+                    placeholder: 'Select Community ID',
+                    ajax: {
+                        url: api_endpoints.community_id_lookup,
+                        dataType: 'json',
+                        data: function (params) {
+                            var query = {
+                                term: params.term,
+                                type: 'public',
+                            };
+                            return query;
+                        },
+                    },
+                })
+                .on('select2:select', function (e) {
+                    let data = e.params.data.id;
+                    vm.filterOCCCommunityMigratedId = data;
+                    sessionStorage.setItem(
+                        'filterOCCCommunityMigratedIdText',
+                        e.params.data.text
+                    );
+                })
+                .on('select2:unselect', function () {
+                    vm.filterOCCCommunityMigratedId = 'all';
+                    sessionStorage.setItem(
+                        'filterOCCCommunityMigratedIdText',
+                        ''
+                    );
+                })
+                .on('select2:open', function () {
+                    const searchField = $(
+                        '[aria-controls="select2-community_id_lookup-results"]'
+                    );
+                    // move focus to select2 field
                     searchField[0].focus();
                 });
         },
