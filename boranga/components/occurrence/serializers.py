@@ -99,6 +99,12 @@ from boranga.ledger_api_utils import retrieve_email_user
 logger = logging.getLogger("boranga")
 
 
+# Note: Many of the fields that are DecimalField in the models are represented as FloatField in the serializers
+# so that they are serialized as the same type as an HTML5 number input expects. This allows the dirty field
+# detection to work correctly in the frontend. They should remain as DecimalField in the models to ensure
+# correct precision in the database and that any calculations done in the backend are accurate.
+
+
 class OccurrenceSerializer(BaseModelSerializer):
     processing_status = serializers.CharField(source="get_processing_status_display")
     scientific_name = serializers.CharField(
@@ -562,6 +568,12 @@ class OCRHabitatCompositionSerializer(BaseModelSerializer):
 
 class OCRHabitatConditionSerializer(BaseModelSerializer):
     obs_date = serializers.DateField(format="%Y-%m-%d", allow_null=True)
+    pristine = serializers.FloatField(default=0.00)
+    excellent = serializers.FloatField(default=0.00)
+    very_good = serializers.FloatField(default=0.00)
+    good = serializers.FloatField(default=0.00)
+    degraded = serializers.FloatField(default=0.00)
+    completely_degraded = serializers.FloatField(default=0.00)
 
     class Meta:
         model = OCRHabitatCondition
@@ -632,6 +644,7 @@ class OCRObservationDetailSerializer(BaseModelSerializer):
     area_assessment = serializers.CharField(
         source="area_assessment.name", allow_null=True
     )
+    area_surveyed = serializers.FloatField(allow_null=True, default=None)
 
     class Meta:
         model = OCRObservationDetail
@@ -662,6 +675,8 @@ class OCRPlantCountSerializer(BaseModelSerializer):
     counted_subject = serializers.CharField(
         source="counted_subject.name", allow_null=True
     )
+    individual_quadrat_area = serializers.FloatField(allow_null=True, default=None)
+    flowering_plants_per = serializers.FloatField(allow_null=True, default=None)
 
     class Meta:
         model = OCRPlantCount
@@ -2795,6 +2810,7 @@ class OCCHabitatCompositionSerializer(BaseModelSerializer):
 class OCCHabitatConditionSerializer(BaseModelSerializer):
 
     copied_ocr = serializers.SerializerMethodField()
+
     obs_date = serializers.DateField(format="%Y-%m-%d", allow_null=True)
 
     class Meta:
@@ -2912,6 +2928,7 @@ class OCCObservationDetailSerializer(BaseModelSerializer):
     area_assessment = serializers.CharField(
         source="area_assessment.name", allow_null=True
     )
+    area_surveyed = serializers.FloatField(allow_null=True, default=None)
 
     class Meta:
         model = OCCObservationDetail
@@ -2950,6 +2967,8 @@ class OCCPlantCountSerializer(BaseModelSerializer):
     counted_subject = serializers.CharField(
         source="counted_subject.name", allow_null=True
     )
+    individual_quadrat_area = serializers.FloatField(allow_null=True, default=None)
+    flowering_plants_per = serializers.FloatField(allow_null=True, default=None)
 
     class Meta:
         model = OCCPlantCount
