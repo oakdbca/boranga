@@ -105,6 +105,17 @@
                                                     Combine</button
                                                 ><br />
                                             </div>
+                                            <div class="col-sm-12">
+                                                <button
+                                                    style="width: 80%"
+                                                    class="btn btn-primary mb-2"
+                                                    @click.prevent="
+                                                        deactivateOccurrence()
+                                                    "
+                                                >
+                                                    Deactivate
+                                                </button>
+                                            </div>
                                         </div>
                                     </template>
                                     <template v-else-if="canUnlock">
@@ -793,14 +804,14 @@ export default {
                 }
             );
         },
-        closeOccurrence: async function () {
+        deactivateOccurrence: function () {
             let vm = this;
             swal.fire({
-                title: 'Close',
-                text: 'Are you sure you want to close this Occurrence?',
+                title: 'Deactivate Occurrence',
+                text: 'Are you sure you want to deactivate this Occurrence?',
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonText: 'Close Occurrence',
+                confirmButtonText: 'Deactivate',
                 customClass: {
                     confirmButton: 'btn btn-primary',
                     cancelButton: 'btn btn-secondary',
@@ -809,7 +820,7 @@ export default {
             }).then(async (swalresult) => {
                 if (swalresult.isConfirmed) {
                     await fetch(
-                        `/api/occurrence/${this.occurrence.id}/close_occurrence.json`,
+                        `/api/occurrence/${this.occurrence.id}/deactivate.json`,
                         {
                             method: 'POST',
                             headers: {
@@ -831,22 +842,20 @@ export default {
                                 return;
                             }
                             swal.fire({
-                                title: 'Closed',
-                                text: 'Occurrence has been Closed',
+                                title: 'Deactivated',
+                                text: 'Occurrence has been Deactivated',
                                 icon: 'success',
                                 customClass: {
                                     confirmButton: 'btn btn-primary',
                                 },
                             }).then(async () => {
-                                vm.$router.push({
-                                    name: 'internal-occurrence-dash',
-                                });
+                                vm.$router.go(this.$router.currentRoute);
                             });
                         },
                         (err) => {
                             var errorText = helpers.apiVueResourceError(err);
                             swal.fire({
-                                title: 'Close Error',
+                                title: 'Deactivate Error',
                                 text: errorText,
                                 icon: 'error',
                                 customClass: {

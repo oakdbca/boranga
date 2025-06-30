@@ -4328,7 +4328,7 @@ class Occurrence(RevisionedMixin):
             request,
         )
 
-    def close(self, request):
+    def deactivate(self, request):
         if (
             is_occurrence_approver(request)
             and self.processing_status == Occurrence.PROCESSING_STATUS_ACTIVE
@@ -4338,13 +4338,17 @@ class Occurrence(RevisionedMixin):
 
         # Log proposal action
         self.log_user_action(
-            OccurrenceUserAction.ACTION_CLOSE_OCCURRENCE.format(self.occurrence_number),
+            OccurrenceUserAction.ACTION_DEACTIVATE_OCCURRENCE.format(
+                self.occurrence_number
+            ),
             request,
         )
 
         # Create a log entry for the user
         request.user.log_user_action(
-            OccurrenceUserAction.ACTION_CLOSE_OCCURRENCE.format(self.occurrence_number),
+            OccurrenceUserAction.ACTION_DEACTIVATE_OCCURRENCE.format(
+                self.occurrence_number
+            ),
             request,
         )
 
@@ -4672,7 +4676,7 @@ class OccurrenceUserAction(UserAction):
     ACTION_ACTIVATE_OCCURRENCE = "Activate occurrence {}"
     ACTION_LOCK_OCCURRENCE = "Lock occurrence {}"
     ACTION_UNLOCK_OCCURRENCE = "Unlock occurrence {}"
-    ACTION_CLOSE_OCCURRENCE = "Close occurrence {}"
+    ACTION_DEACTIVATE_OCCURRENCE = "Deactivate occurrence {}"
     ACTION_REOPEN_OCCURRENCE = "Reopen occurrence {}"
 
     # Document

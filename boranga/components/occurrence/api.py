@@ -3874,9 +3874,9 @@ class OccurrenceViewSet(
         ],
         detail=True,
     )
-    def close_occurrence(self, request, *args, **kwargs):
+    def deactivate(self, request, *args, **kwargs):
         instance = self.get_object()
-        instance.close(request)
+        instance.deactivate(request)
         return redirect(reverse("internal"))
 
     @detail_route(
