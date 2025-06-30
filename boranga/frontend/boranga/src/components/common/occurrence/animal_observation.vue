@@ -10,7 +10,6 @@
                         ref="primary_detection_select"
                         v-model="animal_observation.primary_detection_method"
                         :disabled="isReadOnly"
-                        style="width: 100%"
                         class="form-select input-sm"
                     >
                         <option
@@ -137,56 +136,21 @@
                     >Reproductive State:</label
                 >
                 <div class="col-sm-9">
-                    <template v-if="!isReadOnly">
-                        <template
-                            v-if="
-                                reprod_state_list &&
-                                reprod_state_list.length > 0 &&
-                                animal_observation.reproductive_state &&
-                                !reprod_state_list
-                                    .map((d) => d.id)
-                                    .includes(
-                                        animal_observation.reproductive_state
-                                    )
-                            "
+                    <select
+                        ref="reproductive_state_select"
+                        v-model="animal_observation.reproductive_state"
+                        :disabled="isReadOnly"
+                        class="form-select input-sm"
+                    >
+                        <option
+                            v-for="option in reproductive_state_list"
+                            :key="option.id"
+                            :value="option.id"
+                            :disabled="option.disabled"
                         >
-                            <input
-                                v-if="
-                                    animal_observation.reproductive_state_name
-                                "
-                                type="text"
-                                class="form-control mb-3"
-                                :value="
-                                    animal_observation.reproductive_state_name +
-                                    ' (Now Archived)'
-                                "
-                                disabled
-                            />
-                            <div class="mb-3 text-muted">
-                                Change reproductive state to:
-                            </div>
-                        </template>
-                        <select
-                            v-model="animal_observation.reproductive_state"
-                            class="form-select"
-                        >
-                            <option
-                                v-for="reproductive_state in reprod_state_list"
-                                :key="reproductive_state.id"
-                                :value="reproductive_state.id"
-                            >
-                                {{ reproductive_state.name }}
-                            </option>
-                        </select>
-                    </template>
-                    <template v-else>
-                        <input
-                            v-model="animal_observation.reproductive_state_name"
-                            class="form-control"
-                            type="text"
-                            :disabled="isReadOnly"
-                        />
-                    </template>
+                            {{ option.name }}
+                        </option>
+                    </select>
                 </div>
             </div>
             <div class="row mb-3">
@@ -850,7 +814,7 @@ export default {
             primary_detection_method_list: [],
             secondary_sign_list: [],
             animal_behaviour_list: [],
-            reprod_state_list: [],
+            reproductive_state_list: [],
             death_reason_list: [],
             animal_health_list: [],
             updatingAnimalOnservationDetails: false,
@@ -913,8 +877,9 @@ export default {
             id: '',
             name: '',
         });
-        vm.reprod_state_list = vm.listOfAnimalValuesDict.reprod_state_list;
-        vm.reprod_state_list.splice(0, 0, {
+        vm.reproductive_state_list =
+            vm.listOfAnimalValuesDict.reproductive_state_list;
+        vm.reproductive_state_list.splice(0, 0, {
             id: '',
             name: '',
         });
@@ -1035,7 +1000,15 @@ export default {
                     async (response) => {
                         const data = await response.json();
                         if (!response.ok) {
-                            throw new Error(data);
+                            swal.fire({
+                                title: 'Error',
+                                text: JSON.stringify(data),
+                                icon: 'error',
+                                customClass: {
+                                    confirmButton: 'btn btn-primary',
+                                },
+                            });
+                            return;
                         }
                         vm.$emit('update-animal-observation', data);
                         vm.originalAnimalObservation = JSON.stringify(data);

@@ -1029,9 +1029,12 @@ class OccurrenceReportViewSet(
         animal_behaviour_list = list(
             AnimalBehaviour.objects.active().values("id", "name")
         )
-        reprod_state_list = list(
-            ReproductiveState.objects.active().values("id", "name")
+        reproductive_state_list = list(
+            ReproductiveState.objects.all().values("id", "name", "archived")
         )
+        # Add 'disabled' key for archived items
+        for item in reproductive_state_list:
+            item["disabled"] = item.pop("archived", False)
         death_reason_list = list(DeathReason.objects.active().values("id", "name"))
         animal_health_list = list(AnimalHealth.objects.active().values("id", "name"))
         identification_certainty_list = list(
@@ -1062,7 +1065,7 @@ class OccurrenceReportViewSet(
             "plant_count_accuracy_list": plant_count_accuracy_list,
             "plant_count_method_list": plant_count_method_list,
             "primary_detection_method_list": primary_detection_method_list,
-            "reprod_state_list": reprod_state_list,
+            "reproductive_state_list": reproductive_state_list,
             "sample_dest_list": sample_dest_list,
             "sample_type_list": sample_type_list,
             "secondary_sign_list": secondary_sign_list,
@@ -1150,9 +1153,12 @@ class OccurrenceReportViewSet(
         animal_behaviour_list = list(
             AnimalBehaviour.objects.active().values("id", "name")
         )
-        reprod_state_list = list(
-            ReproductiveState.objects.active().values("id", "name")
+        reproductive_state_list = list(
+            ReproductiveState.objects.all().values("id", "name", "archived")
         )
+        # Add 'disabled' key for archived items
+        for item in reproductive_state_list:
+            item["disabled"] = item.pop("archived", False)
         death_reason_list = list(DeathReason.objects.active().values("id", "name"))
         animal_health_list = list(AnimalHealth.objects.active().values("id", "name"))
 
@@ -1161,7 +1167,7 @@ class OccurrenceReportViewSet(
             "animal_health_list": animal_health_list,
             "death_reason_list": death_reason_list,
             "primary_detection_method_list": primary_detection_method_list,
-            "reprod_state_list": reprod_state_list,
+            "reproductive_state_list": reproductive_state_list,
             "secondary_sign_list": secondary_sign_list,
         }
         res_json = json.dumps(res_json)
@@ -2827,6 +2833,16 @@ class OccurrenceFilterBackend(DatatablesFilterBackend):
         filter_group_type = request.GET.get("filter_group_type")
         if filter_group_type and not filter_group_type.lower() == "all":
             queryset = queryset.filter(group_type__name=filter_group_type)
+
+        filter_community_migrated_id = request.GET.get("filter_community_migrated_id")
+
+        if (
+            filter_community_migrated_id
+            and not filter_community_migrated_id.lower() == "all"
+        ):
+            queryset = queryset.filter(
+                community__taxonomy__id=filter_community_migrated_id
+            )
 
         filter_occurrence_name = request.GET.get("filter_occurrence_name")
         if filter_occurrence_name and not filter_occurrence_name.lower() == "all":
@@ -4831,9 +4847,12 @@ class OccurrenceViewSet(
         animal_behaviour_list = list(
             AnimalBehaviour.objects.active().values("id", "name")
         )
-        reprod_state_list = list(
-            ReproductiveState.objects.active().values("id", "name")
+        reproductive_state_list = list(
+            ReproductiveState.objects.all().values("id", "name", "archived")
         )
+        # Add 'disabled' key for archived items
+        for item in reproductive_state_list:
+            item["disabled"] = item.pop("archived", False)
         death_reason_list = list(DeathReason.objects.active().values("id", "name"))
         animal_health_list = list(AnimalHealth.objects.active().values("id", "name"))
         identification_certainty_list = list(
@@ -4864,7 +4883,7 @@ class OccurrenceViewSet(
             "plant_count_accuracy_list": plant_count_accuracy_list,
             "plant_count_method_list": plant_count_method_list,
             "primary_detection_method_list": primary_detection_method_list,
-            "reprod_state_list": reprod_state_list,
+            "reproductive_state_list": reproductive_state_list,
             "sample_dest_list": sample_dest_list,
             "sample_type_list": sample_type_list,
             "secondary_sign_list": secondary_sign_list,
@@ -4952,9 +4971,12 @@ class OccurrenceViewSet(
         animal_behaviour_list = list(
             AnimalBehaviour.objects.active().values("id", "name")
         )
-        reprod_state_list = list(
-            ReproductiveState.objects.active().values("id", "name")
+        reproductive_state_list = list(
+            ReproductiveState.objects.all().values("id", "name", "archived")
         )
+        # Add 'disabled' key for archived items
+        for item in reproductive_state_list:
+            item["disabled"] = item.pop("archived", False)
         death_reason_list = list(DeathReason.objects.active().values("id", "name"))
         animal_health_list = list(AnimalHealth.objects.active().values("id", "name"))
 
@@ -4963,7 +4985,7 @@ class OccurrenceViewSet(
             "animal_health_list": animal_health_list,
             "death_reason_list": death_reason_list,
             "primary_detection_method_list": primary_detection_method_list,
-            "reprod_state_list": reprod_state_list,
+            "reproductive_state_list": reproductive_state_list,
             "secondary_sign_list": secondary_sign_list,
         }
         res_json = json.dumps(res_json)

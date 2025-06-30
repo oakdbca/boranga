@@ -3346,8 +3346,8 @@ class OCRAnimalObservation(BaseModel):
     animal_behaviour = models.ForeignKey(
         AnimalBehaviour, on_delete=models.SET_NULL, null=True, blank=True
     )
-    reproductive_state = models.ForeignKey(
-        ReproductiveState, on_delete=models.SET_NULL, null=True, blank=True
+    reproductive_state = MultiSelectField(
+        max_length=250, blank=True, choices=[], null=True
     )
     animal_health = models.ForeignKey(
         AnimalHealth, on_delete=models.SET_NULL, null=True, blank=True
@@ -3411,6 +3411,11 @@ class OCRAnimalObservation(BaseModel):
         super().__init__(*args, **kwargs)
         self._meta.get_field("primary_detection_method").choices = tuple(
             PrimaryDetectionMethod.objects.annotate(
+                id_str=Cast("id", CharField()),
+            ).values_list("id_str", "name")
+        )
+        self._meta.get_field("reproductive_state").choices = tuple(
+            ReproductiveState.objects.annotate(
                 id_str=Cast("id", CharField()),
             ).values_list("id_str", "name")
         )
@@ -5391,8 +5396,8 @@ class OCCAnimalObservation(BaseModel):
     animal_behaviour = models.ForeignKey(
         AnimalBehaviour, on_delete=models.SET_NULL, null=True, blank=True
     )
-    reproductive_state = models.ForeignKey(
-        ReproductiveState, on_delete=models.SET_NULL, null=True, blank=True
+    reproductive_state = MultiSelectField(
+        max_length=250, blank=True, choices=[], null=True
     )
     animal_health = models.ForeignKey(
         AnimalHealth, on_delete=models.SET_NULL, null=True, blank=True
