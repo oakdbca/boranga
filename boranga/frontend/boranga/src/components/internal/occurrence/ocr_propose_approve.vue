@@ -268,12 +268,6 @@ export default {
         };
     },
     computed: {
-        proposeApproveButtonDisabled: function () {
-            return (
-                !this.propose_approve.create_new_occurrence &&
-                !this.propose_approve.occurrence
-            );
-        },
         occ_final_comment_preview: function () {
             let comment = this.occurrence_report.comments;
             if (this.occurrence_comment) {
@@ -288,11 +282,6 @@ export default {
     watch: {
         isModalOpen: function (value) {
             if (value) {
-                if (this.ocr_for_occ_name) {
-                    this.propose_approve.new_occurrence_name =
-                        this.ocr_for_occ_name;
-                }
-
                 if (
                     this.occurrence !== null &&
                     this.occurrence.id !== undefined &&
@@ -329,6 +318,19 @@ export default {
                     });
                 }
             }
+        },
+        propose_approve: {
+            handler: function () {
+                if (this.propose_approve.create_new_occurrence) {
+                    if (this.ocr_for_occ_name) {
+                        this.propose_approve.new_occurrence_name =
+                            this.ocr_for_occ_name;
+                    }
+                } else {
+                    this.propose_approve.new_occurrence_name = '';
+                }
+            },
+            deep: true,
         },
     },
     mounted: function () {
