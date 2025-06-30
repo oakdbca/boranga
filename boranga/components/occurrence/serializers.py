@@ -2302,6 +2302,11 @@ class OccurrenceReportLogEntrySerializer(CommunicationLogEntrySerializer):
 class OccurrenceReportDocumentSerializer(BaseModelSerializer):
     document_category_name = serializers.SerializerMethodField()
     document_sub_category_name = serializers.SerializerMethodField()
+    _file = serializers.CharField(
+        source="_file.url",
+        allow_null=True,
+        required=False,
+    )
 
     class Meta:
         model = OccurrenceReportDocument
@@ -2379,6 +2384,11 @@ class InternalSaveOccurrenceReportDocumentSerializer(
 class OccurrenceDocumentSerializer(BaseModelSerializer):
     document_category_name = serializers.SerializerMethodField()
     document_sub_category_name = serializers.SerializerMethodField()
+    _file = serializers.CharField(
+        source="_file.url",
+        allow_null=True,
+        required=False,
+    )
 
     class Meta:
         model = OccurrenceDocument
@@ -2542,6 +2552,12 @@ class SaveOCRConservationThreatSerializer(BaseModelSerializer):
 
 
 class OccurrenceReportAmendmentRequestDocumentSerializer(BaseModelSerializer):
+    _file = serializers.CharField(
+        source="_file.url",
+        allow_null=True,
+        required=False,
+    )
+
     class Meta:
         model = OccurrenceReportAmendmentRequestDocument
         fields = ("id", "name", "_file")

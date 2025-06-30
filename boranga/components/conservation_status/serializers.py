@@ -1544,14 +1544,18 @@ class ConservationStatusReferralSerializer(BaseModelSerializer):
 
 
 class ConservationStatusAmendmentRequestDocumentSerializer(BaseModelSerializer):
+    _file = serializers.CharField(
+        source="_file.url",
+        allow_null=True,
+        required=False,
+    )
+
     class Meta:
         model = ConservationStatusAmendmentRequestDocument
         fields = ("id", "name", "_file")
-        # fields = '__all__'
 
 
 class ConservationStatusAmendmentRequestSerializer(BaseModelSerializer):
-    # reason = serializers.SerializerMethodField()
     cs_amendment_request_documents = (
         ConservationStatusAmendmentRequestDocumentSerializer(many=True, read_only=True)
     )

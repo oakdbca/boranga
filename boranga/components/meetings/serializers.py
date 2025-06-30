@@ -336,6 +336,11 @@ class MeetingUserActionSerializer(BaseModelSerializer):
 class MinutesSerializer(BaseModelSerializer):
     document_category_name = serializers.SerializerMethodField()
     document_sub_category_name = serializers.SerializerMethodField()
+    _file = serializers.CharField(
+        source="_file.url",
+        allow_null=True,
+        required=False,
+    )
 
     class Meta:
         model = Minutes
