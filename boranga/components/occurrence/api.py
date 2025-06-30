@@ -1132,74 +1132,37 @@ class OccurrenceReportViewSet(
 
     # used for Occurrence Report Observation external form
     @list_route(
-        methods=[
-            "GET",
-        ],
+        methods=["GET"],
         detail=False,
         permission_classes=[AllowAny],
     )
     def animal_observation_list_of_values(self, request, *args, **kwargs):
         """used for Occurrence Report external form"""
 
-        primary_detection_method_list = []
-        values = PrimaryDetectionMethod.objects.all()
-        if values:
-            for val in values:
-                if val.archived:
-                    val.name += " (archived)"
-                primary_detection_method_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                        "disabled": val.archived,
-                    }
-                )
-        secondary_sign_list = []
-        values = SecondarySign.objects.active()
-        if values:
-            for val in values:
-                secondary_sign_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        reprod_state_list = []
-        values = ReproductiveState.objects.active()
-        if values:
-            for val in values:
-                reprod_state_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        death_reason_list = []
-        values = DeathReason.objects.active()
-        if values:
-            for val in values:
-                death_reason_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        animal_health_list = []
-        values = AnimalHealth.objects.active()
-        if values:
-            for val in values:
-                animal_health_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
+        primary_detection_method_list = list(
+            PrimaryDetectionMethod.objects.all().values("id", "name", "archived")
+        )
+        # Add 'disabled' key for archived items
+        for item in primary_detection_method_list:
+            item["disabled"] = item.pop("archived", False)
+
+        secondary_sign_list = list(SecondarySign.objects.active().values("id", "name"))
+        animal_behaviour_list = list(
+            AnimalBehaviour.objects.active().values("id", "name")
+        )
+        reprod_state_list = list(
+            ReproductiveState.objects.active().values("id", "name")
+        )
+        death_reason_list = list(DeathReason.objects.active().values("id", "name"))
+        animal_health_list = list(AnimalHealth.objects.active().values("id", "name"))
+
         res_json = {
-            "primary_detection_method_list": primary_detection_method_list,
-            "secondary_sign_list": secondary_sign_list,
-            "reprod_state_list": reprod_state_list,
-            "death_reason_list": death_reason_list,
+            "animal_behaviour_list": animal_behaviour_list,
             "animal_health_list": animal_health_list,
+            "death_reason_list": death_reason_list,
+            "primary_detection_method_list": primary_detection_method_list,
+            "reprod_state_list": reprod_state_list,
+            "secondary_sign_list": secondary_sign_list,
         }
         res_json = json.dumps(res_json)
         return HttpResponse(res_json, content_type="application/json")
@@ -3911,9 +3874,9 @@ class OccurrenceViewSet(
         ],
         detail=True,
     )
-    def close_occurrence(self, request, *args, **kwargs):
+    def deactivate(self, request, *args, **kwargs):
         instance = self.get_object()
-        instance.close(request)
+        instance.deactivate(request)
         return redirect(reverse("internal"))
 
     @detail_route(
@@ -4971,74 +4934,37 @@ class OccurrenceViewSet(
 
     # used for Occurrence Report Observation external form
     @list_route(
-        methods=[
-            "GET",
-        ],
+        methods=["GET"],
         detail=False,
         permission_classes=[AllowAny],
     )
     def animal_observation_list_of_values(self, request, *args, **kwargs):
-        """used for Occurrence Report external form"""
+        """used for Occurrence external form"""
 
-        primary_detection_method_list = []
-        values = PrimaryDetectionMethod.objects.all()
-        if values:
-            for val in values:
-                if val.archived:
-                    val.name += " (archived)"
-                primary_detection_method_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                        "disabled": val.archived,
-                    }
-                )
-        secondary_sign_list = []
-        values = SecondarySign.objects.active()
-        if values:
-            for val in values:
-                secondary_sign_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        reprod_state_list = []
-        values = ReproductiveState.objects.active()
-        if values:
-            for val in values:
-                reprod_state_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        death_reason_list = []
-        values = DeathReason.objects.active()
-        if values:
-            for val in values:
-                death_reason_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
-        animal_health_list = []
-        values = AnimalHealth.objects.active()
-        if values:
-            for val in values:
-                animal_health_list.append(
-                    {
-                        "id": val.id,
-                        "name": val.name,
-                    }
-                )
+        primary_detection_method_list = list(
+            PrimaryDetectionMethod.objects.all().values("id", "name", "archived")
+        )
+        # Add 'disabled' key for archived items
+        for item in primary_detection_method_list:
+            item["disabled"] = item.pop("archived", False)
+
+        secondary_sign_list = list(SecondarySign.objects.active().values("id", "name"))
+        animal_behaviour_list = list(
+            AnimalBehaviour.objects.active().values("id", "name")
+        )
+        reprod_state_list = list(
+            ReproductiveState.objects.active().values("id", "name")
+        )
+        death_reason_list = list(DeathReason.objects.active().values("id", "name"))
+        animal_health_list = list(AnimalHealth.objects.active().values("id", "name"))
+
         res_json = {
-            "primary_detection_method_list": primary_detection_method_list,
-            "secondary_sign_list": secondary_sign_list,
-            "reprod_state_list": reprod_state_list,
-            "death_reason_list": death_reason_list,
+            "animal_behaviour_list": animal_behaviour_list,
             "animal_health_list": animal_health_list,
+            "death_reason_list": death_reason_list,
+            "primary_detection_method_list": primary_detection_method_list,
+            "reprod_state_list": reprod_state_list,
+            "secondary_sign_list": secondary_sign_list,
         }
         res_json = json.dumps(res_json)
         return HttpResponse(res_json, content_type="application/json")
