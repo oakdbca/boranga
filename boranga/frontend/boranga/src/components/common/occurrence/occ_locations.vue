@@ -860,9 +860,14 @@ export default {
             });
         },
         refreshDatatables: function () {
+            // Rather than recreating these components by incrementing their key
+            // we can just call the adjust_table_width method to make sure they
+            // are refreshed and have the correct width.
             this.refreshDatatableRelatedOCR();
             this.$refs.occurrence_sites_datatable.adjust_table_width();
-            this.$refs.occurrence_tenure_datatable.adjust_table_width();
+            // The data for this datatable has to be reloaded as it's likely
+            // the tenures would change based on modified map geometries.
+            this.$refs.occurrence_tenure_datatable.updatedTenureArea();
         },
         refreshDatatableRelatedOCR: function () {
             this.$refs.related_reports_datatable.adjust_table_width();
