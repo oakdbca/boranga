@@ -340,6 +340,11 @@ class ListOccurrenceReportSerializer(BaseModelSerializer):
 class ListInternalOccurrenceReportSerializer(BaseModelSerializer):
     scientific_name = serializers.SerializerMethodField()
     community_name = serializers.SerializerMethodField()
+    community_migrated_id = serializers.CharField(
+        source="community.taxonomy.community_migrated_id",
+        allow_null=True,
+        read_only=True,
+    )
     submitter = serializers.SerializerMethodField()
     processing_status_display = serializers.CharField(
         source="get_processing_status_display"
@@ -373,6 +378,7 @@ class ListInternalOccurrenceReportSerializer(BaseModelSerializer):
             # 'group_type',
             "scientific_name",
             "community_name",
+            "community_migrated_id",
             "reported_date",
             "lodgement_date",
             "submitter",
@@ -403,6 +409,7 @@ class ListInternalOccurrenceReportSerializer(BaseModelSerializer):
             "scientific_name",
             "community",
             "community_name",
+            "community_migrated_id",
             "reported_date",
             "lodgement_date",
             "submitter",

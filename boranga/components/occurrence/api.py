@@ -275,6 +275,17 @@ class OccurrenceReportFilterBackend(DatatablesFilterBackend):
                     community__taxonomy__id=filter_community_name
                 )
 
+            filter_community_migrated_id = request.GET.get(
+                "filter_community_migrated_id"
+            )
+            if (
+                filter_community_migrated_id
+                and not filter_community_migrated_id.lower() == "all"
+            ):
+                queryset = queryset.filter(
+                    community__taxonomy__id=filter_community_migrated_id
+                )
+
             filter_status = request.GET.get("filter_status")
             if filter_status and not filter_status.lower() == "all":
                 queryset = queryset.filter(processing_status=filter_status)
