@@ -5344,6 +5344,13 @@ class OCCPlantCount(BaseModel):
             # This is to preserve the original data from the migration
             return super().save(*args, **kwargs)
 
+        # Just for Occurrences of Flora and Fauna groups, we allow saving both simple and detailed counts.
+        if self.occurrence.group_type.name in [
+            GroupType.GROUP_TYPE_FLORA,
+            GroupType.GROUP_TYPE_FAUNA,
+        ]:
+            return super().save(*args, **kwargs)
+
         # For non migrated occurrences, set fields to None based on count status field
         if self.count_status == settings.COUNT_STATUS_NOT_COUNTED:
             self.detailed_alive_mature = None
@@ -5474,6 +5481,13 @@ class OCCAnimalObservation(BaseModel):
         if self.occurrence.migrated_from_id:
             # IMPORTANT: If the occurrence is migrated, do not modify counts
             # This is to preserve the original data from the migration
+            return super().save(*args, **kwargs)
+
+        # Just for Occurrences of Flora and Fauna groups, we allow saving both simple and detailed counts.
+        if self.occurrence.group_type.name in [
+            GroupType.GROUP_TYPE_FLORA,
+            GroupType.GROUP_TYPE_FAUNA,
+        ]:
             return super().save(*args, **kwargs)
 
         # For non migrated occurrences, set fields to None based on count status field
