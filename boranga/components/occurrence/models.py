@@ -5464,6 +5464,11 @@ class OCCAnimalObservation(BaseModel):
                 id_str=Cast("id", CharField()),
             ).values_list("id_str", "name")
         )
+        self._meta.get_field("reproductive_state").choices = tuple(
+            ReproductiveState.objects.annotate(
+                id_str=Cast("id", CharField()),
+            ).values_list("id_str", "name")
+        )
 
     def save(self, *args, **kwargs):
         if self.occurrence.migrated_from_id:
