@@ -1320,26 +1320,42 @@ export default {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(payload),
-            }).then(async (response) => {
-                let data = await response.json();
-                if (!response.ok) {
-                    swal.fire({
-                        title: 'Save Error',
-                        text: JSON.stringify(data),
-                        icon: 'error',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
-                    });
+            })
+                .then(async (response) => {
+                    let data = await response.json();
+                    if (!response.ok) {
+                        swal.fire({
+                            title: 'Save Error',
+                            text: JSON.stringify(data),
+                            icon: 'error',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            },
+                        });
+                        vm.isSaved = false;
+                        vm.saveError = true;
+                        return;
+                    }
+                    vm.occurrence_report = data;
+                    vm.original_occurrence_report = helpers.copyObject(data);
+                    // Only initialise referee seelct if it's ref is not already a select2
+                    const select2Instance = $(this.$refs.department_users).data(
+                        'select2'
+                    );
+                    if (!select2Instance) {
+                        vm.$nextTick(() => {
+                            vm.initialiseReferreeSelect();
+                        });
+                    }
+                    vm.isSaved = true;
+                })
+                .finally(() => {
                     vm.savingOccurrenceReport = false;
-                    vm.isSaved = false;
                     vm.$refs.occurrence_report.$refs.ocr_location.$refs.component_map.setLoadingMap(
                         false
                     );
-                    vm.saveError = true;
-                    return;
-                }
-            });
+                    vm.$refs.occurrence_report.$refs.ocr_location.$refs.component_map.forceToRefreshMap();
+                });
             return result;
         },
         can_submit: async function (check_action) {
