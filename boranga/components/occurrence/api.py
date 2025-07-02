@@ -5152,6 +5152,21 @@ class OccurrenceViewSet(
 
         return Response(serializer.data)
 
+    @detail_route(
+        methods=["POST"],
+        detail=True,
+        permission_classes=[OccurrencePermission],
+    )
+    @renderer_classes((JSONRenderer,))
+    def process_shapefile_document(self, request, *args, **kwargs):
+        instance = self.get_object()
+        returned_data = None
+        returned_data = process_shapefile_document(request, instance)
+        if returned_data:
+            return Response(returned_data)
+        else:
+            return Response({})
+
 
 class OccurrenceReportReferralViewSet(
     viewsets.GenericViewSet, mixins.RetrieveModelMixin
