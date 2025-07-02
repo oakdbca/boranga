@@ -5910,6 +5910,29 @@ def get_occurrence_report_bulk_import_associated_files_path(instance, filename):
     return f"occurrence_report/bulk-imports/{timezone.now()}/{filename}"
 
 
+class OccurrenceShapefileDocument(Document):
+    objects = ShapefileDocumentQueryset.as_manager()
+    occurrence_report = models.ForeignKey(
+        "Occurrence", related_name="shapefile_documents", on_delete=models.CASCADE
+    )
+    _file = models.FileField(
+        upload_to=update_occurrence_report_doc_filename,
+        max_length=512,
+        storage=private_storage,
+    )
+    input_name = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        app_label = "boranga"
+
+    def get_parent_instance(self) -> BaseModel:
+        return self.occurrence_report
+
+    def delete(self, *args, **kwargs):
+        # By pass the custom delete method in super and just do a regular delete
+        BaseModel.delete(self, *args, **kwargs)
+
+
 class OccurrenceReportBulkImportTask(ArchivableModel):
     schema = models.ForeignKey(
         "OccurrenceReportBulkImportSchema",
