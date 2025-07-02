@@ -7,7 +7,7 @@
             :show-warning-icon="filterApplied"
         >
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div id="select_occurrence" class="form-group">
                         <label for="ocr_occurrence_lookup">Occurrence:</label>
                         <select
@@ -18,7 +18,7 @@
                         />
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div id="select_ocr_community_name" class="form-group">
                         <label for="ocr_community_name_lookup"
                             >Community Name:</label
@@ -31,7 +31,18 @@
                         />
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="community_id_lookup">Community ID:</label>
+                        <select
+                            id="community_id_lookup"
+                            ref="community_id_lookup"
+                            name="community_id_lookup"
+                            class="form-control"
+                        />
+                    </div>
+                </div>
+                <div class="col-md-3">
                     <div id="select_status" class="form-group">
                         <label for="ocr_status_lookup">Status:</label>
                         <select
@@ -47,19 +58,6 @@
                                 {{ status.name }}
                             </option>
                         </select>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="community_id_lookup">Community ID:</label>
-                        <select
-                            id="community_id_lookup"
-                            ref="community_id_lookup"
-                            name="community_id_lookup"
-                            class="form-control"
-                        />
                     </div>
                 </div>
             </div>
@@ -109,6 +107,30 @@
                             type="date"
                             class="form-control"
                             placeholder="DD/MM/YYYY"
+                        />
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <div id="select_assessor" class="form-group">
+                        <label for="ocr_assessor_lookup">Assessor:</label>
+                        <select
+                            id="ocr_assessor_lookup"
+                            ref="ocr_assessor_lookup"
+                            name="ocr_assessor_lookup"
+                            class="form-control"
+                        />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div id="select_submitter" class="form-group">
+                        <label for="ocr_submitter_lookup">Submitter:</label>
+                        <select
+                            id="ocr_submitter_lookup"
+                            ref="ocr_submitter_lookup"
+                            name="ocr_submitter_lookup"
+                            class="form-control"
                         />
                     </div>
                 </div>
@@ -244,12 +266,22 @@ export default {
             required: false,
             default: 'filterOCRToCommunityDueDate',
         },
+        filterOCRCommunityAssessor_cache: {
+            type: String,
+            required: false,
+            default: 'filterOCRCommunityAssessor',
+        },
+        filterOCRCommunitySubmitter_cache: {
+            type: String,
+            required: false,
+            default: 'filterOCRCommunitySubmitter',
+        },
     },
     data() {
         return {
             uuid: 0,
             occurrenceReportHistoryId: null,
-            datatable_id: 'community_ocr-datatable-' + uuid(),
+            datatable_id: 'occurrence-report-community-datatable-' + uuid(),
 
             // selected values for filtering
             filterOCRCommunityOccurrence: sessionStorage.getItem(
@@ -325,6 +357,18 @@ export default {
                 ? sessionStorage.getItem(this.filterOCRToCommunityDueDate_cache)
                 : '',
 
+            filterOCRCommunityAssessor: sessionStorage.getItem(
+                this.filterOCRCommunityAssessor_cache
+            )
+                ? sessionStorage.getItem(this.filterOCRCommunityAssessor_cache)
+                : 'all',
+
+            filterOCRCommunitySubmitter: sessionStorage.getItem(
+                this.filterOCRCommunitySubmitter_cache
+            )
+                ? sessionStorage.getItem(this.filterOCRCommunitySubmitter_cache)
+                : 'all',
+
             filterListsCommunity: {},
             occurrence_list: [],
             community_name_list: [],
@@ -356,7 +400,9 @@ export default {
                 this.filterOCRCommunitySubmittedFromDate === '' &&
                 this.filterOCRCommunitySubmittedToDate === '' &&
                 this.filterOCRFromCommunityDueDate === '' &&
-                this.filterOCRToCommunityDueDate === ''
+                this.filterOCRToCommunityDueDate === '' &&
+                this.filterOCRCommunityAssessor === 'all' &&
+                this.filterOCRCommunitySubmitter === 'all'
             ) {
                 return false;
             } else {
@@ -383,6 +429,7 @@ export default {
                 'Migrated From ID',
                 'Submitted on',
                 'Submitter',
+                'Assessor',
                 'Status',
                 'Action',
             ];
@@ -508,6 +555,15 @@ export default {
                 name: 'submitter__first_name, submitter__last_name',
             };
         },
+        column_assessor: function () {
+            return {
+                data: 'assessor',
+                orderable: false,
+                searchable: false,
+                visible: true,
+                name: 'assessor__first_name, assessor__last_name',
+            };
+        },
         column_status: function () {
             return {
                 data: 'processing_status_display',
@@ -582,6 +638,7 @@ export default {
                 vm.column_migrated_from_id,
                 vm.column_lodgement_date,
                 vm.column_submitter,
+                vm.column_assessor,
                 vm.column_status,
                 vm.column_action,
             ];
@@ -631,6 +688,8 @@ export default {
                         d.filter_from_due_date =
                             vm.filterOCRFromCommunityDueDate;
                         d.filter_to_due_date = vm.filterOCRToCommunityDueDate;
+                        d.filter_assessor = vm.filterOCRCommunityAssessor;
+                        d.filter_submitter = vm.filterOCRCommunitySubmitter;
                     },
                 },
                 dom:
@@ -760,6 +819,28 @@ export default {
                 vm.filterOCRToCommunityDueDate
             );
         },
+        filterOCRCommunityAssessor: function () {
+            let vm = this;
+            vm.$refs.community_ocr_datatable.vmDataTable.ajax.reload(
+                helpers.enablePopovers,
+                false
+            ); // This calls ajax() backend call.
+            sessionStorage.setItem(
+                vm.filterOCRCommunityAssessor_cache,
+                vm.filterOCRCommunityAssessor
+            );
+        },
+        filterOCRCommunitySubmitter: function () {
+            let vm = this;
+            vm.$refs.community_ocr_datatable.vmDataTable.ajax.reload(
+                helpers.enablePopovers,
+                false
+            ); // This calls ajax() backend call.
+            sessionStorage.setItem(
+                vm.filterOCRCommunitySubmitter_cache,
+                vm.filterOCRCommunitySubmitter
+            );
+        },
     },
     mounted: function () {
         this.fetchFilterLists();
@@ -776,6 +857,8 @@ export default {
             vm.initialiseOccurrenceLookup();
             vm.initialiseCommunityNameLookup();
             vm.initialiseCommunityIdLookup();
+            vm.initialiseAssessorLookup();
+            vm.initialiseSubmitterLookup();
             vm.addEventListeners();
             var newOption = null;
             if (
@@ -816,6 +899,31 @@ export default {
                     true
                 );
                 $('#community_id_lookup').append(newOption);
+            }
+            if (
+                sessionStorage.getItem('filterOCRCommunityAssessor') != 'all' &&
+                sessionStorage.getItem('filterOCRCommunityAssessor') != null
+            ) {
+                newOption = new Option(
+                    sessionStorage.getItem('filterOCRCommunityAssessorText'),
+                    vm.filterOCRCommunityAssessor,
+                    false,
+                    true
+                );
+                $('#ocr_assessor_lookup').append(newOption);
+            }
+            if (
+                sessionStorage.getItem('filterOCRCommunitySubmitter') !=
+                    'all' &&
+                sessionStorage.getItem('filterOCRCommunitySubmitter') != null
+            ) {
+                newOption = new Option(
+                    sessionStorage.getItem('filterOCRCommunitySubmitterText'),
+                    vm.filterOCRCommunitySubmitter,
+                    false,
+                    true
+                );
+                $('#ocr_submitter_lookup').append(newOption);
             }
         });
     },
@@ -951,6 +1059,91 @@ export default {
                         '[aria-controls="select2-community_id_lookup-results"]'
                     );
                     // move focus to select2 field
+                    searchField[0].focus();
+                });
+        },
+        initialiseAssessorLookup: function () {
+            let vm = this;
+            $(vm.$refs.ocr_assessor_lookup)
+                .select2({
+                    minimumInputLength: 2,
+                    theme: 'bootstrap-5',
+                    allowClear: true,
+                    placeholder: 'Search for Assessor',
+                    ajax: {
+                        url:
+                            api_endpoints.users_api +
+                            '/get_department_users_ledger_id/',
+                        dataType: 'json',
+                        data: function (params) {
+                            var query = {
+                                term: params.term,
+                            };
+                            return query;
+                        },
+                    },
+                })
+                .on('select2:select', function (e) {
+                    let data = e.params.data.id;
+                    vm.filterOCRCommunityAssessor = data;
+                    sessionStorage.setItem(
+                        'filterOCRCommunityAssessorText',
+                        e.params.data.text
+                    );
+                })
+                .on('select2:unselect', function () {
+                    vm.filterOCRCommunityAssessor = 'all';
+                    sessionStorage.setItem(
+                        'filterOCRCommunityAssessorText',
+                        ''
+                    );
+                })
+                .on('select2:open', function () {
+                    const searchField = $(
+                        '[aria-controls="select2-ocr_assessor_lookup-results"]'
+                    );
+                    searchField[0].focus();
+                });
+        },
+        initialiseSubmitterLookup: function () {
+            let vm = this;
+            $(vm.$refs.ocr_submitter_lookup)
+                .select2({
+                    minimumInputLength: 2,
+                    theme: 'bootstrap-5',
+                    allowClear: true,
+                    placeholder: 'Search for Submitter',
+                    ajax: {
+                        url: api_endpoints.users_api + '/get_users_ledger_id/',
+                        dataType: 'json',
+                        data: function (params) {
+                            var query = {
+                                term: params.term,
+                            };
+                            return query;
+                        },
+                    },
+                })
+                .on('select2:select', function (e) {
+                    let data = e.params.data.id;
+                    vm.filterOCRCommunitySubmitter = data;
+                    sessionStorage.setItem(
+                        'filterOCRCommunitySubmitterText',
+                        e.params.data.text
+                    );
+                })
+                .on('select2:unselect', function () {
+                    vm.selected_referral = null;
+                    vm.filterOCRCommunitySubmitter = 'all';
+                    sessionStorage.setItem(
+                        'filterOCRCommunitySubmitterText',
+                        ''
+                    );
+                })
+                .on('select2:open', function () {
+                    const searchField = $(
+                        '[aria-controls="select2-ocr_submitter_lookup-results"]'
+                    );
                     searchField[0].focus();
                 });
         },

@@ -7,7 +7,7 @@
             :show-warning-icon="filterApplied"
         >
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div id="select_occurrence" class="form-group">
                         <label for="ocr_occurrence_lookup">Occurrence:</label>
                         <select
@@ -18,7 +18,7 @@
                         />
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div
                         id="select_scientific_name_by_groupname"
                         class="form-group"
@@ -34,7 +34,7 @@
                         />
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div id="select_status" class="form-group">
                         <label for="ocr_status_lookup">Status:</label>
                         <select
@@ -52,7 +52,9 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-4">
+            </div>
+            <div class="row">
+                <div class="col-md-3">
                     <div class="form-group">
                         <label for="">Observation Date Range:</label>
                         <input
@@ -64,7 +66,7 @@
                         />
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="form-group">
                         <label for=""></label>
                         <input
@@ -76,7 +78,7 @@
                         />
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="form-group">
                         <label for="">Submitted Date Range:</label>
                         <input
@@ -88,7 +90,7 @@
                         />
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="form-group">
                         <label for=""></label>
                         <input
@@ -97,6 +99,30 @@
                             type="date"
                             class="form-control"
                             placeholder="DD/MM/YYYY"
+                        />
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <div id="select_assessor" class="form-group">
+                        <label for="ocr_assessor_lookup">Assessor:</label>
+                        <select
+                            id="ocr_assessor_lookup"
+                            ref="ocr_assessor_lookup"
+                            name="ocr_assessor_lookup"
+                            class="form-control"
+                        />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div id="select_submitter" class="form-group">
+                        <label for="ocr_submitter_lookup">Submitter:</label>
+                        <select
+                            id="ocr_submitter_lookup"
+                            ref="ocr_submitter_lookup"
+                            name="ocr_submitter_lookup"
+                            class="form-control"
                         />
                     </div>
                 </div>
@@ -225,12 +251,22 @@ export default {
             required: false,
             default: 'filterOCRToFaunaDueDate',
         },
+        filterOCRFaunaAssessor_cache: {
+            type: String,
+            required: false,
+            default: 'filterOCRFaunaAssessor',
+        },
+        filterOCRFaunaSubmitter_cache: {
+            type: String,
+            required: false,
+            default: 'filterOCRFaunaSubmitter',
+        },
     },
     data() {
         return {
             uuid: 0,
             occurrenceReportHistoryId: null,
-            datatable_id: 'species_fauna_ocr-datatable-' + uuid(),
+            datatable_id: 'occurrence-report-fauna-datatable-' + uuid(),
 
             // selected values for filtering
             filterOCRFaunaOccurrence: sessionStorage.getItem(
@@ -296,6 +332,18 @@ export default {
                 ? sessionStorage.getItem(this.filterOCRToFaunaDueDate_cache)
                 : '',
 
+            filterOCRFaunaAssessor: sessionStorage.getItem(
+                this.filterOCRFaunaAssessor_cache
+            )
+                ? sessionStorage.getItem(this.filterOCRFaunaAssessor_cache)
+                : 'all',
+
+            filterOCRFaunaSubmitter: sessionStorage.getItem(
+                this.filterOCRFaunaSubmitter_cache
+            )
+                ? sessionStorage.getItem(this.filterOCRFaunaSubmitter_cache)
+                : 'all',
+
             filterListsSpecies: {},
             occurrence_list: [],
             scientific_name_list: [],
@@ -326,7 +374,9 @@ export default {
                 this.filterOCRFaunaSubmittedFromDate === '' &&
                 this.filterOCRFaunaSubmittedToDate === '' &&
                 this.filterOCRFromFaunaDueDate === '' &&
-                this.filterOCRToFaunaDueDate === ''
+                this.filterOCRToFaunaDueDate === '' &&
+                this.filterOCRFaunaAssessor === 'all' &&
+                this.filterOCRFaunaSubmitter === 'all'
             ) {
                 return false;
             } else {
@@ -352,6 +402,7 @@ export default {
                 'Migrated From ID',
                 'Submitted on',
                 'Submitter',
+                'Assessor',
                 'Status',
                 'Action',
             ];
@@ -460,6 +511,15 @@ export default {
                 name: 'submitter__first_name, submitter__last_name',
             };
         },
+        column_assessor: function () {
+            return {
+                data: 'assessor',
+                orderable: false,
+                searchable: false,
+                visible: true,
+                name: 'assessor__first_name, assessor__last_name',
+            };
+        },
         column_status: function () {
             return {
                 data: 'processing_status_display',
@@ -533,6 +593,7 @@ export default {
                 vm.column_migrated_from_id,
                 vm.column_lodgement_date,
                 vm.column_submitter,
+                vm.column_assessor,
                 vm.column_status,
                 vm.column_action,
             ];
@@ -582,6 +643,8 @@ export default {
                             vm.filterOCRFaunaSubmittedToDate;
                         d.filter_from_due_date = vm.filterOCRFromFaunaDueDate;
                         d.filter_to_due_date = vm.filterOCRToFaunaDueDate;
+                        d.filter_assessor = vm.filterOCRFaunaAssessor;
+                        d.filter_submitter = vm.filterOCRFaunaSubmitter;
                     },
                 },
                 dom:
@@ -700,6 +763,28 @@ export default {
                 vm.filterOCRToFaunaDueDate
             );
         },
+        filterOCRFaunaAssessor: function () {
+            let vm = this;
+            vm.$refs.fauna_ocr_datatable.vmDataTable.ajax.reload(
+                helpers.enablePopovers,
+                false
+            ); // This calls ajax() backend call.
+            sessionStorage.setItem(
+                vm.filterOCRFaunaAssessor_cache,
+                vm.filterOCRFaunaAssessor
+            );
+        },
+        filterOCRFaunaSubmitter: function () {
+            let vm = this;
+            vm.$refs.fauna_ocr_datatable.vmDataTable.ajax.reload(
+                helpers.enablePopovers,
+                false
+            ); // This calls ajax() backend call.
+            sessionStorage.setItem(
+                vm.filterOCRFaunaSubmitter_cache,
+                vm.filterOCRFaunaSubmitter
+            );
+        },
     },
     mounted: function () {
         this.fetchFilterLists();
@@ -715,6 +800,8 @@ export default {
         this.$nextTick(() => {
             vm.initialiseOccurrenceLookup();
             vm.initialiseScientificNameLookup();
+            vm.initialiseAssessorLookup();
+            vm.initialiseSubmitterLookup();
             vm.addEventListeners();
             var newOption = null;
             if (
@@ -741,6 +828,30 @@ export default {
                     true
                 );
                 $('#ocr_scientific_name_lookup').append(newOption);
+            }
+            if (
+                sessionStorage.getItem('filterOCRFaunaAssessor') != 'all' &&
+                sessionStorage.getItem('filterOCRFaunaAssessor') != null
+            ) {
+                newOption = new Option(
+                    sessionStorage.getItem('filterOCRFaunaAssessorText'),
+                    vm.filterOCRFaunaAssessor,
+                    false,
+                    true
+                );
+                $('#ocr_assessor_lookup').append(newOption);
+            }
+            if (
+                sessionStorage.getItem('filterOCRFaunaSubmitter') != 'all' &&
+                sessionStorage.getItem('filterOCRFaunaSubmitter') != null
+            ) {
+                newOption = new Option(
+                    sessionStorage.getItem('filterOCRFaunaSubmitterText'),
+                    vm.filterOCRFaunaSubmitter,
+                    false,
+                    true
+                );
+                $('#ocr_submitter_lookup').append(newOption);
             }
         });
     },
@@ -833,6 +944,85 @@ export default {
                 .on('select2:open', function () {
                     const searchField = $(
                         '[aria-controls="select2-ocr_scientific_name_lookup_by_groupname-results"]'
+                    );
+                    searchField[0].focus();
+                });
+        },
+        initialiseAssessorLookup: function () {
+            let vm = this;
+            $(vm.$refs.ocr_assessor_lookup)
+                .select2({
+                    minimumInputLength: 2,
+                    theme: 'bootstrap-5',
+                    allowClear: true,
+                    placeholder: 'Search for Assessor',
+                    ajax: {
+                        url:
+                            api_endpoints.users_api +
+                            '/get_department_users_ledger_id/',
+                        dataType: 'json',
+                        data: function (params) {
+                            var query = {
+                                term: params.term,
+                            };
+                            return query;
+                        },
+                    },
+                })
+                .on('select2:select', function (e) {
+                    let data = e.params.data.id;
+                    vm.filterOCRFaunaAssessor = data;
+                    sessionStorage.setItem(
+                        'filterOCRFaunaAssessorText',
+                        e.params.data.text
+                    );
+                })
+                .on('select2:unselect', function () {
+                    vm.filterOCRFaunaAssessor = 'all';
+                    sessionStorage.setItem('filterOCRFaunaAssessorText', '');
+                })
+                .on('select2:open', function () {
+                    const searchField = $(
+                        '[aria-controls="select2-ocr_assessor_lookup-results"]'
+                    );
+                    searchField[0].focus();
+                });
+        },
+        initialiseSubmitterLookup: function () {
+            let vm = this;
+            $(vm.$refs.ocr_submitter_lookup)
+                .select2({
+                    minimumInputLength: 2,
+                    theme: 'bootstrap-5',
+                    allowClear: true,
+                    placeholder: 'Search for Submitter',
+                    ajax: {
+                        url: api_endpoints.users_api + '/get_users_ledger_id/',
+                        dataType: 'json',
+                        data: function (params) {
+                            var query = {
+                                term: params.term,
+                            };
+                            return query;
+                        },
+                    },
+                })
+                .on('select2:select', function (e) {
+                    let data = e.params.data.id;
+                    vm.filterOCRFaunaSubmitter = data;
+                    sessionStorage.setItem(
+                        'filterOCRFaunaSubmitterText',
+                        e.params.data.text
+                    );
+                })
+                .on('select2:unselect', function () {
+                    vm.selected_referral = null;
+                    vm.filterOCRFaunaSubmitter = 'all';
+                    sessionStorage.setItem('filterOCRFaunaSubmitterText', '');
+                })
+                .on('select2:open', function () {
+                    const searchField = $(
+                        '[aria-controls="select2-ocr_submitter_lookup-results"]'
                     );
                     searchField[0].focus();
                 });

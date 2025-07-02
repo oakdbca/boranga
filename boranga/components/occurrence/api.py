@@ -290,6 +290,14 @@ class OccurrenceReportFilterBackend(DatatablesFilterBackend):
             if filter_status and not filter_status.lower() == "all":
                 queryset = queryset.filter(processing_status=filter_status)
 
+            filter_assessor = request.GET.get("filter_assessor")
+            if filter_assessor and not filter_assessor.lower() == "all":
+                queryset = queryset.filter(assigned_officer=filter_assessor)
+
+            filter_submitter = request.GET.get("filter_submitter")
+            if filter_submitter and not filter_submitter.lower() == "all":
+                queryset = queryset.filter(submitter=filter_submitter)
+
             def get_date(filter_date):
                 date = request.GET.get(filter_date)
                 if date:
