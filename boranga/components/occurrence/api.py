@@ -5167,6 +5167,14 @@ class OccurrenceViewSet(
         else:
             return Response({})
 
+    @detail_route(methods=["POST"], detail=True)
+    @renderer_classes((JSONRenderer,))
+    def validate_map_files(self, request, *args, **kwargs):
+        instance = self.get_object()
+        validate_map_files(request, instance, "occurrence")
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
 
 class OccurrenceReportReferralViewSet(
     viewsets.GenericViewSet, mixins.RetrieveModelMixin
