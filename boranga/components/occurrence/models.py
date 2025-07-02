@@ -5912,7 +5912,7 @@ def get_occurrence_report_bulk_import_associated_files_path(instance, filename):
 
 class OccurrenceShapefileDocument(Document):
     objects = ShapefileDocumentQueryset.as_manager()
-    occurrence_report = models.ForeignKey(
+    occurrence = models.ForeignKey(
         "Occurrence", related_name="shapefile_documents", on_delete=models.CASCADE
     )
     _file = models.FileField(
