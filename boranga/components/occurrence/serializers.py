@@ -511,6 +511,7 @@ class ListInternalOccurrenceReportSerializer(BaseModelSerializer):
         allow_null=True,
         read_only=True,
     )
+    assessor = serializers.SerializerMethodField()
     submitter = serializers.SerializerMethodField()
     processing_status_display = serializers.CharField(
         source="get_processing_status_display"
@@ -547,6 +548,7 @@ class ListInternalOccurrenceReportSerializer(BaseModelSerializer):
             "community_migrated_id",
             "reported_date",
             "lodgement_date",
+            "assessor",
             "submitter",
             "processing_status",
             "processing_status_display",
@@ -578,6 +580,7 @@ class ListInternalOccurrenceReportSerializer(BaseModelSerializer):
             "community_migrated_id",
             "reported_date",
             "lodgement_date",
+            "assessor",
             "submitter",
             "processing_status",
             "processing_status_display",
@@ -681,6 +684,12 @@ class ListInternalOccurrenceReportSerializer(BaseModelSerializer):
 
     def get_geometry_show_on_map(self, obj):
         return obj.ocr_geometry.filter(show_on_map=True).exists()
+
+    def get_assessor(self, obj):
+        if obj.assigned_officer:
+            email_user = retrieve_email_user(obj.assigned_officer)
+            return EmailUserSerializer(email_user).data.get("fullname", None)
+        return ""
 
 
 class OCRHabitatCompositionSerializer(BaseModelSerializer):

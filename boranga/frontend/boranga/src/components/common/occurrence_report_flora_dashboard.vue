@@ -357,6 +357,7 @@ export default {
                 'Migrated From ID',
                 'Submitted on',
                 'Submitter',
+                'Assessor',
                 'Status',
                 'Action',
             ];
@@ -465,6 +466,15 @@ export default {
                 name: 'submitter__first_name, submitter__last_name',
             };
         },
+        column_assessor: function () {
+            return {
+                data: 'assessor',
+                orderable: false,
+                searchable: false,
+                visible: true,
+                name: 'assessor__first_name, assessor__last_name',
+            };
+        },
         column_status: function () {
             return {
                 data: 'processing_status_display',
@@ -538,6 +548,7 @@ export default {
                 vm.column_migrated_from_id,
                 vm.column_lodgement_date,
                 vm.column_submitter,
+                vm.column_assessor,
                 vm.column_status,
                 vm.column_action,
             ];
