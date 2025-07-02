@@ -1062,6 +1062,163 @@
   {
     "model": "boranga.fileextensionwhitelist",
     "pk": 137,
-    "fields": { "name": "qmd", "model": "occurrencereportshapefiledocument", "compressed": false }
+    "fields": {
+      "name": "qmd",
+      "model": "occurrencereportshapefiledocument",
+      "compressed": false
+    }
+  },
+  {
+    "model": "boranga.fileextensionwhitelist",
+    "pk": 138,
+    "fields": {
+      "name": "qmd",
+      "model": "occurrencereportshapefiledocument",
+      "compressed": false
+    }
+  },
+  {
+    "model": "boranga.fileextensionwhitelist",
+    "pk": 140,
+    "fields": {
+      "name": "aih",
+      "model": "occurrenceshapefiledocument",
+      "compressed": false
+    }
+  },
+  {
+    "model": "boranga.fileextensionwhitelist",
+    "pk": 141,
+    "fields": {
+      "name": "ain",
+      "model": "occurrenceshapefiledocument",
+      "compressed": false
+    }
+  },
+  {
+    "model": "boranga.fileextensionwhitelist",
+    "pk": 142,
+    "fields": {
+      "name": "atx",
+      "model": "occurrenceshapefiledocument",
+      "compressed": false
+    }
+  },
+  {
+    "model": "boranga.fileextensionwhitelist",
+    "pk": 143,
+    "fields": {
+      "name": "cpg",
+      "model": "occurrenceshapefiledocument",
+      "compressed": false
+    }
+  },
+  {
+    "model": "boranga.fileextensionwhitelist",
+    "pk": 144,
+    "fields": {
+      "name": "dbf",
+      "model": "occurrenceshapefiledocument",
+      "compressed": false
+    }
+  },
+  {
+    "model": "boranga.fileextensionwhitelist",
+    "pk": 145,
+    "fields": {
+      "name": "fbn",
+      "model": "occurrenceshapefiledocument",
+      "compressed": false
+    }
+  },
+  {
+    "model": "boranga.fileextensionwhitelist",
+    "pk": 146,
+    "fields": {
+      "name": "fbx",
+      "model": "occurrenceshapefiledocument",
+      "compressed": false
+    }
+  },
+  {
+    "model": "boranga.fileextensionwhitelist",
+    "pk": 147,
+    "fields": {
+      "name": "ixs",
+      "model": "occurrenceshapefiledocument",
+      "compressed": false
+    }
+  },
+  {
+    "model": "boranga.fileextensionwhitelist",
+    "pk": 148,
+    "fields": {
+      "name": "mxs",
+      "model": "occurrenceshapefiledocument",
+      "compressed": false
+    }
+  },
+  {
+    "model": "boranga.fileextensionwhitelist",
+    "pk": 149,
+    "fields": {
+      "name": "prj",
+      "model": "occurrenceshapefiledocument",
+      "compressed": false
+    }
+  },
+  {
+    "model": "boranga.fileextensionwhitelist",
+    "pk": 150,
+    "fields": {
+      "name": "sbn",
+      "model": "occurrenceshapefiledocument",
+      "compressed": false
+    }
+  },
+  {
+    "model": "boranga.fileextensionwhitelist",
+    "pk": 151,
+    "fields": {
+      "name": "sbx",
+      "model": "occurrenceshapefiledocument",
+      "compressed": false
+    }
+  },
+  {
+    "model": "boranga.fileextensionwhitelist",
+    "pk": 152,
+    "fields": {
+      "name": "shp",
+      "model": "occurrenceshapefiledocument",
+      "compressed": false
+    }
+  },
+  {
+    "model": "boranga.fileextensionwhitelist",
+    "pk": 153,
+    "fields": {
+      "name": "shx",
+      "model": "occurrenceshapefiledocument",
+      "compressed": false
+    }
+  },
+  {
+    "model": "boranga.fileextensionwhitelist",
+    "pk": 154,
+    "fields": {
+      "name": "xml",
+      "model": "occurrenceshapefiledocument",
+      "compressed": false
+    }
+  },
+  {
+    "model": "boranga.fileextensionwhitelist",
+    "pk": 155,
+    "fields": {
+      "name": "qmd",
+      "model": "occurrenceshapefiledocument",
+      "compressed": false
+    }
   }
 ]
