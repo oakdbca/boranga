@@ -5916,7 +5916,7 @@ class OccurrenceShapefileDocument(Document):
         "Occurrence", related_name="shapefile_documents", on_delete=models.CASCADE
     )
     _file = models.FileField(
-        upload_to=update_occurrence_report_doc_filename,
+        upload_to=update_occurrence_doc_filename,
         max_length=512,
         storage=private_storage,
     )
