@@ -181,6 +181,9 @@ class FileExtensionWhitelist(BaseModel):
             )
         )
 
+    def __str__(self):
+        return f"File extension: {self.name} is whitelisted for model: {self.model}"
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         cache.delete(settings.CACHE_KEY_FILE_EXTENSION_WHITELIST)

@@ -28,7 +28,7 @@
                     :polygon-features-supported="true"
                     :drawable="!isReadOnly"
                     :editable="!isReadOnly"
-                    :file-upload-disabled="true"
+                    :file-upload-disabled="false"
                     level="internal"
                     style-by="model"
                     :map-info-text="
@@ -42,41 +42,41 @@
                     :tile-layer-api-url="tileLayerApiUrl"
                     :validate-feature-before-save="true"
                     :query-layer-definition="{
-                        name: queryLayerName,
-                        title: 'Occurrence Reports',
-                        default: false,
-                        can_edit: false,
-                        can_buffer: false,
-                        can_hide_geometries: true,
-                        api_url: ocrApiUrl,
-                        ids: occurrenceReportIds,
-                        geometry_name: 'ocr_geometry',
-                        identifier_name: 'occurrence_report_number',
-                        z_index: 2,
-                        collapse: true,
-                        property_display_map: ocrPropertyDisplayMap,
+                        name: occurrenceLayerName,
+                        title: 'Occurrence',
+                        default: true,
+                        processed: true,
+                        can_edit: true,
+                        can_buffer: true,
+                        api_url: occApiUrl,
+                        ids: [occurrence_obj.id],
+                        geometry_name: 'occ_geometry',
+                        identifier_name: 'occurrence_number',
+                        z_index: 3,
+                        property_display_map: occPropertyDisplayMap,
+                        property_overwrite: {
+                            area_sqm: featureAreaMeter,
+                            area_sqhm: (feature) =>
+                                featureAreaMeter(feature) / 10000,
+                            color: '#6273f5', // light blue
+                            stroke: '#192163', // dark blue
+                        },
                     }"
                     :additional-layers-definitions="[
                         {
-                            name: occurrenceLayerName,
-                            title: 'Occurrence',
-                            default: true,
-                            processed: true,
-                            can_edit: true,
-                            can_buffer: true,
-                            api_url: occApiUrl,
-                            ids: [occurrence_obj.id],
-                            geometry_name: 'occ_geometry',
-                            identifier_name: 'occurrence_number',
-                            z_index: 3,
-                            property_display_map: occPropertyDisplayMap,
-                            property_overwrite: {
-                                area_sqm: featureAreaMeter,
-                                area_sqhm: (feature) =>
-                                    featureAreaMeter(feature) / 10000,
-                                color: '#6273f5', // light blue
-                                stroke: '#192163', // dark blue
-                            },
+                            name: queryLayerName,
+                            title: 'Occurrence Reports',
+                            default: false,
+                            can_edit: false,
+                            can_buffer: false,
+                            can_hide_geometries: true,
+                            api_url: ocrApiUrl,
+                            ids: occurrenceReportIds,
+                            geometry_name: 'ocr_geometry',
+                            identifier_name: 'occurrence_report_number',
+                            z_index: 2,
+                            collapse: true,
+                            property_display_map: ocrPropertyDisplayMap,
                         },
                         {
                             name: bufferLayerName,

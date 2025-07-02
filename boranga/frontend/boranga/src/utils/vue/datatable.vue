@@ -2,6 +2,7 @@
     <div id="DataTable" class="table-responsive">
         <table
             :id="id"
+            :ref="id"
             class="hover table border table-striped table-bordered dt-responsive nowrap w-100"
             cellspacing="0"
             style="width: 100%"
@@ -39,21 +40,24 @@ export default {
     },
     data: function () {
         return {
-            table: null,
             vmDataTable: null,
         };
     },
     mounted: function () {
-        let vm = this;
-        vm.table = $('#' + vm.id);
-        vm.initEvents();
+        this.initEvents();
+    },
+    unmounted() {
+        if (this.vmDataTable) {
+            this.vmDataTable.destroy();
+            this.vmDataTable = null;
+        }
     },
     methods: {
         initEvents: function () {
             let vm = this;
-            var options = Object.assign(vm.dtOptions);
-            vm.vmDataTable = $(vm.table).DataTable(options);
-            $(vm.table).resize(function () {
+            var options = { ...vm.dtOptions };
+            vm.vmDataTable = $(this.$refs[this.id]).DataTable(options);
+            $(this.$refs[this.id]).resize(function () {
                 vm.vmDataTable.draw(true);
             });
         },

@@ -275,9 +275,28 @@ class OccurrenceReportFilterBackend(DatatablesFilterBackend):
                     community__taxonomy__id=filter_community_name
                 )
 
+            filter_community_migrated_id = request.GET.get(
+                "filter_community_migrated_id"
+            )
+            if (
+                filter_community_migrated_id
+                and not filter_community_migrated_id.lower() == "all"
+            ):
+                queryset = queryset.filter(
+                    community__taxonomy__id=filter_community_migrated_id
+                )
+
             filter_status = request.GET.get("filter_status")
             if filter_status and not filter_status.lower() == "all":
                 queryset = queryset.filter(processing_status=filter_status)
+
+            filter_assessor = request.GET.get("filter_assessor")
+            if filter_assessor and not filter_assessor.lower() == "all":
+                queryset = queryset.filter(assigned_officer=filter_assessor)
+
+            filter_submitter = request.GET.get("filter_submitter")
+            if filter_submitter and not filter_submitter.lower() == "all":
+                queryset = queryset.filter(submitter=filter_submitter)
 
             def get_date(filter_date):
                 date = request.GET.get(filter_date)
@@ -5139,6 +5158,29 @@ class OccurrenceViewSet(
             qs, many=True, context={"request": request}
         )
 
+        return Response(serializer.data)
+
+    @detail_route(
+        methods=["POST"],
+        detail=True,
+        permission_classes=[OccurrencePermission],
+    )
+    @renderer_classes((JSONRenderer,))
+    def process_shapefile_document(self, request, *args, **kwargs):
+        instance = self.get_object()
+        returned_data = None
+        returned_data = process_shapefile_document(request, instance)
+        if returned_data:
+            return Response(returned_data)
+        else:
+            return Response({})
+
+    @detail_route(methods=["POST"], detail=True)
+    @renderer_classes((JSONRenderer,))
+    def validate_map_files(self, request, *args, **kwargs):
+        instance = self.get_object()
+        validate_map_files(request, instance, "occurrence")
+        serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
 

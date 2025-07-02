@@ -4147,9 +4147,18 @@ export default {
 
             let success = false;
             let errorStr = '';
+            let endpoint = '';
+            if (this.context?.model_name == 'occurrencereport') {
+                endpoint = api_endpoints.occurrence_report;
+            } else if (this.context?.model_name == 'occurrence') {
+                endpoint = api_endpoints.occurrence;
+            } else {
+                console.error('processFeatures: invalid context');
+                return ''; // Should not reach here.
+            }
             const processedGeometry = await fetch(
                 helpers.add_endpoint_join(
-                    api_endpoints.occurrence_report,
+                    endpoint,
                     `/spatially-process-geometries/?geometry=${JSON.stringify(
                         featureCollection
                     )}&operation=${operation}&parameters=${parameters.join(
@@ -4839,17 +4848,26 @@ export default {
                 body: formData,
             };
             vm.isValidating = true;
+            let endpoint = '';
+            if (this.context?.model_name == 'occurrencereport') {
+                endpoint = api_endpoints.occurrence_report;
+            } else if (this.context?.model_name == 'occurrence') {
+                endpoint = api_endpoints.occurrence;
+            } else {
+                console.error('validate_map_docs: invalid context');
+                return ''; // Should not reach here.
+            }
             fetch(
                 helpers.add_endpoint_join(
-                    api_endpoints.occurrence_report,
+                    endpoint,
                     `/${vm.context.id}/validate_map_files/`
                 ),
                 options
             )
                 .then(async (response) => {
                     if (!response.ok) {
-                        const text = await response.json();
-                        throw new Error(text);
+                        const data = await response.json();
+                        throw new Error(JSON.stringify(data));
                     } else {
                         return response.json();
                     }
@@ -4865,11 +4883,14 @@ export default {
                             this.queryLayerDefinition.name
                         );
                         vm.displayAllFeatures();
-                        swal.fire(
-                            'Success',
-                            'Shapefile processed successfully',
-                            'success'
-                        );
+                        swal.fire({
+                            title: 'Success',
+                            text: 'The shapefile has been processed successfully.',
+                            icon: 'success',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            },
+                        });
                     });
                 })
                 .catch((error) => {
@@ -5352,10 +5373,18 @@ export default {
         transformFeature: async function (feature, srid_from, srid_to) {
             const format = new GeoJSON();
             const geomStr = format.writeGeometry(feature.getGeometry());
-
+            let endpoint = '';
+            if (this.context?.model_name == 'occurrencereport') {
+                endpoint = api_endpoints.occurrence_report;
+            } else if (this.context?.model_name == 'occurrence') {
+                endpoint = api_endpoints.occurrence;
+            } else {
+                console.error('transformFeature: invalid context');
+                return ''; // Should not reach here.
+            }
             const transformed = await fetch(
                 helpers.add_endpoint_join(
-                    api_endpoints.occurrence_report,
+                    endpoint,
                     `/transform-geometry/?geometry=${geomStr}&from=${srid_from}&to=${srid_to}`
                 )
             )

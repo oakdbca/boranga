@@ -567,7 +567,7 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
         if not self.assigned_approver == request.user.id:
             return False
 
-        return is_occurrence_approver(request) or request.user.is_superuser
+        return is_occurrence_approver(request)
 
     def has_unlocked_mode(self, request):
         status_with_assessor = [
@@ -582,11 +582,7 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
         if not self.assigned_officer == request.user.id:
             return False
 
-        return (
-            is_occurrence_assessor(request)
-            or is_occurrence_approver(request)
-            or request.user.is_superuser
-        )
+        return is_occurrence_assessor(request) or is_occurrence_approver(request)
 
     def get_approver_group(self):
         return SystemGroup.objects.get(name=GROUP_NAME_OCCURRENCE_APPROVER)
@@ -627,14 +623,10 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
             OccurrenceReport.PROCESSING_STATUS_WITH_REFERRAL,
             OccurrenceReport.PROCESSING_STATUS_UNLOCKED,
         ]:
-            return (
-                is_occurrence_assessor(request)
-                or is_occurrence_approver(request)
-                or request.user.is_superuser
-            )
+            return is_occurrence_assessor(request) or is_occurrence_approver(request)
 
         elif self.processing_status == OccurrenceReport.PROCESSING_STATUS_WITH_APPROVER:
-            return is_occurrence_approver(request) or request.user.is_superuser
+            return is_occurrence_approver(request)
 
         return False
 
@@ -643,11 +635,7 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
             OccurrenceReport.PROCESSING_STATUS_UNLOCKED,
             OccurrenceReport.PROCESSING_STATUS_APPROVED,
         ]:
-            return (
-                is_occurrence_assessor(request)
-                or is_occurrence_approver(request)
-                or request.user.is_superuser
-            )
+            return is_occurrence_assessor(request) or is_occurrence_approver(request)
 
     @transaction.atomic
     def discard(self, request):
@@ -1194,11 +1182,7 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
             ).exists():
                 return True
 
-            return (
-                is_occurrence_assessor(request)
-                or is_occurrence_approver(request)
-                or request.user.is_superuser
-            )
+            return is_occurrence_assessor(request) or is_occurrence_approver(request)
         return False
 
     @transaction.atomic
@@ -4401,7 +4385,7 @@ class Occurrence(RevisionedMixin):
         if self.processing_status not in user_editable_state:
             return False
 
-        return is_occurrence_approver(request) or request.user.is_superuser
+        return is_occurrence_approver(request)
 
     def can_user_reopen(self, request):
         user_editable_state = [
@@ -4410,7 +4394,7 @@ class Occurrence(RevisionedMixin):
         if self.processing_status not in user_editable_state:
             return False
 
-        return is_occurrence_approver(request) or request.user.is_superuser
+        return is_occurrence_approver(request)
 
     def log_user_action(self, action, request):
         return OccurrenceUserAction.log_action(self, action, request.user.id)
@@ -5344,6 +5328,13 @@ class OCCPlantCount(BaseModel):
             # This is to preserve the original data from the migration
             return super().save(*args, **kwargs)
 
+        # Just for Occurrences of Flora and Fauna groups, we allow saving both simple and detailed counts.
+        if self.occurrence.group_type.name in [
+            GroupType.GROUP_TYPE_FLORA,
+            GroupType.GROUP_TYPE_FAUNA,
+        ]:
+            return super().save(*args, **kwargs)
+
         # For non migrated occurrences, set fields to None based on count status field
         if self.count_status == settings.COUNT_STATUS_NOT_COUNTED:
             self.detailed_alive_mature = None
@@ -5464,11 +5455,23 @@ class OCCAnimalObservation(BaseModel):
                 id_str=Cast("id", CharField()),
             ).values_list("id_str", "name")
         )
+        self._meta.get_field("reproductive_state").choices = tuple(
+            ReproductiveState.objects.annotate(
+                id_str=Cast("id", CharField()),
+            ).values_list("id_str", "name")
+        )
 
     def save(self, *args, **kwargs):
         if self.occurrence.migrated_from_id:
             # IMPORTANT: If the occurrence is migrated, do not modify counts
             # This is to preserve the original data from the migration
+            return super().save(*args, **kwargs)
+
+        # Just for Occurrences of Flora and Fauna groups, we allow saving both simple and detailed counts.
+        if self.occurrence.group_type.name in [
+            GroupType.GROUP_TYPE_FLORA,
+            GroupType.GROUP_TYPE_FAUNA,
+        ]:
             return super().save(*args, **kwargs)
 
         # For non migrated occurrences, set fields to None based on count status field
@@ -5889,6 +5892,29 @@ def get_occurrence_report_bulk_import_path(instance, filename):
 
 def get_occurrence_report_bulk_import_associated_files_path(instance, filename):
     return f"occurrence_report/bulk-imports/{timezone.now()}/{filename}"
+
+
+class OccurrenceShapefileDocument(Document):
+    objects = ShapefileDocumentQueryset.as_manager()
+    occurrence = models.ForeignKey(
+        "Occurrence", related_name="shapefile_documents", on_delete=models.CASCADE
+    )
+    _file = models.FileField(
+        upload_to=update_occurrence_doc_filename,
+        max_length=512,
+        storage=private_storage,
+    )
+    input_name = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        app_label = "boranga"
+
+    def get_parent_instance(self) -> BaseModel:
+        return self.occurrence_report
+
+    def delete(self, *args, **kwargs):
+        # By pass the custom delete method in super and just do a regular delete
+        BaseModel.delete(self, *args, **kwargs)
 
 
 class OccurrenceReportBulkImportTask(ArchivableModel):
