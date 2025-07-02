@@ -109,6 +109,171 @@ logger = logging.getLogger("boranga")
 # correct precision in the database and that any calculations done in the backend are accurate.
 
 
+class BaseTypeSerializer(BaseSerializer):
+    model_class = serializers.SerializerMethodField()
+    model_id = serializers.SerializerMethodField()
+
+    class Meta:
+        fields = ["model_class", "model_id"]
+
+    def get_model_class(self, obj):
+        return obj.__class__.__name__
+
+    def get_model_id(self, obj):
+        return obj.id
+
+
+class BufferGeometrySerializer(BaseTypeSerializer, GeoFeatureModelSerializer):
+    geometry_source = serializers.SerializerMethodField()
+    srid = serializers.SerializerMethodField(read_only=True)
+    original_geometry = serializers.SerializerMethodField(read_only=True)
+    label = serializers.SerializerMethodField(read_only=True)
+    buffer_radius = serializers.SerializerMethodField(read_only=True)
+    updated_date = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", read_only=True)
+
+    class Meta:
+        model = BufferGeometry
+        geo_field = "geometry"
+        fields = [
+            "id",
+            "buffered_from_geometry",
+            "geometry",
+            "original_geometry",
+            "srid",
+            "area_sqm",
+            "area_sqhm",
+            "geometry_source",
+            "label",
+            "object_id",
+            "content_type",
+            "buffer_radius",
+            "created_from",
+            "source_of",
+            "color",
+            "stroke",
+            "opacity",
+            "updated_date",
+        ] + BaseTypeSerializer.Meta.fields
+
+    def get_srid(self, obj):
+        if obj.geometry:
+            return obj.geometry.srid
+        else:
+            return None
+
+    def get_geometry_source(self, obj):
+        return obj.buffered_from_geometry.occurrence.occurrence_number
+
+    def get_original_geometry(self, obj):
+        if obj.original_geometry_ewkb:
+            return wkb_to_geojson(obj.original_geometry_ewkb)
+        else:
+            return None
+
+    def get_created_from(self, obj):
+        if obj.created_from:
+            return obj.created_from.__str__()
+        return None
+
+    def get_source_of(self, obj):
+        if obj.source_of:
+            return obj.source_of.__str__()
+        return None
+
+    def get_label(self, obj):
+        return f"{obj.buffered_from_geometry.occurrence.occurrence_number} [Buffer]"
+
+    def get_buffer_radius(self, obj):
+        return obj.buffered_from_geometry.buffer_radius
+
+
+class OccurrenceGeometrySerializer(BaseTypeSerializer, GeoFeatureModelSerializer):
+    occurrence_id = serializers.IntegerField(write_only=True, required=False)
+    geometry_source = serializers.SerializerMethodField()
+    created_from = serializers.SerializerMethodField(read_only=True)
+    source_of = serializers.SerializerMethodField(read_only=True)
+    srid = serializers.SerializerMethodField(read_only=True)
+    original_geometry = serializers.SerializerMethodField(read_only=True)
+    buffer_geometry = BufferGeometrySerializer(read_only=True)
+    drawn_by = serializers.SerializerMethodField(read_only=True)
+    last_updated_by = serializers.SerializerMethodField(read_only=True)
+    updated_date = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", read_only=True)
+
+    class Meta:
+        model = OccurrenceGeometry
+        geo_field = "geometry"
+        fields = [
+            "id",
+            "occurrence_id",
+            "geometry",
+            "original_geometry",
+            "srid",
+            "area_sqm",
+            "area_sqhm",
+            "geometry_source",
+            "locked",
+            "object_id",
+            "content_type",
+            "buffer_radius",
+            "buffer_geometry",
+            "created_from",
+            "source_of",
+            "color",
+            "stroke",
+            "opacity",
+            "updated_date",
+            "drawn_by",
+            "last_updated_by",
+        ] + BaseTypeSerializer.Meta.fields
+        read_only_fields = ("id",)
+
+    def get_srid(self, obj):
+        if obj.geometry:
+            return obj.geometry.srid
+        else:
+            return None
+
+    def get_geometry_source(self, obj):
+        return get_geometry_source(obj)
+
+    def get_copied_from(self, obj):
+        if hasattr(obj, "copied_from") and obj.copied_from:
+            return None
+            return ListOCCMinimalSerializer(
+                obj.copied_from.occurrence, context=self.context
+            ).data
+
+        return None
+
+    def get_original_geometry(self, obj):
+        if obj.original_geometry_ewkb:
+            return wkb_to_geojson(obj.original_geometry_ewkb)
+        else:
+            return None
+
+    def get_created_from(self, obj):
+        if obj.created_from:
+            return obj.created_from.__str__()
+        return None
+
+    def get_source_of(self, obj):
+        if obj.source_of:
+            return obj.source_of.__str__()
+        return None
+
+    def get_drawn_by(self, obj):
+        if obj.drawn_by:
+            email_user = retrieve_email_user(obj.drawn_by)
+            return EmailUserSerializer(email_user).data.get("fullname", None)
+        return None
+
+    def get_last_updated_by(self, obj):
+        if obj.last_updated_by:
+            email_user = retrieve_email_user(obj.last_updated_by)
+            return EmailUserSerializer(email_user).data.get("fullname", None)
+        return None
+
+
 class OccurrenceSerializer(BaseModelSerializer):
     processing_status = serializers.CharField(source="get_processing_status_display")
     scientific_name = serializers.CharField(
@@ -146,6 +311,7 @@ class OccurrenceSerializer(BaseModelSerializer):
     combined_occurrence_id = serializers.SerializerMethodField()
     wild_status_name = serializers.CharField(source="wild_status.name", allow_null=True)
     can_add_log = serializers.SerializerMethodField()
+    occ_geometry = OccurrenceGeometrySerializer(many=True, read_only=True)
 
     class Meta:
         model = Occurrence
@@ -892,20 +1058,6 @@ class OCRLocationSerializer(BaseModelSerializer):
             .filter(geom_type="POINT")
             .exists()
         )
-
-
-class BaseTypeSerializer(BaseSerializer):
-    model_class = serializers.SerializerMethodField()
-    model_id = serializers.SerializerMethodField()
-
-    class Meta:
-        fields = ["model_class", "model_id"]
-
-    def get_model_class(self, obj):
-        return obj.__class__.__name__
-
-    def get_model_id(self, obj):
-        return obj.id
 
 
 class OccurrenceReportGeometrySerializer(BaseTypeSerializer, GeoFeatureModelSerializer):
@@ -3526,157 +3678,6 @@ class OCCLocationSerializer(BaseModelSerializer):
     def get_copied_ocr(self, obj):
         if obj.copied_ocr_location:
             return obj.copied_ocr_location.occurrence_report.occurrence_report_number
-
-
-class BufferGeometrySerializer(BaseTypeSerializer, GeoFeatureModelSerializer):
-    geometry_source = serializers.SerializerMethodField()
-    srid = serializers.SerializerMethodField(read_only=True)
-    original_geometry = serializers.SerializerMethodField(read_only=True)
-    label = serializers.SerializerMethodField(read_only=True)
-    buffer_radius = serializers.SerializerMethodField(read_only=True)
-    updated_date = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", read_only=True)
-
-    class Meta:
-        model = BufferGeometry
-        geo_field = "geometry"
-        fields = [
-            "id",
-            "buffered_from_geometry",
-            "geometry",
-            "original_geometry",
-            "srid",
-            "area_sqm",
-            "area_sqhm",
-            "geometry_source",
-            "label",
-            "object_id",
-            "content_type",
-            "buffer_radius",
-            "created_from",
-            "source_of",
-            "color",
-            "stroke",
-            "opacity",
-            "updated_date",
-        ] + BaseTypeSerializer.Meta.fields
-
-    def get_srid(self, obj):
-        if obj.geometry:
-            return obj.geometry.srid
-        else:
-            return None
-
-    def get_geometry_source(self, obj):
-        return obj.buffered_from_geometry.occurrence.occurrence_number
-
-    def get_original_geometry(self, obj):
-        if obj.original_geometry_ewkb:
-            return wkb_to_geojson(obj.original_geometry_ewkb)
-        else:
-            return None
-
-    def get_created_from(self, obj):
-        if obj.created_from:
-            return obj.created_from.__str__()
-        return None
-
-    def get_source_of(self, obj):
-        if obj.source_of:
-            return obj.source_of.__str__()
-        return None
-
-    def get_label(self, obj):
-        return f"{obj.buffered_from_geometry.occurrence.occurrence_number} [Buffer]"
-
-    def get_buffer_radius(self, obj):
-        return obj.buffered_from_geometry.buffer_radius
-
-
-class OccurrenceGeometrySerializer(BaseTypeSerializer, GeoFeatureModelSerializer):
-    occurrence_id = serializers.IntegerField(write_only=True, required=False)
-    geometry_source = serializers.SerializerMethodField()
-    created_from = serializers.SerializerMethodField(read_only=True)
-    source_of = serializers.SerializerMethodField(read_only=True)
-    srid = serializers.SerializerMethodField(read_only=True)
-    original_geometry = serializers.SerializerMethodField(read_only=True)
-    buffer_geometry = BufferGeometrySerializer(read_only=True)
-    drawn_by = serializers.SerializerMethodField(read_only=True)
-    last_updated_by = serializers.SerializerMethodField(read_only=True)
-    updated_date = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", read_only=True)
-
-    class Meta:
-        model = OccurrenceGeometry
-        geo_field = "geometry"
-        fields = [
-            "id",
-            "occurrence_id",
-            "geometry",
-            "original_geometry",
-            "srid",
-            "area_sqm",
-            "area_sqhm",
-            "geometry_source",
-            "locked",
-            "object_id",
-            "content_type",
-            "buffer_radius",
-            "buffer_geometry",
-            "created_from",
-            "source_of",
-            "color",
-            "stroke",
-            "opacity",
-            "updated_date",
-            "drawn_by",
-            "last_updated_by",
-        ] + BaseTypeSerializer.Meta.fields
-        read_only_fields = ("id",)
-
-    def get_srid(self, obj):
-        if obj.geometry:
-            return obj.geometry.srid
-        else:
-            return None
-
-    def get_geometry_source(self, obj):
-        return get_geometry_source(obj)
-
-    def get_copied_from(self, obj):
-        if hasattr(obj, "copied_from") and obj.copied_from:
-            return None
-            return ListOCCMinimalSerializer(
-                obj.copied_from.occurrence, context=self.context
-            ).data
-
-        return None
-
-    def get_original_geometry(self, obj):
-        if obj.original_geometry_ewkb:
-            return wkb_to_geojson(obj.original_geometry_ewkb)
-        else:
-            return None
-
-    def get_created_from(self, obj):
-        if obj.created_from:
-            return obj.created_from.__str__()
-        return None
-
-    def get_source_of(self, obj):
-        if obj.source_of:
-            return obj.source_of.__str__()
-        return None
-
-    def get_drawn_by(self, obj):
-        if obj.drawn_by:
-            email_user = retrieve_email_user(obj.drawn_by)
-            return EmailUserSerializer(email_user).data.get("fullname", None)
-        return None
-
-    def get_last_updated_by(self, obj):
-        if obj.last_updated_by:
-            email_user = retrieve_email_user(obj.last_updated_by)
-            return EmailUserSerializer(email_user).data.get("fullname", None)
-        return None
 
 
 class ListOCCMinimalSerializer(BaseModelSerializer):
