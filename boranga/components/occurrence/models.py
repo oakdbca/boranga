@@ -567,7 +567,7 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
         if not self.assigned_approver == request.user.id:
             return False
 
-        return is_occurrence_approver(request) or request.user.is_superuser
+        return is_occurrence_approver(request)
 
     def has_unlocked_mode(self, request):
         status_with_assessor = [
@@ -582,11 +582,7 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
         if not self.assigned_officer == request.user.id:
             return False
 
-        return (
-            is_occurrence_assessor(request)
-            or is_occurrence_approver(request)
-            or request.user.is_superuser
-        )
+        return is_occurrence_assessor(request) or is_occurrence_approver(request)
 
     def get_approver_group(self):
         return SystemGroup.objects.get(name=GROUP_NAME_OCCURRENCE_APPROVER)
@@ -627,14 +623,10 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
             OccurrenceReport.PROCESSING_STATUS_WITH_REFERRAL,
             OccurrenceReport.PROCESSING_STATUS_UNLOCKED,
         ]:
-            return (
-                is_occurrence_assessor(request)
-                or is_occurrence_approver(request)
-                or request.user.is_superuser
-            )
+            return is_occurrence_assessor(request) or is_occurrence_approver(request)
 
         elif self.processing_status == OccurrenceReport.PROCESSING_STATUS_WITH_APPROVER:
-            return is_occurrence_approver(request) or request.user.is_superuser
+            return is_occurrence_approver(request)
 
         return False
 
@@ -643,11 +635,7 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
             OccurrenceReport.PROCESSING_STATUS_UNLOCKED,
             OccurrenceReport.PROCESSING_STATUS_APPROVED,
         ]:
-            return (
-                is_occurrence_assessor(request)
-                or is_occurrence_approver(request)
-                or request.user.is_superuser
-            )
+            return is_occurrence_assessor(request) or is_occurrence_approver(request)
 
     @transaction.atomic
     def discard(self, request):
@@ -1194,11 +1182,7 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
             ).exists():
                 return True
 
-            return (
-                is_occurrence_assessor(request)
-                or is_occurrence_approver(request)
-                or request.user.is_superuser
-            )
+            return is_occurrence_assessor(request) or is_occurrence_approver(request)
         return False
 
     @transaction.atomic
@@ -4401,7 +4385,7 @@ class Occurrence(RevisionedMixin):
         if self.processing_status not in user_editable_state:
             return False
 
-        return is_occurrence_approver(request) or request.user.is_superuser
+        return is_occurrence_approver(request)
 
     def can_user_reopen(self, request):
         user_editable_state = [
@@ -4410,7 +4394,7 @@ class Occurrence(RevisionedMixin):
         if self.processing_status not in user_editable_state:
             return False
 
-        return is_occurrence_approver(request) or request.user.is_superuser
+        return is_occurrence_approver(request)
 
     def log_user_action(self, action, request):
         return OccurrenceUserAction.log_action(self, action, request.user.id)
