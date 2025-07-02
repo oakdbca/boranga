@@ -54,6 +54,8 @@ class FileExtensionWhitelistAdmin(DeleteProtectedModelAdmin):
         "compressed",
     )
     form = ModelForm
+    search_fields = ["name", "model"]
+    list_filter = ["compressed", "model"]
 
 
 class HelpTextEntryAdmin(
