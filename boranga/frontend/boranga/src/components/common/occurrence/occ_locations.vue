@@ -28,7 +28,7 @@
                     :polygon-features-supported="true"
                     :drawable="!isReadOnly"
                     :editable="!isReadOnly"
-                    :file-upload-disabled="true"
+                    :file-upload-disabled="false"
                     level="internal"
                     style-by="model"
                     :map-info-text="
