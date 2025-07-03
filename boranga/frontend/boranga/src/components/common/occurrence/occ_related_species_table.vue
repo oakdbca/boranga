@@ -114,6 +114,18 @@ export default {
         };
     },
     computed: {
+        datatable_headers: function () {
+            return [
+                'Scientific Name',
+                'Common Name(s)',
+                'Conservation Status',
+                'Species Role',
+                'Is Current',
+                'Kingdom',
+                'Comments',
+                'Action',
+            ];
+        },
         column_scientific_name: function () {
             return {
                 data: 'scientific_name',
@@ -191,10 +203,6 @@ export default {
                 orderable: true,
                 searchable: true,
                 visible: true,
-                render: function (value, type) {
-                    let result = helpers.dtPopover(value, 30, 'hover');
-                    return type == 'export' ? value : result;
-                },
             };
         },
         column_action: function () {
@@ -256,18 +264,6 @@ export default {
                 columns: columns,
                 processing: true,
             };
-        },
-        datatable_headers: function () {
-            return [
-                'Scientific Name',
-                'Common Name(s)',
-                'Conservation Status',
-                'Species Role',
-                'Is Current',
-                'Kingdom',
-                'Comments',
-                'Action',
-            ];
         },
     },
     mounted: function () {
