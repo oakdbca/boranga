@@ -545,12 +545,20 @@ export default {
         csrf_token: function () {
             return helpers.getCookie('csrftoken');
         },
+        isAssignedOfficer: function () {
+            return (
+                this.occurrence_report_obj &&
+                this.occurrence_report_obj.assigned_officer ==
+                    this.occurrence_report_obj.current_assessor.id
+            );
+        },
         assessor_comment_readonly: function () {
             return !this.is_external &&
                 !this.occurrence_report_obj.can_user_edit &&
                 this.occurrence_report_obj.assessor_mode.assessor_level ==
                     'assessor' &&
                 this.occurrence_report_obj.assessor_mode.has_assessor_mode &&
+                this.isAssignedOfficer &&
                 !this.occurrence_report_obj.assessor_mode
                     .status_without_assessor
                 ? false

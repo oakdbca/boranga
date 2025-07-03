@@ -992,8 +992,10 @@ export default {
                 this.occurrence_report &&
                 this.occurrence_report.assessor_mode &&
                 (this.show_submit_button ||
-                    this.occurrence_report.assessor_mode.has_assessor_mode ||
-                    this.occurrence_report.assessor_mode.has_unlocked_mode)
+                    (this.occurrence_report.assessor_mode.has_assessor_mode &&
+                        this.isAssignedOfficer) ||
+                    (this.occurrence_report.assessor_mode.has_unlocked_mode &&
+                        this.isAssignedApprover))
             );
         },
         show_submit_button: function () {
