@@ -87,7 +87,7 @@ class OccurrenceReportPermission(BasePermission):
     def is_authorised_to_assess(self, request, obj):
         return obj.has_assessor_mode(request)
 
-    def is_authorised_to_assign(self, obj, assigner, assignee=None):
+    def is_authorised_to_assign(self, request, obj, assigner, assignee=None):
         # To assign a report:
         # - the report must be under assessment, the assigner must be in the assessment group,
         # and the assignee must be in the assessment group or
@@ -95,10 +95,10 @@ class OccurrenceReportPermission(BasePermission):
         # and the assignee must be in the approval group
         # AND the Assignee must be the proposed assignee, or already assigned
         in_assessor_group = assignee and (
-            is_occurrence_assessor(self.request) or self.request.user.is_superuser
+            is_occurrence_assessor(request) or request.user.is_superuser
         )
         in_approver_group = assignee and (
-            is_occurrence_approver(self.request) or self.request.user.is_superuser
+            is_occurrence_approver(request) or request.user.is_superuser
         )
 
         self_assigning = assigner == assignee
@@ -120,12 +120,12 @@ class OccurrenceReportPermission(BasePermission):
                 or (
                     not (assignee)
                     and assigner_assigned
-                    and obj.has_assessor_mode(self.request)
+                    and obj.has_assessor_mode(request)
                 )
                 or (
                     (in_assessor_group or in_approver_group)
                     and assigner_assigned
-                    and obj.has_assessor_mode(self.request)
+                    and obj.has_assessor_mode(request)
                 )
             )
         ) or (
@@ -140,12 +140,12 @@ class OccurrenceReportPermission(BasePermission):
                 or (
                     not (assignee)
                     and assigner_approver
-                    and obj.has_approver_mode(self.request)
+                    and obj.has_approver_mode(request)
                 )
                 or (
                     (in_approver_group)
                     and assigner_assigned
-                    and obj.has_assessor_mode(self.request)
+                    and obj.has_assessor_mode(request)
                 )
             )
         )
@@ -177,7 +177,7 @@ class OccurrenceReportPermission(BasePermission):
             return self.is_authorised_to_approve(request, obj)
 
         if view.action == "assign_request_user":
-            self.is_authorised_to_assign(obj, request.user, request.user)
+            self.is_authorised_to_assign(request, obj, request.user, request.user)
 
         if view.action == "assign_to":
             try:
@@ -187,10 +187,10 @@ class OccurrenceReportPermission(BasePermission):
                 raise serializers.ValidationError(
                     "A user with the id passed in does not exist"
                 )
-            self.is_authorised_to_assign(obj, request.user, user)
+            self.is_authorised_to_assign(request, obj, request.user, user)
 
         if view.action == "unassign":
-            self.is_authorised_to_assign(obj, request.user)
+            self.is_authorised_to_assign(request, obj, request.user)
 
         if view.action in ["lock_occurrence_report", "unlock_occurrence_report"]:
             return self.is_authorised_to_change_lock(request, obj)

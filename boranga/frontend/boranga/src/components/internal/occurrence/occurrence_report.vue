@@ -469,6 +469,7 @@
                                 style="width: 80%"
                                 class="btn btn-primary mb-2"
                                 @click.prevent="amendmentRequest()"
+                                :disabled="savingOccurrenceReport"
                             >
                                 Request Amendment
                             </button>
@@ -477,6 +478,7 @@
                                 style="width: 80%"
                                 class="btn btn-primary mb-2"
                                 @click.prevent="backToAssessor()"
+                                :disabled="savingOccurrenceReport"
                             >
                                 Back to Assessor
                             </button>
@@ -486,6 +488,7 @@
                                 style="width: 80%"
                                 class="btn btn-primary mb-2"
                                 @click.prevent="proposeApprove"
+                                :disabled="savingOccurrenceReport"
                             >
                                 Propose Approve
                             </button>
@@ -494,6 +497,7 @@
                                 style="width: 80%"
                                 class="btn btn-primary mb-2"
                                 @click.prevent="proposeDecline"
+                                :disabled="savingOccurrenceReport"
                             >
                                 Propose Decline
                             </button>
@@ -503,6 +507,7 @@
                                 style="width: 80%"
                                 class="btn btn-primary mb-2"
                                 @click.prevent="approve()"
+                                :disabled="savingOccurrenceReport"
                             >
                                 Approve
                             </button>
@@ -511,6 +516,7 @@
                                 style="width: 80%"
                                 class="btn btn-primary mb-2"
                                 @click.prevent="decline()"
+                                :disabled="savingOccurrenceReport"
                             >
                                 Decline
                             </button>
@@ -520,6 +526,7 @@
                                 style="width: 80%"
                                 class="btn btn-primary mb-2"
                                 @click.prevent="unlock()"
+                                :disabled="savingOccurrenceReport"
                             >
                                 Unlock
                             </button>
@@ -528,6 +535,7 @@
                                 style="width: 80%"
                                 class="btn btn-primary mb-2"
                                 @click.prevent="lock()"
+                                :disabled="savingOccurrenceReport"
                             >
                                 Lock
                             </button>
@@ -541,6 +549,7 @@
                             style="width: 80%"
                             class="btn btn-primary mb-1"
                             @click.prevent="copyOccurrenceReport()"
+                            :disabled="savingOccurrenceReport"
                         >
                             <i class="bi bi-copy me-1"></i> Copy
                             {{
@@ -983,8 +992,10 @@ export default {
                 this.occurrence_report &&
                 this.occurrence_report.assessor_mode &&
                 (this.show_submit_button ||
-                    this.occurrence_report.assessor_mode.has_assessor_mode ||
-                    this.occurrence_report.assessor_mode.has_unlocked_mode)
+                    (this.occurrence_report.assessor_mode.has_assessor_mode &&
+                        this.isAssignedOfficer) ||
+                    (this.occurrence_report.assessor_mode.has_unlocked_mode &&
+                        this.isAssignedApprover))
             );
         },
         show_submit_button: function () {
@@ -1228,7 +1239,7 @@ export default {
             }
 
             let payload = { proposal: vm.occurrence_report };
-            fetch(vm.occurrence_report_form_url, {
+            await fetch(vm.occurrence_report_form_url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1290,18 +1301,18 @@ export default {
                 return false;
             }
             vm.saveExitOccurrenceReport = true;
-            await vm.save().then(() => {
-                if (vm.isSaved === true) {
-                    vm.$router.push({
-                        name: 'internal-occurrence-dash',
-                    });
-                } else {
-                    vm.saveExitOccurrenceReport = false;
-                }
-            });
+            await vm.save();
+            if (vm.isSaved === true) {
+                vm.$router.push({
+                    name: 'internal-occurrence-dash',
+                });
+            } else {
+                vm.saveExitOccurrenceReport = false;
+            }
         },
         save_before_submit: async function () {
             let vm = this;
+            vm.savingOccurrenceReport = true;
             vm.saveError = false;
 
             // add map geometry to the occurrence_report

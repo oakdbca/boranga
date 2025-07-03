@@ -4,7 +4,7 @@
             transition="modal fade"
             :title="title"
             large
-            :data-loss-warning-on-cancel="isReadOnly || viewMode"
+            :data-loss-warning-on-cancel="!(isReadOnly || viewMode)"
             @ok="ok()"
             @cancel="cancel"
         >

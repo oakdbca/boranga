@@ -154,6 +154,15 @@ table.has-columns-hidden > tbody > tr > td.child {
     background: #eee;
 }
 
+/* Prevent large content in child row (expander) from breaking out of parent width */
+tr.child td .dtr-data {
+    white-space: normal !important;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    display: block;
+}
+
 table.collapsed > tbody > tr > td > ul,
 table.has-columns-hidden > tbody > tr > td > ul {
     list-style: none;
