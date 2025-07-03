@@ -314,6 +314,7 @@ class GetCommonNameOCRSelect(views.APIView):
         search_term = request.GET.get("term", "")
         group_type_id = request.GET.get("group_type_id", "")
         has_species = request.GET.get("has_species", False)
+        only_active = request.GET.get("only_active", "true").lower() == "true"
 
         if not search_term:
             return Response({"results": []})
@@ -323,9 +324,10 @@ class GetCommonNameOCRSelect(views.APIView):
         if has_species:
             taxonomy_vernaculars = taxonomy_vernaculars.exclude(taxonomy__species=None)
 
-        taxonomy_vernaculars = taxonomy_vernaculars.filter(
-            taxonomy__species__processing_status=Species.PROCESSING_STATUS_ACTIVE
-        )
+        if only_active:
+            taxonomy_vernaculars = taxonomy_vernaculars.filter(
+                taxonomy__species__processing_status=Species.PROCESSING_STATUS_ACTIVE
+            )
 
         if group_type_id:
             taxonomy_vernaculars = taxonomy_vernaculars.filter(
@@ -350,7 +352,10 @@ class GetCommonNameOCRSelect(views.APIView):
         taxonomies = Taxonomy.objects.filter(
             id__in=taxonomy_ids,
         )
-
+        logger.debug(
+            f"queryset: {taxonomy_vernaculars.query} - "
+            f"taxonomies: {taxonomies.query}"
+        )
         serializer = CommonNameTaxonomySerializer(
             taxonomies[: settings.DEFAULT_SELECT2_RECORDS_LIMIT],
             context={"request": request},

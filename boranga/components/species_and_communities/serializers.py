@@ -410,12 +410,10 @@ class TaxonomySerializer(BaseModelSerializer):
         return ", ".join(str(vn.vernacular_name) for vn in obj.vernaculars.all())
 
     def get_common_names_list(self, obj):
-        if not hasattr(obj, "species") or not obj.species:
-            return []
+        if not obj.vernaculars:
+            return ""
 
-        return obj.species.taxonomy.vernaculars.values_list(
-            "vernacular_name", flat=True
-        )
+        return obj.vernaculars.values_list("vernacular_name", flat=True)
 
     def get_phylogenetic_group(self, obj):
         try:

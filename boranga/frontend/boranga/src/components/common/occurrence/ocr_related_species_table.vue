@@ -490,9 +490,7 @@ export default {
                             var query = {
                                 term: params.term,
                                 type: 'public',
-                                group_type_id:
-                                    vm.occurrence_report_obj.group_type_id,
-                                has_species: true,
+                                only_active: false,
                             };
                             return query;
                         },
