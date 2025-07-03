@@ -352,10 +352,6 @@ class GetCommonNameOCRSelect(views.APIView):
         taxonomies = Taxonomy.objects.filter(
             id__in=taxonomy_ids,
         )
-        logger.debug(
-            f"queryset: {taxonomy_vernaculars.query} - "
-            f"taxonomies: {taxonomies.query}"
-        )
         serializer = CommonNameTaxonomySerializer(
             taxonomies[: settings.DEFAULT_SELECT2_RECORDS_LIMIT],
             context={"request": request},
