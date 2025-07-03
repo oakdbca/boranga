@@ -11,6 +11,7 @@ from boranga.components.main.serializers import (
     BaseSerializer,
     CommunicationLogEntrySerializer,
     EmailUserSerializer,
+    SafeFileUrlField,
 )
 from boranga.components.species_and_communities.models import (
     Community,
@@ -1509,8 +1510,7 @@ class CreateCommunitySerializer(BaseCommunitySerializer):
 
 
 class DocumentSerializer(BaseModelSerializer):
-    _file = serializers.CharField(
-        source="_file.url",
+    _file = SafeFileUrlField(
         allow_null=True,
         required=False,
     )
@@ -1523,8 +1523,7 @@ class DocumentSerializer(BaseModelSerializer):
 class SpeciesDocumentSerializer(BaseModelSerializer):
     document_category_name = serializers.SerializerMethodField()
     document_sub_category_name = serializers.SerializerMethodField()
-    _file = serializers.CharField(
-        source="_file.url",
+    _file = SafeFileUrlField(
         allow_null=True,
         required=False,
     )
@@ -1593,8 +1592,7 @@ class SaveSpeciesDocumentSerializer(BaseModelSerializer):
 class CommunityDocumentSerializer(BaseModelSerializer):
     document_category_name = serializers.SerializerMethodField()
     document_sub_category_name = serializers.SerializerMethodField()
-    _file = serializers.CharField(
-        source="_file.url",
+    _file = SafeFileUrlField(
         allow_null=True,
         required=False,
     )

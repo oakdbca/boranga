@@ -6,6 +6,7 @@ from boranga.components.main.serializers import (
     BaseModelSerializer,
     CommunicationLogEntrySerializer,
     EmailUserSerializer,
+    SafeFileUrlField,
 )
 from boranga.components.meetings.models import (
     AgendaItem,
@@ -336,8 +337,7 @@ class MeetingUserActionSerializer(BaseModelSerializer):
 class MinutesSerializer(BaseModelSerializer):
     document_category_name = serializers.SerializerMethodField()
     document_sub_category_name = serializers.SerializerMethodField()
-    _file = serializers.CharField(
-        source="_file.url",
+    _file = SafeFileUrlField(
         allow_null=True,
         required=False,
     )

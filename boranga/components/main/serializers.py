@@ -287,3 +287,11 @@ class IntegerFieldEmptytoNullSerializerMixin:
             ):
                 data[field_name] = None
         return super().to_internal_value(data)
+
+
+class SafeFileUrlField(serializers.CharField):
+    def to_representation(self, value):
+        try:
+            return value.url
+        except (ValueError, AttributeError):
+            return None

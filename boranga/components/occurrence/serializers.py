@@ -19,6 +19,7 @@ from boranga.components.main.serializers import (
     EmailUserSerializer,
     IntegerFieldEmptytoNullSerializerMixin,
     LimitedEmailUserSerializer,
+    SafeFileUrlField,
 )
 from boranga.components.main.utils import get_geometry_source
 from boranga.components.occurrence.models import (
@@ -2470,8 +2471,7 @@ class OccurrenceReportLogEntrySerializer(CommunicationLogEntrySerializer):
 class OccurrenceReportDocumentSerializer(BaseModelSerializer):
     document_category_name = serializers.SerializerMethodField()
     document_sub_category_name = serializers.SerializerMethodField()
-    _file = serializers.CharField(
-        source="_file.url",
+    _file = SafeFileUrlField(
         allow_null=True,
         required=False,
     )
@@ -2552,8 +2552,7 @@ class InternalSaveOccurrenceReportDocumentSerializer(
 class OccurrenceDocumentSerializer(BaseModelSerializer):
     document_category_name = serializers.SerializerMethodField()
     document_sub_category_name = serializers.SerializerMethodField()
-    _file = serializers.CharField(
-        source="_file.url",
+    _file = SafeFileUrlField(
         allow_null=True,
         required=False,
     )
@@ -2720,8 +2719,7 @@ class SaveOCRConservationThreatSerializer(BaseModelSerializer):
 
 
 class OccurrenceReportAmendmentRequestDocumentSerializer(BaseModelSerializer):
-    _file = serializers.CharField(
-        source="_file.url",
+    _file = SafeFileUrlField(
         allow_null=True,
         required=False,
     )

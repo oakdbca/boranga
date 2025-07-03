@@ -19,6 +19,7 @@ from boranga.components.main.serializers import (
     BaseSerializer,
     CommunicationLogEntrySerializer,
     EmailUserSerializer,
+    SafeFileUrlField,
 )
 from boranga.components.meetings.serializers import MeetingSerializer
 from boranga.components.species_and_communities.models import CommunityTaxonomy
@@ -1544,8 +1545,7 @@ class ConservationStatusReferralSerializer(BaseModelSerializer):
 
 
 class ConservationStatusAmendmentRequestDocumentSerializer(BaseModelSerializer):
-    _file = serializers.CharField(
-        source="_file.url",
+    _file = SafeFileUrlField(
         allow_null=True,
         required=False,
     )
