@@ -2783,6 +2783,9 @@ class AssociatedSpeciesTaxonomy(BaseModel):
     @property
     def conservation_status(self):
         species = Species.objects.filter(taxonomy=self.taxonomy).first()
+        if not species:
+            return ""
+
         current_conservation_status = ConservationStatus.objects.filter(
             species=species,
             processing_status=ConservationStatus.PROCESSING_STATUS_APPROVED,
