@@ -5183,6 +5183,36 @@ class OccurrenceViewSet(
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
+    @list_route(
+        methods=[
+            "GET",
+        ],
+        detail=False,
+        url_path="spatially-process-geometries",
+    )
+    def spatially_process_geometries(self, request, *args, **kwargs):
+        geometry = request.GET.get("geometry", None)
+        operation = request.GET.get("operation", None)
+        parameters = request.GET.get("parameters", None)
+        parameters = [float(p) for p in parameters.split(",")] if parameters else []
+        unit = request.GET.get("unit", None)
+
+        if not geometry:
+            raise serializers.ValidationError("Geometry is required")
+        if not operation:
+            raise serializers.ValidationError("Operation is required")
+        if not unit:
+            raise serializers.ValidationError("Unit is required")
+
+        try:
+            res_json = spatially_process_geometry(
+                json.loads(geometry), operation, parameters, unit
+            )
+        except Exception as e:
+            raise e
+        else:
+            return HttpResponse(res_json, content_type="application/json")
+
 
 class OccurrenceReportReferralViewSet(
     viewsets.GenericViewSet, mixins.RetrieveModelMixin
