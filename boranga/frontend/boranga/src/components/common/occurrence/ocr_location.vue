@@ -26,6 +26,9 @@
                     :context="occurrence_report_obj"
                     :is_external="is_external"
                     :point-features-supported="true"
+                    :point-limit="
+                        occurrence_report_obj.group_type === 'fauna' ? 1 : null
+                    "
                     :polygon-features-supported="isFauna == false"
                     :drawable="!isReadOnly"
                     :editable="!isReadOnly"
