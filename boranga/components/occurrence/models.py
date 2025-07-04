@@ -5700,9 +5700,7 @@ class OccurrenceTenure(RevisionedMixin):
     )
 
     comments = models.TextField(blank=True, null=True)
-    significant_to_occurrence = models.BooleanField(
-        null=True, blank=True, default=False
-    )
+    significant_to_occurrence = models.BooleanField(null=True, blank=True, default=None)
 
     def save(self, *args, **kwargs):
 
