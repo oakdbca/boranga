@@ -2279,7 +2279,7 @@ class ConservationStatusIssuanceApprovalDetails(BaseModel):
     officer = models.IntegerField()  # EmailUserRO
     effective_from_date = models.DateField(null=True, blank=True)
     effective_to_date = models.DateField(null=True, blank=True)
-    details = models.TextField(blank=True)
+    details = models.TextField(null=True, blank=True)
     cc_email = models.TextField(null=True)
     conservation_status_approval_document = models.ForeignKey(
         ConservationStatusDocument,

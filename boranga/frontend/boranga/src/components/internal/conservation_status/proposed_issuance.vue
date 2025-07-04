@@ -67,13 +67,7 @@
                                             name="approval_details"
                                             class="form-control"
                                             style="width: 70%"
-                                            @blur="validateDetails($event)"
                                         ></textarea>
-                                        <small
-                                            v-show="showDetailsError"
-                                            style="color: red"
-                                            >This field is required</small
-                                        >
                                     </div>
                                 </div>
                             </div>
@@ -199,7 +193,6 @@ export default {
             errors: false,
             showtoDateError: false,
             showstartDateError: false,
-            showDetailsError: false,
             errorString: '',
             successString: '',
             success: false,
@@ -370,24 +363,11 @@ export default {
                 vm.showstartDateError = false;
             }
         },
-        validateDetails: function (event) {
-            let vm = this;
-            const value = event.target.value;
-            if (!value) {
-                vm.showDetailsError = true;
-            } else {
-                vm.showDetailsError = false;
-            }
-        },
         isError: function () {
             let vm = this;
             let hasError = false;
             if (!vm.approval.effective_from_date) {
                 vm.showstartDateError = true;
-                hasError = true;
-            }
-            if (!vm.approval.details || vm.approval.details == '') {
-                vm.showDetailsError = true;
                 hasError = true;
             }
             return hasError;
