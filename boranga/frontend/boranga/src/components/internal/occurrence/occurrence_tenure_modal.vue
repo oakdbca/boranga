@@ -188,8 +188,8 @@
                                         style="width: 100%"
                                         class="form-select input-sm"
                                     >
-                                        <option :value="true">Yes</option>
-                                        <option :value="false">No</option>
+                                        <option :value="'Yes'">Yes</option>
+                                        <option :value="'No'">No</option>
                                     </select>
                                 </div>
                             </div>

@@ -276,7 +276,7 @@ export default {
                             text: 'Schema copied successfully',
                             icon: 'success',
                             showConfirmButton: false,
-                            timer: 1500,
+                            timer: 1200,
                         });
                         this.$router.push(
                             `/internal/occurrence-report/bulk_import_schema/${data.id}`
@@ -305,7 +305,7 @@ export default {
                             text: 'New version created successfully',
                             icon: 'success',
                             showConfirmButton: false,
-                            timer: 1500,
+                            timer: 1200,
                         });
                         this.$router.push(
                             `/internal/occurrence-report/bulk_import_schema/${data.id}`

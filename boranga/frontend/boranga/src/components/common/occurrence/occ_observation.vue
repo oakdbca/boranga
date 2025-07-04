@@ -907,9 +907,8 @@ export default {
                             title: 'Saved',
                             text: 'Observation details have been saved',
                             icon: 'success',
-                            customClass: {
-                                confirmButton: 'btn btn-primary',
-                            },
+                            showConfirmButton: false,
+                            timer: 1200,
                         });
                     },
                     (error) => {
@@ -960,9 +959,8 @@ export default {
                         title: 'Saved',
                         text: 'Identification details have been saved',
                         icon: 'success',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
+                        showConfirmButton: false,
+                        timer: 1200,
                     });
                 },
                 (error) => {

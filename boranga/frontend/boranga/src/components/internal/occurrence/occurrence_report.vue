@@ -1267,9 +1267,8 @@ export default {
                     title: 'Saved',
                     text: 'Your changes have been saved',
                     icon: 'success',
-                    customClass: {
-                        confirmButton: 'btn btn-primary',
-                    },
+                    showConfirmButton: false,
+                    timer: 1200,
                 });
                 vm.savingOccurrenceReport = false;
                 vm.isSaved = true;

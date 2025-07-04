@@ -1292,9 +1292,8 @@ export default {
                         title: 'Saved',
                         text: 'Publishing settings have been updated',
                         icon: 'success',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
+                        showConfirmButton: false,
+                        timer: 1200,
                     });
                 },
                 (error) => {

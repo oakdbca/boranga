@@ -3763,7 +3763,7 @@ export default {
                     icon: 'success',
                     title: 'Copied!',
                     text: `Coordinates "${coords}" copied to clipboard.`,
-                    timer: 1500,
+                    timer: 1200,
                     showConfirmButton: false,
                 });
             }
@@ -4195,7 +4195,7 @@ export default {
                             : 'Processing Failed',
                         icon: success ? 'success' : 'error',
                         text: success ? '' : errorStr,
-                        timer: success ? 1000 : 0,
+                        timer: success ? 1200 : 0,
                         showConfirmButton: !success,
                         timerProgressBar: success,
                     }).then(() => {

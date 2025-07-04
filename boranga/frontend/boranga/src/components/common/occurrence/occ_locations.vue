@@ -821,9 +821,8 @@ export default {
                         title: 'Saved',
                         text: 'Location details have been saved',
                         icon: 'success',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
+                        showConfirmButton: false,
+                        timer: 1200,
                     }).then(() => {
                         if (vm.occurrence_obj.processing_status == 'Unlocked') {
                             vm.$router.go();

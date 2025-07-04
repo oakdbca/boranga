@@ -1215,9 +1215,8 @@ export default {
                         title: 'Saved',
                         text: 'Your changes have been saved',
                         icon: 'success',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
+                        showConfirmButton: false,
+                        timer: 1200,
                     });
                     vm.savingSpeciesCommunity = false;
                     vm.isSaved = true;
@@ -1771,9 +1770,8 @@ export default {
                                 title: 'Saved',
                                 text: 'Record has been made private',
                                 icon: 'success',
-                                customClass: {
-                                    confirmButton: 'btn btn-primary',
-                                },
+                                showConfirmButton: false,
+                                timer: 1200,
                             });
                         },
                         (error) => {

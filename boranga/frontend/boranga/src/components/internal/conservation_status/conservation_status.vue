@@ -1347,7 +1347,7 @@ export default {
                         title: 'Conservation Status Unlocked',
                         icon: 'success',
                         showConfirmButton: false,
-                        timer: 1500,
+                        timer: 1200,
                     });
                 },
                 (err) => {
@@ -1682,9 +1682,8 @@ export default {
                         title: 'Saved',
                         text: 'Your changes have been saved',
                         icon: 'success',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
+                        showConfirmButton: false,
+                        timer: 1200,
                     });
                     vm.savingConservationStatus = false;
                     vm.isSaved = true;
