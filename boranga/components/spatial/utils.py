@@ -199,12 +199,13 @@ def populate_occurrence_tenure_data(geometry_instance, features, request):
             ).exclude(occurrence_geometry=None, tenure_area_id=None)
 
             occurrence_tenures_current = occurrence_tenures.filter(
-                occurrence_geometry=geometry_instance, status="current"
+                occurrence_geometry=geometry_instance,
+                status=OccurrenceTenure.STATUS_CURRENT,
             )
 
             occurrence_tenures_historical = occurrence_tenures.filter(
                 historical_occurrence=geometry_instance.occurrence.id,
-                status="historical",
+                status=OccurrenceTenure.STATUS_HISTORICAL,
             )
 
             if occurrence_tenures_current.exists():
