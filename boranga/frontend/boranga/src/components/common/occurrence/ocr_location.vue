@@ -26,6 +26,9 @@
                     :context="occurrence_report_obj"
                     :is_external="is_external"
                     :point-features-supported="true"
+                    :point-limit="
+                        occurrence_report_obj.group_type === 'fauna' ? 1 : null
+                    "
                     :polygon-features-supported="isFauna == false"
                     :drawable="!isReadOnly"
                     :editable="!isReadOnly"
@@ -693,9 +696,8 @@ export default {
                         title: 'Saved',
                         text: 'Location details have been saved',
                         icon: 'success',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
+                        showConfirmButton: false,
+                        timer: 1200,
                     }).then(() => {
                         if (
                             vm.occurrence_report_obj.processing_status ==

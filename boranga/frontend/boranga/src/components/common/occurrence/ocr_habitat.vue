@@ -1426,9 +1426,8 @@ export default {
                     title: 'Saved',
                     text: 'Habitat Composition details have been saved',
                     icon: 'success',
-                    customClass: {
-                        confirmButton: 'btn btn-primary',
-                    },
+                    showConfirmButton: false,
+                    timer: 1200,
                 }).then(() => {
                     if (
                         vm.occurrence_report_obj.processing_status == 'Unlocked'
@@ -1490,9 +1489,8 @@ export default {
                     title: 'Saved',
                     text: 'Habitat Condition details have been saved',
                     icon: 'success',
-                    customClass: {
-                        confirmButton: 'btn btn-primary',
-                    },
+                    showConfirmButton: false,
+                    timer: 1200,
                 }).then(() => {
                     if (
                         vm.occurrence_report_obj.processing_status == 'Unlocked'
@@ -1531,9 +1529,8 @@ export default {
                         title: 'Saved',
                         text: 'Vegetation Structure details have been saved',
                         icon: 'success',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
+                        showConfirmButton: false,
+                        timer: 1200,
                     }).then(() => {
                         if (
                             vm.occurrence_report_obj.processing_status ==
@@ -1586,9 +1583,8 @@ export default {
                         title: 'Saved',
                         text: 'Fire History details have been saved',
                         icon: 'success',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
+                        showConfirmButton: false,
+                        timer: 1200,
                     }).then(() => {
                         if (
                             vm.occurrence_report_obj.processing_status ==
@@ -1644,9 +1640,8 @@ export default {
                         title: 'Saved',
                         text: 'Associated Species details have been saved',
                         icon: 'success',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
+                        showConfirmButton: false,
+                        timer: 1200,
                     }).then(() => {
                         if (
                             vm.occurrence_report_obj.processing_status ==

@@ -80,7 +80,7 @@ class CommitteeMembers(OrderedModel, ArchivableModel):
 
     class Meta(OrderedModel.Meta):
         app_label = "boranga"
-        verbose_name = "Committee"
+        verbose_name = "Committee Member"
         verbose_name_plural = "Committee Members"
 
     def __str__(self):

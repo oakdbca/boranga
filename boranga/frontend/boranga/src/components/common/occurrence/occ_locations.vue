@@ -25,6 +25,9 @@
                     :context="occurrence_obj"
                     :is_external="false"
                     :point-features-supported="true"
+                    :point-limit="
+                        occurrence_obj.group_type === 'fauna' ? 1 : null
+                    "
                     :polygon-features-supported="true"
                     :drawable="!isReadOnly"
                     :editable="!isReadOnly"
@@ -821,9 +824,8 @@ export default {
                         title: 'Saved',
                         text: 'Location details have been saved',
                         icon: 'success',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
+                        showConfirmButton: false,
+                        timer: 1200,
                     }).then(() => {
                         if (vm.occurrence_obj.processing_status == 'Unlocked') {
                             vm.$router.go();

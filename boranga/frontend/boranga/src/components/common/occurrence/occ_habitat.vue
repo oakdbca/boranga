@@ -1384,9 +1384,8 @@ export default {
                     title: 'Saved',
                     text: 'Habitat Composition details have been saved',
                     icon: 'success',
-                    customClass: {
-                        confirmButton: 'btn btn-primary',
-                    },
+                    showConfirmButton: false,
+                    timer: 1200,
                 });
             });
         },
@@ -1454,9 +1453,8 @@ export default {
                     title: 'Saved',
                     text: 'Habitat Condition details have been saved',
                     icon: 'success',
-                    customClass: {
-                        confirmButton: 'btn btn-primary',
-                    },
+                    showConfirmButton: false,
+                    timer: 1200,
                 });
             });
         },
@@ -1489,9 +1487,8 @@ export default {
                         title: 'Saved',
                         text: 'Vegetation Structure details have been saved',
                         icon: 'success',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
+                        showConfirmButton: false,
+                        timer: 1200,
                     }).then(() => {
                         if (vm.occurrence_obj.processing_status == 'Unlocked') {
                             vm.$router.go();
@@ -1540,9 +1537,8 @@ export default {
                         title: 'Saved',
                         text: 'Fire History details have been saved',
                         icon: 'success',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
+                        showConfirmButton: false,
+                        timer: 1200,
                     });
                 },
                 (error) => {
@@ -1588,9 +1584,8 @@ export default {
                         title: 'Saved',
                         text: 'Associated Species details have been saved',
                         icon: 'success',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
+                        showConfirmButton: false,
+                        timer: 1200,
                     });
                 },
                 (error) => {

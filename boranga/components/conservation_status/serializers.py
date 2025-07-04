@@ -1146,6 +1146,8 @@ class SaveSpeciesConservationStatusSerializer(BaseConservationStatusSerializer):
             "comment",
             "lodgement_date",
             "listing_date",
+            "effective_from",
+            "effective_to",
             "review_due_date",
             "applicant_type",
             "submitter",
@@ -1301,6 +1303,8 @@ class SaveCommunityConservationStatusSerializer(BaseConservationStatusSerializer
             "comment",
             "lodgement_date",
             "listing_date",
+            "effective_from",
+            "effective_to",
             "review_due_date",
             "applicant_type",
             "submitter",
@@ -1592,7 +1596,7 @@ class ProposedDeclineSerializer(BaseSerializer):
 class ProposedApprovalSerializer(BaseSerializer):
     effective_from_date = serializers.DateField()
     effective_to_date = serializers.DateField(required=False, allow_null=True)
-    details = serializers.CharField()
+    details = serializers.CharField(required=False, allow_null=True)
     cc_email = serializers.CharField(required=False, allow_null=True)
 
     def validate(self, data):

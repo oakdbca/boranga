@@ -1060,6 +1060,7 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
                 )
             occurrence = Occurrence.clone_from_occurrence_report(self)
             occurrence.occurrence_name = self.approval_details.new_occurrence_name
+            occurrence.occurrence_source = Occurrence.OCCURRENCE_CHOICE_OCR
             occurrence.save(version_user=request.user)
 
         self.occurrence = occurrence
@@ -5700,9 +5701,7 @@ class OccurrenceTenure(RevisionedMixin):
     )
 
     comments = models.TextField(blank=True, null=True)
-    significant_to_occurrence = models.BooleanField(
-        null=True, blank=True, default=False
-    )
+    significant_to_occurrence = models.BooleanField(null=True, blank=True, default=None)
 
     def save(self, *args, **kwargs):
 

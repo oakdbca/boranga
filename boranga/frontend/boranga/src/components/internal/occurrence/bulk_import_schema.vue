@@ -1976,7 +1976,7 @@ export default {
                             text: 'Schema copied successfully',
                             icon: 'success',
                             showConfirmButton: false,
-                            timer: 1500,
+                            timer: 1200,
                         });
                         this.$router
                             .push({

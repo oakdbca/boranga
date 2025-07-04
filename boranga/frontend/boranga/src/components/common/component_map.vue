@@ -1810,6 +1810,13 @@ export default {
             default: true,
         },
         /**
+         * Number of points that can be drawn on the map
+         */
+        pointLimit: {
+            type: Number,
+            required: false,
+        },
+        /**
          * Whether to enable drawing of new features
          */
         drawable: {
@@ -2357,6 +2364,22 @@ export default {
         },
         vectorLayersArray: function () {
             return Object.values(this.vectorLayers);
+        },
+        canAddMorePoints: function () {
+            if (!this.pointFeaturesSupported) {
+                return false;
+            }
+            if (this.pointLimit && this.pointLimit > 0) {
+                // Only count Point and MultiPoint features in the editableFeatureCollection
+                const pointCount = this.editableFeatureCollection
+                    .getArray()
+                    .filter((feature) => {
+                        const type = feature.getGeometry().getType();
+                        return type === 'Point' || type === 'MultiPoint';
+                    }).length;
+                return pointCount < this.pointLimit;
+            }
+            return true; // No limit on points
         },
     },
     watch: {
@@ -3156,6 +3179,22 @@ export default {
             vm.drawPointsForModel = new Draw({
                 source: vm.layerSources[vm.defaultQueryLayerName],
                 type: 'Point',
+                condition: function () {
+                    if (!vm.canAddMorePoints) {
+                        if (vm.mode === 'draw' && vm.subMode === 'Point') {
+                            swal.fire({
+                                title: 'Point Limit Reached',
+                                text: `You cannot add more than ${vm.pointLimit} points.`,
+                                icon: 'warning',
+                                customClass: {
+                                    confirmButton: 'btn btn-primary',
+                                },
+                            });
+                        }
+                        return false;
+                    }
+                    return true;
+                },
             });
 
             vm.drawPolygonsForModel.set('escKey', '');
@@ -3172,7 +3211,6 @@ export default {
             vm.drawPolygonsForModel.on('drawend', function (evt) {
                 vm.onDrawEnd(evt.feature);
             });
-
             vm.drawPointsForModel.on('drawend', function (evt) {
                 vm.onDrawEnd(evt.feature);
                 vm.userInputGeometryStackAdd(evt.feature);
@@ -3763,7 +3801,7 @@ export default {
                     icon: 'success',
                     title: 'Copied!',
                     text: `Coordinates "${coords}" copied to clipboard.`,
-                    timer: 1500,
+                    timer: 1200,
                     showConfirmButton: false,
                 });
             }
@@ -4194,8 +4232,8 @@ export default {
                             ? 'Processing Successful'
                             : 'Processing Failed',
                         icon: success ? 'success' : 'error',
-                        text: success ? '' : errorStr,
-                        timer: success ? 1000 : 0,
+                        text: success ? '' : JSON.stringify(errorStr),
+                        timer: success ? 1200 : 0,
                         showConfirmButton: !success,
                         timerProgressBar: success,
                     }).then(() => {

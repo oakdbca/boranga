@@ -1016,9 +1016,8 @@ export default {
                             title: 'Saved',
                             text: 'Animal Observation details have been saved',
                             icon: 'success',
-                            customClass: {
-                                confirmButton: 'btn btn-primary',
-                            },
+                            showConfirmButton: false,
+                            timer: 1200,
                         }).then(() => {
                             if (vm.processing_status == 'Unlocked') {
                                 vm.$router.go();

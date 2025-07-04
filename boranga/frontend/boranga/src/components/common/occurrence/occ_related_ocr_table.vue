@@ -2,7 +2,7 @@
     <div :id="'related_ocr' + section_type">
         <FormSection
             :form-collapse="false"
-            label="Related Occurrence Reports"
+            label="Select Related Occurrence Report to Copy Data"
             :Index="'related_ocr' + section_type"
             @toggle-collapse="toggleCollapse"
         >

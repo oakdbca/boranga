@@ -20,6 +20,7 @@ from boranga.components.main.serializers import (
     IntegerFieldEmptytoNullSerializerMixin,
     LimitedEmailUserSerializer,
     SafeFileUrlField,
+    YesNoBooleanField,
 )
 from boranga.components.main.utils import get_geometry_source
 from boranga.components.occurrence.models import (
@@ -3832,6 +3833,8 @@ class BaseOccurrenceTenureSerializer(BaseModelSerializer):
 
 
 class OccurrenceTenureSerializer(BaseOccurrenceTenureSerializer):
+    significant_to_occurrence = YesNoBooleanField()
+
     class Meta:
         model = OccurrenceTenure
         fields = (
@@ -3855,9 +3858,9 @@ class OccurrenceTenureSerializer(BaseOccurrenceTenureSerializer):
 
 
 class ListOccurrenceTenureSerializer(BaseOccurrenceTenureSerializer):
-
     occurrence_number = serializers.SerializerMethodField()
     occurrence_id = serializers.SerializerMethodField()
+    significant_to_occurrence = YesNoBooleanField()
 
     class Meta:
         model = OccurrenceTenure
@@ -3917,6 +3920,7 @@ class ListOccurrenceTenureSerializer(BaseOccurrenceTenureSerializer):
 class OccurrenceTenureSaveSerializer(BaseModelSerializer):
     vesting_id = serializers.IntegerField(required=False, allow_null=True)
     purpose_id = serializers.IntegerField(required=False, allow_null=True)
+    significant_to_occurrence = YesNoBooleanField()
 
     class Meta:
         model = OccurrenceTenure

@@ -302,9 +302,8 @@ export default {
                         title: 'Saved',
                         text: 'Record has been made public',
                         icon: 'success',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
+                        showConfirmButton: false,
+                        timer: 1200,
                     });
                     vm.close();
                 })
