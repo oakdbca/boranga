@@ -295,3 +295,21 @@ class SafeFileUrlField(serializers.CharField):
             return value.url
         except (ValueError, AttributeError):
             return None
+
+
+class YesNoBooleanField(serializers.BooleanField):
+    """
+    A BooleanField that serializes to 'Yes'/'No' instead of True/False.
+    """
+
+    def to_representation(self, value):
+        return "Yes" if value else "No"
+
+    def to_internal_value(self, data):
+        if isinstance(data, str):
+            data = data.strip().lower()
+            if data in ["yes", "true", "1"]:
+                return True
+            elif data in ["no", "false", "0"]:
+                return False
+        return super().to_internal_value(data)
