@@ -1297,22 +1297,21 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
             )
 
         serializer.is_valid(raise_exception=True)
-        if serializer.is_valid():
-            serializer.save(version_user=request.user)
+        serializer.save(version_user=request.user)
 
-            instance.log_user_action(
-                ConservationStatusUserAction.ACTION_SAVE_APPLICATION.format(
-                    instance.conservation_status_number
-                ),
-                request,
-            )
+        instance.log_user_action(
+            ConservationStatusUserAction.ACTION_SAVE_APPLICATION.format(
+                instance.conservation_status_number
+            ),
+            request,
+        )
 
-            request.user.log_user_action(
-                ConservationStatusUserAction.ACTION_SAVE_APPLICATION.format(
-                    instance.conservation_status_number
-                ),
-                request,
-            )
+        request.user.log_user_action(
+            ConservationStatusUserAction.ACTION_SAVE_APPLICATION.format(
+                instance.conservation_status_number
+            ),
+            request,
+        )
 
         return redirect(reverse("internal"))
 
