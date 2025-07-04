@@ -1735,7 +1735,6 @@ class OccurrenceReportViewSet(
         instance.save(version_user=request.user)
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
-        # return redirect(reverse('external'))
 
     @detail_route(
         methods=[
