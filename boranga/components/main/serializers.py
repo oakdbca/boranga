@@ -27,6 +27,10 @@ class NH3SanitizeSerializerMixin:
     """
 
     def to_internal_value(self, data):
+        if isinstance(data, list):
+            # Recursively sanitize each item in the list
+            return [self.child.to_internal_value(item) for item in data]
+
         data = data.copy()
         for field_name, field in self.fields.items():
             if isinstance(field, serializers.CharField):
