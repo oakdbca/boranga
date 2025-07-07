@@ -169,6 +169,7 @@
             <RelatedReports
                 :is-read-only="isReadOnly"
                 :occurrence_obj="occurrence_obj"
+                label="Related Occurrence Reports"
             />
         </FormSection>
     </div>

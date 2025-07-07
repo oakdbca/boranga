@@ -4,6 +4,7 @@
             transition="modal fade"
             :title="title"
             large
+            :data-loss-warning-on-cancel="!isReadOnly"
             @ok="ok()"
             @cancel="cancel()"
         >
@@ -19,55 +20,90 @@
                             ><strong>{{ change_warning }}</strong>
                         </alert>
                         <div class="col-sm-12">
-                            <div class="form-group">
-                                <div class="row mb-3">
-                                    <div class="col-sm-3">
-                                        <label class="control-label pull-left"
-                                            >Site Name</label
-                                        >
-                                    </div>
-                                    <div class="col-sm-9">
-                                        <textarea
-                                            v-model="siteObj.site_name"
-                                            :disabled="isReadOnly"
-                                            rows="1"
-                                            class="form-control"
-                                        >
-                                        </textarea>
-                                    </div>
+                            <div class="row mb-3">
+                                <div class="col-sm-3">
+                                    <label class="control-label"
+                                        >Site Name</label
+                                    >
+                                </div>
+                                <div class="col-sm-9">
+                                    <input
+                                        ref="site_name"
+                                        v-model="siteObj.site_name"
+                                        :disabled="isReadOnly"
+                                        type="text"
+                                        class="form-control"
+                                    />
                                 </div>
                             </div>
                             <div class="row mb-3">
                                 <label for="" class="col-sm-3 control-label"
-                                    >Point Coordinate (Lat-Long)</label
+                                    >Point Coordinate</label
                                 >
-                                <div class="col-sm-4">
-                                    <input
-                                        id="point_coord2"
-                                        v-model="siteObj.point_coord2"
-                                        :disabled="isReadOnly"
-                                        type="decimal"
-                                        class="form-control"
-                                        placeholder=""
-                                    />
-                                </div>
-                                -
-                                <div class="col-sm-4">
-                                    <input
-                                        id="point_coord1"
-                                        v-model="siteObj.point_coord1"
-                                        :disabled="isReadOnly"
-                                        type="decimal"
-                                        class="form-control"
-                                        placeholder=""
-                                    />
+                                <div class="col-sm-9">
+                                    <div class="input-group">
+                                        <span class="input-group-text"
+                                            >Latitude</span
+                                        >
+                                        <input
+                                            id="point_coord2"
+                                            v-model="siteObj.point_coord2"
+                                            :disabled="isReadOnly"
+                                            type="number"
+                                            class="form-control"
+                                            placeholder=""
+                                            :max="-10.000001"
+                                            :min="-34.999999"
+                                            step="0.000001"
+                                            @change="
+                                                if (
+                                                    $event.target.value <
+                                                    -34.999999
+                                                ) {
+                                                    siteObj.point_coord2 =
+                                                        -34.999999;
+                                                } else if (
+                                                    $event.target.value >
+                                                    -10.000001
+                                                ) {
+                                                    siteObj.point_coord2 =
+                                                        -10.000001;
+                                                }
+                                            "
+                                        />
+                                        <span class="input-group-text"
+                                            >Longitude</span
+                                        >
+                                        <input
+                                            id="point_coord1"
+                                            v-model="siteObj.point_coord1"
+                                            :disabled="isReadOnly"
+                                            type="number"
+                                            :min="96.000001"
+                                            :max="128.999999"
+                                            step="0.000001"
+                                            class="form-control"
+                                            placeholder=""
+                                            @change="
+                                                if (
+                                                    $event.target.value <
+                                                    96.000001
+                                                ) {
+                                                    siteObj.point_coord1 = 96.000001;
+                                                } else if (
+                                                    $event.target.value >
+                                                    128.999999
+                                                ) {
+                                                    siteObj.point_coord1 = 128.999999;
+                                                }
+                                            "
+                                        />
+                                    </div>
                                 </div>
                             </div>
                             <div class="row mb-3">
                                 <div class="col-sm-3">
-                                    <label class="control-label pull-left"
-                                        >Datum</label
-                                    >
+                                    <label class="control-label">Datum</label>
                                 </div>
                                 <div class="col-sm-9">
                                     <template v-if="!isReadOnly">
@@ -120,7 +156,7 @@
                             </div>
                             <div class="row mb-3">
                                 <div class="col-sm-3">
-                                    <label class="control-label pull-left"
+                                    <label class="control-label"
                                         >Site Type</label
                                     >
                                 </div>
@@ -176,7 +212,7 @@
                             <div class="form-group">
                                 <div class="row mb-3">
                                     <div class="col-sm-3">
-                                        <label class="control-label pull-left"
+                                        <label class="control-label"
                                             >Occurrence Reports</label
                                         >
                                     </div>
@@ -211,7 +247,7 @@
                             <div class="form-group">
                                 <div class="row mb-3">
                                     <div class="col-sm-3">
-                                        <label class="control-label pull-left"
+                                        <label class="control-label"
                                             >Comments</label
                                         >
                                     </div>
@@ -357,6 +393,13 @@ export default {
         },
     },
     watch: {
+        isModalOpen: function (newVal) {
+            if (newVal) {
+                this.$nextTick(() => {
+                    this.$refs.site_name.focus();
+                });
+            }
+        },
         siteObj: function () {
             let vm = this;
             vm.reinitialiseOCRLookup();
@@ -396,6 +439,10 @@ export default {
             }
         },
         cancel: function () {
+            if (this.isReadOnly) {
+                this.close();
+                return;
+            }
             swal.fire({
                 title: 'Are you sure you want to close this modal?',
                 text: 'You will lose any unsaved changes.',
@@ -448,6 +495,11 @@ export default {
                     vm.siteObj.related_occurrence_reports = selected.val();
                 });
         },
+        prepareNewSiteAtCoordinates: function (coordinates) {
+            this.siteObj.point_coord1 = coordinates[0];
+            this.siteObj.point_coord2 = coordinates[1];
+            this.siteObj.related_occurrence_reports = [];
+        },
         sendData: function () {
             let vm = this;
             vm.errorString = '';
@@ -486,8 +538,8 @@ export default {
                             vm.errorString = data;
                             return;
                         }
-                        vm.close();
                         vm.$parent.updatedSites();
+                        vm.close();
                     })
                     .finally(() => {
                         vm.addingSite = false;

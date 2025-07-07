@@ -864,6 +864,7 @@ class OCRPlantCountSerializer(BaseModelSerializer):
         source="counted_subject.name", allow_null=True
     )
     individual_quadrat_area = serializers.FloatField(allow_null=True, default=None)
+    total_quadrat_area = serializers.FloatField(allow_null=True, default=None)
     flowering_plants_per = serializers.FloatField(allow_null=True, default=None)
 
     class Meta:
@@ -3172,6 +3173,7 @@ class OCCPlantCountSerializer(BaseModelSerializer):
         source="counted_subject.name", allow_null=True
     )
     individual_quadrat_area = serializers.FloatField(allow_null=True, default=None)
+    total_quadrat_area = serializers.FloatField(allow_null=True, default=None)
     flowering_plants_per = serializers.FloatField(allow_null=True, default=None)
 
     class Meta:
@@ -4028,6 +4030,7 @@ class OccurrenceSiteSerializer(BaseModelSerializer):
 
 
 class SaveOccurrenceSiteSerializer(BaseModelSerializer):
+    site_name = serializers.CharField(required=True)
 
     class Meta:
         model = OccurrenceSite

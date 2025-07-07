@@ -66,6 +66,48 @@ export function layerAtEventPixel(map_component, evt) {
 }
 
 /**
+ * Fetches the GIS extent from an API endpoint and returns it as an array of floats.
+ * @param {string} gisExtentApiUrl The url to the end point that returns the GIS extent
+ * @returns
+ */
+export async function fetchGISExtent(gisExtentApiUrl) {
+    if (!gisExtentApiUrl) {
+        console.warn('No GIS extent API URL provided');
+        return null;
+    }
+    let gisExtent = null;
+    await fetch(gisExtentApiUrl)
+        .then(async (response) => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then((extent) => {
+            console.log('GIS extent', extent);
+            gisExtent = extent;
+        })
+        .catch((error) => {
+            console.error('Error fetching GIS extent:', error);
+        });
+    if (gisExtent === null) {
+        console.warn('GIS extent is null');
+        return null;
+    }
+    if (!Array.isArray(gisExtent) || gisExtent.length !== 4) {
+        console.error('GIS extent is not an array of four numbers', gisExtent);
+        return null;
+    }
+    // Convert the extent to a tuple of numbers
+    const extentArray = gisExtent.map((num) => parseFloat(num));
+    if (extentArray.some((num) => isNaN(num))) {
+        console.error('GIS extent contains non-numeric values', extentArray);
+        return null;
+    }
+    return extentArray;
+}
+
+/**
  * Queries the WMS server for its capabilities and adds optional layers to a map
  * @param {Proxy} map_component A map component instance
  * @param {string} tileLayerApiUrl The url to the tile layer API

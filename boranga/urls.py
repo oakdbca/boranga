@@ -374,6 +374,11 @@ api_patterns = [
         main_api.GetListItems.as_view(),
         name="get-list-items",
     ),
+    re_path(
+        r"^api/gis-extent/$",
+        main_api.GetGISExtent.as_view(),
+        name="gis-extent",
+    ),
 ]
 
 # URL Patterns

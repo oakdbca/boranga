@@ -124,6 +124,9 @@
                     @crs-select-search="searchForCRS"
                     @toggle-show-hide="toggleShowOnMapLayer"
                     @validate-feature="validateFeature"
+                    @prepare-new-site-at-coordinates="
+                        prepareNewSiteAtCoordinates
+                    "
                     @dirty="mapIsDirty = $event"
                 ></MapComponent>
             </div>
@@ -875,7 +878,8 @@ export default {
             this.$refs.related_reports_datatable.adjust_table_width();
         },
         updatedSites: function () {
-            this.$refs.component_map.forceToRefreshMap();
+            console.debug('Updated sites, refreshing map.');
+            this.incrementComponentMapKey();
         },
         searchForCRS: function (search, loading) {
             const vm = this;
@@ -1226,6 +1230,11 @@ export default {
             }
 
             return areas;
+        },
+        prepareNewSiteAtCoordinates: function (coordinates) {
+            this.$refs.occurrence_sites_datatable.prepareSiteFromCoordinates(
+                coordinates
+            );
         },
     },
 };

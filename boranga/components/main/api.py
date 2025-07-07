@@ -209,6 +209,15 @@ class GetListItems(views.APIView):
         return Response(serializer.data)
 
 
+class GetGISExtent(views.APIView):
+    def get(self, request, *args, **kwargs):
+        """Returns the GIS extent as a list of floats"""
+        extent = settings.GIS_EXTENT
+        if not isinstance(extent, (list, tuple)) or len(extent) != 4:
+            raise ValueError("GIS_EXTENT must be a list or tuple of four floats")
+        return Response(list(extent))
+
+
 class NoPaginationListMixin:
     def get_paginated_response(self, data):
         if "no_pagination" == self.action:

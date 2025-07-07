@@ -28,7 +28,6 @@ from wagov_utils.components.proxy.views import proxy_view
 from boranga import settings
 from boranga.components.occurrence.models import (
     BufferGeometry,
-    GeometryBase,
     OccurrenceGeometry,
     OccurrenceTenure,
 )
@@ -1045,7 +1044,7 @@ def get_geometry_array_from_geojson(
     features = geojson.get("features")
 
     geoms = []
-    bbox = Polygon.from_bbox(GeometryBase.EXTENT)
+    bbox = Polygon.from_bbox(settings.GIS_EXTENT)
 
     for feature in features:
         geom = feature.get("geometry")
@@ -1070,7 +1069,9 @@ def get_geometry_array_from_geojson(
         if not geom.within(bbox):
             error_message = (
                 f"Geomtry defined in {cell_value} for column {column_name} "
-                "is not within Western Australia"
+                "is not within the extent defined for the Boranga application ({})".format(
+                    settings.GIS_EXTENT
+                )
             )
             errors.append(
                 {

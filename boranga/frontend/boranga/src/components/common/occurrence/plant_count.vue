@@ -517,18 +517,30 @@
         </div>
         <div class="row mb-3">
             <label for="" class="col-sm-3 control-label"
-                >Total quadrat area (m<sup>2</sup>):</label
+                >Total quadrat area:</label
             >
-            <div class="col-sm-6">
-                <input
-                    id="tot_quadrat_area"
-                    v-model="plant_count.total_quadrat_area"
-                    :disabled="isReadOnly"
-                    type="number"
-                    class="form-control ocr_number"
-                    placeholder=""
-                    min="0"
-                />
+            <div class="col-sm-4">
+                <div class="input-group w-75">
+                    <input
+                        id="tot_quadrat_area"
+                        v-model="plant_count.total_quadrat_area"
+                        :disabled="isReadOnly"
+                        type="number"
+                        class="form-control ocr_number"
+                        placeholder=""
+                        min="0.00"
+                        step="0.01"
+                        max="9999999999.99"
+                        @change.prevent="
+                            if ($event.target.value > 9999999999.99) {
+                                plant_count.total_quadrat_area = 9999999999.99;
+                            } else if ($event.target.value < 0) {
+                                plant_count.total_quadrat_area = 0;
+                            }
+                        "
+                    />
+                    <span class="input-group-text">m<sup>2</sup></span>
+                </div>
             </div>
         </div>
         <div class="row mb-3">

@@ -458,14 +458,14 @@
                                                         feature
                                                     )
                                                         ? -10e6
-                                                        : -35.5
+                                                        : gisExtentArray[1]
                                                 "
                                                 :max="
                                                     isOriginalGeometryCrsProjected(
                                                         feature
                                                     )
                                                         ? 0.0
-                                                        : -13.5
+                                                        : gisExtentArray[3]
                                                 "
                                                 :step="
                                                     isOriginalGeometryCrsProjected(
@@ -526,14 +526,14 @@
                                                         feature
                                                     )
                                                         ? 0.0
-                                                        : 112.5
+                                                        : gisExtentArray[0]
                                                 "
                                                 :max="
                                                     isOriginalGeometryCrsProjected(
                                                         feature
                                                     )
                                                         ? 40e6
-                                                        : 129.0
+                                                        : gisExtentArray[2]
                                                 "
                                                 :step="
                                                     isOriginalGeometryCrsProjected(
@@ -1641,6 +1641,7 @@ import { platformModifierKeyOnly } from 'ol/events/condition.js';
 import MeasureStyles, { formatLength } from '@/components/common/measure.js';
 import FileField from '@/components/forms/filefield_immediate.vue';
 import {
+    fetchGISExtent,
     fetchTileLayers,
     fetchProposals,
     set_mode,
@@ -1980,6 +1981,7 @@ export default {
         'features-loaded',
         'toggle-show-hide',
         'crs-select-search',
+        'prepare-new-site-at-coordinates',
         'dirty',
     ],
     data() {
@@ -1987,6 +1989,7 @@ export default {
             elem_id: uuid(),
             map_container_id: uuid(),
             map: null,
+            gisExtentArray: null,
             tileLayerMapbox: null,
             tileLayerSat: null,
             selectedBaseLayer: null,
@@ -2412,6 +2415,8 @@ export default {
             ),
             // Tile Layers
             fetchTileLayers(this, this.tileLayerApiUrl),
+            // Fetch the GIS extent for the map
+            fetchGISExtent(api_endpoints.gis_extent),
         ];
         // Addional Layers
         const additionalInitialisers = [];
@@ -2431,6 +2436,7 @@ export default {
                 const baseLayers = this.initialiseBaseLayers(
                     initialised.shift()
                 );
+                this.gisExtentArray = initialised.shift(); // pop the GIS extent tuple
                 this.createMap(baseLayers);
                 this.addTileLayers();
                 this.initialiseMap();
@@ -3797,11 +3803,41 @@ export default {
             const coords = mousePosElem ? mousePosElem.textContent.trim() : '';
             if (coords) {
                 navigator.clipboard.writeText(coords);
+                let text = `Coordinates "${coords}" copied to clipboard.`;
+                if (this.context?.model_name == 'occurrence') {
+                    text +=
+                        '<br/><br/>Would you like to prepare a new site at these coordinates?';
+                    swal.fire({
+                        icon: 'success',
+                        title: 'Copied!',
+                        html: text,
+                        showCancelButton: true,
+                        showConfirmButton: true,
+                        reverseButtons: true,
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                            cancelButton: 'btn btn-secondary',
+                        },
+                        confirmButtonText: 'Yes, prepare site',
+                        cancelButtonText: 'No, thanks',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            this.$emit(
+                                'prepare-new-site-at-coordinates',
+                                coords
+                                    .split(',')
+                                    .map((c) => parseFloat(c.trim()))
+                            );
+                        }
+                    });
+                    return;
+                }
                 swal.fire({
                     icon: 'success',
                     title: 'Copied!',
-                    text: `Coordinates "${coords}" copied to clipboard.`,
+                    text: text,
                     timer: 1200,
+                    showCancelButton: false,
                     showConfirmButton: false,
                 });
             }
@@ -4479,8 +4515,9 @@ export default {
                     this.getLayerDefinitionByName(toSource).identifier_name ||
                     null;
                 propertyOverwrite['identifier_name'] = identifierName;
+                // The following line can lead to circular references
                 propertyOverwrite['layer_definition'] =
-                    this.getLayerDefinitionByName(toSource);
+                    this.getLayerDefinitionByName(toSource).name;
                 opacities = vm.addGeometryToMapSource(
                     proposals,
                     propertyOverwrite,
