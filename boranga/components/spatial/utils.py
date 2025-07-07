@@ -28,7 +28,6 @@ from wagov_utils.components.proxy.views import proxy_view
 from boranga import settings
 from boranga.components.occurrence.models import (
     BufferGeometry,
-    GeometryBase,
     OccurrenceGeometry,
     OccurrenceTenure,
 )
@@ -1045,7 +1044,7 @@ def get_geometry_array_from_geojson(
     features = geojson.get("features")
 
     geoms = []
-    bbox = Polygon.from_bbox(GeometryBase.EXTENT)
+    bbox = Polygon.from_bbox(settings.GIS_EXTENT)
 
     for feature in features:
         geom = feature.get("geometry")

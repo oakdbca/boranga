@@ -2078,9 +2078,9 @@ class GeometryBase(BaseModel):
 
     objects = GeometryManager()
 
-    EXTENT = (112.5, -35.5, 129.0, -13.5)
-
-    geometry = gis_models.GeometryField(extent=EXTENT, blank=True, null=True)
+    geometry = gis_models.GeometryField(
+        extent=settings.GIS_EXTENT, blank=True, null=True
+    )
     original_geometry_ewkb = models.BinaryField(
         blank=True, null=True, editable=True
     )  # original geometry as uploaded by the user in EWKB format (keeps the srid)
@@ -2122,7 +2122,7 @@ class GeometryBase(BaseModel):
             )
 
         if not self.geometry.within(
-            GEOSGeometry(Polygon.from_bbox(self.EXTENT), srid=4326)
+            GEOSGeometry(Polygon.from_bbox(settings.GIS_EXTENT), srid=4326)
         ):
             raise ValidationError(
                 "Geometry is not within the extent of Western Australia"
