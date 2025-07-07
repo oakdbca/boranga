@@ -2,7 +2,7 @@
     <div :id="'related_ocr' + section_type">
         <FormSection
             :form-collapse="false"
-            label="Select Related Occurrence Report to Copy Data"
+            :label="label"
             :Index="'related_ocr' + section_type"
             @toggle-collapse="toggleCollapse"
         >
@@ -47,6 +47,11 @@ export default {
         occurrence_obj: {
             type: Object,
             required: true,
+        },
+        label: {
+            type: String,
+            required: false,
+            default: 'Select Related Occurrence Report to Copy Data',
         },
         section_type: {
             type: String,
