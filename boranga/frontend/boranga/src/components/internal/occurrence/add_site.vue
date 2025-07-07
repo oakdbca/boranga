@@ -39,28 +39,33 @@
                             </div>
                             <div class="row mb-3">
                                 <label for="" class="col-sm-3 control-label"
-                                    >Point Coordinate (Lat-Long)</label
+                                    >Point Coordinate</label
                                 >
-                                <div class="col-sm-4">
-                                    <input
-                                        id="point_coord2"
-                                        v-model="siteObj.point_coord2"
-                                        :disabled="isReadOnly"
-                                        type="decimal"
-                                        class="form-control"
-                                        placeholder=""
-                                    />
-                                </div>
-                                -
-                                <div class="col-sm-4">
-                                    <input
-                                        id="point_coord1"
-                                        v-model="siteObj.point_coord1"
-                                        :disabled="isReadOnly"
-                                        type="decimal"
-                                        class="form-control"
-                                        placeholder=""
-                                    />
+                                <div class="col-sm-9">
+                                    <div class="input-group">
+                                        <span class="input-group-text"
+                                            >Latitude</span
+                                        >
+                                        <input
+                                            id="point_coord2"
+                                            v-model="siteObj.point_coord2"
+                                            :disabled="isReadOnly"
+                                            type="decimal"
+                                            class="form-control"
+                                            placeholder=""
+                                        />
+                                        <span class="input-group-text"
+                                            >Longitude</span
+                                        >
+                                        <input
+                                            id="point_coord1"
+                                            v-model="siteObj.point_coord1"
+                                            :disabled="isReadOnly"
+                                            type="decimal"
+                                            class="form-control"
+                                            placeholder=""
+                                        />
+                                    </div>
                                 </div>
                             </div>
                             <div class="row mb-3">
