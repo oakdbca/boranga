@@ -1069,7 +1069,9 @@ def get_geometry_array_from_geojson(
         if not geom.within(bbox):
             error_message = (
                 f"Geomtry defined in {cell_value} for column {column_name} "
-                "is not within Western Australia"
+                "is not within the extent defined for the Boranga application ({})".format(
+                    settings.GIS_EXTENT
+                )
             )
             errors.append(
                 {

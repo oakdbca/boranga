@@ -2125,7 +2125,9 @@ class GeometryBase(BaseModel):
             GEOSGeometry(Polygon.from_bbox(settings.GIS_EXTENT), srid=4326)
         ):
             raise ValidationError(
-                "Geometry is not within the extent of Western Australia"
+                "Geometry is not within the extent defined for the Boranga application ({})".format(
+                    settings.GIS_EXTENT
+                )
             )
 
         super().save(*args, **kwargs)
