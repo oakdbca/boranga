@@ -3097,7 +3097,13 @@ class OCRPlantCount(BaseModel):
         decimal_places=2,
         validators=[MinValueValidator(Decimal("0.00"))],
     )
-    total_quadrat_area = models.IntegerField(null=True, blank=True, default=0)
+    total_quadrat_area = models.DecimalField(
+        null=True,
+        blank=True,
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
     flowering_plants_per = models.DecimalField(
         blank=True,
         max_digits=5,
@@ -5297,7 +5303,13 @@ class OCCPlantCount(BaseModel):
         decimal_places=2,
         validators=[MinValueValidator(Decimal("0.00"))],
     )
-    total_quadrat_area = models.IntegerField(null=True, blank=True, default=0)
+    total_quadrat_area = models.DecimalField(
+        null=True,
+        blank=True,
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
     flowering_plants_per = models.DecimalField(
         blank=True,
         max_digits=5,
