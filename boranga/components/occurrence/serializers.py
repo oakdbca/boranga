@@ -4030,6 +4030,7 @@ class OccurrenceSiteSerializer(BaseModelSerializer):
 
 
 class SaveOccurrenceSiteSerializer(BaseModelSerializer):
+    site_name = serializers.CharField(required=True)
 
     class Meta:
         model = OccurrenceSite
