@@ -429,6 +429,17 @@ export default {
                 }
             );
         },
+        prepareSiteFromCoordinates: function (coordinates) {
+            console.debug(
+                'prepareSiteFromCoordinates called with coordinates:',
+                coordinates
+            );
+            this.newSite();
+            this.$refs.site_detail.prepareNewSiteAtCoordinates(
+                coordinates,
+                this.occurrence_obj.id
+            );
+        },
         historySite: function (id) {
             this.occSiteHistoryId = parseInt(id);
             this.uuid++;

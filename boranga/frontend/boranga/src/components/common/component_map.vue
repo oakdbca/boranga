@@ -1981,6 +1981,7 @@ export default {
         'features-loaded',
         'toggle-show-hide',
         'crs-select-search',
+        'prepare-new-site-at-coordinates',
         'dirty',
     ],
     data() {
@@ -3802,11 +3803,41 @@ export default {
             const coords = mousePosElem ? mousePosElem.textContent.trim() : '';
             if (coords) {
                 navigator.clipboard.writeText(coords);
+                let text = `Coordinates "${coords}" copied to clipboard.`;
+                if (this.context?.model_name == 'occurrence') {
+                    text +=
+                        '<br/><br/>Would you like to prepare a new site at these coordinates?';
+                    swal.fire({
+                        icon: 'success',
+                        title: 'Copied!',
+                        html: text,
+                        showCancelButton: true,
+                        showConfirmButton: true,
+                        reverseButtons: true,
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                            cancelButton: 'btn btn-secondary',
+                        },
+                        confirmButtonText: 'Yes, prepare site',
+                        cancelButtonText: 'No, thanks',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            this.$emit(
+                                'prepare-new-site-at-coordinates',
+                                coords
+                                    .split(',')
+                                    .map((c) => parseFloat(c.trim()))
+                            );
+                        }
+                    });
+                    return;
+                }
                 swal.fire({
                     icon: 'success',
                     title: 'Copied!',
-                    text: `Coordinates "${coords}" copied to clipboard.`,
+                    text: text,
                     timer: 1200,
+                    showCancelButton: false,
                     showConfirmButton: false,
                 });
             }
@@ -4484,8 +4515,9 @@ export default {
                     this.getLayerDefinitionByName(toSource).identifier_name ||
                     null;
                 propertyOverwrite['identifier_name'] = identifierName;
+                // The following line can lead to circular references
                 propertyOverwrite['layer_definition'] =
-                    this.getLayerDefinitionByName(toSource);
+                    this.getLayerDefinitionByName(toSource).name;
                 opacities = vm.addGeometryToMapSource(
                     proposals,
                     propertyOverwrite,
