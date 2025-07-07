@@ -549,3 +549,9 @@ CSV_EXPORT_QUOTING = config("CSV_EXPORT_QUOTING", default="QUOTE_ALL")
 DEFAULT_SELECT2_RECORDS_LIMIT = config(
     "DEFAULT_SELECT2_RECORDS_LIMIT", default=20, cast=int
 )
+
+GIS_EXTENT = config(
+    "GIS_EXTENT",
+    default="96.0, -35.0, 129.0, -10.0",
+    cast=Csv(float, post_process=tuple),
+)
