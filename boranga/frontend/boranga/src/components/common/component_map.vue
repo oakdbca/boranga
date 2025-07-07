@@ -458,14 +458,14 @@
                                                         feature
                                                     )
                                                         ? -10e6
-                                                        : -35.5
+                                                        : gisExtentArray[1]
                                                 "
                                                 :max="
                                                     isOriginalGeometryCrsProjected(
                                                         feature
                                                     )
                                                         ? 0.0
-                                                        : -13.5
+                                                        : gisExtentArray[3]
                                                 "
                                                 :step="
                                                     isOriginalGeometryCrsProjected(
@@ -526,14 +526,14 @@
                                                         feature
                                                     )
                                                         ? 0.0
-                                                        : 112.5
+                                                        : gisExtentArray[0]
                                                 "
                                                 :max="
                                                     isOriginalGeometryCrsProjected(
                                                         feature
                                                     )
                                                         ? 40e6
-                                                        : 129.0
+                                                        : gisExtentArray[2]
                                                 "
                                                 :step="
                                                     isOriginalGeometryCrsProjected(
@@ -1641,6 +1641,7 @@ import { platformModifierKeyOnly } from 'ol/events/condition.js';
 import MeasureStyles, { formatLength } from '@/components/common/measure.js';
 import FileField from '@/components/forms/filefield_immediate.vue';
 import {
+    fetchGISExtent,
     fetchTileLayers,
     fetchProposals,
     set_mode,
@@ -1987,6 +1988,7 @@ export default {
             elem_id: uuid(),
             map_container_id: uuid(),
             map: null,
+            gisExtentArray: null,
             tileLayerMapbox: null,
             tileLayerSat: null,
             selectedBaseLayer: null,
@@ -2412,6 +2414,8 @@ export default {
             ),
             // Tile Layers
             fetchTileLayers(this, this.tileLayerApiUrl),
+            // Fetch the GIS extent for the map
+            fetchGISExtent(api_endpoints.gis_extent),
         ];
         // Addional Layers
         const additionalInitialisers = [];
@@ -2431,6 +2435,7 @@ export default {
                 const baseLayers = this.initialiseBaseLayers(
                     initialised.shift()
                 );
+                this.gisExtentArray = initialised.shift(); // pop the GIS extent tuple
                 this.createMap(baseLayers);
                 this.addTileLayers();
                 this.initialiseMap();
