@@ -5708,6 +5708,9 @@ class OccurrenceSiteViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         return qs
 
     def update(self, request, *args, **kwargs):
+        # TODO: Both the update and create methods here are a bit jank.
+        # Most of this stuff should be done in a serializer and it should validate the presence
+        # of fields before doing more advanced validation.
         instance = self.get_object()
 
         if not instance.visible:
