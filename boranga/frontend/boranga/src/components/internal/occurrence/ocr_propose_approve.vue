@@ -319,7 +319,7 @@ export default {
                 }
             }
         },
-        propose_approve: {
+        'propose_approve.create_new_occurrence': {
             handler: function () {
                 if (this.propose_approve.create_new_occurrence) {
                     if (this.ocr_for_occ_name) {
