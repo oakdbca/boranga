@@ -201,6 +201,11 @@ export default {
 <style scoped>
 .modal {
     display: block;
+    z-index: 20000 !important;
+}
+
+.modal-backdrop {
+    z-index: 19999 !important;
 }
 
 .modal .btn {
