@@ -38,6 +38,18 @@
                     <div class="card-body">
                         <strong>Status</strong><br />
                         {{ conservation_status_obj.processing_status }}
+                        <template v-if="conservation_status_obj.locked"
+                            ><i
+                                class="bi bi-lock-fill text-secondary"
+                                title="locked"
+                            ></i
+                        ></template>
+                        <template v-else
+                            ><i
+                                class="bi bi-unlock-fill text-secondary"
+                                title="unlocked"
+                            ></i
+                        ></template>
                         <template
                             v-if="
                                 conservation_status_obj.processing_status ==
