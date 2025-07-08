@@ -764,7 +764,7 @@ class ConservationStatus(
             ConservationStatus.PROCESSING_STATUS_READY_FOR_AGENDA,
             ConservationStatus.PROCESSING_STATUS_WITH_APPROVER,
         ]
-        return self.processing_status in approver_process_state
+        return not self.locked or self.processing_status in approver_process_state
 
     @property
     def can_officer_edit(self):
@@ -2006,11 +2006,6 @@ class ConservationStatus(
             ConservationStatus.PROCESSING_STATUS_DELISTED,
         ]
 
-    def can_unlock(self, request):
-        if self.is_finalised:
-            return is_conservation_status_approver(request)
-        return False
-
     @property
     def show_locked_indicator(self):
         return self.processing_status in [
@@ -2024,6 +2019,11 @@ class ConservationStatus(
         if self.locked:
             raise ValidationError(
                 "You cannot lock a conservation status that is already locked"
+            )
+        if not is_conservation_status_approver(request):
+            raise ValidationError(
+                "You cannot lock a conservation status unless you are a member "
+                "of the conservation status approver group"
             )
 
         self.locked = True
@@ -2044,9 +2044,15 @@ class ConservationStatus(
         )
 
     def unlock(self, request):
-        if self.locked:
+        if not self.locked:
             raise ValidationError(
                 "You cannot unlock a conservation status that is already unlocked"
+            )
+
+        if not is_conservation_status_approver(request):
+            raise ValidationError(
+                "You cannot unlock a conservation status unless you are a member "
+                "of the conservation status approver group"
             )
 
         self.locked = False
