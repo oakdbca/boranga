@@ -454,6 +454,13 @@ class SpeciesConservationStatusFilterBackend(DatatablesFilterBackend):
             ):
                 queryset = queryset.filter(processing_status=filter_application_status)
 
+        filter_locked = request.POST.get("filter_locked")
+        if filter_locked and not filter_locked.lower() == "all":
+            if filter_locked.lower() == "true":
+                queryset = queryset.filter(locked=True)
+            elif filter_locked.lower() == "false":
+                queryset = queryset.filter(locked=False)
+
         filter_assessor = request.POST.get("filter_assessor")
         if filter_assessor and not filter_assessor.lower() == "all":
             if queryset.model is ConservationStatus:
@@ -849,6 +856,13 @@ class CommunityConservationStatusFilterBackend(DatatablesFilterBackend):
                     conservation_status__processing_status=filter_application_status
                 )
 
+        filter_locked = request.POST.get("filter_locked")
+        if filter_locked and not filter_locked.lower() == "all":
+            if filter_locked.lower() == "true":
+                queryset = queryset.filter(locked=True)
+            elif filter_locked.lower() == "false":
+                queryset = queryset.filter(locked=False)
+
         filter_assessor = request.POST.get("filter_assessor")
         if filter_assessor and not filter_assessor.lower() == "all":
             if queryset.model is ConservationStatus:
@@ -1130,6 +1144,13 @@ class ConservationStatusFilterBackend(DatatablesFilterBackend):
                 and not filter_application_status.lower() == "all"
             ):
                 queryset = queryset.filter(processing_status=filter_application_status)
+
+            filter_locked = request.GET.get("filter_locked")
+            if filter_locked and not filter_locked.lower() == "all":
+                if filter_locked.lower() == "true":
+                    queryset = queryset.filter(locked=True)
+                elif filter_locked.lower() == "false":
+                    queryset = queryset.filter(locked=False)
 
         fields = self.get_fields(request)
         ordering = self.get_ordering(request, view, fields)
