@@ -751,11 +751,6 @@ export default {
                     name: 'DeListed',
                     className: 'optionChild',
                 },
-                {
-                    value: 'unlocked',
-                    name: 'Unlocked',
-                    className: 'optionChild',
-                },
                 { value: 'approved', name: 'Approved', className: '' },
             ],
         };
