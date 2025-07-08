@@ -432,7 +432,6 @@ class ConservationStatus(
     PROCESSING_STATUS_ON_AGENDA = "on_agenda"
     PROCESSING_STATUS_PROPOSED_FOR_AGENDA = "proposed_for_agenda"
     PROCESSING_STATUS_READY_FOR_AGENDA = "ready_for_agenda"
-    PROCESSING_STATUS_UNLOCKED = "unlocked"
     PROCESSING_STATUS_WITH_APPROVER = "with_approver"
     PROCESSING_STATUS_WITH_ASSESSOR = "with_assessor"
     PROCESSING_STATUS_WITH_REFERRAL = "with_referral"
@@ -451,7 +450,6 @@ class ConservationStatus(
         (PROCESSING_STATUS_DECLINED, "Declined"),
         (PROCESSING_STATUS_DELISTED, "DeListed"),
         (PROCESSING_STATUS_CLOSED, "Closed"),
-        (PROCESSING_STATUS_UNLOCKED, "Unlocked"),
     )
 
     # The following tuples of statuses are only user for filtering purposes
@@ -645,9 +643,6 @@ class ConservationStatus(
         default=PROCESSING_STATUS_CHOICES[0][0],
     )
 
-    # Currently prev_processing_status is only used to keep track of status prior to unlock
-    # so that when locked the record returns to the correct status
-    prev_processing_status = models.CharField(max_length=30, blank=True, null=True)
     proposed_decline_status = models.BooleanField(default=False)
     assessor_data = models.TextField(null=True, blank=True)  # assessor comment
 
@@ -810,13 +805,12 @@ class ConservationStatus(
     @property
     def allowed_assessors(self):
         group_ids = None
-        if self.processing_status in [
+        if not self.locked or self.processing_status in [
             ConservationStatus.PROCESSING_STATUS_PROPOSED_FOR_AGENDA,
             ConservationStatus.PROCESSING_STATUS_READY_FOR_AGENDA,
             ConservationStatus.PROCESSING_STATUS_ON_AGENDA,
             ConservationStatus.PROCESSING_STATUS_WITH_APPROVER,
             ConservationStatus.PROCESSING_STATUS_APPROVED,
-            ConservationStatus.PROCESSING_STATUS_UNLOCKED,
             ConservationStatus.PROCESSING_STATUS_CLOSED,
             ConservationStatus.PROCESSING_STATUS_DECLINED,
             ConservationStatus.PROCESSING_STATUS_DELISTED,
@@ -915,12 +909,11 @@ class ConservationStatus(
             ConservationStatus.PROCESSING_STATUS_DEFERRED,
         ]:
             return is_conservation_status_assessor(request)
-        elif self.processing_status in [
+        elif not self.locked or self.processing_status in [
             ConservationStatus.PROCESSING_STATUS_PROPOSED_FOR_AGENDA,
             ConservationStatus.PROCESSING_STATUS_READY_FOR_AGENDA,
             ConservationStatus.PROCESSING_STATUS_ON_AGENDA,
             ConservationStatus.PROCESSING_STATUS_WITH_APPROVER,
-            ConservationStatus.PROCESSING_STATUS_UNLOCKED,
             ConservationStatus.PROCESSING_STATUS_DEFERRED,
         ]:
             return is_conservation_status_approver(request)
@@ -928,13 +921,12 @@ class ConservationStatus(
         return False
 
     def assessor_comments_view(self, request):
-        if self.processing_status in [
+        if not self.locked or self.processing_status in [
             ConservationStatus.PROCESSING_STATUS_WITH_ASSESSOR,
             ConservationStatus.PROCESSING_STATUS_WITH_REFERRAL,
             ConservationStatus.PROCESSING_STATUS_READY_FOR_AGENDA,
             ConservationStatus.PROCESSING_STATUS_WITH_APPROVER,
             ConservationStatus.PROCESSING_STATUS_APPROVED,
-            ConservationStatus.PROCESSING_STATUS_UNLOCKED,
             ConservationStatus.PROCESSING_STATUS_CLOSED,
             ConservationStatus.PROCESSING_STATUS_DELISTED,
             ConservationStatus.PROCESSING_STATUS_DEFERRED,
@@ -1005,7 +997,7 @@ class ConservationStatus(
             # the assigned to dropdown for the approver or assessor and not both.
             return is_conservation_status_assessor(request)
 
-        elif self.processing_status == ConservationStatus.PROCESSING_STATUS_UNLOCKED:
+        elif not self.locked:
             return is_conservation_status_approver(request)
         else:
             if not self.assigned_officer:
@@ -1034,13 +1026,11 @@ class ConservationStatus(
             ConservationStatus.PROCESSING_STATUS_CLOSED,
             ConservationStatus.PROCESSING_STATUS_DELISTED,
             ConservationStatus.PROCESSING_STATUS_DECLINED,
-            ConservationStatus.PROCESSING_STATUS_UNLOCKED,
         ]
 
         if (
-            self.processing_status in approver_statuses
-            and is_conservation_status_approver(request)
-        ):
+            not self.locked or self.processing_status in approver_statuses
+        ) and is_conservation_status_approver(request):
             if officer == self.assigned_approver:
                 logger.warning(
                     "Approver is already assigned to this conservation status"
@@ -1107,7 +1097,7 @@ class ConservationStatus(
 
     @transaction.atomic
     def unassign(self, request):
-        if self.processing_status in [
+        if not self.locked or self.processing_status in [
             ConservationStatus.PROCESSING_STATUS_PROPOSED_FOR_AGENDA,
             ConservationStatus.PROCESSING_STATUS_READY_FOR_AGENDA,
             ConservationStatus.PROCESSING_STATUS_ON_AGENDA,
@@ -1116,7 +1106,6 @@ class ConservationStatus(
             ConservationStatus.PROCESSING_STATUS_CLOSED,
             ConservationStatus.PROCESSING_STATUS_DELISTED,
             ConservationStatus.PROCESSING_STATUS_DECLINED,
-            ConservationStatus.PROCESSING_STATUS_UNLOCKED,
         ]:
             if self.assigned_approver:
                 self.assigned_approver = None
@@ -2022,17 +2011,13 @@ class ConservationStatus(
             return is_conservation_status_approver(request)
         return False
 
-    def can_lock(self, request):
-        if self.processing_status == ConservationStatus.PROCESSING_STATUS_UNLOCKED:
-            return is_conservation_status_approver(request)
-        return False
-
     def lock(self, request):
-        if not self.can_lock(request):
-            return
+        if self.locked:
+            raise ValidationError(
+                "You cannot lock a conservation status that is already locked"
+            )
 
-        self.processing_status = self.prev_processing_status
-        self.assigned_approver = None
+        self.locked = True
         self.save(version_user=request.user)
 
         self.log_user_action(
@@ -2050,11 +2035,12 @@ class ConservationStatus(
         )
 
     def unlock(self, request):
-        if not self.can_unlock(request):
-            return
+        if self.locked:
+            raise ValidationError(
+                "You cannot unlock a conservation status that is already unlocked"
+            )
 
-        self.prev_processing_status = self.processing_status
-        self.processing_status = ConservationStatus.PROCESSING_STATUS_UNLOCKED
+        self.locked = False
         self.save(version_user=request.user)
 
         self.log_user_action(
@@ -2072,7 +2058,7 @@ class ConservationStatus(
         )
 
     def has_unlocked_mode(self, request):
-        if not self.processing_status == ConservationStatus.PROCESSING_STATUS_UNLOCKED:
+        if self.locked:
             return False
 
         if not self.assigned_approver:
