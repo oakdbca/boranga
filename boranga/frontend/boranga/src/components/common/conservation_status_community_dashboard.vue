@@ -835,11 +835,15 @@ export default {
                 searchable: true,
                 visible: true,
                 render: function (data, type, full) {
-                    if (full.processing_status) {
-                        return full.processing_status;
+                    let html = full.processing_status;
+                    if (full.locked) {
+                        html +=
+                            '<i class="bi bi-lock-fill ms-2 text-secondary"></i>';
+                    } else {
+                        html +=
+                            '<i class="bi bi-unlock-fill ms-2 text-secondary"></i>';
                     }
-                    // Should not reach here
-                    return '';
+                    return html;
                 },
                 name: 'processing_status',
             };
