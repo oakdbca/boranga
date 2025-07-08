@@ -414,3 +414,27 @@ class AbstractOrderedList(OrderedModel, ArchivableModel):
         lists = lists.values("id", "item").order_by("order")
 
         return list(lists)
+
+
+class LockableModelMixin(BaseModel):
+    locked = models.BooleanField(
+        null=False, blank=False, default=False, help_text="Whether the record is locked"
+    )
+
+    class Meta:
+        abstract = True
+        app_label = "boranga"
+
+    def lock(self):
+        if not self.locked:
+            self.locked = True
+            self.save()
+
+    def unlock(self):
+        if self.locked:
+            self.locked = False
+            self.save()
+
+    def toggle_lock(self):
+        self.locked = not self.locked
+        self.save()
