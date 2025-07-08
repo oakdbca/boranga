@@ -1066,7 +1066,7 @@ export default {
                     let html = full.processing_status;
                     if (full.locked) {
                         html +=
-                            '<i class="bi bi-lock-fill ms-2 text-secondary"></i>';
+                            '<i class="bi bi-lock-fill ms-2 text-warning"></i>';
                     } else {
                         html +=
                             '<i class="bi bi-unlock-fill ms-2 text-secondary"></i>';

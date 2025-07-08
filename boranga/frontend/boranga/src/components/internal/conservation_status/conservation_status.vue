@@ -40,7 +40,7 @@
                         {{ conservation_status_obj.processing_status }}
                         <template v-if="conservation_status_obj.locked"
                             ><i
-                                class="bi bi-lock-fill text-secondary"
+                                class="bi bi-lock-fill text-warning"
                                 title="locked"
                             ></i
                         ></template>
