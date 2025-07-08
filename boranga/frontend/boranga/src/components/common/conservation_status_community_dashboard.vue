@@ -221,6 +221,20 @@
                         </select>
                     </div>
                 </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="submitter-category">Locked:</label>
+                        <select
+                            id="submitter-category"
+                            v-model="filterCSCommunityLocked"
+                            class="form-select"
+                        >
+                            <option value="all">All</option>
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                </div>
                 <div v-show="!is_for_agenda" class="col-md-6">
                     <label for="" class="form-label px-2"
                         >Effective From Date Range:</label
@@ -472,6 +486,11 @@ export default {
             required: false,
             default: 'filterCSToCommunityReviewDueDate',
         },
+        filterCSCommunityLocked_cache: {
+            type: String,
+            required: false,
+            default: 'filterCSCommunityLocked',
+        },
     },
     data() {
         return {
@@ -616,6 +635,12 @@ export default {
                   )
                 : '',
 
+            filterCSCommunityLocked: sessionStorage.getItem(
+                this.filterCSCommunityLocked_cache
+            )
+                ? sessionStorage.getItem(this.filterCSCommunityLocked_cache)
+                : 'all',
+
             //Filter list for Community select box
             filterListsCommunities: {},
             communities_data_list: [],
@@ -717,7 +742,8 @@ export default {
                 this.filterCSFromCommunityEffectiveToDate === '' &&
                 this.filterCSToCommunityEffectiveToDate === '' &&
                 this.filterCSFromCommunityReviewDueDate === '' &&
-                this.filterCSToCommunityReviewDueDate === ''
+                this.filterCSToCommunityReviewDueDate === '' &&
+                this.filterCSCommunityLocked === 'all'
             ) {
                 return false;
             } else {
@@ -1184,6 +1210,7 @@ export default {
                             vm.filterCSFromCommunityReviewDueDate;
                         d.filter_to_review_due_date =
                             vm.filterCSToCommunityReviewDueDate;
+                        d.filter_locked = vm.filterCSCommunityLocked;
                     },
                 },
                 //dom: 'lBfrtip',
@@ -1291,6 +1318,17 @@ export default {
             sessionStorage.setItem(
                 vm.filterCSToCommunityReviewDueDate_cache,
                 vm.filterCSToCommunityReviewDueDate
+            );
+        },
+        filterCSCommunityLocked: function () {
+            let vm = this;
+            vm.$refs.cs_communities_datatable.vmDataTable.ajax.reload(
+                helpers.enablePopovers,
+                false
+            ); // This calls ajax() backend call.
+            sessionStorage.setItem(
+                vm.filterCSCommunityLocked_cache,
+                vm.filterCSCommunityLocked
             );
         },
         filterCSCommunityApplicationStatus: function () {
