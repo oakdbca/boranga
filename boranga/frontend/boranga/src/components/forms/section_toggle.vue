@@ -1,12 +1,11 @@
 <template lang="html">
-    <div :id="custom_id" class="card section-wrapper">
+    <div :id="custom_id" class="card mb-4">
         <div class="card-header h4 fw-bold p-4">
             <div
                 :id="'show_hide_switch_' + section_body_id"
-                class="row show_hide_switch"
+                class="row"
                 aria-expanded="true"
                 :aria-controls="section_body_id"
-                @click="toggle_show_hide"
             >
                 <div
                     class="col-11 d-flex align-items-center"
@@ -49,8 +48,10 @@
                 <div class="col-1 text-end">
                     <i
                         :id="chevron_elem_id"
+                        role="button"
                         class="bi fw-bold chevron-toggle"
                         :data-bs-target="'#' + section_body_id"
+                        @click="toggle"
                     >
                     </i>
                 </div>
@@ -112,11 +113,12 @@ export default {
             default: false,
         },
     },
-    emits: ['toggle-collapse', 'opened', 'collapsed', 'toggleComment'],
+    emits: ['toggle', 'opened', 'collapsed', 'toggleComment'],
     data: function () {
         return {
             custom_id: uuid(),
             chevron_elem_id: 'chevron_elem_' + uuid(),
+            collapsed: false,
         };
     },
     computed: {
@@ -137,16 +139,13 @@ export default {
     mounted: function () {
         // eslint-disable-next-line no-undef
         chevron_toggle.init();
+        this.collapsed = this.formCollapse;
     },
     methods: {
-        toggle_show_hide: function () {
-            // Bootstrap add a 'collapsed' class name to the element
-            let elem_expanded_when_clicked = $(
-                '#show_hide_switch_' + this.section_body_id
-            ).hasClass('collapsed');
-            this.elem_expanded = !elem_expanded_when_clicked;
-            this.$emit('toggle-collapse');
-            if (elem_expanded_when_clicked) {
+        toggle: function () {
+            this.collapsed = !this.collapsed;
+            this.$emit('toggle', this.collapsed);
+            if (this.collapsed) {
                 this.$emit('collapsed');
             } else {
                 this.$emit('opened');
@@ -158,22 +157,3 @@ export default {
     },
 };
 </script>
-
-<style scoped>
-.section-wrapper {
-    margin-bottom: 20px;
-    padding: 0;
-}
-
-.show_hide_switch {
-    cursor: pointer;
-}
-
-.rotate_icon {
-    transition: 0.5s;
-}
-
-.chev_rotated {
-    transform: rotate(90deg);
-}
-</style>
