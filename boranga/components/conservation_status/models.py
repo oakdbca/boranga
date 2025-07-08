@@ -2011,6 +2011,15 @@ class ConservationStatus(
             return is_conservation_status_approver(request)
         return False
 
+    @property
+    def show_locked_indicator(self):
+        return self.processing_status in [
+            ConservationStatus.PROCESSING_STATUS_APPROVED,
+            ConservationStatus.PROCESSING_STATUS_DELISTED,
+            ConservationStatus.PROCESSING_STATUS_DECLINED,
+            ConservationStatus.PROCESSING_STATUS_CLOSED,
+        ]
+
     def lock(self, request):
         if self.locked:
             raise ValidationError(

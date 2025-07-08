@@ -836,6 +836,9 @@ export default {
                 visible: true,
                 render: function (data, type, full) {
                     let html = full.processing_status;
+                    if (!full.show_locked_indicator) {
+                        return html;
+                    }
                     if (full.locked) {
                         html +=
                             '<i class="bi bi-lock-fill ms-2 text-warning"></i>';
