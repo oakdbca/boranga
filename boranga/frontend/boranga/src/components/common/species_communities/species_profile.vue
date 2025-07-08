@@ -412,8 +412,15 @@
                     </div>
                     <div class="row mb-3">
                         <label for="" class="col-sm-4 col-form-label"
-                            >Area of Occupancy:</label
+                            >Area of Occupancy:
+                            <div
+                                id="area-of-occupancy-help-text"
+                                class="form-text"
+                            >
+                                Based on IUCN 2km x 2km grid method
+                            </div></label
                         >
+
                         <div class="col-sm-4">
                             <div class="input-group">
                                 <input
@@ -428,9 +435,9 @@
                                     placeholder=""
                                 />
                                 <span
-                                    id="area_of_occupancy-addon"
+                                    id="area_of_occupancy_km2-addon"
                                     class="input-group-text"
-                                    >10km x 10km</span
+                                    >km&#xb2;</span
                                 >
                             </div>
                         </div>
