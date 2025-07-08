@@ -641,6 +641,8 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
         choices=PROCESSING_STATUS_CHOICES,
         default=PROCESSING_STATUS_CHOICES[0][0],
     )
+    locked = models.BooleanField(null=False, blank=False, default=False)
+
     # Currently prev_processing_status is only used to keep track of status prior to unlock
     # so that when locked the record returns to the correct status
     prev_processing_status = models.CharField(max_length=30, blank=True, null=True)
