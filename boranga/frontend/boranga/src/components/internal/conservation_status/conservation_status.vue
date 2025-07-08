@@ -38,18 +38,20 @@
                     <div class="card-body">
                         <strong>Status</strong><br />
                         {{ conservation_status_obj.processing_status }}
-                        <template v-if="conservation_status_obj.locked"
-                            ><i
-                                class="bi bi-lock-fill text-warning"
+                        <template
+                            v-if="conservation_status_obj.show_locked_indicator"
+                        >
+                            <i
+                                v-if="conservation_status_obj.locked"
+                                class="bi bi-lock-fill text-warning fs-5"
                                 title="locked"
-                            ></i
-                        ></template>
-                        <template v-else
-                            ><i
-                                class="bi bi-unlock-fill text-secondary"
+                            ></i>
+                            <i
+                                v-else
+                                class="bi bi-unlock-fill text-secondary fs-5 ms-1"
                                 title="unlocked"
-                            ></i
-                        ></template>
+                            ></i>
+                        </template>
                         <template
                             v-if="
                                 conservation_status_obj.processing_status ==
@@ -106,14 +108,13 @@
                                                 'Ready For Agenda',
                                                 'On Agenda',
                                                 'Proposed DeListed',
-                                                'Unlocked',
                                                 'Approved',
                                                 'Closed',
                                                 'DeListed',
                                                 'Declined',
                                             ].includes(
                                                 conservation_status_obj.processing_status
-                                            )
+                                            ) || conservation_status_obj.locked
                                         "
                                     >
                                         <select
@@ -1125,7 +1126,6 @@ export default {
                 this.conservation_status_obj.processing_status == 'Declined' ||
                 this.conservation_status_obj.processing_status == 'Approved' ||
                 this.conservation_status_obj.processing_status == 'Closed' ||
-                this.conservation_status_obj.processing_status == 'Unlocked' ||
                 this.conservation_status_obj.processing_status == 'DeListed'
             );
         },
@@ -1156,8 +1156,11 @@ export default {
                     'Proposed For Agenda',
                     'Ready For Agenda',
                     'Proposed DeListed',
-                    'Unlocked',
-                ].includes(this.conservation_status_obj.processing_status)
+                ].includes(this.conservation_status_obj.processing_status) ||
+                (['Closed', 'DeListed', 'Declined', 'Approved'].includes(
+                    this.conservation_status_obj.processing_status
+                ) &&
+                    !this.conservation_status_obj.locked)
             ) {
                 return (
                     this.conservation_status_obj.current_assessor.id ==
@@ -1292,7 +1295,8 @@ export default {
                     this.conservation_status_obj.assigned_approver &&
                 ['Approved', 'Closed', 'Declined', 'DeListed'].includes(
                     this.conservation_status_obj.processing_status
-                )
+                ) &&
+                this.conservation_status_obj.locked
             );
         },
         canLock: function () {
@@ -1300,7 +1304,7 @@ export default {
                 this.conservation_status_obj &&
                 this.conservation_status_obj.current_assessor.id ==
                     this.conservation_status_obj.assigned_approver &&
-                this.conservation_status_obj.processing_status === 'Unlocked'
+                !this.conservation_status_obj.locked
             );
         },
         show_finalised_actions: function () {
