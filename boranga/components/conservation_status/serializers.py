@@ -120,6 +120,7 @@ class ListConservationStatusSerializer(BaseModelSerializer):
             "can_user_edit",
             "can_user_view",
             "is_new_contributor",
+            "locked",
         )
         datatables_always_serialize = (
             "id",
@@ -132,6 +133,7 @@ class ListConservationStatusSerializer(BaseModelSerializer):
             "can_user_edit",
             "can_user_view",
             "is_new_contributor",
+            "locked",
         )
 
     def get_community_name(self, obj):
@@ -233,6 +235,7 @@ class ListSpeciesConservationStatusSerializer(BaseModelSerializer):
             "submitter_category",
             "submitter_organisation",
             "assessor_name",
+            "locked",
         )
         datatables_always_serialize = (
             "id",
@@ -266,6 +269,7 @@ class ListSpeciesConservationStatusSerializer(BaseModelSerializer):
             "submitter_category",
             "submitter_organisation",
             "assessor_name",
+            "locked",
         )
 
     def get_group_type(self, obj):
@@ -423,6 +427,7 @@ class ListCommunityConservationStatusSerializer(BaseModelSerializer):
             "submitter_category",
             "submitter_organisation",
             "assessor_name",
+            "locked",
         )
         datatables_always_serialize = (
             "id",
@@ -456,6 +461,7 @@ class ListCommunityConservationStatusSerializer(BaseModelSerializer):
             "submitter_category",
             "submitter_organisation",
             "assessor_name",
+            "locked",
         )
 
     def get_group_type(self, obj):
@@ -597,6 +603,7 @@ class BaseConservationStatusSerializer(BaseModelSerializer):
             "approval_level",
             "submitter_information",
             "is_submitter",
+            "locked",
         )
 
     def get_wa_legislative_list(self, obj):
