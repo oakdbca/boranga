@@ -935,6 +935,7 @@ class InternalConservationStatusSerializer(BaseConservationStatusSerializer):
             "public_consultation_end_date",
             "most_recent_meeting",
             "most_recent_meeting_completed",
+            "locked",
         )
 
     def get_submitter(self, obj):
