@@ -416,7 +416,7 @@ class AbstractOrderedList(OrderedModel, ArchivableModel):
         return list(lists)
 
 
-class LockableModelMixin(BaseModel):
+class LockableModel(BaseModel):
     locked = models.BooleanField(
         null=False, blank=False, default=False, help_text="Whether the record is locked"
     )

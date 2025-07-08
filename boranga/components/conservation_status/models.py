@@ -30,6 +30,7 @@ from boranga.components.main.models import (
     BaseModel,
     CommunicationsLogEntry,
     Document,
+    LockableModel,
     OrderedArchivableManager,
     RevisionedMixin,
     UserAction,
@@ -369,7 +370,9 @@ class ConservationChangeCode(OrderedModel, ArchivableModel):
         return list(cls.objects.active().values("id", "code"))
 
 
-class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
+class ConservationStatus(
+    LockableModel, SubmitterInformationModelMixin, RevisionedMixin
+):
     """
     Several lists with different attributes
 
@@ -641,7 +644,6 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
         choices=PROCESSING_STATUS_CHOICES,
         default=PROCESSING_STATUS_CHOICES[0][0],
     )
-    locked = models.BooleanField(null=False, blank=False, default=False)
 
     # Currently prev_processing_status is only used to keep track of status prior to unlock
     # so that when locked the record returns to the correct status
@@ -1375,6 +1377,7 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
         )
         self.proposed_decline_status = True
         self.processing_status = ConservationStatus.PROCESSING_STATUS_DECLINED
+        self.locked = True
         self.customer_status = ConservationStatus.CUSTOMER_STATUS_DECLINED
 
         self.save()
@@ -1525,6 +1528,7 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
 
         self.processing_status = ConservationStatus.PROCESSING_STATUS_APPROVED
         self.customer_status = ConservationStatus.CUSTOMER_STATUS_APPROVED
+        self.locked = True
         self.assigned_officer = None
         self.approved_by = request.user.id
 
@@ -1584,6 +1588,7 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
             previous_approved_version.processing_status = (
                 ConservationStatus.PROCESSING_STATUS_CLOSED
             )
+            previous_approved_version.locked = True
             previous_approved_version.change_code = (
                 ConservationChangeCode.get_closed_change_code()
             )
@@ -1844,6 +1849,7 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
             )
 
         self.processing_status = ConservationStatus.PROCESSING_STATUS_DELISTED
+        self.locked = True
         self.save()
 
         # Log proposal action
