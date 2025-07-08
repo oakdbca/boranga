@@ -18,8 +18,7 @@
                             :ref="community_name_lookup"
                             :disabled="
                                 conservation_status_obj.readonly ||
-                                'Unlocked' ==
-                                    conservation_status_obj.processing_status
+                                !conservation_status_obj.locked
                             "
                             :name="community_name_lookup"
                             class="form-control"
@@ -1547,9 +1546,10 @@ export default {
         listing_and_review_due_date_disabled: function () {
             return (
                 this.isReadOnly ||
-                !['With Assessor', 'Deferred', 'Unlocked'].includes(
+                !['With Assessor', 'Deferred'].includes(
                     this.conservation_status_obj.processing_status
-                )
+                ) ||
+                this.conservation_status_obj.locked
             );
         },
         approval_level_disabled: function () {
@@ -1643,13 +1643,11 @@ export default {
             return true;
         },
         conservation_list_proposed: function () {
-            return ![
-                'Approved',
-                'DeListed',
-                'Declined',
-                'Closed',
-                'Unlocked',
-            ].includes(this.conservation_status_obj.processing_status);
+            return (
+                !['Approved', 'DeListed', 'Declined', 'Closed'].includes(
+                    this.conservation_status_obj.processing_status
+                ) || this.conservation_status_obj.locked
+            );
         },
         canViewCurrentList: function () {
             return this.conservation_status_obj.processing_status ==
