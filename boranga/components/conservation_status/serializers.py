@@ -618,6 +618,7 @@ class BaseConservationStatusSerializer(BaseModelSerializer):
             "show_locked_indicator",
             "locked",
             "datetime_updated",
+            "editing_window_minutes",
         )
 
     def get_wa_legislative_list(self, obj):
@@ -952,6 +953,7 @@ class InternalConservationStatusSerializer(BaseConservationStatusSerializer):
             "show_locked_indicator",
             "locked",
             "datetime_updated",
+            "editing_window_minutes",
         )
 
     def get_submitter(self, obj):
