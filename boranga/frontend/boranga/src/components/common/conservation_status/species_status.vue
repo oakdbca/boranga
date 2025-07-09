@@ -17,9 +17,7 @@
                         <select
                             :id="scientific_name_lookup"
                             :ref="scientific_name_lookup"
-                            :disabled="
-                                isReadOnly || !conservation_status_obj.locked
-                            "
+                            :disabled="isScientificNameReadOnly"
                             :name="scientific_name_lookup"
                             class="form-control"
                         />
@@ -1675,6 +1673,12 @@ export default {
             }
 
             return true;
+        },
+        isScientificNameReadOnly: function () {
+            return (
+                this.isReadOnly ||
+                (!this.is_external && !this.conservation_status_obj.locked)
+            );
         },
         conservation_list_proposed: function () {
             return (
