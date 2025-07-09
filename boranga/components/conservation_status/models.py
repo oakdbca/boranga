@@ -30,6 +30,7 @@ from boranga.components.main.models import (
     BaseModel,
     CommunicationsLogEntry,
     Document,
+    LockableModel,
     OrderedArchivableManager,
     RevisionedMixin,
     UserAction,
@@ -369,7 +370,9 @@ class ConservationChangeCode(OrderedModel, ArchivableModel):
         return list(cls.objects.active().values("id", "code"))
 
 
-class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
+class ConservationStatus(
+    LockableModel, SubmitterInformationModelMixin, RevisionedMixin
+):
     """
     Several lists with different attributes
 
@@ -429,7 +432,6 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
     PROCESSING_STATUS_ON_AGENDA = "on_agenda"
     PROCESSING_STATUS_PROPOSED_FOR_AGENDA = "proposed_for_agenda"
     PROCESSING_STATUS_READY_FOR_AGENDA = "ready_for_agenda"
-    PROCESSING_STATUS_UNLOCKED = "unlocked"
     PROCESSING_STATUS_WITH_APPROVER = "with_approver"
     PROCESSING_STATUS_WITH_ASSESSOR = "with_assessor"
     PROCESSING_STATUS_WITH_REFERRAL = "with_referral"
@@ -448,7 +450,6 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
         (PROCESSING_STATUS_DECLINED, "Declined"),
         (PROCESSING_STATUS_DELISTED, "DeListed"),
         (PROCESSING_STATUS_CLOSED, "Closed"),
-        (PROCESSING_STATUS_UNLOCKED, "Unlocked"),
     )
 
     # The following tuples of statuses are only user for filtering purposes
@@ -641,9 +642,7 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
         choices=PROCESSING_STATUS_CHOICES,
         default=PROCESSING_STATUS_CHOICES[0][0],
     )
-    # Currently prev_processing_status is only used to keep track of status prior to unlock
-    # so that when locked the record returns to the correct status
-    prev_processing_status = models.CharField(max_length=30, blank=True, null=True)
+
     proposed_decline_status = models.BooleanField(default=False)
     assessor_data = models.TextField(null=True, blank=True)  # assessor comment
 
@@ -654,6 +653,9 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
 
     # Date first listed
     listing_date = models.DateField(null=True, blank=True)
+
+    datetime_created = models.DateTimeField(auto_now_add=True)
+    datetime_updated = models.DateTimeField(auto_now=True)
 
     class Meta:
         app_label = "boranga"
@@ -685,6 +687,10 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
                 group_type=self.species_taxonomy.kingdom_fk.grouptype,
             )
         self.species = species
+
+    @property
+    def editing_window_minutes(self):
+        return settings.LOCKED_CONSERVATION_STATUS_EDITING_WINDOW_MINUTES
 
     @property
     def reference(self):
@@ -765,7 +771,7 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
             ConservationStatus.PROCESSING_STATUS_READY_FOR_AGENDA,
             ConservationStatus.PROCESSING_STATUS_WITH_APPROVER,
         ]
-        return self.processing_status in approver_process_state
+        return not self.locked or self.processing_status in approver_process_state
 
     @property
     def can_officer_edit(self):
@@ -806,13 +812,12 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
     @property
     def allowed_assessors(self):
         group_ids = None
-        if self.processing_status in [
+        if not self.locked or self.processing_status in [
             ConservationStatus.PROCESSING_STATUS_PROPOSED_FOR_AGENDA,
             ConservationStatus.PROCESSING_STATUS_READY_FOR_AGENDA,
             ConservationStatus.PROCESSING_STATUS_ON_AGENDA,
             ConservationStatus.PROCESSING_STATUS_WITH_APPROVER,
             ConservationStatus.PROCESSING_STATUS_APPROVED,
-            ConservationStatus.PROCESSING_STATUS_UNLOCKED,
             ConservationStatus.PROCESSING_STATUS_CLOSED,
             ConservationStatus.PROCESSING_STATUS_DECLINED,
             ConservationStatus.PROCESSING_STATUS_DELISTED,
@@ -911,12 +916,11 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
             ConservationStatus.PROCESSING_STATUS_DEFERRED,
         ]:
             return is_conservation_status_assessor(request)
-        elif self.processing_status in [
+        elif not self.locked or self.processing_status in [
             ConservationStatus.PROCESSING_STATUS_PROPOSED_FOR_AGENDA,
             ConservationStatus.PROCESSING_STATUS_READY_FOR_AGENDA,
             ConservationStatus.PROCESSING_STATUS_ON_AGENDA,
             ConservationStatus.PROCESSING_STATUS_WITH_APPROVER,
-            ConservationStatus.PROCESSING_STATUS_UNLOCKED,
             ConservationStatus.PROCESSING_STATUS_DEFERRED,
         ]:
             return is_conservation_status_approver(request)
@@ -924,13 +928,12 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
         return False
 
     def assessor_comments_view(self, request):
-        if self.processing_status in [
+        if not self.locked or self.processing_status in [
             ConservationStatus.PROCESSING_STATUS_WITH_ASSESSOR,
             ConservationStatus.PROCESSING_STATUS_WITH_REFERRAL,
             ConservationStatus.PROCESSING_STATUS_READY_FOR_AGENDA,
             ConservationStatus.PROCESSING_STATUS_WITH_APPROVER,
             ConservationStatus.PROCESSING_STATUS_APPROVED,
-            ConservationStatus.PROCESSING_STATUS_UNLOCKED,
             ConservationStatus.PROCESSING_STATUS_CLOSED,
             ConservationStatus.PROCESSING_STATUS_DELISTED,
             ConservationStatus.PROCESSING_STATUS_DEFERRED,
@@ -1001,7 +1004,7 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
             # the assigned to dropdown for the approver or assessor and not both.
             return is_conservation_status_assessor(request)
 
-        elif self.processing_status == ConservationStatus.PROCESSING_STATUS_UNLOCKED:
+        elif not self.locked:
             return is_conservation_status_approver(request)
         else:
             if not self.assigned_officer:
@@ -1030,13 +1033,11 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
             ConservationStatus.PROCESSING_STATUS_CLOSED,
             ConservationStatus.PROCESSING_STATUS_DELISTED,
             ConservationStatus.PROCESSING_STATUS_DECLINED,
-            ConservationStatus.PROCESSING_STATUS_UNLOCKED,
         ]
 
         if (
-            self.processing_status in approver_statuses
-            and is_conservation_status_approver(request)
-        ):
+            not self.locked or self.processing_status in approver_statuses
+        ) and is_conservation_status_approver(request):
             if officer == self.assigned_approver:
                 logger.warning(
                     "Approver is already assigned to this conservation status"
@@ -1103,7 +1104,7 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
 
     @transaction.atomic
     def unassign(self, request):
-        if self.processing_status in [
+        if not self.locked or self.processing_status in [
             ConservationStatus.PROCESSING_STATUS_PROPOSED_FOR_AGENDA,
             ConservationStatus.PROCESSING_STATUS_READY_FOR_AGENDA,
             ConservationStatus.PROCESSING_STATUS_ON_AGENDA,
@@ -1112,7 +1113,6 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
             ConservationStatus.PROCESSING_STATUS_CLOSED,
             ConservationStatus.PROCESSING_STATUS_DELISTED,
             ConservationStatus.PROCESSING_STATUS_DECLINED,
-            ConservationStatus.PROCESSING_STATUS_UNLOCKED,
         ]:
             if self.assigned_approver:
                 self.assigned_approver = None
@@ -1373,6 +1373,7 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
         )
         self.proposed_decline_status = True
         self.processing_status = ConservationStatus.PROCESSING_STATUS_DECLINED
+        self.locked = True
         self.customer_status = ConservationStatus.CUSTOMER_STATUS_DECLINED
 
         self.save()
@@ -1523,6 +1524,7 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
 
         self.processing_status = ConservationStatus.PROCESSING_STATUS_APPROVED
         self.customer_status = ConservationStatus.CUSTOMER_STATUS_APPROVED
+        self.locked = True
         self.assigned_officer = None
         self.approved_by = request.user.id
 
@@ -1582,6 +1584,7 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
             previous_approved_version.processing_status = (
                 ConservationStatus.PROCESSING_STATUS_CLOSED
             )
+            previous_approved_version.locked = True
             previous_approved_version.change_code = (
                 ConservationChangeCode.get_closed_change_code()
             )
@@ -1842,6 +1845,7 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
             )
 
         self.processing_status = ConservationStatus.PROCESSING_STATUS_DELISTED
+        self.locked = True
         self.save()
 
         # Log proposal action
@@ -2009,22 +2013,27 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
             ConservationStatus.PROCESSING_STATUS_DELISTED,
         ]
 
-    def can_unlock(self, request):
-        if self.is_finalised:
-            return is_conservation_status_approver(request)
-        return False
-
-    def can_lock(self, request):
-        if self.processing_status == ConservationStatus.PROCESSING_STATUS_UNLOCKED:
-            return is_conservation_status_approver(request)
-        return False
+    @property
+    def show_locked_indicator(self):
+        return self.processing_status in [
+            ConservationStatus.PROCESSING_STATUS_APPROVED,
+            ConservationStatus.PROCESSING_STATUS_DELISTED,
+            ConservationStatus.PROCESSING_STATUS_DECLINED,
+            ConservationStatus.PROCESSING_STATUS_CLOSED,
+        ]
 
     def lock(self, request):
-        if not self.can_lock(request):
-            return
+        if self.locked:
+            raise ValidationError(
+                "You cannot lock a conservation status that is already locked"
+            )
+        if not is_conservation_status_approver(request):
+            raise ValidationError(
+                "You cannot lock a conservation status unless you are a member "
+                "of the conservation status approver group"
+            )
 
-        self.processing_status = self.prev_processing_status
-        self.assigned_approver = None
+        self.locked = True
         self.save(version_user=request.user)
 
         self.log_user_action(
@@ -2042,11 +2051,18 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
         )
 
     def unlock(self, request):
-        if not self.can_unlock(request):
-            return
+        if not self.locked:
+            raise ValidationError(
+                "You cannot unlock a conservation status that is already unlocked"
+            )
 
-        self.prev_processing_status = self.processing_status
-        self.processing_status = ConservationStatus.PROCESSING_STATUS_UNLOCKED
+        if not is_conservation_status_approver(request):
+            raise ValidationError(
+                "You cannot unlock a conservation status unless you are a member "
+                "of the conservation status approver group"
+            )
+
+        self.locked = False
         self.save(version_user=request.user)
 
         self.log_user_action(
@@ -2064,7 +2080,7 @@ class ConservationStatus(SubmitterInformationModelMixin, RevisionedMixin):
         )
 
     def has_unlocked_mode(self, request):
-        if not self.processing_status == ConservationStatus.PROCESSING_STATUS_UNLOCKED:
+        if self.locked:
             return False
 
         if not self.assigned_approver:

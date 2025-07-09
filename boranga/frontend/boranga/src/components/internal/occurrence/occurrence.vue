@@ -781,8 +781,8 @@ export default {
                     }
                     swal.fire({
                         title: 'Unlocked',
-                        text: 'Occurrence has been Unlocked',
-                        icon: 'success',
+                        html: '<p>Occurrence has been Unlocked</p><p class="fw-bold">Make sure to lock the occurrence as soon as you are done making changes.</p>',
+                        icon: 'warning',
                         customClass: {
                             confirmButton: 'btn btn-primary',
                         },

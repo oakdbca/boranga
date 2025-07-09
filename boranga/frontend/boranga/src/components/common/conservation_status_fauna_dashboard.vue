@@ -249,6 +249,20 @@
                         </select>
                     </div>
                 </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="submitter-category">Locked:</label>
+                        <select
+                            id="submitter-category"
+                            v-model="filterCSFaunaLocked"
+                            class="form-select"
+                        >
+                            <option value="all">All</option>
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                </div>
                 <div v-show="!is_for_agenda" class="col-md-6">
                     <label for="" class="form-label px-2"
                         >Effective From Date Range:</label
@@ -513,6 +527,11 @@ export default {
             required: false,
             default: 'filterCSToFaunaReviewDueDate',
         },
+        filterCSFaunaLocked_cache: {
+            type: String,
+            required: false,
+            default: 'filterCSFaunaLocked',
+        },
     },
     data() {
         return {
@@ -677,6 +696,12 @@ export default {
                   )
                 : '',
 
+            filterCSFaunaLocked: sessionStorage.getItem(
+                this.filterCSFaunaLocked_cache
+            )
+                ? sessionStorage.getItem(this.filterCSFaunaLocked_cache)
+                : 'all',
+
             //Filter list for scientific name and common name
             filterListsSpecies: {},
             scientific_name_list: [],
@@ -792,7 +817,8 @@ export default {
                 this.filterCSFromFaunaEffectiveToDate === '' &&
                 this.filterCSToFaunaEffectiveToDate === '' &&
                 this.filterCSFromFaunaReviewDueDate === '' &&
-                this.filterCSToFaunaReviewDueDate === ''
+                this.filterCSToFaunaReviewDueDate === '' &&
+                this.filterCSFaunaLocked === 'all'
             ) {
                 return false;
             } else {
@@ -1068,10 +1094,18 @@ export default {
                 searchable: true,
                 visible: true,
                 render: function (data, type, full) {
-                    if (full.processing_status) {
-                        return full.processing_status;
+                    let html = full.processing_status;
+                    if (!full.show_locked_indicator) {
+                        return html;
                     }
-                    return '';
+                    if (full.locked) {
+                        html +=
+                            '<i class="bi bi-lock-fill ms-2 text-warning"></i>';
+                    } else {
+                        html +=
+                            '<i class="bi bi-unlock-fill ms-2 text-secondary"></i>';
+                    }
+                    return html;
                 },
                 name: 'processing_status',
             };
@@ -1274,6 +1308,7 @@ export default {
                             vm.filterCSFromFaunaReviewDueDate;
                         d.filter_to_review_due_date =
                             vm.filterCSToFaunaReviewDueDate;
+                        d.filter_locked = vm.filterCSFaunaLocked;
                     },
                 },
                 dom:
@@ -1512,6 +1547,17 @@ export default {
             sessionStorage.setItem(
                 vm.filterCSToFaunaReviewDueDate_cache,
                 vm.filterCSToFaunaReviewDueDate
+            );
+        },
+        filterCSFaunaLocked: function () {
+            let vm = this;
+            vm.$refs.fauna_cs_datatable.vmDataTable.ajax.reload(
+                helpers.enablePopovers,
+                false
+            ); // This calls ajax() backend call.
+            sessionStorage.setItem(
+                vm.filterCSFaunaLocked_cache,
+                vm.filterCSFaunaLocked
             );
         },
         filterCSFaunaApplicationStatus: function () {

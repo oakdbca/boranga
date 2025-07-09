@@ -17,11 +17,7 @@
                         <select
                             :id="scientific_name_lookup"
                             :ref="scientific_name_lookup"
-                            :disabled="
-                                isReadOnly ||
-                                'Unlocked' ==
-                                    conservation_status_obj.processing_status
-                            "
+                            :disabled="isScientificNameReadOnly"
                             :name="scientific_name_lookup"
                             class="form-control"
                         />
@@ -1585,9 +1581,10 @@ export default {
         listing_and_review_due_date_disabled: function () {
             return (
                 this.isReadOnly ||
-                !['With Assessor', 'Deferred', 'Unlocked'].includes(
+                !['With Assessor', 'Deferred'].includes(
                     this.conservation_status_obj.processing_status
-                )
+                ) ||
+                this.conservation_status_obj.locked
             );
         },
         approval_level_disabled: function () {
@@ -1658,13 +1655,10 @@ export default {
                 return true;
             } else {
                 if (
-                    [
-                        'Ready For Agenda',
-                        'Approved',
-                        'Closed',
-                        'DeListed',
-                        'Discarded',
-                    ].includes(this.conservation_status_obj.processing_status)
+                    ['Ready For Agenda'].includes(
+                        this.conservation_status_obj.processing_status
+                    ) ||
+                    this.conservation_status_obj.locked
                 ) {
                     return true;
                 }
@@ -1680,14 +1674,18 @@ export default {
 
             return true;
         },
+        isScientificNameReadOnly: function () {
+            return (
+                this.isReadOnly ||
+                (!this.is_external && !this.conservation_status_obj.locked)
+            );
+        },
         conservation_list_proposed: function () {
-            return ![
-                'Approved',
-                'DeListed',
-                'Declined',
-                'Closed',
-                'Unlocked',
-            ].includes(this.conservation_status_obj.processing_status);
+            return (
+                !['Approved', 'DeListed', 'Declined', 'Closed'].includes(
+                    this.conservation_status_obj.processing_status
+                ) || this.conservation_status_obj.locked
+            );
         },
         canViewCurrentList: function () {
             return this.conservation_status_obj.processing_status ==

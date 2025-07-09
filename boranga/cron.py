@@ -42,3 +42,14 @@ class CronJobOCRProcessBulkImportQueue(django_cron.CronJobBase):
         log.info("OCR Process Bulk Import Tasks cron job triggered, running...")
         management.call_command("ocr_process_bulk_import_queue")
         return "Job Completed Successfully"
+
+
+class CronJobAutoLockConservationStatusRecords(django_cron.CronJobBase):
+    schedule = django_cron.Schedule(
+        run_weekly_on_days=[0, 1, 2, 3, 4, 5, 6], run_every_mins=1
+    )
+    code = "boranga.auto_lock_conservation_status_records"
+
+    def do(self) -> None:
+        management.call_command("auto_lock_conservation_status_records")
+        return "Job Completed Successfully"

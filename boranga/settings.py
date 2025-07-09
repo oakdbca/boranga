@@ -235,6 +235,7 @@ CRON_CLASSES = [
     "boranga.cron.CronJobFetchNomosTaxonDataDaily",
     "boranga.cron.CronJobOCRPreProcessBulkImportTasks",
     "boranga.cron.CronJobOCRProcessBulkImportQueue",
+    "boranga.cron.CronJobAutoLockConservationStatusRecords",
 ]
 
 
@@ -554,4 +555,8 @@ GIS_EXTENT = config(
     "GIS_EXTENT",
     default="96.0, -35.0, 129.0, -10.0",
     cast=Csv(float, post_process=tuple),
+)
+
+LOCKED_CONSERVATION_STATUS_EDITING_WINDOW_MINUTES = config(
+    "LOCKED_CONSERVATION_STATUS_EDITING_WINDOW_MINUTES", default=30, cast=int
 )

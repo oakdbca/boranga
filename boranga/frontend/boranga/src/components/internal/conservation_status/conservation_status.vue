@@ -39,6 +39,26 @@
                         <strong>Status</strong><br />
                         {{ conservation_status_obj.processing_status }}
                         <template
+                            v-if="conservation_status_obj.show_locked_indicator"
+                        >
+                            <i
+                                v-if="conservation_status_obj.locked"
+                                class="bi bi-lock-fill text-warning fs-5"
+                                title="locked"
+                            ></i>
+                            <i
+                                v-else
+                                class="bi bi-unlock-fill text-secondary fs-5 ms-1"
+                                title="unlocked"
+                            ></i>
+                            <span
+                                v-if="showEditingCountdown"
+                                :class="editingCountdownBadgeClass"
+                            >
+                                {{ editingCountdownDisplay }}
+                            </span>
+                        </template>
+                        <template
                             v-if="
                                 conservation_status_obj.processing_status ==
                                     'On Agenda' &&
@@ -94,14 +114,13 @@
                                                 'Ready For Agenda',
                                                 'On Agenda',
                                                 'Proposed DeListed',
-                                                'Unlocked',
                                                 'Approved',
                                                 'Closed',
                                                 'DeListed',
                                                 'Declined',
                                             ].includes(
                                                 conservation_status_obj.processing_status
-                                            )
+                                            ) || conservation_status_obj.locked
                                         "
                                     >
                                         <select
@@ -1019,6 +1038,27 @@ export default {
             }
         );
     },
+    beforeRouteLeave(to, from, next) {
+        if (
+            this.conservation_status_obj &&
+            !this.conservation_status_obj.locked &&
+            this.shouldShowTimerAndPoll
+        ) {
+            swal.fire({
+                title: 'Conservation Status Unlocked',
+                text: 'Please lock the conservation status before leaving.',
+                icon: 'warning',
+                confirmButtonText: 'Ok',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                },
+            }).then(() => {
+                next(false);
+            });
+        } else {
+            next();
+        }
+    },
     data: function () {
         let vm = this;
         return {
@@ -1054,6 +1094,11 @@ export default {
             ),
             initialisedSelects: false,
             cs_proposal_readonly: true,
+            pollInterval: null,
+            editingCountdownInterval: null,
+            editingWindowMinutes: null,
+            serverDatetimeUpdated: null,
+            editingCountdown: null,
             isSaved: false,
         };
     },
@@ -1113,7 +1158,6 @@ export default {
                 this.conservation_status_obj.processing_status == 'Declined' ||
                 this.conservation_status_obj.processing_status == 'Approved' ||
                 this.conservation_status_obj.processing_status == 'Closed' ||
-                this.conservation_status_obj.processing_status == 'Unlocked' ||
                 this.conservation_status_obj.processing_status == 'DeListed'
             );
         },
@@ -1144,8 +1188,11 @@ export default {
                     'Proposed For Agenda',
                     'Ready For Agenda',
                     'Proposed DeListed',
-                    'Unlocked',
-                ].includes(this.conservation_status_obj.processing_status)
+                ].includes(this.conservation_status_obj.processing_status) ||
+                (['Closed', 'DeListed', 'Declined', 'Approved'].includes(
+                    this.conservation_status_obj.processing_status
+                ) &&
+                    !this.conservation_status_obj.locked)
             ) {
                 return (
                     this.conservation_status_obj.current_assessor.id ==
@@ -1280,7 +1327,8 @@ export default {
                     this.conservation_status_obj.assigned_approver &&
                 ['Approved', 'Closed', 'Declined', 'DeListed'].includes(
                     this.conservation_status_obj.processing_status
-                )
+                ) &&
+                this.conservation_status_obj.locked
             );
         },
         canLock: function () {
@@ -1288,7 +1336,7 @@ export default {
                 this.conservation_status_obj &&
                 this.conservation_status_obj.current_assessor.id ==
                     this.conservation_status_obj.assigned_approver &&
-                this.conservation_status_obj.processing_status === 'Unlocked'
+                !this.conservation_status_obj.locked
             );
         },
         show_finalised_actions: function () {
@@ -1298,6 +1346,33 @@ export default {
                         'Approved') ||
                 (this.canAction && (this.canUnlock || this.canLock))
             );
+        },
+        shouldShowTimerAndPoll() {
+            const cs = this.conservation_status_obj;
+            if (!cs) return false;
+            const allowed = ['Closed', 'DeListed', 'Approved', 'Declined'];
+            return !cs.locked && allowed.includes(cs.processing_status);
+        },
+        showEditingCountdown() {
+            return (
+                this.shouldShowTimerAndPoll &&
+                this.editingWindowMinutes !== null &&
+                this.serverDatetimeUpdated !== null
+            );
+        },
+        editingCountdownDisplay() {
+            if (this.editingCountdown === null) return '';
+            const min = Math.floor(this.editingCountdown / 60);
+            const sec = this.editingCountdown % 60;
+            return `${min}:${sec.toString().padStart(2, '0')} until auto lock`;
+        },
+        editingCountdownBadgeClass() {
+            if (this.editingCountdown !== null) {
+                if (this.editingCountdown < 60) {
+                    return 'badge bg-danger text-white ms-2';
+                }
+            }
+            return 'badge bg-warning text-dark ms-2';
         },
     },
     watch: {
@@ -1310,8 +1385,13 @@ export default {
         },
     },
     mounted: function () {
-        let vm = this;
-        vm.fetchDeparmentUsers();
+        this.fetchDeparmentUsers();
+        this.startPollingForUpdates();
+        window.addEventListener('beforeunload', this.handleBeforeUnload);
+    },
+    beforeUnmount() {
+        this.stopPollingForUpdates();
+        window.removeEventListener('beforeunload', this.handleBeforeUnload);
     },
     created: function () {
         if (!this.conservation_status_obj) {
@@ -1331,6 +1411,7 @@ export default {
         },
         unlockConservationStatus: async function () {
             let vm = this;
+            this.stopEditingCountdown();
             await fetch(
                 `/api/conservation_status/${vm.conservation_status_obj.id}/unlock_conservation_status.json`,
                 {
@@ -1343,11 +1424,20 @@ export default {
                 async (response) => {
                     const data = await response.json();
                     vm.conservation_status_obj = Object.assign({}, data);
+                    vm.editingWindowMinutes =
+                        vm.conservation_status_obj.editing_window_minutes;
+                    vm.serverDatetimeUpdated =
+                        vm.conservation_status_obj.datetime_updated;
+                    vm.startEditingCountdown();
+                    vm.startPollingForUpdates();
                     swal.fire({
                         title: 'Conservation Status Unlocked',
+                        html: `<p>Make sure to lock the conservation status as soon as you are done making changes.</p>
+                        <p class="fw-bold">If you have not modified the record for more than ${vm.editingWindowMinutes} minutes, it will be locked automatically.</p>`,
                         icon: 'success',
-                        showConfirmButton: false,
-                        timer: 1200,
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        },
                     });
                 },
                 (err) => {
@@ -1394,6 +1484,7 @@ export default {
                                     {},
                                     data
                                 );
+                                vm.stopEditingCountdown();
                                 swal.fire({
                                     title: 'Conservation Status Locked',
                                     icon: 'success',
@@ -1666,8 +1757,8 @@ export default {
                 body: JSON.stringify(payload),
             }).then(
                 async (response) => {
+                    const data = await response.json();
                     if (!response.ok) {
-                        const data = await response.json();
                         swal.fire({
                             title: 'Error',
                             text: JSON.stringify(data),
@@ -1678,6 +1769,8 @@ export default {
                         });
                         return;
                     }
+                    vm.conservation_status_obj = Object.assign({}, data);
+                    vm.updateEditingWindowVarsFromCSObj();
                     swal.fire({
                         title: 'Saved',
                         text: 'Your changes have been saved',
@@ -1742,8 +1835,8 @@ export default {
                 body: JSON.stringify(payload),
             }).then(
                 async (response) => {
+                    const data = await response.json();
                     if (!response.ok) {
-                        const data = await response.json();
                         swal.fire({
                             title: 'Error',
                             text: JSON.stringify(data),
@@ -1754,6 +1847,8 @@ export default {
                         });
                         return;
                     }
+                    vm.conservation_status_obj = Object.assign({}, data);
+                    vm.updateEditingWindowVarsFromCSObj();
                 },
                 (err) => {
                     var errorText = helpers.apiVueResourceError(err);
@@ -1922,13 +2017,42 @@ export default {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(payload),
-            });
+            }).then(
+                async (response) => {
+                    const data = await response.json();
+                    if (!response.ok) {
+                        swal.fire({
+                            title: 'Error',
+                            text: JSON.stringify(data),
+                            icon: 'error',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            },
+                        });
+                        return;
+                    }
+                    vm.conservation_status_obj = data;
+                    vm.updateEditingWindowVarsFromCSObj();
+                },
+                (err) => {
+                    var errorText = helpers.apiVueResourceError(err);
+                    swal.fire({
+                        title: 'Save Error',
+                        text: errorText,
+                        icon: 'error',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        },
+                    });
+                }
+            );
         },
         refreshFromResponse: async function (response) {
             const data = await response.json();
             let vm = this;
             vm.original_conservation_status_obj = helpers.copyObject(data);
             vm.conservation_status_obj = helpers.copyObject(data);
+            this.updateEditingWindowVarsFromCSObj();
             vm.$nextTick(() => {
                 vm.initialisedSelects = false;
                 vm.initialiseSelects();
@@ -2671,7 +2795,7 @@ export default {
                 });
             });
         },
-        fetchConservationStatus: function () {
+        fetchConservationStatus: async function () {
             let vm = this;
             fetch(
                 '/api/conservation_status/' +
@@ -2681,11 +2805,128 @@ export default {
                 async (response) => {
                     const data = await response.json();
                     vm.conservation_status_obj = data.conservation_status_obj;
+                    // Set these directly from the object
+                    vm.editingWindowMinutes =
+                        vm.conservation_status_obj.editing_window_minutes;
+                    vm.serverDatetimeUpdated =
+                        vm.conservation_status_obj.datetime_updated;
+                    // Start countdown immediately after setting values
+                    vm.startEditingCountdown();
+                    // (Re)start polling/timer if needed
+                    vm.startPollingForUpdates();
                 },
                 (err) => {
                     console.log(err);
                 }
             );
+        },
+        async checkForUpdates() {
+            if (!this.shouldShowTimerAndPoll) return;
+            const id = this.conservation_status_obj.id;
+            const dt = this.conservation_status_obj.datetime_updated;
+            try {
+                const resp = await fetch(
+                    `/api/conservation_status/${id}/check-updated/?datetime_updated=${encodeURIComponent(dt)}`
+                );
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.changed) {
+                        await this.fetchConservationStatus();
+                    }
+                    this.editingWindowMinutes = data.editing_window_minutes; // May have changed
+                }
+            } catch (e) {
+                console.error('Polling error:', e);
+            }
+        },
+        startPollingForUpdates() {
+            this.stopPollingForUpdates();
+            if (this.shouldShowTimerAndPoll) {
+                this.checkForUpdates(); // Initial check
+                this.pollInterval = setInterval(this.checkForUpdates, 60000);
+            }
+        },
+        stopPollingForUpdates() {
+            if (this.pollInterval) {
+                clearInterval(this.pollInterval);
+                this.pollInterval = null;
+            }
+        },
+        startEditingCountdown() {
+            this.stopEditingCountdown();
+            this.updateEditingCountdown();
+            this.editingCountdownInterval = setInterval(
+                this.updateEditingCountdown,
+                1000
+            );
+        },
+        stopEditingCountdown() {
+            if (this.editingCountdownInterval) {
+                clearInterval(this.editingCountdownInterval);
+                this.editingCountdownInterval = null;
+                this.editingCountdown = null;
+            }
+        },
+        updateEditingCountdown() {
+            if (!this.serverDatetimeUpdated || !this.editingWindowMinutes) {
+                this.editingCountdown = null;
+                return;
+            }
+            const updated = new Date(this.serverDatetimeUpdated);
+            const now = new Date();
+            const windowMs = this.editingWindowMinutes * 60 * 1000;
+            const elapsedMs = now - updated;
+            const remainingMs = windowMs - elapsedMs;
+            this.editingCountdown =
+                remainingMs > 0 ? Math.floor(remainingMs / 1000) : 0;
+
+            if (this.editingCountdown === 0 && this.shouldShowTimerAndPoll) {
+                this.autoLockConservationStatus();
+            }
+        },
+        async autoLockConservationStatus() {
+            const id = this.conservation_status_obj.id;
+            await fetch(
+                `/api/conservation_status/${id}/lock_conservation_status/`,
+                {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                }
+            );
+            await this.fetchConservationStatus();
+            this.stopEditingCountdown();
+            this.stopPollingForUpdates();
+            swal.fire({
+                title: 'Record Auto Locked',
+                text: `This record has been automatically locked because the editing window of ${this.editingWindowMinutes} minutes expired.`,
+                icon: 'info',
+                confirmButtonText: 'OK',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                },
+            });
+        },
+        updateEditingWindowVarsFromCSObj() {
+            this.editingWindowMinutes =
+                this.conservation_status_obj.editing_window_minutes;
+            this.serverDatetimeUpdated =
+                this.conservation_status_obj.datetime_updated;
+            this.startEditingCountdown();
+            this.startPollingForUpdates();
+        },
+        handleBeforeUnload(event) {
+            if (
+                this.conservation_status_obj &&
+                ['Closed', 'DeListed', 'Approved', 'Declined'].includes(
+                    this.conservation_status_obj.processing_status
+                ) &&
+                !this.conservation_status_obj.locked &&
+                this.shouldShowTimerAndPoll
+            ) {
+                event.preventDefault();
+                event.returnValue = ''; // Required for Chrome
+                return '';
+            }
         },
     },
 };

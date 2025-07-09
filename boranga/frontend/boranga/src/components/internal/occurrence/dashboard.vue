@@ -50,9 +50,10 @@
             >
                 <FormSection
                     v-if="show_occurrences"
-                    :form-collapse="true"
+                    :form-collapse="getSectionCollapsed('occurrence-flora')"
                     label="Occurrences - Flora"
                     Index="occurrence-flora"
+                    @toggle="onSectionToggle($event, 'occurrence-flora')"
                     @opened="
                         reloadDatatable(
                             'occ_flora_table',
@@ -72,9 +73,12 @@
                 </FormSection>
                 <FormSection
                     v-if="show_occurrence_reports"
-                    :form-collapse="true"
+                    :form-collapse="
+                        getSectionCollapsed('occurrence-report-flora')
+                    "
                     label="Occurrence Report - Flora"
                     Index="occurrence-report-flora"
+                    @toggle="onSectionToggle($event, 'occurrence-report-flora')"
                     @opened="
                         reloadDatatable('flora_table', 'flora_ocr_datatable')
                     "
@@ -91,9 +95,19 @@
                 </FormSection>
                 <FormSection
                     v-if="profile && profile.ocr_referral_count > 0"
-                    :form-collapse="true"
+                    :form-collapse="
+                        getSectionCollapsed(
+                            'occurrence-report-flora-referred-to-me'
+                        )
+                    "
                     label="Occurrence Report - Flora Referred to Me"
                     Index="occurrence-report-flora-referred-to-me"
+                    @toggle="
+                        onSectionToggle(
+                            $event,
+                            'occurrence-report-flora-referred-to-me'
+                        )
+                    "
                     @opened="
                         reloadDatatable(
                             'flora_referrals_table',
@@ -124,9 +138,10 @@
             >
                 <FormSection
                     v-if="show_occurrences"
-                    :form-collapse="true"
+                    :form-collapse="getSectionCollapsed('occurrence-fauna')"
                     label="Occurrences - Fauna"
                     Index="occurrence-fauna"
+                    @toggle="onSectionToggle($event, 'occurrence-fauna')"
                     @opened="
                         reloadDatatable(
                             'occ_fauna_table',
@@ -146,9 +161,12 @@
                 </FormSection>
                 <FormSection
                     v-if="show_occurrence_reports"
-                    :form-collapse="true"
+                    :form-collapse="
+                        getSectionCollapsed('occurrence-report-fauna')
+                    "
                     label="Occurrence Report - Fauna"
                     Index="fauna"
+                    @toggle="onSectionToggle($event, 'occurrence-report-fauna')"
                     @opened="
                         reloadDatatable('fauna_table', 'fauna_ocr_datatable')
                     "
@@ -165,9 +183,19 @@
                 </FormSection>
                 <FormSection
                     v-if="profile && profile.ocr_referral_count > 0"
-                    :form-collapse="true"
+                    :form-collapse="
+                        getSectionCollapsed(
+                            'occurrence-report-fauna-referred-to-me'
+                        )
+                    "
                     label="Occurrence Report - Fauna Referred to Me"
                     Index="occurrence-report-fauna-referred-to-me"
+                    @toggle="
+                        onSectionToggle(
+                            $event,
+                            'occurrence-report-fauna-referred-to-me'
+                        )
+                    "
                     @opened="
                         reloadDatatable(
                             'fauna_referrals_table',
@@ -198,9 +226,10 @@
             >
                 <FormSection
                     v-if="show_occurrences"
-                    :form-collapse="true"
+                    :form-collapse="getSectionCollapsed('occurrence-community')"
                     label="Occurrences - Community"
                     Index="occurrence-community"
+                    @toggle="onSectionToggle($event, 'occurrence-community')"
                     @opened="
                         reloadDatatable(
                             'occ_community_table',
@@ -220,9 +249,14 @@
                 </FormSection>
                 <FormSection
                     v-if="show_occurrence_reports"
-                    :form-collapse="true"
+                    :form-collapse="
+                        getSectionCollapsed('occurrence-report-community')
+                    "
                     label="Occurrence Report - Community"
                     Index="community"
+                    @toggle="
+                        onSectionToggle($event, 'occurrence-report-community')
+                    "
                     @opened="
                         reloadDatatable(
                             'community_table',
@@ -242,9 +276,19 @@
                 </FormSection>
                 <FormSection
                     v-if="profile && profile.ocr_referral_count > 0"
-                    :form-collapse="true"
+                    :form-collapse="
+                        getSectionCollapsed(
+                            'occurrence-report-community-referred-to-me'
+                        )
+                    "
                     label="Occurrence Report - Community Referred to Me"
                     Index="occurrence-report-community-referred-to-me"
+                    @toggle="
+                        onSectionToggle(
+                            $event,
+                            'occurrence-report-community-referred-to-me'
+                        )
+                    "
                     @opened="
                         reloadDatatable(
                             'community_referrals_table',
@@ -410,6 +454,20 @@ export default {
                     console.log(error);
                 }
             );
+        },
+        getSectionCollapsed(key) {
+            // Returns true if collapsed, false if expanded
+            const val = sessionStorage.getItem('formSectionCollapsed_' + key);
+            return val === null ? true : val === 'true';
+        },
+        setSectionCollapsed(key, collapsed) {
+            sessionStorage.setItem('formSectionCollapsed_' + key, collapsed);
+        },
+        onSectionToggle(event, key) {
+            console.debug(
+                `onSectionToggle called for ${key} with collapsed: ${event}`
+            );
+            this.setSectionCollapsed(key, event);
         },
         reloadDatatable: function (dashRef, datatableRef) {
             this.$refs[dashRef].$refs[datatableRef].vmDataTable.ajax.reload(
