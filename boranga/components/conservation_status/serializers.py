@@ -122,6 +122,7 @@ class ListConservationStatusSerializer(BaseModelSerializer):
             "is_new_contributor",
             "show_locked_indicator",
             "locked",
+            "datetime_updated",
         )
         datatables_always_serialize = (
             "id",
@@ -136,6 +137,7 @@ class ListConservationStatusSerializer(BaseModelSerializer):
             "is_new_contributor",
             "show_locked_indicator",
             "locked",
+            "datetime_updated",
         )
 
     def get_community_name(self, obj):
@@ -239,6 +241,7 @@ class ListSpeciesConservationStatusSerializer(BaseModelSerializer):
             "assessor_name",
             "show_locked_indicator",
             "locked",
+            "datetime_updated",
         )
         datatables_always_serialize = (
             "id",
@@ -274,6 +277,7 @@ class ListSpeciesConservationStatusSerializer(BaseModelSerializer):
             "assessor_name",
             "show_locked_indicator",
             "locked",
+            "datetime_updated",
         )
 
     def get_group_type(self, obj):
@@ -433,6 +437,7 @@ class ListCommunityConservationStatusSerializer(BaseModelSerializer):
             "assessor_name",
             "show_locked_indicator",
             "locked",
+            "datetime_updated",
         )
         datatables_always_serialize = (
             "id",
@@ -468,6 +473,7 @@ class ListCommunityConservationStatusSerializer(BaseModelSerializer):
             "assessor_name",
             "show_locked_indicator",
             "locked",
+            "datetime_updated",
         )
 
     def get_group_type(self, obj):
@@ -611,6 +617,7 @@ class BaseConservationStatusSerializer(BaseModelSerializer):
             "is_submitter",
             "show_locked_indicator",
             "locked",
+            "datetime_updated",
         )
 
     def get_wa_legislative_list(self, obj):
@@ -944,6 +951,7 @@ class InternalConservationStatusSerializer(BaseConservationStatusSerializer):
             "most_recent_meeting_completed",
             "show_locked_indicator",
             "locked",
+            "datetime_updated",
         )
 
     def get_submitter(self, obj):
