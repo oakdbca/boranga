@@ -7,8 +7,6 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponse
-from django.shortcuts import redirect
-from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import is_naive, make_aware
@@ -25,7 +23,6 @@ from rest_framework.response import Response
 from rest_framework_datatables.filters import DatatablesFilterBackend
 from rest_framework_datatables.pagination import DatatablesPageNumberPagination
 
-from boranga import exceptions
 from boranga.components.conservation_status.email import (
     send_external_referee_invite_email,
 )
@@ -1269,8 +1266,24 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
             qs = qs.filter(referrals__referral=self.request.user.id)
         return qs
 
-    def internal_serializer_class(self):
-        return InternalConservationStatusSerializer
+    def get_serializer_class(self):
+        if (
+            is_readonly_user(self.request)
+            or is_conservation_status_assessor(self.request)
+            or is_conservation_status_approver(self.request)
+            or is_species_communities_approver(self.request)
+            or is_occurrence_assessor(self.request)
+            or is_occurrence_approver(self.request)
+            or self.request.user.is_superuser
+        ):
+            return InternalConservationStatusSerializer
+        if self.action == "retrieve" and is_conservation_status_referee(self.request):
+            obj = self.get_object()
+            if obj.referrals.filter(
+                referral=self.request.user.id,
+            ).exists():
+                return InternalConservationStatusSerializer
+        return ConservationStatusSerializer
 
     @detail_route(
         methods=[
@@ -1281,9 +1294,7 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
     )
     def internal_conservation_status(self, request, *args, **kwargs):
         instance = self.get_object()
-        serializer_class = self.internal_serializer_class()
-        serializer = serializer_class(instance, context={"request": request})
-
+        serializer = self.get_serializer(instance, context={"request": request})
         res_json = {"conservation_status_obj": serializer.data}
         res_json = json.dumps(res_json)
         return HttpResponse(res_json, content_type="application/json")
@@ -1322,7 +1333,7 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
             )
 
         serializer.is_valid(raise_exception=True)
-        serializer.save(version_user=request.user)
+        instance = serializer.save(version_user=request.user)
 
         instance.log_user_action(
             ConservationStatusUserAction.ACTION_SAVE_APPLICATION.format(
@@ -1337,54 +1348,8 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
             ),
             request,
         )
-
-        return redirect(reverse("internal"))
-
-    @detail_route(methods=["post"], detail=True)
-    @renderer_classes((JSONRenderer,))
-    @transaction.atomic
-    def conservation_status_edit(self, request, *args, **kwargs):
-        instance = self.get_object()
-        request_data = request.data
-        if not instance.can_assess(request):
-            raise exceptions.ProposalNotAuthorized()
-        if instance.processing_status == "approved":
-            # to resolve error for serializer submitter id as object is received in request
-            if request_data["submitter"]:
-                request.data["submitter"] = "{}".format(
-                    request_data["submitter"].get("id")
-                )
-            if (
-                instance.application_type.name == GroupType.GROUP_TYPE_FLORA
-                or instance.application_type.name == GroupType.GROUP_TYPE_FAUNA
-            ):
-                serializer = SaveSpeciesConservationStatusSerializer(
-                    instance, data=request_data, partial=True
-                )
-            elif instance.application_type.name == GroupType.GROUP_TYPE_COMMUNITY:
-                serializer = SaveCommunityConservationStatusSerializer(
-                    instance, data=request_data, partial=True
-                )
-
-            serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save(version_user=request.user)
-
-                instance.log_user_action(
-                    ConservationStatusUserAction.ACTION_EDIT_APPLICATION.format(
-                        instance.conservation_status_number
-                    ),
-                    request,
-                )
-
-                request.user.log_user_action(
-                    ConservationStatusUserAction.ACTION_EDIT_APPLICATION.format(
-                        instance.conservation_status_number
-                    ),
-                    request,
-                )
-
-        return redirect(reverse("external"))
+        serializer = self.get_serializer(instance, context={"request": request})
+        return Response(serializer.data)
 
     @detail_route(methods=["post"], detail=True)
     @renderer_classes((JSONRenderer,))
@@ -1407,10 +1372,9 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
             )
 
         serializer.is_valid(raise_exception=True)
-        if serializer.is_valid():
-            serializer.save(version_user=request.user)
-
-        return redirect(reverse("external"))
+        instance = serializer.save(version_user=request.user)
+        serializer = self.get_serializer(instance, context={"request": request})
+        return Response(serializer.data)
 
     @detail_route(methods=["post"], detail=True)
     @renderer_classes((JSONRenderer,))
@@ -1418,7 +1382,7 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
         instance = self.get_object()
         cs_proposal_submit(instance, request)
         instance.save(version_user=request.user)
-        serializer = self.get_serializer(instance)
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     @transaction.atomic
@@ -1517,8 +1481,7 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
     def assign_request_user(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.assign_officer(request, request.user)
-        serializer_class = self.internal_serializer_class()
-        serializer = serializer_class(instance, context={"request": request})
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     @detail_route(
@@ -1541,8 +1504,7 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
                 "A user with the id passed in does not exist"
             )
         instance.assign_officer(request, user)
-        serializer_class = self.internal_serializer_class()
-        serializer = serializer_class(instance, context={"request": request})
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     @detail_route(
@@ -1555,8 +1517,7 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
     def unassign(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.unassign(request)
-        serializer_class = self.internal_serializer_class()
-        serializer = serializer_class(instance, context={"request": request})
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     @detail_route(
@@ -1573,8 +1534,7 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
             serializer.validated_data["email"],
             serializer.validated_data["text"],
         )
-        serializer_class = self.internal_serializer_class()
-        serializer = serializer_class(instance, context={"request": request})
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     @detail_route(
@@ -1589,8 +1549,7 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
         serializer = ProposedDeclineSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         instance.proposed_decline(request, serializer.validated_data)
-        serializer_class = self.internal_serializer_class()
-        serializer = serializer_class(instance, context={"request": request})
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     @detail_route(
@@ -1605,8 +1564,7 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
         serializer = ProposedDeclineSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         instance.final_decline(request, serializer.validated_data)
-        serializer_class = self.internal_serializer_class()
-        serializer = serializer_class(instance, context={"request": request})
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     @detail_route(
@@ -1621,8 +1579,7 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
         serializer = ProposedApprovalSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         instance.proposed_approval(request, serializer.validated_data)
-        serializer_class = self.internal_serializer_class()
-        serializer = serializer_class(instance, context={"request": request})
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     @detail_route(
@@ -1639,8 +1596,7 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
         )
         serializer.is_valid(raise_exception=True)
         instance.final_approval(request, serializer.validated_data)
-        serializer_class = self.internal_serializer_class()
-        serializer = serializer_class(instance, context={"request": request})
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     @detail_route(
@@ -1672,8 +1628,7 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
             raise serializers.ValidationError("The status provided is not allowed")
 
         instance.move_to_status(request, status, approver_comment)
-        serializer_class = self.internal_serializer_class()
-        serializer = serializer_class(instance, context={"request": request})
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     @detail_route(
@@ -1686,8 +1641,7 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
     def proposed_for_agenda(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.proposed_for_agenda(request)
-        serializer_class = self.internal_serializer_class()
-        serializer = serializer_class(instance, context={"request": request})
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     @detail_route(
@@ -1700,8 +1654,7 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
     def ready_for_agenda(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.ready_for_agenda(request)
-        serializer_class = self.internal_serializer_class()
-        serializer = serializer_class(instance, context={"request": request})
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     @detail_route(
@@ -1759,14 +1712,14 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
     def discard(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.discard(request)
-        serializer = self.get_serializer(instance)
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     @detail_route(methods=["patch"], detail=True)
     def reinstate(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.reinstate(request)
-        serializer = self.get_serializer(instance)
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     @detail_route(methods=["patch"], detail=True)
@@ -1777,8 +1730,7 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
         if not reason:
             raise serializers.ValidationError("Reason is required")
         instance.defer(request, reason, review_due_date)
-        serializer_class = self.internal_serializer_class()
-        serializer = serializer_class(instance, context={"request": request})
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     @detail_route(
@@ -1789,7 +1741,7 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
     def propose_delist(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.propose_delist(request)
-        serializer = self.get_serializer(instance)
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     @detail_route(
@@ -1800,7 +1752,7 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
     def delist(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.delist(request)
-        serializer = self.get_serializer(instance)
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     @detail_route(
@@ -1825,8 +1777,7 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
     def unlock_conservation_status(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.unlock(request)
-        serializer_class = self.internal_serializer_class()
-        serializer = serializer_class(instance, context={"request": request})
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     @detail_route(
@@ -1839,8 +1790,7 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
     def lock_conservation_status(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.lock(request)
-        serializer_class = self.internal_serializer_class()
-        serializer = serializer_class(instance, context={"request": request})
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     @detail_route(
@@ -1867,8 +1817,7 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
         )
         send_external_referee_invite_email(instance, request, external_referee_invite)
 
-        serializer_class = self.internal_serializer_class()
-        serializer = serializer_class(instance, context={"request": request})
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     @detail_route(detail=True, methods=["GET"], url_path="check-updated")
@@ -2267,7 +2216,7 @@ class ConservationStatusReferralViewSet(
             request,
         )
 
-        serializer = self.get_serializer(instance)
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
 
@@ -2300,7 +2249,7 @@ class ConservationStatusAmendmentRequestViewSet(
         instance = serializer.save()
         instance.add_documents(request)
         instance.generate_amendment(request)
-        serializer = self.get_serializer(instance)
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     @detail_route(
@@ -2383,7 +2332,7 @@ class ConservationStatusDocumentViewSet(
         # the file will be deleted from the file system
         instance.delete()
         instance.save(version_user=request.user)
-        serializer = self.get_serializer(instance)
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     @detail_route(
@@ -2396,7 +2345,7 @@ class ConservationStatusDocumentViewSet(
         instance = self.get_object()
         instance.active = True
         instance.save(version_user=request.user)
-        serializer = self.get_serializer(instance)
+        serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
