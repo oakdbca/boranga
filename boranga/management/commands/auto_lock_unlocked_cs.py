@@ -16,8 +16,6 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
-        logger.info("Starting auto locking of conservation status records")
-
         # Calculate the threshold time for locking
         threshold_time = timezone.now() - timezone.timedelta(
             minutes=settings.LOCKED_CONSERVATION_STATUS_EDITING_WINDOW_MINUTES
@@ -41,5 +39,3 @@ class Command(BaseCommand):
                 f"{list(conservation_statuses_to_lock.values_list('conservation_status_number'))}"
             )
             conservation_statuses_to_lock.update(locked=True)
-
-        logger.info("Auto lock completed")
