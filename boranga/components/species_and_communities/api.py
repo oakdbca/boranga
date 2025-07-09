@@ -2171,7 +2171,6 @@ class CommunityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         instance.save(version_user=request.user)
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
-        # return redirect(reverse('internal'))
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
