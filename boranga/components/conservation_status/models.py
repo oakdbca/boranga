@@ -689,6 +689,10 @@ class ConservationStatus(
         self.species = species
 
     @property
+    def editing_window_minutes(self):
+        return settings.CONSERVATION_STATUS_EDITING_WINDOW_MINUTES
+
+    @property
     def reference(self):
         return f"{self.conservation_status_number}"
 
