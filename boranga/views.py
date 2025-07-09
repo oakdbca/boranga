@@ -63,7 +63,6 @@ class InternalSpeciesView(DetailView):
     def get(self, *args, **kwargs):
         if self.request.user.is_authenticated():
             if is_internal(self.request):
-                # return redirect('internal-proposal-detail')
                 return super().get(*args, **kwargs)
         kwargs["form"] = LoginForm
         return super(BorangaRoutingView, self).get(*args, **kwargs)
@@ -76,7 +75,6 @@ class InternalCommunityView(DetailView):
     def get(self, *args, **kwargs):
         if self.request.user.is_authenticated():
             if is_internal(self.request):
-                # return redirect('internal-proposal-detail')
                 return super().get(*args, **kwargs)
         kwargs["form"] = LoginForm
         return super(BorangaRoutingView, self).get(*args, **kwargs)
@@ -94,7 +92,6 @@ class InternalConservationStatusView(DetailView):
     def get(self, *args, **kwargs):
         if self.request.user.is_authenticated():
             if is_internal(self.request):
-                # return redirect('internal-proposal-detail')
                 return super().get(*args, **kwargs)
             return redirect("external-conservation-status-detail")
         kwargs["form"] = LoginForm
