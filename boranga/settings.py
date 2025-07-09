@@ -555,3 +555,7 @@ GIS_EXTENT = config(
     default="96.0, -35.0, 129.0, -10.0",
     cast=Csv(float, post_process=tuple),
 )
+
+LOCKED_CONSERVATION_STATUS_EDITING_WINDOW_MINUTES = config(
+    "LOCKED_CONSERVATION_STATUS_EDITING_WINDOW_MINUTES", default=30, cast=int
+)
