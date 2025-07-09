@@ -6,6 +6,7 @@
             cancel-text="Close"
             :title="title"
             large
+            :data-loss-warning-on-cancel="false"
             @cancel="close()"
         >
             <form
