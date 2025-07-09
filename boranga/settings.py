@@ -235,6 +235,7 @@ CRON_CLASSES = [
     "boranga.cron.CronJobFetchNomosTaxonDataDaily",
     "boranga.cron.CronJobOCRPreProcessBulkImportTasks",
     "boranga.cron.CronJobOCRProcessBulkImportQueue",
+    "boranga.cron.CronJobAutoLockConservationStatusRecords",
 ]
 
 
