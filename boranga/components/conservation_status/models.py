@@ -654,6 +654,9 @@ class ConservationStatus(
     # Date first listed
     listing_date = models.DateField(null=True, blank=True)
 
+    datetime_created = models.DateTimeField(auto_now_add=True)
+    datetime_updated = models.DateTimeField(auto_now=True)
+
     class Meta:
         app_label = "boranga"
 
