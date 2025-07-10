@@ -322,6 +322,14 @@ class ListSpeciesConservationStatusSerializer(BaseModelSerializer):
                 )
         return ""
 
+    def get_assessor_edit(self, obj):
+        request = self.context["request"]
+        user = request.user
+        if obj.can_officer_edit:
+            if user in obj.allowed_assessors:
+                return True
+        return False
+
     def get_assessor_process(self, obj):
         # Check if currently logged in user has access to process the proposal
         request = self.context["request"]
@@ -330,14 +338,6 @@ class ListSpeciesConservationStatusSerializer(BaseModelSerializer):
     def get_approver_process(self, obj):
         request = self.context["request"]
         return obj.can_approver_process and is_conservation_status_approver(request)
-
-    def get_assessor_edit(self, obj):
-        request = self.context["request"]
-        user = request.user
-        if obj.can_officer_edit:
-            if user in obj.allowed_assessors:
-                return True
-        return False
 
     def get_internal_user_edit(self, obj):
         request = self.context["request"]
@@ -367,6 +367,7 @@ class ListCommunityConservationStatusSerializer(BaseModelSerializer):
     regions = serializers.SerializerMethodField()
     districts = serializers.SerializerMethodField()
     assessor_process = serializers.SerializerMethodField(read_only=True)
+    approver_process = serializers.SerializerMethodField(read_only=True)
     assessor_edit = serializers.SerializerMethodField(read_only=True)
     internal_user_edit = serializers.SerializerMethodField(read_only=True)
     wa_priority_list = serializers.CharField(
@@ -417,6 +418,7 @@ class ListCommunityConservationStatusSerializer(BaseModelSerializer):
             "can_user_edit",
             "can_user_view",
             "assessor_process",
+            "approver_process",
             "assessor_edit",
             "internal_application",
             "internal_user_edit",
@@ -453,6 +455,7 @@ class ListCommunityConservationStatusSerializer(BaseModelSerializer):
             "can_user_edit",
             "can_user_view",
             "assessor_process",
+            "approver_process",
             "assessor_edit",
             "internal_application",
             "internal_user_edit",
@@ -531,6 +534,10 @@ class ListCommunityConservationStatusSerializer(BaseModelSerializer):
         # Check if currently logged in user has access to process the proposal
         request = self.context["request"]
         return obj.can_officer_process and is_conservation_status_assessor(request)
+
+    def get_approver_process(self, obj):
+        request = self.context["request"]
+        return obj.can_approver_process and is_conservation_status_approver(request)
 
     def get_assessor_edit(self, obj):
         request = self.context["request"]
