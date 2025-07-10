@@ -217,7 +217,6 @@ export default {
             let columns = [
                 vm.column_number,
                 vm.column_submitter,
-                //vm.column_status,
                 vm.column_observation_date,
                 vm.column_location_accuracy,
                 vm.column_identification_certainty,
@@ -231,7 +230,6 @@ export default {
                     processing: constants.DATATABLE_PROCESSING_HTML,
                 },
                 responsive: true,
-                //serverSide: true,
                 searching: true,
                 ordering: true,
                 order: [[0, 'desc']],
@@ -240,7 +238,6 @@ export default {
                     { responsivePriority: 2, targets: -1 },
                 ],
                 ajax: {
-                    //"url": '/api/proposal/' + vm.proposal.id + '/get_related_items/',
                     url:
                         '/api/occurrence/' +
                         this.occurrence_obj.id +
@@ -380,6 +377,11 @@ export default {
                 this.$refs.related_ocr_datatable.vmDataTable.columns
                     .adjust()
                     .responsive.recalc();
+            }
+        },
+        reloadDatatable: function () {
+            if (this.$refs.related_ocr_datatable) {
+                this.$refs.related_ocr_datatable.vmDataTable.ajax.reload();
             }
         },
         addEventListeners: function () {
