@@ -2111,14 +2111,28 @@ class OccurrenceReportViewSet(
     )
     @renderer_classes((JSONRenderer,))
     def update_show_on_map(self, request, *args, **kwargs):
-        show_on_map = request.data.get("show_on_map")
-        model_id = request.data.get("model_id")
         instance = self.get_object()
-        OccurrenceReportGeometry.objects.filter(
-            occurrence_report=instance, id=model_id
-        ).update(show_on_map=show_on_map)
+        show_on_map = request.data.get("show_on_map", None)
+        if show_on_map is None:
+            raise serializers.ValidationError("show_on_map is required")
+        if show_on_map not in [True, False]:
+            raise serializers.ValidationError(
+                "show_on_map must be a boolean value (True or False)"
+            )
+        ocr_geometries = instance.ocr_geometry.all()
+        if not ocr_geometries.exists():
+            raise serializers.ValidationError(
+                "No ocr_geometry exists for this occurrence report"
+            )
+        model_id = request.data.get("model_id", None)
+        if model_id:
+            if not instance.ocr_geometry.filter(id=model_id).exists():
+                raise serializers.ValidationError(
+                    "The model_id provided does not exist in the ocr_geometry"
+                )
+            ocr_geometries = ocr_geometries.filter(id=model_id)
+        ocr_geometries.update(show_on_map=show_on_map)
         serializer = self.get_serializer(instance)
-
         return Response(serializer.data)
 
     @detail_route(
@@ -3304,7 +3318,7 @@ class OccurrencePaginatedViewSet(viewsets.ReadOnlyModelViewSet):
     @detail_route(methods=["get"], detail=True)
     def get_related_occurrence_reports(self, request, *args, **kwargs):
         instance = self.get_object()
-        related_reports = instance.get_related_occurrence_reports()
+        related_reports = instance.occurrence_reports.all()
         if is_internal(self.request):
             related_reports = related_reports.all()
         else:
@@ -4130,7 +4144,7 @@ class OccurrenceViewSet(
     @detail_route(methods=["get"], detail=True)
     def get_related_occurrence_reports(self, request, *args, **kwargs):
         instance = self.get_object()
-        related_reports = instance.get_related_occurrence_reports()
+        related_reports = instance.occurrence_reports.all()
         if is_internal(self.request):
             related_reports = related_reports.all()
         else:
@@ -4143,9 +4157,7 @@ class OccurrenceViewSet(
     @detail_route(methods=["get"], detail=True)
     def get_existing_ocr_threats(self, request, *args, **kwargs):
         instance = self.get_object()
-        related_reports = instance.get_related_occurrence_reports().values_list(
-            "id", flat=True
-        )
+        related_reports = instance.occurrence_reports.all().values_list("id", flat=True)
         addedThreats = (
             OCCConservationThreat.objects.filter(occurrence=instance)
             .exclude(occurrence_report_threat=None)

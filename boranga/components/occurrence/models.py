@@ -18,6 +18,7 @@ import openpyxl
 import pyproj
 import reversion
 from colorfield.fields import ColorField
+from dirtyfields import DirtyFieldsMixin
 from django.apps import apps
 from django.conf import settings
 from django.contrib.contenttypes import fields
@@ -3806,7 +3807,7 @@ class OccurrenceManager(models.Manager):
         )
 
 
-class Occurrence(RevisionedMixin):
+class Occurrence(DirtyFieldsMixin, RevisionedMixin):
     BULK_IMPORT_ABBREVIATION = "occ"
 
     REVIEW_STATUS_CHOICES = (
@@ -3932,7 +3933,12 @@ class Occurrence(RevisionedMixin):
             self.occurrence_number = f"OCC{str(self.pk)}"
             self.save(*args, **kwargs)
         else:
+            # Take a copy of dirty fields before saving
+            dirty_fields = self.get_dirty_fields()
             super().save(*args, **kwargs)
+            # If the species or community was changed, update the child OCRs
+            if "species" or "community" in dirty_fields:
+                self.update_child_ocrs()
 
     def __str__(self):
         if self.species:
@@ -3941,6 +3947,33 @@ class Occurrence(RevisionedMixin):
             return f"{self.occurrence_number} - {self.community} ({self.group_type})"
         else:
             return f"{self.occurrence_number} - {self.group_type}"
+
+    def update_child_ocrs(self):
+        """Update child occurrence reports with the current species or community
+        based on the group type of the occurrence. This is to be called"""
+        if not self.occurrence_reports.exists():
+            return
+
+        if not self.species and not self.community:
+            logger.warning(
+                f"Occurrence {self.id} does not have a species or community set, cannot update child OCRs."
+            )
+            return
+
+        if not self.group_type:
+            logger.warning(
+                f"Occurrence {self.id} does not have a group type set, cannot update child OCRs."
+            )
+            return
+
+        if self.group_type and self.group_type.name == GroupType.GROUP_TYPE_COMMUNITY:
+            self.occurrence_reports.exclude(community=self.community).update(
+                community=self.community
+            )
+        else:
+            self.occurrence_reports.exclude(species=self.species).update(
+                species=self.species
+            )
 
     @property
     def number_of_reports(self):
@@ -4410,10 +4443,6 @@ class Occurrence(RevisionedMixin):
 
     def log_user_action(self, action, request):
         return OccurrenceUserAction.log_action(self, action, request.user.id)
-
-    def get_related_occurrence_reports(self, **kwargs):
-
-        return OccurrenceReport.objects.filter(occurrence=self)
 
     def get_related_items(self, filter_type, **kwargs):
         return_list = []

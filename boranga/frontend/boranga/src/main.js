@@ -62,7 +62,13 @@ window.fetch = ((originalFetch) => {
         const response = await originalFetch.apply(this, args);
 
         // Handle 401/403 globally
-        if (response.status === 401) {
+        if (
+            response.status === 401 &&
+            // Only redirect to login for requests to boranga api endpoints
+            args[0] &&
+            typeof args[0] === 'string' &&
+            new URL(args[0], window.location.origin).pathname.startsWith('/api')
+        ) {
             window.location.href =
                 '/login/?next=' + encodeURIComponent(window.location.pathname);
         } else if (response.status === 403) {
