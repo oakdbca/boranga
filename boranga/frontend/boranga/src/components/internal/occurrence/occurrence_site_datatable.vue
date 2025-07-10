@@ -430,10 +430,6 @@ export default {
             );
         },
         prepareSiteFromCoordinates: function (coordinates) {
-            console.debug(
-                'prepareSiteFromCoordinates called with coordinates:',
-                coordinates
-            );
             this.newSite();
             this.$refs.site_detail.prepareNewSiteAtCoordinates(
                 coordinates,

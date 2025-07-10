@@ -464,9 +464,6 @@ export default {
             sessionStorage.setItem('formSectionCollapsed_' + key, collapsed);
         },
         onSectionToggle(event, key) {
-            console.debug(
-                `onSectionToggle called for ${key} with collapsed: ${event}`
-            );
             this.setSectionCollapsed(key, event);
         },
         reloadDatatable: function (dashRef, datatableRef) {

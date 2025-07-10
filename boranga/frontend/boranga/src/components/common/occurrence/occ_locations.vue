@@ -878,7 +878,6 @@ export default {
             this.$refs.related_reports_datatable.adjust_table_width();
         },
         updatedSites: function () {
-            console.debug('Updated sites, refreshing map.');
             this.incrementComponentMapKey();
         },
         searchForCRS: function (search, loading) {
