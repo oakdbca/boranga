@@ -443,9 +443,9 @@
                 :target-map-layer-name-for-copy="occurrenceLayerName"
                 :target-map-layer-name-for-show-hide="queryLayerName"
                 @copy-update="copyUpdate"
-                @highlight-on-map="highlightIdOnMapLayer"
+                @highlight-on-map="highlightOCROnMapLayer"
                 @copy-to-map-layer="copyToMapLayer"
-                @toggle-show-on-map="toggleShowOnMapLayer"
+                @toggle-show-on-map="toggleShowOCROnMapLayer"
             />
         </FormSection>
     </div>
@@ -875,7 +875,7 @@ export default {
             this.$refs.occurrence_tenure_datatable.updatedTenureArea();
         },
         refreshDatatableRelatedOCR: function () {
-            this.$refs.related_reports_datatable.adjust_table_width();
+            this.$refs.related_reports_datatable.reloadDatatable();
         },
         updatedSites: function () {
             this.incrementComponentMapKey();
@@ -937,6 +937,20 @@ export default {
             const layer = map.getLayerByName(layer_name);
             return map.getFeatureById(layer, id);
         },
+        getMapFeaturesByOccurrenceReportId: function (
+            occurrenceReportId,
+            layer_name
+        ) {
+            if (!layer_name) {
+                layer_name = this.queryLayerName;
+            }
+            const map = this.$refs.component_map;
+            const layer = map.getLayerByName(layer_name);
+            return map.getFeaturesByOccurrenceReportId(
+                layer,
+                occurrenceReportId
+            );
+        },
         highlightPointOnMap: function (coordinates) {
             if (!coordinates) {
                 console.warn('No coordinates found');
@@ -944,7 +958,7 @@ export default {
             }
             this.$refs.component_map.highlightPointOnTenureLayer(coordinates);
         },
-        highlightIdOnMapLayer: function (id) {
+        highlightOCROnMapLayer: function (id) {
             const feature = this.getMapFeatureById(id);
             this.$refs.component_map.centerOnFeature(feature);
         },
@@ -971,12 +985,43 @@ export default {
             feature.set('show_on_map', !show_on_map);
             this.updateShowHide(feature, layer_name).then(() => {
                 this.refreshDatatableRelatedOCR();
+                this.$refs.component_map.forceToRefreshMap();
             });
-            // Recreating the map component here as for some reason the feature
-            // refuses to hide (if the feature is hidden it will show when toggled but will not hide)
-            if (!show_on_map) {
-                this.incrementComponentMapKey();
+        },
+        toggleShowOCROnMapLayer: function (occurrenceReportId, layer_name) {
+            const features = this.getMapFeaturesByOccurrenceReportId(
+                occurrenceReportId,
+                layer_name
+            );
+            if (!features || features.length === 0) {
+                console.warn(
+                    `No features found for occurrence report with id ${occurrenceReportId} on layer ${layer_name}.`
+                );
+                return;
             }
+            let show_on_map = features[0].getProperties().show_on_map;
+            for (let feature of features) {
+                feature.set(
+                    'show_on_map',
+                    !feature.getProperties().show_on_map
+                );
+            }
+            show_on_map = !show_on_map; // Toggle the show_on_map property
+            this.updateShowHideOCRGeometries(
+                occurrenceReportId,
+                show_on_map
+            ).then(() => {
+                this.refreshDatatableRelatedOCR();
+                this.$refs.component_map.forceToRefreshMap();
+                let shownOrHidden = show_on_map ? 'shown' : 'hidden';
+                swal.fire({
+                    title: `Geometries ${shownOrHidden}`,
+                    text: `Occurrence Report OCR${occurrenceReportId} geometries are now ${shownOrHidden}.`,
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+            });
         },
         bufferGeometryHandler: function () {
             const occurrence_features = this.$refs.component_map
@@ -1037,6 +1082,57 @@ export default {
                     feature.getProperties().label
                 }: ${showOnMap}.`
             );
+            return fetch(apiEndpoint, payload)
+                .then(async (response) => {
+                    if (!response.ok) {
+                        return await response.json().then((json) => {
+                            throw new Error(json);
+                        });
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    return data;
+                })
+                .catch((error) => {
+                    swal.fire({
+                        title: 'Error',
+                        text:
+                            'Cannot change geometry visibility because of the following error: ' +
+                            error,
+                        icon: 'error',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        },
+                    });
+                });
+        },
+        updateShowHideOCRGeometries: function (
+            occurrenceReportId,
+            show_on_map
+        ) {
+            if (!occurrenceReportId) {
+                console.warn(
+                    `No occurrenceReportId provided for update show/hide.`
+                );
+                return;
+            }
+
+            const apiEndpoint = helpers.add_endpoint_join(
+                api_endpoints.occurrence_report,
+                `/${occurrenceReportId}/update_show_on_map/`
+            );
+
+            const payload = {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    show_on_map: show_on_map,
+                }),
+            };
+
             return fetch(apiEndpoint, payload)
                 .then(async (response) => {
                     if (!response.ok) {
