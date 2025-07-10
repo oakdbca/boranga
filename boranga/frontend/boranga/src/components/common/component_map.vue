@@ -5841,6 +5841,17 @@ export default {
                     return feature.getProperties().name == featureId;
                 });
         },
+        getFeaturesByOccurrenceReportId: function (
+            layer,
+            occurrence_report_id
+        ) {
+            return layer
+                .getSource()
+                .getFeatures()
+                .filter((feature) => {
+                    return feature.getProperties().name == occurrence_report_id;
+                });
+        },
         copyFeatureToLayer: function (feature, layer) {
             const copy = feature.clone();
             copy.unset('id');
