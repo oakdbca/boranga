@@ -4444,10 +4444,6 @@ class Occurrence(DirtyFieldsMixin, RevisionedMixin):
     def log_user_action(self, action, request):
         return OccurrenceUserAction.log_action(self, action, request.user.id)
 
-    def get_related_occurrence_reports(self, **kwargs):
-
-        return OccurrenceReport.objects.filter(occurrence=self)
-
     def get_related_items(self, filter_type, **kwargs):
         return_list = []
         if filter_type == "all":
