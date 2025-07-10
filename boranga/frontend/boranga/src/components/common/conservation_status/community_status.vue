@@ -1620,13 +1620,10 @@ export default {
                 return true;
             } else {
                 if (
-                    [
-                        'Ready For Agenda',
-                        'Approved',
-                        'Closed',
-                        'DeListed',
-                        'Discarded',
-                    ].includes(this.conservation_status_obj.processing_status)
+                    ['Ready For Agenda'].includes(
+                        this.conservation_status_obj.processing_status
+                    ) ||
+                    this.conservation_status_obj.locked
                 ) {
                     return true;
                 }

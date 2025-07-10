@@ -1799,7 +1799,7 @@ class ConservationStatus(
 
         self.effective_to = datetime.strptime(
             request.data.get("effective_to"), "%Y-%m-%d"
-        )
+        ).date()
         self.processing_status = ConservationStatus.PROCESSING_STATUS_WITH_APPROVER
         self.save()
 
@@ -2089,7 +2089,7 @@ class ConservationStatus(
         if not self.assigned_approver == request.user.id:
             return False
 
-        return is_conservation_status_approver(request)
+        return not self.locked and is_conservation_status_approver(request)
 
     @property
     def external_referral_invites(self):

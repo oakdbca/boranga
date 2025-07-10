@@ -890,7 +890,9 @@
                                                 </button>
                                             </div>
                                             <div
-                                                v-else-if="hasAssessorMode"
+                                                v-else-if="
+                                                    showSaveChangesButton
+                                                "
                                                 class="col-md-6 text-end"
                                             >
                                                 <button
@@ -1313,6 +1315,9 @@ export default {
                     this.conservation_status_obj.assessor_mode
                         .has_unlocked_mode)
             );
+        },
+        showSaveChangesButton: function () {
+            return this.hasAssessorMode && !this.conservation_status_obj.locked;
         },
         isApprovalLevelDocument: function () {
             return false;
