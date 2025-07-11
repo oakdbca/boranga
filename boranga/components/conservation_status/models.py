@@ -690,7 +690,7 @@ class ConservationStatus(
 
     @property
     def editing_window_minutes(self):
-        return settings.LOCKED_CONSERVATION_STATUS_EDITING_WINDOW_MINUTES
+        return settings.UNLOCKED_CONSERVATION_STATUS_EDITING_WINDOW_MINUTES
 
     @property
     def reference(self):
