@@ -315,6 +315,7 @@ class OccurrenceSerializer(BaseModelSerializer):
     can_add_log = serializers.SerializerMethodField()
     occ_geometry = OccurrenceGeometrySerializer(many=True, read_only=True)
     show_locked_indicator = serializers.BooleanField(read_only=True)
+    editing_window_minutes = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Occurrence
