@@ -67,6 +67,7 @@ from boranga.components.main.models import (
     BaseModel,
     CommunicationsLogEntry,
     Document,
+    LockableModel,
     OrderedArchivableManager,
     RevisionedMixin,
     UserAction,
@@ -3807,7 +3808,7 @@ class OccurrenceManager(models.Manager):
         )
 
 
-class Occurrence(DirtyFieldsMixin, RevisionedMixin):
+class Occurrence(DirtyFieldsMixin, LockableModel, RevisionedMixin):
     BULK_IMPORT_ABBREVIATION = "occ"
 
     REVIEW_STATUS_CHOICES = (
@@ -3890,10 +3891,9 @@ class Occurrence(DirtyFieldsMixin, RevisionedMixin):
         blank=True,
         related_name="combined_occurrences",
     )
-    locked = models.BooleanField(null=False, blank=False, default=False)
+
     PROCESSING_STATUS_DRAFT = "draft"
     PROCESSING_STATUS_ACTIVE = "active"
-    PROCESSING_STATUS_LOCKED = "locked"
     PROCESSING_STATUS_SPLIT = "split"
     PROCESSING_STATUS_COMBINE = "combine"
     PROCESSING_STATUS_HISTORICAL = "historical"
@@ -3901,7 +3901,6 @@ class Occurrence(DirtyFieldsMixin, RevisionedMixin):
     PROCESSING_STATUS_CHOICES = (
         (PROCESSING_STATUS_DRAFT, "Draft"),
         (PROCESSING_STATUS_ACTIVE, "Active"),
-        (PROCESSING_STATUS_LOCKED, "Locked"),
         (PROCESSING_STATUS_SPLIT, "Split"),
         (PROCESSING_STATUS_COMBINE, "Combine"),
         (PROCESSING_STATUS_HISTORICAL, "Historical"),
@@ -4321,12 +4320,16 @@ class Occurrence(DirtyFieldsMixin, RevisionedMixin):
         )
 
     def lock(self, request):
-        if (
-            is_occurrence_approver(request)
-            and self.processing_status == Occurrence.PROCESSING_STATUS_ACTIVE
-        ):
-            self.processing_status = Occurrence.PROCESSING_STATUS_LOCKED
-            self.save(version_user=request.user)
+        if self.locked:
+            return
+
+        if not is_occurrence_approver(request):
+            raise exceptions.OccurrenceNotAuthorized(
+                "You do not have permission to lock this occurrence."
+            )
+
+        self.locked = True
+        self.save(version_user=request.user)
 
         # Log proposal action
         self.log_user_action(
