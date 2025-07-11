@@ -1597,8 +1597,7 @@ class OccurrenceReportViewSet(
                 habitat_instance, data=proposal_data.get("habitat_composition")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if proposal_data.get("habitat_condition"):
             hab_cond_instance, created = OCRHabitatCondition.objects.get_or_create(
@@ -1608,8 +1607,7 @@ class OccurrenceReportViewSet(
                 hab_cond_instance, data=proposal_data.get("habitat_condition")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if proposal_data.get("vegetation_structure"):
             veg_struct_instance, created = OCRVegetationStructure.objects.get_or_create(
@@ -1619,8 +1617,7 @@ class OccurrenceReportViewSet(
                 veg_struct_instance, data=proposal_data.get("vegetation_structure")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if proposal_data.get("fire_history"):
             fire_instance, created = OCRFireHistory.objects.get_or_create(
@@ -1630,8 +1627,7 @@ class OccurrenceReportViewSet(
                 fire_instance, data=proposal_data.get("fire_history")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if proposal_data.get("associated_species"):
             assoc_species_instance, created = (
@@ -1642,8 +1638,7 @@ class OccurrenceReportViewSet(
                 data=proposal_data.get("associated_species"),
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if proposal_data.get("observation_detail"):
             obs_det_instance, created = OCRObservationDetail.objects.get_or_create(
@@ -1653,8 +1648,7 @@ class OccurrenceReportViewSet(
                 obs_det_instance, data=proposal_data.get("observation_detail")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if (
             instance.group_type.name == GroupType.GROUP_TYPE_FLORA
@@ -1667,8 +1661,7 @@ class OccurrenceReportViewSet(
                 plant_count_instance, data=proposal_data.get("plant_count")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if proposal_data.get("animal_observation"):
             animal_obs_instance, created = OCRAnimalObservation.objects.get_or_create(
@@ -1679,8 +1672,7 @@ class OccurrenceReportViewSet(
                 data=proposal_data.get("animal_observation"),
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if proposal_data.get("identification"):
             identification_instance, created = OCRIdentification.objects.get_or_create(
@@ -1691,8 +1683,7 @@ class OccurrenceReportViewSet(
                 data=proposal_data.get("identification"),
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if proposal_data.get("location"):
             location_instance, created = OCRLocation.objects.get_or_create(
@@ -1702,8 +1693,7 @@ class OccurrenceReportViewSet(
                 location_instance, data=proposal_data.get("location")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         # ocr geometry data to save seperately
         geometry_data = proposal_data.get("ocr_geometry", None)
@@ -4291,8 +4281,7 @@ class OccurrenceViewSet(
                 habitat_instance, data=request_data.get("habitat_composition")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()
 
         if request_data.get("habitat_condition"):
             hab_cond_instance, created = OCCHabitatCondition.objects.get_or_create(
@@ -4302,8 +4291,7 @@ class OccurrenceViewSet(
                 hab_cond_instance, data=request_data.get("habitat_condition")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if request_data.get("vegetation_structure"):
             veg_struct_instance, created = OCCVegetationStructure.objects.get_or_create(
@@ -4313,8 +4301,7 @@ class OccurrenceViewSet(
                 veg_struct_instance, data=request_data.get("vegetation_structure")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if request_data.get("fire_history"):
             fire_instance, created = OCCFireHistory.objects.get_or_create(
@@ -4324,8 +4311,7 @@ class OccurrenceViewSet(
                 fire_instance, data=request_data.get("fire_history")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if request_data.get("associated_species"):
             assoc_species_instance, created = (
@@ -4336,8 +4322,7 @@ class OccurrenceViewSet(
                 data=request_data.get("associated_species"),
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if request_data.get("observation_detail"):
             obs_det_instance, created = OCCObservationDetail.objects.get_or_create(
@@ -4347,8 +4332,7 @@ class OccurrenceViewSet(
                 obs_det_instance, data=request_data.get("observation_detail")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if request_data.get("plant_count"):
             plant_count_instance, created = OCCPlantCount.objects.get_or_create(
@@ -4358,8 +4342,7 @@ class OccurrenceViewSet(
                 plant_count_instance, data=request_data.get("plant_count")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if request_data.get("animal_observation"):
             animal_obs_instance, created = OCCAnimalObservation.objects.get_or_create(
@@ -4370,8 +4353,7 @@ class OccurrenceViewSet(
                 data=request_data.get("animal_observation"),
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if request_data.get("identification"):
             identification_instance, created = OCCIdentification.objects.get_or_create(
@@ -4382,8 +4364,7 @@ class OccurrenceViewSet(
                 data=request_data.get("identification"),
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if request_data.get("location"):
             location_instance, created = OCCLocation.objects.get_or_create(
@@ -4393,8 +4374,7 @@ class OccurrenceViewSet(
                 location_instance, data=request_data.get("location")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         # occ geometry data to save seperately
         geometry_data = request_data.get("occ_geometry", None)

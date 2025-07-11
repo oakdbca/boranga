@@ -1241,8 +1241,7 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 distribution_instance, data=request_data.get("distribution")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()
 
         if request_data.get("conservation_attributes"):
             conservation_attributes_instance, created = (
@@ -1253,8 +1252,7 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 data=request_data.get("conservation_attributes"),
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()
 
         publishing_status_instance, created = (
             SpeciesPublishingStatus.objects.get_or_create(species=instance)
@@ -1346,8 +1344,7 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 distribution_instance, data=request_data.get("distribution")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()
 
         if request_data.get("conservation_attributes"):
             conservation_attributes_instance, created = (
@@ -1358,8 +1355,7 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 data=request_data.get("conservation_attributes"),
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()
 
         serializer = SaveSpeciesSerializer(instance, data=request_data, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -2065,8 +2061,7 @@ class CommunityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 taxonomy_instance, data=request_data.get("taxonomy_details")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()
 
         if request_data.get("distribution"):
             distribution_instance, created = (
@@ -2076,8 +2071,7 @@ class CommunityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 distribution_instance, data=request_data.get("distribution")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()
 
         if request_data.get("conservation_attributes"):
             conservation_attributes_instance, created = (
@@ -2090,8 +2084,7 @@ class CommunityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 data=request_data.get("conservation_attributes"),
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()
 
         publishing_status_instance, created = (
             CommunityPublishingStatus.objects.get_or_create(community=instance)
