@@ -1,7 +1,7 @@
 <template lang="html">
-    <div id="internal-occurence-detail" class="container">
+    <div v-if="occurrence" id="internal-occurence-detail" class="container">
         <div class="row" style="padding-bottom: 50px">
-            <div v-if="occurrence" class="col">
+            <div class="col">
                 <h3>
                     Occurrence: {{ occurrence.occurrence_number }} -
                     <span class="text-capitalize">{{
@@ -54,6 +54,26 @@
                             <div class="card-body card-collapse">
                                 <strong>Status</strong><br />
                                 {{ occurrence.processing_status }}
+                                <template
+                                    v-if="occurrence.show_locked_indicator"
+                                >
+                                    <i
+                                        v-if="occurrence.locked"
+                                        class="bi bi-lock-fill text-warning fs-5"
+                                        title="locked"
+                                    ></i>
+                                    <i
+                                        v-else
+                                        class="bi bi-unlock-fill text-secondary fs-5 ms-1"
+                                        title="unlocked"
+                                    ></i>
+                                    <span
+                                        v-if="showEditingCountdown"
+                                        :class="editingCountdownBadgeClass"
+                                    >
+                                        {{ editingCountdownDisplay }}
+                                    </span>
+                                </template>
                             </div>
                             <div class="card-body border-top">
                                 <div class="col-sm-12">
@@ -276,6 +296,27 @@ export default {
             }
         );
     },
+    beforeRouteLeave(to, from, next) {
+        if (
+            this.occurrence &&
+            !this.occurrence.locked &&
+            this.shouldShowTimerAndPoll
+        ) {
+            swal.fire({
+                title: 'Occurrence Unlocked',
+                text: 'Please lock the occurrence before leaving.',
+                icon: 'warning',
+                confirmButtonText: 'Ok',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                },
+            }).then(() => {
+                next(false);
+            });
+        } else {
+            next();
+        }
+    },
     data: function () {
         return {
             occurrence: null,
@@ -291,6 +332,11 @@ export default {
             DATE_TIME_FORMAT: 'DD/MM/YYYY HH:mm:ss',
             comparing: false,
             isDirty: false,
+            pollInterval: null,
+            editingCountdownInterval: null,
+            editingWindowMinutes: null,
+            serverDatetimeUpdated: null,
+            editingCountdown: null,
         };
     },
     computed: {
@@ -342,16 +388,14 @@ export default {
                 : false;
         },
         canLock: function () {
-            return this.occurrence &&
-                this.occurrence.processing_status === 'Active'
-                ? true
-                : false;
+            return (
+                this.occurrence &&
+                this.occurrence.processing_status === 'Active' &&
+                !this.occurrence.locked
+            );
         },
         canUnlock: function () {
-            return this.occurrence &&
-                this.occurrence.processing_status === 'Locked'
-                ? true
-                : false;
+            return this.occurrence && this.occurrence.locked;
         },
         canClose: function () {
             return this.occurrence &&
@@ -382,6 +426,34 @@ export default {
                 this.$route.params.occurrence_id + '/action_log'
             );
         },
+        shouldShowTimerAndPoll() {
+            return (
+                this.occurrence &&
+                !this.occurrence.locked &&
+                this.occurrence.processing_status == 'Active'
+            );
+        },
+        showEditingCountdown() {
+            return (
+                this.shouldShowTimerAndPoll &&
+                this.editingWindowMinutes !== null &&
+                this.serverDatetimeUpdated !== null
+            );
+        },
+        editingCountdownDisplay() {
+            if (this.editingCountdown === null) return '';
+            const min = Math.floor(this.editingCountdown / 60);
+            const sec = this.editingCountdown % 60;
+            return `${min}:${sec.toString().padStart(2, '0')} until auto lock`;
+        },
+        editingCountdownBadgeClass() {
+            if (this.editingCountdown !== null) {
+                if (this.editingCountdown < 60) {
+                    return 'badge bg-danger text-white ms-2';
+                }
+            }
+            return 'badge bg-warning text-dark ms-2';
+        },
     },
     created: function () {
         if (!this.occurrence) {
@@ -389,10 +461,12 @@ export default {
         }
     },
     mounted: function () {
-        window.addEventListener('beforeunload', this.leaving);
+        this.startPollingForUpdates();
+        window.addEventListener('beforeunload', this.handleBeforeUnload);
     },
-    beforeUnmount: function () {
-        window.removeEventListener('beforeunload', this.leaving);
+    beforeUnmount() {
+        this.stopPollingForUpdates();
+        window.removeEventListener('beforeunload', this.handleBeforeUnload);
     },
     updated: function () {
         let vm = this;
@@ -473,6 +547,9 @@ export default {
                     );
                     return;
                 }
+                vm.occurrence = data;
+                vm.original_occurrence = helpers.copyObject(data);
+                vm.updateEditingWindowVarsFromOccObj();
                 swal.fire({
                     title: 'Saved',
                     text: 'Your changes have been saved',
@@ -540,8 +617,8 @@ export default {
                 body: JSON.stringify(payload),
             }).then(
                 async (response) => {
+                    const data = await response.json();
                     if (!response.ok) {
-                        const data = await response.json();
                         swal.fire({
                             title: 'Error',
                             text: JSON.stringify(data),
@@ -552,6 +629,9 @@ export default {
                         });
                         return;
                     }
+                    vm.occurrence = data;
+                    vm.original_occurrence = helpers.copyObject(data);
+                    vm.updateEditingWindowVarsFromOccObj();
                 },
                 (err) => {
                     var errorText = helpers.apiVueResourceError(err);
@@ -676,6 +756,7 @@ export default {
             const data = await response.json();
             vm.original_occurrence = helpers.copyObject(data);
             vm.occurrence = helpers.copyObject(data);
+            this.updateEditingWindowVarsFromOccObj();
             vm.combine_key++;
         },
         activateOccurrence: async function () {
@@ -720,8 +801,8 @@ export default {
                 }
             ).then(
                 async (response) => {
+                    const data = await response.json();
                     if (!response.ok) {
-                        const data = await response.json();
                         swal.fire({
                             title: 'Error',
                             text: JSON.stringify(data),
@@ -732,15 +813,16 @@ export default {
                         });
                         return;
                     }
+                    this.stopEditingCountdown();
+                    this.occurrence = data;
+                    this.original_occurrence = helpers.copyObject(data);
+
                     swal.fire({
                         title: 'Locked',
                         text: 'Occurrence has been Locked',
                         icon: 'success',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
-                    }).then(async () => {
-                        this.$router.go(this.$router.currentRoute);
+                        timer: 1200,
+                        showConfirmButton: false,
                     });
                 },
                 (err) => {
@@ -757,6 +839,7 @@ export default {
             );
         },
         unlockOccurrence: async function () {
+            this.stopEditingCountdown();
             await fetch(
                 `/api/occurrence/${this.occurrence.id}/unlock_occurrence.json`,
                 {
@@ -767,8 +850,8 @@ export default {
                 }
             ).then(
                 async (response) => {
+                    const data = await response.json();
                     if (!response.ok) {
-                        const data = await response.json();
                         swal.fire({
                             title: 'Error',
                             text: JSON.stringify(data),
@@ -779,15 +862,22 @@ export default {
                         });
                         return;
                     }
+                    this.occurrence = data;
+                    this.original_occurrence = helpers.copyObject(data);
+                    this.editingWindowMinutes =
+                        this.occurrence.editing_window_minutes;
+                    this.serverDatetimeUpdated =
+                        this.occurrence.datetime_updated;
+                    this.startEditingCountdown();
+                    this.startPollingForUpdates();
                     swal.fire({
-                        title: 'Unlocked',
-                        html: '<p>Occurrence has been Unlocked</p><p class="fw-bold">Make sure to lock the occurrence as soon as you are done making changes.</p>',
-                        icon: 'warning',
+                        title: 'Occurrence Unlocked',
+                        html: `<p>Make sure to lock the occurrence as soon as you are done making changes.</p>
+                        <p class="fw-bold">If you have not modified the record for more than ${this.editingWindowMinutes} minutes, it will be locked automatically.</p>`,
+                        icon: 'success',
                         customClass: {
                             confirmButton: 'btn btn-primary',
                         },
-                    }).then(async () => {
-                        this.$router.go(this.$router.currentRoute);
                     });
                 },
                 (err) => {
@@ -931,11 +1021,20 @@ export default {
         combineOccurrence: async function () {
             this.$refs.occurrence_combine.isModalOpen = true;
         },
-        fetchOccurrence: function () {
+        fetchOccurrence: async function () {
             let vm = this;
             fetch(`/api/occurrence/${this.$route.params.occurrence_id}/`).then(
                 async (response) => {
                     vm.occurrence = await response.json();
+                    vm.original_occurrence = helpers.copyObject(vm.occurrence);
+                    // Set these directly from the object
+                    vm.editingWindowMinutes =
+                        vm.occurrence.editing_window_minutes;
+                    vm.serverDatetimeUpdated = vm.occurrence.datetime_updated;
+                    // Start countdown immediately after setting values
+                    vm.startEditingCountdown();
+                    // (Re)start polling/timer if needed
+                    vm.startPollingForUpdates();
                 },
                 (err) => {
                     console.log(err);
@@ -969,6 +1068,107 @@ export default {
             this.$router.push({
                 name: 'internal-occurrence-dash',
             });
+        },
+        async checkForUpdates() {
+            if (!this.shouldShowTimerAndPoll) return;
+            const id = this.occurrence.id;
+            const dt = this.occurrence.datetime_updated;
+            try {
+                const resp = await fetch(
+                    `/api/occurrence/${id}/check-updated/?datetime_updated=${encodeURIComponent(dt)}`
+                );
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.changed) {
+                        await this.fetchOccurrence();
+                    }
+                    this.editingWindowMinutes = data.editing_window_minutes; // May have changed
+                }
+            } catch (e) {
+                console.error('Polling error:', e);
+            }
+        },
+        startPollingForUpdates() {
+            this.stopPollingForUpdates();
+            if (this.shouldShowTimerAndPoll) {
+                this.checkForUpdates(); // Initial check
+                this.pollInterval = setInterval(this.checkForUpdates, 60000);
+            }
+        },
+        stopPollingForUpdates() {
+            if (this.pollInterval) {
+                clearInterval(this.pollInterval);
+                this.pollInterval = null;
+            }
+        },
+        startEditingCountdown() {
+            this.stopEditingCountdown();
+            this.updateEditingCountdown();
+            this.editingCountdownInterval = setInterval(
+                this.updateEditingCountdown,
+                1000
+            );
+        },
+        stopEditingCountdown() {
+            if (this.editingCountdownInterval) {
+                clearInterval(this.editingCountdownInterval);
+                this.editingCountdownInterval = null;
+                this.editingCountdown = null;
+            }
+        },
+        updateEditingCountdown() {
+            if (!this.serverDatetimeUpdated || !this.editingWindowMinutes) {
+                this.editingCountdown = null;
+                return;
+            }
+            const updated = new Date(this.serverDatetimeUpdated);
+            const now = new Date();
+            const windowMs = this.editingWindowMinutes * 60 * 1000;
+            const elapsedMs = now - updated;
+            const remainingMs = windowMs - elapsedMs;
+            this.editingCountdown =
+                remainingMs > 0 ? Math.floor(remainingMs / 1000) : 0;
+
+            if (this.editingCountdown === 0 && this.shouldShowTimerAndPoll) {
+                this.autoLockOccurrence();
+            }
+        },
+        async autoLockOccurrence() {
+            const id = this.occurrence.id;
+            await fetch(`/api/occurrence/${id}/lock_occurrence/`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+            });
+            await this.fetchOccurrence();
+            this.stopEditingCountdown();
+            this.stopPollingForUpdates();
+            swal.fire({
+                title: 'Record Auto Locked',
+                text: `This record has been automatically locked because the editing window of ${this.editingWindowMinutes} minutes expired.`,
+                icon: 'info',
+                confirmButtonText: 'OK',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                },
+            });
+        },
+        updateEditingWindowVarsFromOccObj() {
+            this.editingWindowMinutes = this.occurrence.editing_window_minutes;
+            this.serverDatetimeUpdated = this.occurrence.datetime_updated;
+            this.startEditingCountdown();
+            this.startPollingForUpdates();
+        },
+        handleBeforeUnload(event) {
+            if (
+                this.occurrence &&
+                this.occurrence.processing_status === 'Active' &&
+                !this.occurrence.locked &&
+                this.shouldShowTimerAndPoll
+            ) {
+                event.preventDefault();
+                event.returnValue = ''; // Required for Chrome
+                return '';
+            }
         },
     },
 };
