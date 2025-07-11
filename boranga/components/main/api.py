@@ -265,17 +265,6 @@ class CheckUpdatedActionMixin:
                 status=400,
             )
 
-        # Validate datetime format
-        try:
-            parse_datetime(client_dt_str)
-        except ValueError:
-            return Response(
-                {
-                    "error": f"{datetime_updated_field_name} is not a valid datetime string"
-                },
-                status=400,
-            )
-
         # Parse both datetimes as aware objects
         try:
             client_dt = parse_datetime(client_dt_str)
