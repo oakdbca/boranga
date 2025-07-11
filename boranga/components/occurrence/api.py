@@ -31,7 +31,11 @@ from rest_framework_datatables.pagination import DatatablesPageNumberPagination
 
 from boranga import settings
 from boranga.components.conservation_status.serializers import SendReferralSerializer
-from boranga.components.main.api import NoPaginationListMixin, search_datums
+from boranga.components.main.api import (
+    CheckUpdatedActionMixin,
+    NoPaginationListMixin,
+    search_datums,
+)
 from boranga.components.main.permissions import CommsLogPermission
 from boranga.components.main.related_item import RelatedItemsSerializer
 from boranga.components.main.utils import validate_threat_request
@@ -485,7 +489,10 @@ class OccurrenceReportPaginatedViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class OccurrenceReportViewSet(
-    viewsets.GenericViewSet, mixins.RetrieveModelMixin, DatumSearchMixin
+    CheckUpdatedActionMixin,
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    DatumSearchMixin,
 ):
     queryset = OccurrenceReport.objects.all()
     serializer_class = OccurrenceReportSerializer
@@ -493,6 +500,7 @@ class OccurrenceReportViewSet(
     permission_classes = [
         OccurrenceReportPermission | ExternalOccurrenceReportPermission
     ]
+    EDITING_WINDOW_MINUTES = settings.UNLOCKED_OCCURRENCE_EDITING_WINDOW_MINUTES
 
     def get_queryset(self):
         request = self.request
