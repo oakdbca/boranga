@@ -766,8 +766,8 @@ export default {
                     'Content-Type': 'application/json',
                 },
             }).then(async (response) => {
+                const data = await response.json();
                 if (!response.ok) {
-                    const data = await response.json();
                     swal.fire({
                         title: 'Activate Error',
                         text: JSON.stringify(data),
@@ -778,6 +778,8 @@ export default {
                     });
                     return;
                 }
+                this.occurrence = data;
+                this.original_occurrence = helpers.copyObject(data);
                 swal.fire({
                     title: 'Activated',
                     text: 'Occurrence has been Activated',
@@ -785,8 +787,6 @@ export default {
                     customClass: {
                         confirmButton: 'btn btn-primary',
                     },
-                }).then(async () => {
-                    this.$router.go(this.$router.currentRoute);
                 });
             });
         },
@@ -918,8 +918,8 @@ export default {
                         }
                     ).then(
                         async (response) => {
+                            const data = await response.json();
                             if (!response.ok) {
-                                const data = await response.json();
                                 swal.fire({
                                     title: 'Error',
                                     text: JSON.stringify(data),
@@ -930,6 +930,8 @@ export default {
                                 });
                                 return;
                             }
+                            vm.occurrence = data;
+                            vm.original_occurrence = helpers.copyObject(data);
                             swal.fire({
                                 title: 'Deactivated',
                                 text: 'Occurrence has been Deactivated',
@@ -937,8 +939,6 @@ export default {
                                 customClass: {
                                     confirmButton: 'btn btn-primary',
                                 },
-                            }).then(async () => {
-                                vm.$router.go(this.$router.currentRoute);
                             });
                         },
                         (err) => {
@@ -980,8 +980,8 @@ export default {
                         }
                     ).then(
                         async (response) => {
+                            const data = await response.json();
                             if (!response.ok) {
-                                const data = await response.json();
                                 swal.fire({
                                     title: 'Error',
                                     text: JSON.stringify(data),
@@ -992,6 +992,8 @@ export default {
                                 });
                                 return;
                             }
+                            this.occurrence = data;
+                            this.original_occurrence = helpers.copyObject(data);
                             swal.fire({
                                 title: 'Reopened',
                                 text: 'Occurrence has been Reopened',
@@ -999,8 +1001,6 @@ export default {
                                 customClass: {
                                     confirmButton: 'btn btn-primary',
                                 },
-                            }).then(async () => {
-                                this.$router.go(this.$router.currentRoute);
                             });
                         },
                         (err) => {
