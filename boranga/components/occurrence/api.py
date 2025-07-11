@@ -488,7 +488,6 @@ class OccurrenceReportPaginatedViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class OccurrenceReportViewSet(
-    CheckUpdatedActionMixin,
     viewsets.GenericViewSet,
     mixins.RetrieveModelMixin,
     DatumSearchMixin,
@@ -3688,7 +3687,10 @@ class GetWildStatus(views.APIView):
 
 
 class OccurrenceViewSet(
-    viewsets.GenericViewSet, mixins.RetrieveModelMixin, DatumSearchMixin
+    CheckUpdatedActionMixin,
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    DatumSearchMixin,
 ):
     queryset = Occurrence.objects.none()
     serializer_class = OccurrenceSerializer
