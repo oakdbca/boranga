@@ -4342,12 +4342,16 @@ class Occurrence(DirtyFieldsMixin, LockableModel, RevisionedMixin):
         )
 
     def unlock(self, request):
-        if (
-            is_occurrence_approver(request)
-            and self.processing_status == Occurrence.PROCESSING_STATUS_LOCKED
-        ):
-            self.processing_status = Occurrence.PROCESSING_STATUS_ACTIVE
-            self.save(version_user=request.user)
+        if not self.locked:
+            return
+
+        if not is_occurrence_approver(request):
+            raise exceptions.OccurrenceNotAuthorized(
+                "You do not have permission to unlock this occurrence."
+            )
+
+        self.locked = False
+        self.save(version_user=request.user)
 
         # Log proposal action
         self.log_user_action(
@@ -4660,6 +4664,10 @@ class Occurrence(DirtyFieldsMixin, LockableModel, RevisionedMixin):
     @property
     def editing_window_minutes(self):
         return settings.UNLOCKED_OCCURRENCE_EDITING_WINDOW_MINUTES
+
+    @property
+    def show_locked_indicator(self):
+        return self.processing_status == self.PROCESSING_STATUS_ACTIVE
 
 
 class OccurrenceLogEntry(CommunicationsLogEntry):
