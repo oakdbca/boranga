@@ -11,8 +11,7 @@ from django.db import models, transaction
 from django.db.models import CharField, Q, Value
 from django.db.models.functions import Concat
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django_filters import rest_framework as filters
 from ledger_api_client.ledger_models import EmailUserRO as EmailUser
@@ -500,7 +499,9 @@ class OccurrenceReportViewSet(
     permission_classes = [
         OccurrenceReportPermission | ExternalOccurrenceReportPermission
     ]
-    EDITING_WINDOW_MINUTES = settings.UNLOCKED_OCCURRENCE_EDITING_WINDOW_MINUTES
+    UNLOCKED_EDITING_WINDOW_MINUTES = (
+        settings.UNLOCKED_OCCURRENCE_EDITING_WINDOW_MINUTES
+    )
 
     def get_queryset(self):
         request = self.request
@@ -3865,7 +3866,8 @@ class OccurrenceViewSet(
 
         instance.combine(request)
 
-        return redirect(reverse("internal"))
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     @detail_route(
         methods=[
@@ -3900,7 +3902,8 @@ class OccurrenceViewSet(
     def activate(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.activate(request)
-        return redirect(reverse("internal"))
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     @detail_route(
         methods=[
@@ -3911,7 +3914,8 @@ class OccurrenceViewSet(
     def lock_occurrence(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.lock(request)
-        return redirect(reverse("internal"))
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     @detail_route(
         methods=[
@@ -3922,7 +3926,8 @@ class OccurrenceViewSet(
     def unlock_occurrence(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.unlock(request)
-        return redirect(reverse("internal"))
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     @detail_route(
         methods=[
@@ -3933,7 +3938,8 @@ class OccurrenceViewSet(
     def deactivate(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.deactivate(request)
-        return redirect(reverse("internal"))
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     @detail_route(
         methods=[
@@ -3944,7 +3950,8 @@ class OccurrenceViewSet(
     def reopen_occurrence(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.reopen(request)
-        return redirect(reverse("internal"))
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     @detail_route(
         methods=[
