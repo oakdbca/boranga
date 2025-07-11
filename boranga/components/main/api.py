@@ -243,7 +243,9 @@ class CheckUpdatedActionMixin:
         Client should pass ?<datetime_updated_field_name>=2025-07-09T10:56:30.069835+08:00
         """
         instance = self.get_object()
-        datetime_updated_field_name = self.DATE_UPDATED_FIELD_NAME or "datetime_updated"
+        datetime_updated_field_name = getattr(
+            self, "DATE_UPDATED_FIELD_NAME", "datetime_updated"
+        )
         if not hasattr(instance, datetime_updated_field_name):
             raise ImproperlyConfigured(
                 f"CheckUpdatedActionMixin requires {instance._meta.model_name} "
@@ -290,8 +292,11 @@ class CheckUpdatedActionMixin:
         return Response(
             {
                 "changed": changed,
-                "editing_window_minutes": self.UNLOCKED_EDITING_WINDOW_MINUTES
-                or settings.DEFAULT_UNLOCKED_EDITING_WINDOW_MINUTES,
+                "editing_window_minutes": getattr(
+                    self,
+                    "UNLOCKED_EDITING_WINDOW_MINUTES",
+                    settings.DEFAULT_UNLOCKED_EDITING_WINDOW_MINUTES,
+                ),
                 "server_datetime_updated": server_dt.isoformat() if server_dt else None,
             }
         )
