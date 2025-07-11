@@ -4299,6 +4299,7 @@ class Occurrence(DirtyFieldsMixin, LockableModel, RevisionedMixin):
             )
 
         self.processing_status = Occurrence.PROCESSING_STATUS_ACTIVE
+        self.locked = True
         self.submitter = request.user.id
         self.lodgement_date = timezone.now()
         self.save(version_user=request.user)
