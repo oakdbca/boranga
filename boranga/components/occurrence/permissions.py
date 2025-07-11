@@ -487,9 +487,7 @@ class OccurrencePermission(BasePermission):
         )
 
     def is_authorised_to_unlock(self, request, obj):
-        return (is_occurrence_approver(request) or request.user.is_superuser) and (
-            obj.processing_status == Occurrence.PROCESSING_STATUS_LOCKED
-        )
+        return is_occurrence_approver(request)
 
     def is_authorised_to_update_show_on_map(self, request):
         return is_occurrence_approver(request) or is_occurrence_assessor(request)
