@@ -238,7 +238,8 @@ class CheckUpdatedActionMixin:
     @action(detail=True, methods=["GET"], url_path="check-updated")
     def check_updated(self, request, *args, **kwargs):
         """
-        Custom action to check if the datetime_updated field has changed.
+        Custom action to check if the auto_now field for the instance model has changed
+        since it was last requested.
         Client should pass ?<datetime_updated_field_name>=2025-07-09T10:56:30.069835+08:00
         """
         instance = self.get_object()
