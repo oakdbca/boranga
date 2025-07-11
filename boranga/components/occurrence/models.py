@@ -3880,8 +3880,8 @@ class Occurrence(DirtyFieldsMixin, RevisionedMixin):
         default=REVIEW_STATUS_CHOICES[0][0],
     )
 
-    created_date = models.DateTimeField(auto_now_add=True, null=False, blank=False)
-    updated_date = models.DateTimeField(auto_now=True, null=False, blank=False)
+    datetime_created = models.DateTimeField(auto_now_add=True, null=False, blank=False)
+    datetime_updated = models.DateTimeField(auto_now=True, null=False, blank=False)
 
     combined_occurrence = models.ForeignKey(
         "self",
