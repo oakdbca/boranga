@@ -3890,7 +3890,7 @@ class Occurrence(DirtyFieldsMixin, RevisionedMixin):
         blank=True,
         related_name="combined_occurrences",
     )
-
+    locked = models.BooleanField(null=False, blank=False, default=False)
     PROCESSING_STATUS_DRAFT = "draft"
     PROCESSING_STATUS_ACTIVE = "active"
     PROCESSING_STATUS_LOCKED = "locked"
@@ -4653,6 +4653,10 @@ class Occurrence(DirtyFieldsMixin, RevisionedMixin):
                 occ_doc.save()
 
         return occurrence
+
+    @property
+    def editing_window_minutes(self):
+        return settings.UNLOCKED_OCCURRENCE_EDITING_WINDOW_MINUTES
 
 
 class OccurrenceLogEntry(CommunicationsLogEntry):
