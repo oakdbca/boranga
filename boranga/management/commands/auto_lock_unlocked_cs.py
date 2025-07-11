@@ -18,7 +18,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Calculate the threshold time for locking
         threshold_time = timezone.now() - timezone.timedelta(
-            minutes=settings.LOCKED_CONSERVATION_STATUS_EDITING_WINDOW_MINUTES
+            minutes=settings.UNLOCKED_CONSERVATION_STATUS_EDITING_WINDOW_MINUTES
         )
 
         # Lock all unlocked conservation status records that were updated before the threshold time
@@ -36,6 +36,6 @@ class Command(BaseCommand):
         if conservation_statuses_to_lock.exists():
             logger.info(
                 "The following conservation status records will be locked: "
-                f"{list(conservation_statuses_to_lock.values_list('conservation_status_number'))}"
+                f"{list(conservation_statuses_to_lock.values_list('conservation_status_number', flat=True))}"
             )
             conservation_statuses_to_lock.update(locked=True)

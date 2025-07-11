@@ -314,6 +314,8 @@ class OccurrenceSerializer(BaseModelSerializer):
     wild_status_name = serializers.CharField(source="wild_status.name", allow_null=True)
     can_add_log = serializers.SerializerMethodField()
     occ_geometry = OccurrenceGeometrySerializer(many=True, read_only=True)
+    show_locked_indicator = serializers.BooleanField(read_only=True)
+    editing_window_minutes = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Occurrence
@@ -1258,6 +1260,9 @@ class ListOccurrenceSerializer(OccurrenceSerializer):
             "review_due_date",
             "migrated_from_id",
             "can_user_edit",
+            "show_locked_indicator",
+            "locked",
+            "datetime_updated",
         )
         datatables_always_serialize = (
             "id",
@@ -1268,6 +1273,9 @@ class ListOccurrenceSerializer(OccurrenceSerializer):
             "processing_status",
             "processing_status_display",
             "can_user_edit",
+            "show_locked_indicator",
+            "locked",
+            "datetime_updated",
         )
 
     def get_community_number(self, obj):
@@ -2910,6 +2918,7 @@ class SaveOccurrenceSerializer(BaseModelSerializer):
             "community",
             "can_user_edit",
             "review_due_date",
+            "locked",
         )
         read_only_fields = ("id", "group_type")
         validators = [

@@ -7,9 +7,6 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponse
-from django.utils import timezone
-from django.utils.dateparse import parse_datetime
-from django.utils.timezone import is_naive, make_aware
 from ledger_api_client.ledger_models import EmailUserRO as EmailUser
 from openpyxl import Workbook
 from openpyxl.styles import Font
@@ -76,6 +73,7 @@ from boranga.components.conservation_status.serializers import (
     SendReferralSerializer,
 )
 from boranga.components.conservation_status.utils import cs_proposal_submit
+from boranga.components.main.api import CheckUpdatedActionMixin
 from boranga.components.main.permissions import CommsLogPermission
 from boranga.components.main.related_item import RelatedItemsSerializer
 from boranga.components.species_and_communities.models import (
@@ -1233,13 +1231,18 @@ class ConservationStatusPaginatedViewSet(viewsets.ReadOnlyModelViewSet):
         return self.paginator.get_paginated_response(serializer.data)
 
 
-class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
+class ConservationStatusViewSet(
+    CheckUpdatedActionMixin, viewsets.GenericViewSet, mixins.RetrieveModelMixin
+):
     queryset = ConservationStatus.objects.all()
     serializer_class = ConservationStatusSerializer
     lookup_field = "id"
     permission_classes = [
         ConservationStatusPermission | ExternalConservationStatusPermission
     ]
+    UNLOCKED_EDITING_WINDOW_MINUTES = (
+        settings.UNLOCKED_CONSERVATION_STATUS_EDITING_WINDOW_MINUTES
+    )
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -1819,39 +1822,6 @@ class ConservationStatusViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMix
 
         serializer = self.get_serializer(instance, context={"request": request})
         return Response(serializer.data)
-
-    @detail_route(detail=True, methods=["GET"], url_path="check-updated")
-    def check_updated(self, request, *args, **kwargs):
-        """
-        Custom action to check if the datetime_updated field has changed.
-        Client should pass ?datetime_updated=2025-07-09T10:56:30.069835+08:00
-        """
-        instance = self.get_object()
-        client_dt_str = request.query_params.get("datetime_updated")
-        if not client_dt_str:
-            return Response(
-                {"error": "datetime_updated parameter is required"}, status=400
-            )
-
-        # Parse both datetimes as aware objects
-        client_dt = parse_datetime(client_dt_str)
-        server_dt = instance.datetime_updated
-
-        # Make both aware (UTC) if needed
-        if client_dt and is_naive(client_dt):
-            client_dt = make_aware(client_dt, timezone.utc)
-        if server_dt and is_naive(server_dt):
-            server_dt = make_aware(server_dt, timezone.utc)
-
-        changed = client_dt != server_dt
-
-        return Response(
-            {
-                "changed": changed,
-                "editing_window_minutes": settings.LOCKED_CONSERVATION_STATUS_EDITING_WINDOW_MINUTES,
-                "server_datetime_updated": server_dt.isoformat() if server_dt else None,
-            }
-        )
 
 
 class ConservationStatusReferralViewSet(

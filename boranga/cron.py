@@ -51,5 +51,16 @@ class CronJobAutoLockConservationStatusRecords(django_cron.CronJobBase):
     code = "boranga.auto_lock_conservation_status_records"
 
     def do(self) -> None:
-        management.call_command("auto_lock_conservation_status_records")
+        management.call_command("auto_lock_unlocked_cs")
+        return "Job Completed Successfully"
+
+
+class CronJobAutoLockUnlockedOccurrenceRecords(django_cron.CronJobBase):
+    schedule = django_cron.Schedule(
+        run_weekly_on_days=[0, 1, 2, 3, 4, 5, 6], run_every_mins=1
+    )
+    code = "boranga.auto_lock_unlocked_occurrence_records"
+
+    def do(self) -> None:
+        management.call_command("auto_lock_unlocked_occ")
         return "Job Completed Successfully"

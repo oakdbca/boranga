@@ -11,8 +11,7 @@ from django.db import models, transaction
 from django.db.models import CharField, Q, Value
 from django.db.models.functions import Concat
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django_filters import rest_framework as filters
 from ledger_api_client.ledger_models import EmailUserRO as EmailUser
@@ -31,7 +30,11 @@ from rest_framework_datatables.pagination import DatatablesPageNumberPagination
 
 from boranga import settings
 from boranga.components.conservation_status.serializers import SendReferralSerializer
-from boranga.components.main.api import NoPaginationListMixin, search_datums
+from boranga.components.main.api import (
+    CheckUpdatedActionMixin,
+    NoPaginationListMixin,
+    search_datums,
+)
 from boranga.components.main.permissions import CommsLogPermission
 from boranga.components.main.related_item import RelatedItemsSerializer
 from boranga.components.main.utils import validate_threat_request
@@ -485,7 +488,9 @@ class OccurrenceReportPaginatedViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class OccurrenceReportViewSet(
-    viewsets.GenericViewSet, mixins.RetrieveModelMixin, DatumSearchMixin
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    DatumSearchMixin,
 ):
     queryset = OccurrenceReport.objects.all()
     serializer_class = OccurrenceReportSerializer
@@ -493,6 +498,9 @@ class OccurrenceReportViewSet(
     permission_classes = [
         OccurrenceReportPermission | ExternalOccurrenceReportPermission
     ]
+    UNLOCKED_EDITING_WINDOW_MINUTES = (
+        settings.UNLOCKED_OCCURRENCE_EDITING_WINDOW_MINUTES
+    )
 
     def get_queryset(self):
         request = self.request
@@ -1589,8 +1597,7 @@ class OccurrenceReportViewSet(
                 habitat_instance, data=proposal_data.get("habitat_composition")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if proposal_data.get("habitat_condition"):
             hab_cond_instance, created = OCRHabitatCondition.objects.get_or_create(
@@ -1600,8 +1607,7 @@ class OccurrenceReportViewSet(
                 hab_cond_instance, data=proposal_data.get("habitat_condition")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if proposal_data.get("vegetation_structure"):
             veg_struct_instance, created = OCRVegetationStructure.objects.get_or_create(
@@ -1611,8 +1617,7 @@ class OccurrenceReportViewSet(
                 veg_struct_instance, data=proposal_data.get("vegetation_structure")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if proposal_data.get("fire_history"):
             fire_instance, created = OCRFireHistory.objects.get_or_create(
@@ -1622,8 +1627,7 @@ class OccurrenceReportViewSet(
                 fire_instance, data=proposal_data.get("fire_history")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if proposal_data.get("associated_species"):
             assoc_species_instance, created = (
@@ -1634,8 +1638,7 @@ class OccurrenceReportViewSet(
                 data=proposal_data.get("associated_species"),
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if proposal_data.get("observation_detail"):
             obs_det_instance, created = OCRObservationDetail.objects.get_or_create(
@@ -1645,8 +1648,7 @@ class OccurrenceReportViewSet(
                 obs_det_instance, data=proposal_data.get("observation_detail")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if (
             instance.group_type.name == GroupType.GROUP_TYPE_FLORA
@@ -1659,8 +1661,7 @@ class OccurrenceReportViewSet(
                 plant_count_instance, data=proposal_data.get("plant_count")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if proposal_data.get("animal_observation"):
             animal_obs_instance, created = OCRAnimalObservation.objects.get_or_create(
@@ -1671,8 +1672,7 @@ class OccurrenceReportViewSet(
                 data=proposal_data.get("animal_observation"),
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if proposal_data.get("identification"):
             identification_instance, created = OCRIdentification.objects.get_or_create(
@@ -1683,8 +1683,7 @@ class OccurrenceReportViewSet(
                 data=proposal_data.get("identification"),
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if proposal_data.get("location"):
             location_instance, created = OCRLocation.objects.get_or_create(
@@ -1694,8 +1693,7 @@ class OccurrenceReportViewSet(
                 location_instance, data=proposal_data.get("location")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         # ocr geometry data to save seperately
         geometry_data = proposal_data.get("ocr_geometry", None)
@@ -3679,7 +3677,10 @@ class GetWildStatus(views.APIView):
 
 
 class OccurrenceViewSet(
-    viewsets.GenericViewSet, mixins.RetrieveModelMixin, DatumSearchMixin
+    CheckUpdatedActionMixin,
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    DatumSearchMixin,
 ):
     queryset = Occurrence.objects.none()
     serializer_class = OccurrenceSerializer
@@ -3857,7 +3858,8 @@ class OccurrenceViewSet(
 
         instance.combine(request)
 
-        return redirect(reverse("internal"))
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     @detail_route(
         methods=[
@@ -3892,7 +3894,8 @@ class OccurrenceViewSet(
     def activate(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.activate(request)
-        return redirect(reverse("internal"))
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     @detail_route(
         methods=[
@@ -3903,7 +3906,8 @@ class OccurrenceViewSet(
     def lock_occurrence(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.lock(request)
-        return redirect(reverse("internal"))
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     @detail_route(
         methods=[
@@ -3914,7 +3918,8 @@ class OccurrenceViewSet(
     def unlock_occurrence(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.unlock(request)
-        return redirect(reverse("internal"))
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     @detail_route(
         methods=[
@@ -3925,7 +3930,8 @@ class OccurrenceViewSet(
     def deactivate(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.deactivate(request)
-        return redirect(reverse("internal"))
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     @detail_route(
         methods=[
@@ -3936,7 +3942,8 @@ class OccurrenceViewSet(
     def reopen_occurrence(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.reopen(request)
-        return redirect(reverse("internal"))
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     @detail_route(
         methods=[
@@ -4274,8 +4281,7 @@ class OccurrenceViewSet(
                 habitat_instance, data=request_data.get("habitat_composition")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()
 
         if request_data.get("habitat_condition"):
             hab_cond_instance, created = OCCHabitatCondition.objects.get_or_create(
@@ -4285,8 +4291,7 @@ class OccurrenceViewSet(
                 hab_cond_instance, data=request_data.get("habitat_condition")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if request_data.get("vegetation_structure"):
             veg_struct_instance, created = OCCVegetationStructure.objects.get_or_create(
@@ -4296,8 +4301,7 @@ class OccurrenceViewSet(
                 veg_struct_instance, data=request_data.get("vegetation_structure")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if request_data.get("fire_history"):
             fire_instance, created = OCCFireHistory.objects.get_or_create(
@@ -4307,8 +4311,7 @@ class OccurrenceViewSet(
                 fire_instance, data=request_data.get("fire_history")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if request_data.get("associated_species"):
             assoc_species_instance, created = (
@@ -4319,8 +4322,7 @@ class OccurrenceViewSet(
                 data=request_data.get("associated_species"),
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if request_data.get("observation_detail"):
             obs_det_instance, created = OCCObservationDetail.objects.get_or_create(
@@ -4330,8 +4332,7 @@ class OccurrenceViewSet(
                 obs_det_instance, data=request_data.get("observation_detail")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if request_data.get("plant_count"):
             plant_count_instance, created = OCCPlantCount.objects.get_or_create(
@@ -4341,8 +4342,7 @@ class OccurrenceViewSet(
                 plant_count_instance, data=request_data.get("plant_count")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if request_data.get("animal_observation"):
             animal_obs_instance, created = OCCAnimalObservation.objects.get_or_create(
@@ -4353,8 +4353,7 @@ class OccurrenceViewSet(
                 data=request_data.get("animal_observation"),
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if request_data.get("identification"):
             identification_instance, created = OCCIdentification.objects.get_or_create(
@@ -4365,8 +4364,7 @@ class OccurrenceViewSet(
                 data=request_data.get("identification"),
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         if request_data.get("location"):
             location_instance, created = OCCLocation.objects.get_or_create(
@@ -4376,8 +4374,7 @@ class OccurrenceViewSet(
                 location_instance, data=request_data.get("location")
             )
             serializer.is_valid(raise_exception=True)
-            if serializer.is_valid():
-                serializer.save()
+            serializer.save()()
 
         # occ geometry data to save seperately
         geometry_data = request_data.get("occ_geometry", None)

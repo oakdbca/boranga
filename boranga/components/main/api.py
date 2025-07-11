@@ -6,9 +6,13 @@ from django.apps import apps
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
+from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Q
 from django.http import Http404
+from django.utils import timezone
+from django.utils.timezone import is_naive, make_aware
 from django_filters import rest_framework as filters
+from isodate import parse_datetime
 from rest_framework import filters as rest_framework_filters
 from rest_framework import views, viewsets
 from rest_framework.decorators import action
@@ -228,3 +232,71 @@ class NoPaginationListMixin:
     def no_pagination(self, request):
         serializer = self.get_serializer(self.get_queryset(), many=True)
         return Response(serializer.data)
+
+
+class CheckUpdatedActionMixin:
+    @action(detail=True, methods=["GET"], url_path="check-updated")
+    def check_updated(self, request, *args, **kwargs):
+        """
+        Custom action to check if the auto_now field for the instance model has changed
+        since it was last requested.
+        Client should pass ?<datetime_updated_field_name>=2025-07-09T10:56:30.069835+08:00
+        """
+        instance = self.get_object()
+        datetime_updated_field_name = getattr(
+            self, "DATE_UPDATED_FIELD_NAME", "datetime_updated"
+        )
+        if not hasattr(instance, datetime_updated_field_name):
+            raise ImproperlyConfigured(
+                f"CheckUpdatedActionMixin requires {instance._meta.model_name} "
+                f"to have a field named '{datetime_updated_field_name}'"
+            )
+        if not instance._meta.get_field(datetime_updated_field_name).auto_now:
+            raise ImproperlyConfigured(
+                "CheckUpdatedActionMixin requires "
+                f"{instance._meta.model_name}.{datetime_updated_field_name} to have auto_now=True"
+            )
+        client_dt_str = request.query_params.get(datetime_updated_field_name)
+        if not client_dt_str:
+            return Response(
+                {"error": f"{datetime_updated_field_name} parameter is required"},
+                status=400,
+            )
+        if not isinstance(client_dt_str, str):
+            return Response(
+                {"error": f"{datetime_updated_field_name} must be a string"},
+                status=400,
+            )
+
+        # Parse both datetimes as aware objects
+        try:
+            client_dt = parse_datetime(client_dt_str)
+        except ValueError:
+            return Response(
+                {
+                    "error": f"{datetime_updated_field_name} is not a valid datetime string"
+                },
+                status=400,
+            )
+
+        server_dt = getattr(instance, datetime_updated_field_name)
+
+        # Make both aware (UTC) if needed
+        if client_dt and is_naive(client_dt):
+            client_dt = make_aware(client_dt, timezone.utc)
+        if server_dt and is_naive(server_dt):
+            server_dt = make_aware(server_dt, timezone.utc)
+
+        changed = client_dt != server_dt
+
+        return Response(
+            {
+                "changed": changed,
+                "editing_window_minutes": getattr(
+                    self,
+                    "UNLOCKED_EDITING_WINDOW_MINUTES",
+                    settings.DEFAULT_UNLOCKED_EDITING_WINDOW_MINUTES,
+                ),
+                "server_datetime_updated": server_dt.isoformat() if server_dt else None,
+            }
+        )

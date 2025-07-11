@@ -67,6 +67,7 @@ from boranga.components.main.models import (
     BaseModel,
     CommunicationsLogEntry,
     Document,
+    LockableModel,
     OrderedArchivableManager,
     RevisionedMixin,
     UserAction,
@@ -3807,7 +3808,7 @@ class OccurrenceManager(models.Manager):
         )
 
 
-class Occurrence(DirtyFieldsMixin, RevisionedMixin):
+class Occurrence(DirtyFieldsMixin, LockableModel, RevisionedMixin):
     BULK_IMPORT_ABBREVIATION = "occ"
 
     REVIEW_STATUS_CHOICES = (
@@ -3880,8 +3881,8 @@ class Occurrence(DirtyFieldsMixin, RevisionedMixin):
         default=REVIEW_STATUS_CHOICES[0][0],
     )
 
-    created_date = models.DateTimeField(auto_now_add=True, null=False, blank=False)
-    updated_date = models.DateTimeField(auto_now=True, null=False, blank=False)
+    datetime_created = models.DateTimeField(auto_now_add=True, null=False, blank=False)
+    datetime_updated = models.DateTimeField(auto_now=True, null=False, blank=False)
 
     combined_occurrence = models.ForeignKey(
         "self",
@@ -3893,7 +3894,6 @@ class Occurrence(DirtyFieldsMixin, RevisionedMixin):
 
     PROCESSING_STATUS_DRAFT = "draft"
     PROCESSING_STATUS_ACTIVE = "active"
-    PROCESSING_STATUS_LOCKED = "locked"
     PROCESSING_STATUS_SPLIT = "split"
     PROCESSING_STATUS_COMBINE = "combine"
     PROCESSING_STATUS_HISTORICAL = "historical"
@@ -3901,7 +3901,6 @@ class Occurrence(DirtyFieldsMixin, RevisionedMixin):
     PROCESSING_STATUS_CHOICES = (
         (PROCESSING_STATUS_DRAFT, "Draft"),
         (PROCESSING_STATUS_ACTIVE, "Active"),
-        (PROCESSING_STATUS_LOCKED, "Locked"),
         (PROCESSING_STATUS_SPLIT, "Split"),
         (PROCESSING_STATUS_COMBINE, "Combine"),
         (PROCESSING_STATUS_HISTORICAL, "Historical"),
@@ -4300,6 +4299,7 @@ class Occurrence(DirtyFieldsMixin, RevisionedMixin):
             )
 
         self.processing_status = Occurrence.PROCESSING_STATUS_ACTIVE
+        self.locked = True
         self.submitter = request.user.id
         self.lodgement_date = timezone.now()
         self.save(version_user=request.user)
@@ -4321,12 +4321,16 @@ class Occurrence(DirtyFieldsMixin, RevisionedMixin):
         )
 
     def lock(self, request):
-        if (
-            is_occurrence_approver(request)
-            and self.processing_status == Occurrence.PROCESSING_STATUS_ACTIVE
-        ):
-            self.processing_status = Occurrence.PROCESSING_STATUS_LOCKED
-            self.save(version_user=request.user)
+        if self.locked:
+            return
+
+        if not is_occurrence_approver(request):
+            raise exceptions.OccurrenceNotAuthorized(
+                "You do not have permission to lock this occurrence."
+            )
+
+        self.locked = True
+        self.save(version_user=request.user)
 
         # Log proposal action
         self.log_user_action(
@@ -4339,12 +4343,16 @@ class Occurrence(DirtyFieldsMixin, RevisionedMixin):
         )
 
     def unlock(self, request):
-        if (
-            is_occurrence_approver(request)
-            and self.processing_status == Occurrence.PROCESSING_STATUS_LOCKED
-        ):
-            self.processing_status = Occurrence.PROCESSING_STATUS_ACTIVE
-            self.save(version_user=request.user)
+        if not self.locked:
+            return
+
+        if not is_occurrence_approver(request):
+            raise exceptions.OccurrenceNotAuthorized(
+                "You do not have permission to unlock this occurrence."
+            )
+
+        self.locked = False
+        self.save(version_user=request.user)
 
         # Log proposal action
         self.log_user_action(
@@ -4429,6 +4437,9 @@ class Occurrence(DirtyFieldsMixin, RevisionedMixin):
         ]
         if self.processing_status not in user_editable_state:
             return False
+
+        if self.processing_status == Occurrence.PROCESSING_STATUS_ACTIVE:
+            return self.locked is False and is_occurrence_approver(request)
 
         return is_occurrence_approver(request)
 
@@ -4653,6 +4664,14 @@ class Occurrence(DirtyFieldsMixin, RevisionedMixin):
                 occ_doc.save()
 
         return occurrence
+
+    @property
+    def editing_window_minutes(self):
+        return settings.UNLOCKED_OCCURRENCE_EDITING_WINDOW_MINUTES
+
+    @property
+    def show_locked_indicator(self):
+        return self.processing_status == self.PROCESSING_STATUS_ACTIVE
 
 
 class OccurrenceLogEntry(CommunicationsLogEntry):

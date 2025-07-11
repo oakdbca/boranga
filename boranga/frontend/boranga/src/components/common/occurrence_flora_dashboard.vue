@@ -360,6 +360,20 @@ export default {
                 searchable: true,
                 visible: true,
                 name: 'processing_status',
+                render: function (data, type, full) {
+                    let html = full.processing_status_display;
+                    if (!full.show_locked_indicator) {
+                        return html;
+                    }
+                    if (full.locked) {
+                        html +=
+                            '<i class="bi bi-lock-fill ms-2 text-warning"></i>';
+                    } else {
+                        html +=
+                            '<i class="bi bi-unlock-fill ms-2 text-secondary"></i>';
+                    }
+                    return html;
+                },
             };
         },
         column_action: function () {

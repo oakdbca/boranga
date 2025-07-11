@@ -236,6 +236,7 @@ CRON_CLASSES = [
     "boranga.cron.CronJobOCRPreProcessBulkImportTasks",
     "boranga.cron.CronJobOCRProcessBulkImportQueue",
     "boranga.cron.CronJobAutoLockConservationStatusRecords",
+    "boranga.cron.CronJobAutoLockUnlockedOccurrenceRecords",
 ]
 
 
@@ -557,6 +558,12 @@ GIS_EXTENT = config(
     cast=Csv(float, post_process=tuple),
 )
 
-LOCKED_CONSERVATION_STATUS_EDITING_WINDOW_MINUTES = config(
-    "LOCKED_CONSERVATION_STATUS_EDITING_WINDOW_MINUTES", default=30, cast=int
+DEFAULT_UNLOCKED_EDITING_WINDOW_MINUTES = config(
+    "DEFAULT_UNLOCKED_EDITING_WINDOW_MINUTES", default=30, cast=int
+)
+UNLOCKED_CONSERVATION_STATUS_EDITING_WINDOW_MINUTES = config(
+    "UNLOCKED_CONSERVATION_STATUS_EDITING_WINDOW_MINUTES", default=30, cast=int
+)
+UNLOCKED_OCCURRENCE_EDITING_WINDOW_MINUTES = config(
+    "UNLOCKED_OCCURRENCE_EDITING_WINDOW_MINUTES", default=30, cast=int
 )
