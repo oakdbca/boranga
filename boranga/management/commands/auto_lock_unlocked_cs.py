@@ -36,6 +36,6 @@ class Command(BaseCommand):
         if conservation_statuses_to_lock.exists():
             logger.info(
                 "The following conservation status records will be locked: "
-                f"{list(conservation_statuses_to_lock.values_list('conservation_status_number'))}"
+                f"{list(conservation_statuses_to_lock.values_list('conservation_status_number', flat=True))}"
             )
             conservation_statuses_to_lock.update(locked=True)
