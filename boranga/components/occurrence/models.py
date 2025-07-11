@@ -4437,6 +4437,9 @@ class Occurrence(DirtyFieldsMixin, LockableModel, RevisionedMixin):
         if self.processing_status not in user_editable_state:
             return False
 
+        if self.processing_status == Occurrence.PROCESSING_STATUS_ACTIVE:
+            return self.locked is False and is_occurrence_approver(request)
+
         return is_occurrence_approver(request)
 
     def can_user_reopen(self, request):
