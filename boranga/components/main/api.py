@@ -279,7 +279,7 @@ class CheckUpdatedActionMixin:
                 status=400,
             )
 
-        server_dt = instance.getattr(datetime_updated_field_name)
+        server_dt = getattr(instance, datetime_updated_field_name)
 
         # Make both aware (UTC) if needed
         if client_dt and is_naive(client_dt):
