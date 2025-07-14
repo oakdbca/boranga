@@ -1308,6 +1308,7 @@ export default {
                                 confirmButton: 'btn btn-primary',
                             },
                         });
+                        vm.saveError = true;
                         return;
                     }
                 },
