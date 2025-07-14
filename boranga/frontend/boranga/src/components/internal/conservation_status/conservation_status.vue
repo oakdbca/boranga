@@ -1341,6 +1341,9 @@ export default {
                 this.conservation_status_obj &&
                 this.conservation_status_obj.current_assessor.id ==
                     this.conservation_status_obj.assigned_approver &&
+                ['Approved', 'Closed', 'Declined', 'DeListed'].includes(
+                    this.conservation_status_obj.processing_status
+                ) &&
                 !this.conservation_status_obj.locked
             );
         },
@@ -1760,46 +1763,48 @@ export default {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(payload),
-            }).then(
-                async (response) => {
-                    const data = await response.json();
-                    if (!response.ok) {
+            })
+                .then(
+                    async (response) => {
+                        const data = await response.json();
+                        if (!response.ok) {
+                            swal.fire({
+                                title: 'Error',
+                                text: JSON.stringify(data),
+                                icon: 'error',
+                                customClass: {
+                                    confirmButton: 'btn btn-primary',
+                                },
+                            });
+                            return;
+                        }
+                        vm.conservation_status_obj = Object.assign({}, data);
+                        vm.updateEditingWindowVarsFromCSObj();
                         swal.fire({
-                            title: 'Error',
-                            text: JSON.stringify(data),
+                            title: 'Saved',
+                            text: 'Your changes have been saved',
+                            icon: 'success',
+                            showConfirmButton: false,
+                            timer: 1200,
+                        });
+                        vm.isSaved = true;
+                    },
+                    (err) => {
+                        var errorText = helpers.apiVueResourceError(err);
+                        swal.fire({
+                            title: 'Save Error',
+                            text: errorText,
                             icon: 'error',
                             customClass: {
                                 confirmButton: 'btn btn-primary',
                             },
                         });
-                        return;
+                        vm.isSaved = false;
                     }
-                    vm.conservation_status_obj = Object.assign({}, data);
-                    vm.updateEditingWindowVarsFromCSObj();
-                    swal.fire({
-                        title: 'Saved',
-                        text: 'Your changes have been saved',
-                        icon: 'success',
-                        showConfirmButton: false,
-                        timer: 1200,
-                    });
+                )
+                .finally(() => {
                     vm.savingConservationStatus = false;
-                    vm.isSaved = true;
-                },
-                (err) => {
-                    var errorText = helpers.apiVueResourceError(err);
-                    swal.fire({
-                        title: 'Save Error',
-                        text: errorText,
-                        icon: 'error',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
-                    });
-                    vm.savingConservationStatus = false;
-                    vm.isSaved = false;
-                }
-            );
+                });
         },
         save_exit: async function (e) {
             let vm = this;

@@ -61,7 +61,7 @@
                         <label
                             for="change_code"
                             class="col-sm-4 col-form-label fw-bold"
-                            >Change Type
+                            >Change Type:
                             <span class="text-danger">*</span></label
                         >
                         <div class="col-sm-8">
@@ -130,7 +130,7 @@
                         <label
                             for="approval_level"
                             class="col-sm-4 col-form-label fw-bold"
-                            >Applicable Workflow
+                            >Applicable Workflow:
                             <span class="text-danger">*</span></label
                         >
                         <div class="col-sm-8">
@@ -255,17 +255,15 @@
                         </div>
                     </template>
                     <div
-                        v-if="
-                            conservation_status_obj.effective_from ||
-                            conservation_status_obj.effective_to
-                        "
+                        v-if="show_effective_date_fields"
                         class="row mb-3 border-top pt-3"
                     >
-                        <template v-if="conservation_status_obj.effective_from">
+                        <template v-if="show_effective_from">
                             <label
                                 for="effective_from"
-                                class="col-sm-3 col-form-label"
-                                >Effective From:</label
+                                class="col-sm-3 col-form-label fw-bold"
+                                >Effective From:
+                                <span class="text-danger">*</span></label
                             >
                             <div class="col-sm-3">
                                 <input
@@ -280,11 +278,17 @@
                                 />
                             </div>
                         </template>
-                        <template v-if="conservation_status_obj.effective_to">
+                        <template v-if="show_effective_to">
                             <label
                                 for="effective_to"
                                 class="col-sm-3 col-form-label"
-                                >Effective to:</label
+                                :class="effective_to_mandatory ? 'fw-bold' : ''"
+                                >Effective To:
+                                <span
+                                    v-if="effective_to_mandatory"
+                                    class="text-danger"
+                                    >*</span
+                                ></label
                             >
                             <div class="col-sm-3">
                                 <input
@@ -434,7 +438,7 @@
                         <label
                             for="proposed_wa_legislative_list"
                             class="col-sm-5 col-form-label fw-bold"
-                            >WA Legislative List
+                            >WA Legislative List:
                             <span class="text-warning">*</span></label
                         >
                         <div class="col-sm-7">
@@ -583,8 +587,8 @@
                         <label
                             for="proposed_iucnversion"
                             class="col-sm-5 col-form-label"
-                            >IUCN Version</label
-                        >
+                            >IUCN Version:
+                        </label>
                         <div class="col-sm-7">
                             <template v-if="!isReadOnly">
                                 <template
@@ -676,7 +680,7 @@
                         <label
                             for="proposed_wa_priority_list"
                             class="col-sm-5 col-form-label fw-bold"
-                            >WA Priority List
+                            >WA Priority List:
                             <span class="text-warning">*</span></label
                         >
                         <div class="col-sm-7">
@@ -967,7 +971,7 @@
                         <label
                             for="comment"
                             class="col-sm-5 col-form-label fw-bold"
-                            >Comments <span class="text-danger">*</span></label
+                            >Comments: <span class="text-danger">*</span></label
                         >
                         <div class="col-sm-7">
                             <textarea
@@ -1330,7 +1334,7 @@
                         <label
                             for="comment"
                             class="col-sm-5 col-form-label fw-bold"
-                            >Comments <span class="text-danger">*</span></label
+                            >Comments: <span class="text-danger">*</span></label
                         >
                         <div class="col-sm-7">
                             <textarea
@@ -1569,6 +1573,38 @@ export default {
         },
         show_proposed_conservation_status: function () {
             return this.conservation_status_obj.species_taxonomy_id;
+        },
+        show_effective_date_fields: function () {
+            return (
+                this.conservation_status_obj.effective_from ||
+                this.conservation_status_obj.effective_to ||
+                ['Proposed DeListed', 'DeListed', 'Closed'].includes(
+                    this.conservation_status_obj.processing_status
+                ) ||
+                !this.conservation_status_obj.locked
+            );
+        },
+        show_effective_from: function () {
+            return (
+                this.conservation_status_obj &&
+                (this.conservation_status_obj.effective_from ||
+                    !this.conservation_status_obj.locked)
+            );
+        },
+        show_effective_to: function () {
+            return (
+                this.conservation_status_obj &&
+                (this.conservation_status_obj.effective_to ||
+                    ['Proposed DeListed', 'DeListed', 'Closed'].includes(
+                        this.conservation_status_obj.processing_status
+                    ) ||
+                    !this.conservation_status_obj.locked)
+            );
+        },
+        effective_to_mandatory: function () {
+            return ['Proposed DeListed', 'DeListed', 'Closed'].includes(
+                this.conservation_status_obj.processing_status
+            );
         },
         show_listing_and_review_due_date: function () {
             return (
