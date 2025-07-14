@@ -3899,7 +3899,7 @@ class OccurrenceViewSet(
 
     @detail_route(
         methods=[
-            "POST",
+            "PATCH",
         ],
         detail=True,
     )
@@ -3911,7 +3911,7 @@ class OccurrenceViewSet(
 
     @detail_route(
         methods=[
-            "POST",
+            "PATCH",
         ],
         detail=True,
     )
