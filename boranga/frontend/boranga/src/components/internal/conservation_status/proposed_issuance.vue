@@ -24,9 +24,12 @@
                                 <div class="row mb-3">
                                     <div class="col-sm-4">
                                         <label
-                                            class="control-label pull-left"
+                                            class="control-label fw-bold"
                                             for="Name"
-                                            >Effective From Date</label
+                                            >Effective From Date
+                                            <span class="text-danger"
+                                                >*</span
+                                            ></label
                                         >
                                     </div>
                                     <div class="col-sm-8">
@@ -54,9 +57,7 @@
                             <div class="form-group">
                                 <div class="row mb-3">
                                     <div class="col-sm-4">
-                                        <label
-                                            class="control-label pull-left"
-                                            for="Name"
+                                        <label class="control-label" for="Name"
                                             >Details</label
                                         >
                                     </div>
@@ -74,9 +75,7 @@
                             <div class="form-group">
                                 <div class="row mb-3">
                                     <div class="col-sm-4">
-                                        <label
-                                            class="control-label pull-left"
-                                            for="Name"
+                                        <label class="control-label" for="Name"
                                             >CC email</label
                                         >
                                     </div>
@@ -100,7 +99,7 @@
                             >
                                 <div class="row mb-3">
                                     <div class="col-sm-4">
-                                        <label class="control-label pull-left"
+                                        <label class="control-label"
                                             >Approval Document</label
                                         >
                                     </div>
