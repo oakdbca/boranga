@@ -67,6 +67,20 @@
                         />
                     </div>
                 </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="submitter-category">Locked:</label>
+                        <select
+                            id="submitter-category"
+                            v-model="filterOCCCommunityLocked"
+                            class="form-select"
+                        >
+                            <option value="all">All</option>
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </CollapsibleFilters>
 
@@ -162,6 +176,11 @@ export default {
             required: false,
             default: 'filterOCCCommunityStatus',
         },
+        filterOCCCommunityLocked_cache: {
+            type: String,
+            required: false,
+            default: 'filterOCCCommunityLocked',
+        },
         filterOCCFromCommunityDueDate_cache: {
             type: String,
             required: false,
@@ -205,6 +224,12 @@ export default {
                 this.filterOCCCommunityStatus_cache
             )
                 ? sessionStorage.getItem(this.filterOCCCommunityStatus_cache)
+                : 'all',
+
+            filterOCCCommunityLocked: sessionStorage.getItem(
+                this.filterOCCCommunityLocked_cache
+            )
+                ? sessionStorage.getItem(this.filterOCCCommunityLocked_cache)
                 : 'all',
 
             filterOCCFromCommunityDueDate: sessionStorage.getItem(
@@ -257,7 +282,8 @@ export default {
                 this.filterOCCCommunityName === 'all' &&
                 this.filterOCCCommunityStatus === 'all' &&
                 this.filterOCCFromCommunityDueDate === '' &&
-                this.filterOCCToCommunityDueDate === ''
+                this.filterOCCToCommunityDueDate === '' &&
+                this.filterOCCCommunityLocked === 'all'
             ) {
                 return false;
             } else {
@@ -533,6 +559,7 @@ export default {
                         d.filter_from_due_date =
                             vm.filterOCCFromCommunityDueDate;
                         d.filter_to_due_date = vm.filterOCCToCommunityDueDate;
+                        d.filter_locked = vm.filterOCCCommunityLocked;
                         d.is_internal = vm.is_internal;
                     },
                 },
@@ -595,6 +622,17 @@ export default {
             sessionStorage.setItem(
                 vm.filterOCCCommunityStatus_cache,
                 vm.filterOCCCommunityStatus
+            );
+        },
+        filterOCCCommunityLocked: function () {
+            let vm = this;
+            vm.$refs.community_occ_datatable.vmDataTable.ajax.reload(
+                helpers.enablePopovers,
+                false
+            ); // This calls ajax() backend call.
+            sessionStorage.setItem(
+                vm.filterOCCCommunityLocked_cache,
+                vm.filterOCCCommunityLocked
             );
         },
         filterOCCFromCommunityDueDate: function () {

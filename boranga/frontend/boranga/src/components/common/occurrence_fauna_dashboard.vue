@@ -58,6 +58,22 @@
                     </div>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="submitter-category">Locked:</label>
+                        <select
+                            id="submitter-category"
+                            v-model="filterOCCFaunaLocked"
+                            class="form-select"
+                        >
+                            <option value="all">All</option>
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
         </CollapsibleFilters>
 
         <div v-if="show_add_button" class="col-md-12">
@@ -151,6 +167,11 @@ export default {
             required: false,
             default: 'filterOCCFaunaStatus',
         },
+        filterOCCFaunaLocked_cache: {
+            type: String,
+            required: false,
+            default: 'filterOCCFaunaLocked',
+        },
         filterOCCFromFaunaDueDate_cache: {
             type: String,
             required: false,
@@ -189,6 +210,12 @@ export default {
                 this.filterOCCFaunaStatus_cache
             )
                 ? sessionStorage.getItem(this.filterOCCFaunaStatus_cache)
+                : 'all',
+
+            filterOCCFaunaLocked: sessionStorage.getItem(
+                this.filterOCCFaunaLocked_cache
+            )
+                ? sessionStorage.getItem(this.filterOCCFaunaLocked_cache)
                 : 'all',
 
             filterOCCFromFaunaDueDate: sessionStorage.getItem(
@@ -236,7 +263,8 @@ export default {
                 this.filterOCCFaunaScientificName === 'all' &&
                 this.filterOCCFaunaStatus === 'all' &&
                 this.filterOCCFromFaunaDueDate === '' &&
-                this.filterOCCToFaunaDueDate === ''
+                this.filterOCCToFaunaDueDate === '' &&
+                this.filterOCCFaunaLocked === 'all'
             ) {
                 return false;
             } else {
@@ -484,6 +512,7 @@ export default {
                         d.filter_status = vm.filterOCCFaunaStatus;
                         d.filter_from_due_date = vm.filterOCCFromFaunaDueDate;
                         d.filter_to_due_date = vm.filterOCCToFaunaDueDate;
+                        d.filter_locked = vm.filterOCCFaunaLocked;
                         d.is_internal = vm.is_internal;
                     },
                 },
@@ -535,6 +564,17 @@ export default {
             sessionStorage.setItem(
                 vm.filterOCCFaunaStatus_cache,
                 vm.filterOCCFaunaStatus
+            );
+        },
+        filterOCCFaunaLocked: function () {
+            let vm = this;
+            vm.$refs.fauna_occ_datatable.vmDataTable.ajax.reload(
+                helpers.enablePopovers,
+                false
+            ); // This calls ajax() backend call.
+            sessionStorage.setItem(
+                vm.filterOCCFaunaLocked_cache,
+                vm.filterOCCFaunaLocked
             );
         },
         filterOCCFromFaunaDueDate: function () {
