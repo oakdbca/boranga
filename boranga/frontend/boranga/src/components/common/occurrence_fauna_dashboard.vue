@@ -613,7 +613,7 @@ export default {
             }, 100);
         });
         this.$nextTick(() => {
-            vm.initialiseOccurrenceLookupName();
+            vm.initialiseOccurrenceNameLookup();
             vm.initialiseScientificNameLookup();
             vm.addEventListeners();
             var newOption = null;
@@ -653,7 +653,7 @@ export default {
                 this.$refs.occurrence_history.isModalOpen = true;
             });
         },
-        initialiseOccurrenceLookupName: function () {
+        initialiseOccurrenceNameLookup: function () {
             let vm = this;
             $(vm.$refs.occurrence_name_lookup)
                 .select2({
@@ -670,6 +670,7 @@ export default {
                                 term: params.term,
                                 type: 'public',
                                 group_type_id: vm.group_type_id,
+                                active_only: false,
                             };
                             return query;
                         },
