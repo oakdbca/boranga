@@ -2890,6 +2890,15 @@ class OccurrenceFilterBackend(DatatablesFilterBackend):
         if filter_status and not filter_status.lower() == "all":
             queryset = queryset.filter(processing_status=filter_status)
 
+        filter_locked = request.GET.get("filter_locked")
+        if filter_locked and not filter_locked.lower() == "all":
+            if filter_locked.lower() == "true":
+                queryset = queryset.filter(locked=True)
+            elif filter_locked.lower() == "false":
+                queryset = queryset.filter(
+                    processing_status=Occurrence.PROCESSING_STATUS_ACTIVE, locked=False
+                )
+
         filter_from_review_due_date = request.GET.get("filter_from_review_due_date")
         filter_to_review_due_date = request.GET.get("filter_to_review_due_date")
 
