@@ -58,6 +58,22 @@
                     </div>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="submitter-category">Locked:</label>
+                        <select
+                            id="submitter-category"
+                            v-model="filterOCCFloraLocked"
+                            class="form-select"
+                        >
+                            <option value="all">All</option>
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
         </CollapsibleFilters>
 
         <div v-if="show_add_button" class="col-md-12">
@@ -161,6 +177,11 @@ export default {
             required: false,
             default: 'filterOCCToFloraDueDate',
         },
+        filterOCCFloraLocked_cache: {
+            type: String,
+            required: false,
+            default: 'filterOCCFloraLocked',
+        },
     },
     data() {
         return {
@@ -189,6 +210,12 @@ export default {
                 this.filterOCCFloraStatus_cache
             )
                 ? sessionStorage.getItem(this.filterOCCFloraStatus_cache)
+                : 'all',
+
+            filterOCCFloraLocked: sessionStorage.getItem(
+                this.filterOCCFloraLocked_cache
+            )
+                ? sessionStorage.getItem(this.filterOCCFloraLocked_cache)
                 : 'all',
 
             filterOCCFromFloraDueDate: sessionStorage.getItem(
@@ -236,7 +263,8 @@ export default {
                 this.filterOCCFloraScientificName === 'all' &&
                 this.filterOCCFloraStatus === 'all' &&
                 this.filterOCCFromFloraDueDate === '' &&
-                this.filterOCCToFloraDueDate === ''
+                this.filterOCCToFloraDueDate === '' &&
+                this.filterOCCFloraLocked === 'all'
             ) {
                 return false;
             } else {
@@ -485,6 +513,7 @@ export default {
                         d.filter_status = vm.filterOCCFloraStatus;
                         d.filter_from_due_date = vm.filterOCCFromFloraDueDate;
                         d.filter_to_due_date = vm.filterOCCToFloraDueDate;
+                        d.filter_locked = vm.filterOCCFloraLocked;
                         d.is_internal = vm.is_internal;
                     },
                 },
@@ -536,6 +565,17 @@ export default {
             sessionStorage.setItem(
                 vm.filterOCCFloraStatus_cache,
                 vm.filterOCCFloraStatus
+            );
+        },
+        filterOCCFloraLocked: function () {
+            let vm = this;
+            vm.$refs.flora_occ_datatable.vmDataTable.ajax.reload(
+                helpers.enablePopovers,
+                false
+            ); // This calls ajax() backend call.
+            sessionStorage.setItem(
+                vm.filterOCCFloraLocked_cache,
+                vm.filterOCCFloraLocked
             );
         },
         filterOCCFromFloraDueDate: function () {
@@ -631,6 +671,7 @@ export default {
                                 term: params.term,
                                 type: 'public',
                                 group_type_id: vm.group_type_id,
+                                active_only: false,
                             };
                             return query;
                         },

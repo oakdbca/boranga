@@ -2890,6 +2890,15 @@ class OccurrenceFilterBackend(DatatablesFilterBackend):
         if filter_status and not filter_status.lower() == "all":
             queryset = queryset.filter(processing_status=filter_status)
 
+        filter_locked = request.GET.get("filter_locked")
+        if filter_locked and not filter_locked.lower() == "all":
+            if filter_locked.lower() == "true":
+                queryset = queryset.filter(locked=True)
+            elif filter_locked.lower() == "false":
+                queryset = queryset.filter(
+                    processing_status=Occurrence.PROCESSING_STATUS_ACTIVE, locked=False
+                )
+
         filter_from_review_due_date = request.GET.get("filter_from_review_due_date")
         filter_to_review_due_date = request.GET.get("filter_to_review_due_date")
 
@@ -2979,9 +2988,12 @@ class OccurrencePaginatedViewSet(viewsets.ReadOnlyModelViewSet):
         detail=False,
     )
     def occurrence_name_lookup(self, request, *args, **kwargs):
-        queryset = self.get_queryset().filter(
-            processing_status=Occurrence.PROCESSING_STATUS_ACTIVE
-        )
+        active_only = request.GET.get("active_only", "true").lower() == "true"
+        queryset = self.get_queryset()
+        if active_only:
+            queryset = queryset.filter(
+                processing_status=Occurrence.PROCESSING_STATUS_ACTIVE
+            )
         group_type_id = request.GET.get("group_type_id", None)
         if group_type_id:
             try:
@@ -3899,7 +3911,7 @@ class OccurrenceViewSet(
 
     @detail_route(
         methods=[
-            "POST",
+            "PATCH",
         ],
         detail=True,
     )
@@ -3911,7 +3923,7 @@ class OccurrenceViewSet(
 
     @detail_route(
         methods=[
-            "POST",
+            "PATCH",
         ],
         detail=True,
     )

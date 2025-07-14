@@ -58,13 +58,29 @@
             <div class="row">
                 <div class="col-md-4">
                     <div class="form-group">
-                        <label for="community_id_lookup">Community ID:</label>
+                        <label for="occ_community_id_lookup"
+                            >Community ID:</label
+                        >
                         <select
-                            id="community_id_lookup"
-                            ref="community_id_lookup"
-                            name="community_id_lookup"
+                            id="occ_community_id_lookup"
+                            ref="occ_community_id_lookup"
+                            name="occ_community_id_lookup"
                             class="form-control"
                         />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="submitter-category">Locked:</label>
+                        <select
+                            id="submitter-category"
+                            v-model="filterOCCCommunityLocked"
+                            class="form-select"
+                        >
+                            <option value="all">All</option>
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -162,6 +178,11 @@ export default {
             required: false,
             default: 'filterOCCCommunityStatus',
         },
+        filterOCCCommunityLocked_cache: {
+            type: String,
+            required: false,
+            default: 'filterOCCCommunityLocked',
+        },
         filterOCCFromCommunityDueDate_cache: {
             type: String,
             required: false,
@@ -205,6 +226,12 @@ export default {
                 this.filterOCCCommunityStatus_cache
             )
                 ? sessionStorage.getItem(this.filterOCCCommunityStatus_cache)
+                : 'all',
+
+            filterOCCCommunityLocked: sessionStorage.getItem(
+                this.filterOCCCommunityLocked_cache
+            )
+                ? sessionStorage.getItem(this.filterOCCCommunityLocked_cache)
                 : 'all',
 
             filterOCCFromCommunityDueDate: sessionStorage.getItem(
@@ -257,7 +284,8 @@ export default {
                 this.filterOCCCommunityName === 'all' &&
                 this.filterOCCCommunityStatus === 'all' &&
                 this.filterOCCFromCommunityDueDate === '' &&
-                this.filterOCCToCommunityDueDate === ''
+                this.filterOCCToCommunityDueDate === '' &&
+                this.filterOCCCommunityLocked === 'all'
             ) {
                 return false;
             } else {
@@ -533,6 +561,7 @@ export default {
                         d.filter_from_due_date =
                             vm.filterOCCFromCommunityDueDate;
                         d.filter_to_due_date = vm.filterOCCToCommunityDueDate;
+                        d.filter_locked = vm.filterOCCCommunityLocked;
                         d.is_internal = vm.is_internal;
                     },
                 },
@@ -595,6 +624,17 @@ export default {
             sessionStorage.setItem(
                 vm.filterOCCCommunityStatus_cache,
                 vm.filterOCCCommunityStatus
+            );
+        },
+        filterOCCCommunityLocked: function () {
+            let vm = this;
+            vm.$refs.community_occ_datatable.vmDataTable.ajax.reload(
+                helpers.enablePopovers,
+                false
+            ); // This calls ajax() backend call.
+            sessionStorage.setItem(
+                vm.filterOCCCommunityLocked_cache,
+                vm.filterOCCCommunityLocked
             );
         },
         filterOCCFromCommunityDueDate: function () {
@@ -681,7 +721,7 @@ export default {
                     false,
                     true
                 );
-                $('#community_id_lookup').append(newOption);
+                $('#occ_community_id_lookup').append(newOption);
             }
         });
     },
@@ -710,6 +750,7 @@ export default {
                                 term: params.term,
                                 type: 'public',
                                 group_type_id: vm.group_type_id,
+                                active_only: false,
                             };
                             return query;
                         },
@@ -779,7 +820,7 @@ export default {
         },
         initialiseCommunityIdLookup: function () {
             let vm = this;
-            $(vm.$refs.community_id_lookup)
+            $(vm.$refs.occ_community_id_lookup)
                 .select2({
                     minimumInputLength: 1,
                     theme: 'bootstrap-5',
@@ -814,7 +855,7 @@ export default {
                 })
                 .on('select2:open', function () {
                     const searchField = $(
-                        '[aria-controls="select2-community_id_lookup-results"]'
+                        '[aria-controls="select2-occ_community_id_lookup-results"]'
                     );
                     // move focus to select2 field
                     searchField[0].focus();
