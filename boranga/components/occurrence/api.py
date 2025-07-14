@@ -2988,9 +2988,12 @@ class OccurrencePaginatedViewSet(viewsets.ReadOnlyModelViewSet):
         detail=False,
     )
     def occurrence_name_lookup(self, request, *args, **kwargs):
-        queryset = self.get_queryset().filter(
-            processing_status=Occurrence.PROCESSING_STATUS_ACTIVE
-        )
+        active_only = request.GET.get("active_only", "true").lower() == "true"
+        queryset = self.get_queryset()
+        if active_only:
+            queryset = queryset.filter(
+                processing_status=Occurrence.PROCESSING_STATUS_ACTIVE
+            )
         group_type_id = request.GET.get("group_type_id", None)
         if group_type_id:
             try:
