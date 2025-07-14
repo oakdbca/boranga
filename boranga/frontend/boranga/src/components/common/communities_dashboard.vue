@@ -51,6 +51,22 @@
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
+                        <label for="submitter-category"
+                            >Publication Status:</label
+                        >
+                        <select
+                            id="submitter-category"
+                            v-model="filterCommunityPublicationStatus"
+                            class="form-select"
+                        >
+                            <option value="all">All</option>
+                            <option value="False">Private</option>
+                            <option value="True">Public</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
                         <label for="">Region:</label>
                         <select
                             v-model="filterCommunityRegion"
@@ -290,6 +306,11 @@ export default {
             required: false,
             default: 'filterCommunityApplicationStatus',
         },
+        filterCommunityPublicationStatus_cache: {
+            type: String,
+            required: false,
+            default: 'filterCommunityPublicationStatus',
+        },
         filterCommunityRegion_cache: {
             type: String,
             required: false,
@@ -353,6 +374,14 @@ export default {
             )
                 ? sessionStorage.getItem(
                       this.filterCommunityApplicationStatus_cache
+                  )
+                : 'all',
+
+            filterCommunityPublicationStatus: sessionStorage.getItem(
+                this.filterCommunityPublicationStatus_cache
+            )
+                ? sessionStorage.getItem(
+                      this.filterCommunityPublicationStatus_cache
                   )
                 : 'all',
 
@@ -451,6 +480,7 @@ export default {
                 this.filterCommunityMigratedId === 'all' &&
                 this.filterCommunityName === 'all' &&
                 this.filterCommunityApplicationStatus === 'all' &&
+                this.filterCommunityPublicationStatus === 'all' &&
                 this.filterCommunityRegion === 'all' &&
                 this.filterCommunityDistrict === 'all' &&
                 this.filterCommunityWALegislativeList === 'all' &&
@@ -577,7 +607,9 @@ export default {
                 render: function (data, type, full) {
                     if (full.processing_status) {
                         if (
-                            full.processing_status === 'Active' &&
+                            ['Active', 'Historical'].includes(
+                                full.processing_status
+                            ) &&
                             full.publishing_status
                         ) {
                             return (
@@ -807,6 +839,8 @@ export default {
                         d.filter_group_type = vm.group_type_name;
                         d.filter_application_status =
                             vm.filterCommunityApplicationStatus;
+                        d.filter_publication_status =
+                            vm.filterCommunityPublicationStatus;
                         d.filter_region = vm.filterCommunityRegion;
                         d.filter_district = vm.filterCommunityDistrict;
                         d.filter_wa_legislative_list =
@@ -872,6 +906,17 @@ export default {
             sessionStorage.setItem(
                 vm.filterCommunityApplicationStatus_cache,
                 vm.filterCommunityApplicationStatus
+            );
+        },
+        filterCommunityPublicationStatus: function () {
+            let vm = this;
+            vm.$refs.communities_datatable.vmDataTable.ajax.reload(
+                helpers.enablePopovers,
+                false
+            ); // This calls ajax() backend call.
+            sessionStorage.setItem(
+                vm.filterCommunityPublicationStatus_cache,
+                vm.filterCommunityPublicationStatus
             );
         },
         filterCommunityRegion: function () {

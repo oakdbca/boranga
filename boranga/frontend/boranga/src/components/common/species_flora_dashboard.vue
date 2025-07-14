@@ -97,6 +97,22 @@
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
+                        <label for="submitter-category"
+                            >Publication Status:</label
+                        >
+                        <select
+                            id="submitter-category"
+                            v-model="filterFloraPublicationStatus"
+                            class="form-select"
+                        >
+                            <option value="all">All</option>
+                            <option value="False">Private</option>
+                            <option value="True">Public</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
                         <label for="">Region:</label>
                         <select
                             v-model="filterFloraRegion"
@@ -358,6 +374,11 @@ export default {
             required: false,
             default: 'filterFloraApplicationStatus',
         },
+        filterFloraPublicationStatus_cache: {
+            type: String,
+            required: false,
+            default: 'filterFloraPublicationStatus',
+        },
         filterFloraRegion_cache: {
             type: String,
             required: false,
@@ -442,6 +463,14 @@ export default {
                 this.filterFloraNameStatus_cache
             )
                 ? sessionStorage.getItem(this.filterFloraNameStatus_cache)
+                : 'all',
+
+            filterFloraPublicationStatus: sessionStorage.getItem(
+                this.filterFloraPublicationStatus_cache
+            )
+                ? sessionStorage.getItem(
+                      this.filterFloraPublicationStatus_cache
+                  )
                 : 'all',
 
             filterFloraApplicationStatus: sessionStorage.getItem(
@@ -554,6 +583,7 @@ export default {
                 this.filterFloraPhylogeneticGroup === 'all' &&
                 this.filterFloraGenus === 'all' &&
                 this.filterFloraNameStatus === 'all' &&
+                this.filterFloraPublicationStatus === 'all' &&
                 this.filterFloraApplicationStatus === 'all' &&
                 this.filterFloraRegion === 'all' &&
                 this.filterFloraDistrict === 'all' &&
@@ -784,7 +814,9 @@ export default {
                 render: function (data, type, full) {
                     if (full.processing_status) {
                         if (
-                            full.processing_status === 'Active' &&
+                            ['Active', 'Historical'].includes(
+                                full.processing_status
+                            ) &&
                             full.publishing_status
                         ) {
                             return (
@@ -963,6 +995,8 @@ export default {
                             vm.filterFloraPhylogeneticGroup;
                         d.filter_genus = vm.filterFloraGenus;
                         d.filter_name_status = vm.filterFloraNameStatus;
+                        d.filter_publication_status =
+                            vm.filterFloraPublicationStatus;
                         d.filter_application_status =
                             vm.filterFloraApplicationStatus;
                         d.filter_region = vm.filterFloraRegion;
@@ -1063,6 +1097,17 @@ export default {
             sessionStorage.setItem(
                 vm.filterFloraNameStatus_cache,
                 vm.filterFloraNameStatus
+            );
+        },
+        filterFloraPublicationStatus: function () {
+            let vm = this;
+            vm.$refs.flora_datatable.vmDataTable.ajax.reload(
+                helpers.enablePopovers,
+                false
+            ); // This calls ajax() backend call.
+            sessionStorage.setItem(
+                vm.filterFloraPublicationStatus_cache,
+                vm.filterFloraPublicationStatus
             );
         },
         filterFloraApplicationStatus: function () {
