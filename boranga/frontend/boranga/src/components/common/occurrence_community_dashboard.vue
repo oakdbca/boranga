@@ -58,11 +58,13 @@
             <div class="row">
                 <div class="col-md-4">
                     <div class="form-group">
-                        <label for="community_id_lookup">Community ID:</label>
+                        <label for="occ_community_id_lookup"
+                            >Community ID:</label
+                        >
                         <select
-                            id="community_id_lookup"
-                            ref="community_id_lookup"
-                            name="community_id_lookup"
+                            id="occ_community_id_lookup"
+                            ref="occ_community_id_lookup"
+                            name="occ_community_id_lookup"
                             class="form-control"
                         />
                     </div>
@@ -719,7 +721,7 @@ export default {
                     false,
                     true
                 );
-                $('#community_id_lookup').append(newOption);
+                $('#occ_community_id_lookup').append(newOption);
             }
         });
     },
@@ -817,7 +819,7 @@ export default {
         },
         initialiseCommunityIdLookup: function () {
             let vm = this;
-            $(vm.$refs.community_id_lookup)
+            $(vm.$refs.occ_community_id_lookup)
                 .select2({
                     minimumInputLength: 1,
                     theme: 'bootstrap-5',
@@ -852,7 +854,7 @@ export default {
                 })
                 .on('select2:open', function () {
                     const searchField = $(
-                        '[aria-controls="select2-community_id_lookup-results"]'
+                        '[aria-controls="select2-occ_community_id_lookup-results"]'
                     );
                     // move focus to select2 field
                     searchField[0].focus();
