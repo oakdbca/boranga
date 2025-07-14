@@ -1205,36 +1205,49 @@ export default {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-            }).then(
-                async (response) => {
-                    vm.species_community = await response.json();
-                    vm.species_community_original = helpers.copyObject(
-                        vm.species_community
-                    ); //update original after save
-                    swal.fire({
-                        title: 'Saved',
-                        text: 'Your changes have been saved',
-                        icon: 'success',
-                        showConfirmButton: false,
-                        timer: 1200,
-                    });
+            })
+                .then(
+                    async (response) => {
+                        const data = await response.json();
+                        if (!response.ok) {
+                            swal.fire({
+                                title: 'Error',
+                                text: JSON.stringify(data),
+                                icon: 'error',
+                                customClass: {
+                                    confirmButton: 'btn btn-primary',
+                                },
+                            });
+                            return;
+                        }
+                        vm.species_community_original = helpers.copyObject(
+                            vm.species_community
+                        ); //update original after save
+                        swal.fire({
+                            title: 'Saved',
+                            text: 'Your changes have been saved',
+                            icon: 'success',
+                            showConfirmButton: false,
+                            timer: 1200,
+                        });
+                        vm.isSaved = true;
+                    },
+                    (err) => {
+                        var errorText = helpers.apiVueResourceError(err);
+                        swal.fire({
+                            title: 'Save Error',
+                            text: errorText,
+                            icon: 'error',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            },
+                        });
+                        vm.isSaved = false;
+                    }
+                )
+                .finally(() => {
                     vm.savingSpeciesCommunity = false;
-                    vm.isSaved = true;
-                },
-                (err) => {
-                    var errorText = helpers.apiVueResourceError(err);
-                    swal.fire({
-                        title: 'Save Error',
-                        text: errorText,
-                        icon: 'error',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
-                    });
-                    vm.savingSpeciesCommunity = false;
-                    vm.isSaved = false;
-                }
-            );
+                });
         },
         save_exit: async function () {
             let vm = this;
