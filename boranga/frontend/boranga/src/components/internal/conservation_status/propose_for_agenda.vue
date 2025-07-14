@@ -25,10 +25,13 @@
                                 <div class="col">
                                     <div class="form-group">
                                         <label
-                                            class="control-label mb-3"
+                                            class="control-label mb-3 fw-bold"
                                             for="Name"
                                             >Recommended Action (Decline or
-                                            Approve) / Comments</label
+                                            Approve) / Comments
+                                            <span class="text-danger"
+                                                >*</span
+                                            ></label
                                         >
                                         <textarea
                                             ref="assessor_comment"

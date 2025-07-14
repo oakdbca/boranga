@@ -23,9 +23,12 @@
                                 <div class="row mb-3">
                                     <div class="col-sm-12">
                                         <label
-                                            class="control-label"
+                                            class="control-label fw-bold"
                                             for="efective_to"
-                                            >Effective To</label
+                                            >Effective To
+                                            <span class="text-danger"
+                                                >*</span
+                                            ></label
                                         >
                                         <input
                                             id="efective_to"
@@ -49,9 +52,13 @@
                                 </div>
                                 <div class="row mb-3">
                                     <div class="col-sm-12">
-                                        <label class="control-label" for="Name"
-                                            >Reason for proposing to
-                                            delist</label
+                                        <label
+                                            class="control-label fw-bold"
+                                            for="Name"
+                                            >Reason for proposing to delist
+                                            <span class="text-danger"
+                                                >*</span
+                                            ></label
                                         >
                                         <textarea
                                             id="reason"

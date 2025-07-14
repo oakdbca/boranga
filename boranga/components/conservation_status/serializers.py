@@ -1160,6 +1160,10 @@ class SaveSpeciesConservationStatusSerializer(BaseConservationStatusSerializer):
     def to_internal_value(self, data):
         if data.get("review_due_date") == "":
             data["review_due_date"] = None
+        if data.get("effective_from") == "":
+            data["effective_from"] = None
+        if data.get("effective_to") == "":
+            data["effective_to"] = None
         return super().to_internal_value(data)
 
     class Meta:
@@ -1198,6 +1202,28 @@ class SaveSpeciesConservationStatusSerializer(BaseConservationStatusSerializer):
             "public_consultation_end_date",
         )
         read_only_fields = ("id",)
+
+    def validate(self, attrs):
+        if not self.instance:
+            return super().validate(attrs)
+
+        if (not self.instance.locked) and not attrs.get("effective_from"):
+            raise serializers.ValidationError(
+                {"Effective From": "An effective from date is required."}
+            )
+        if (
+            self.instance.processing_status
+            in [
+                ConservationStatus.PROCESSING_STATUS_WITH_APPROVER,  # Proposed delisted
+                ConservationStatus.PROCESSING_STATUS_DELISTED,
+                ConservationStatus.PROCESSING_STATUS_CLOSED,
+            ]
+        ) and not attrs.get("effective_to"):
+            raise serializers.ValidationError(
+                {"Effective To": "An effective to date is required."}
+            )
+
+        return super().validate(attrs)
 
 
 class CreateSpeciesConservationStatusSerializer(BaseConservationStatusSerializer):

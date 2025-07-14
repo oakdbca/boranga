@@ -725,6 +725,23 @@ class SpeciesFilterBackend(DatatablesFilterBackend):
         if filter_application_status and not filter_application_status.lower() == "all":
             queryset = queryset.filter(processing_status=filter_application_status)
 
+        filter_publication_status = request.POST.get("filter_publication_status")
+        if filter_publication_status and not filter_publication_status.lower() == "all":
+            queryset = queryset.filter(
+                processing_status__in=[
+                    Species.PROCESSING_STATUS_ACTIVE,
+                    Species.PROCESSING_STATUS_HISTORICAL,
+                ]
+            )
+            if filter_publication_status.lower() == "true":
+                queryset = queryset.filter(
+                    species_publishing_status__species_public=filter_publication_status
+                )
+            elif filter_publication_status.lower() == "false":
+                queryset = queryset.filter(
+                    species_publishing_status__species_public=filter_publication_status
+                )
+
         filter_region = request.POST.get("filter_region")
         if filter_region and not filter_region.lower() == "all":
             queryset = queryset.filter(regions__id=filter_region)
@@ -874,6 +891,23 @@ class CommunitiesFilterBackend(DatatablesFilterBackend):
         filter_application_status = request.GET.get("filter_application_status")
         if filter_application_status and not filter_application_status.lower() == "all":
             queryset = queryset.filter(processing_status=filter_application_status)
+
+        filter_publication_status = request.GET.get("filter_publication_status")
+        if filter_publication_status and not filter_publication_status.lower() == "all":
+            queryset = queryset.filter(
+                processing_status__in=[
+                    Community.PROCESSING_STATUS_ACTIVE,
+                    Community.PROCESSING_STATUS_HISTORICAL,
+                ]
+            )
+            if filter_publication_status.lower() == "true":
+                queryset = queryset.filter(
+                    community_publishing_status__community_public=filter_publication_status
+                )
+            elif filter_publication_status.lower() == "false":
+                queryset = queryset.filter(
+                    community_publishing_status__community_public=filter_publication_status
+                )
 
         filter_region = request.GET.get("filter_region")
         if filter_region and not filter_region.lower() == "all":

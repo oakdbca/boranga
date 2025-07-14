@@ -97,6 +97,22 @@
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
+                        <label for="submitter-category"
+                            >Publication Status:</label
+                        >
+                        <select
+                            id="submitter-category"
+                            v-model="filterFaunaPublicationStatus"
+                            class="form-select"
+                        >
+                            <option value="all">All</option>
+                            <option value="False">Private</option>
+                            <option value="True">Public</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
                         <label for="">Region:</label>
                         <select
                             v-model="filterFaunaRegion"
@@ -358,6 +374,11 @@ export default {
             required: false,
             default: 'filterFaunaApplicationStatus',
         },
+        filterFaunaPublicationStatus_cache: {
+            type: String,
+            required: false,
+            default: 'filterFaunaPublicationStatus',
+        },
         filterFaunaRegion_cache: {
             type: String,
             required: false,
@@ -451,6 +472,14 @@ export default {
             )
                 ? sessionStorage.getItem(
                       this.filterFaunaApplicationStatus_cache
+                  )
+                : 'all',
+
+            filterFaunaPublicationStatus: sessionStorage.getItem(
+                this.filterFaunaPublicationStatus_cache
+            )
+                ? sessionStorage.getItem(
+                      this.filterFaunaPublicationStatus_cache
                   )
                 : 'all',
 
@@ -557,6 +586,7 @@ export default {
                 this.filterFaunaGenus === 'all' &&
                 this.filterFaunaNameStatus === 'all' &&
                 this.filterFaunaApplicationStatus === 'all' &&
+                this.filterFaunaPublicationStatus === 'all' &&
                 this.filterFaunaRegion === 'all' &&
                 this.filterFaunaDistrict === 'all' &&
                 this.filterFaunaWALegislativeList === 'all' &&
@@ -733,7 +763,9 @@ export default {
                 render: function (data, type, full) {
                     if (full.processing_status) {
                         if (
-                            full.processing_status === 'Active' &&
+                            ['Active', 'Historical'].includes(
+                                full.processing_status
+                            ) &&
                             full.publishing_status
                         ) {
                             return (
@@ -965,6 +997,8 @@ export default {
                             vm.filterFaunaConservationCategory;
                         d.filter_application_status =
                             vm.filterFaunaApplicationStatus;
+                        d.filter_publication_status =
+                            vm.filterFaunaPublicationStatus;
                         d.filter_region = vm.filterFaunaRegion;
                         d.filter_district = vm.filterFaunaDistrict;
                         d.filter_wa_legislative_list =
@@ -1074,6 +1108,17 @@ export default {
             sessionStorage.setItem(
                 vm.filterFaunaApplicationStatus_cache,
                 vm.filterFaunaApplicationStatus
+            );
+        },
+        filterFaunaPublicationStatus: function () {
+            let vm = this;
+            vm.$refs.fauna_datatable.vmDataTable.ajax.reload(
+                helpers.enablePopovers,
+                false
+            ); // This calls ajax() backend call.
+            sessionStorage.setItem(
+                vm.filterFaunaPublicationStatus_cache,
+                vm.filterFaunaPublicationStatus
             );
         },
         filterFaunaRegion: function () {
