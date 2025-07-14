@@ -843,7 +843,7 @@ export default {
             await fetch(
                 `/api/occurrence/${this.occurrence.id}/unlock_occurrence.json`,
                 {
-                    method: 'POST',
+                    method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
                     },
