@@ -1911,15 +1911,11 @@ export default {
                                 type: 'public',
                                 group_type_id:
                                     vm.species_community.group_type_id,
-                                species_profile: true,
+                                species_profile: !vm.rename_species,
                                 species_id: vm.species_community.id, // to filter species  current/non_current
                             };
                             return query;
                         },
-                        // results: function (data, page) { // parse the results into the format expected by Select2.
-                        //     // since we are using custom formatting functions we do not need to alter remote JSON data
-                        //     return {results: data};
-                        // },
                     },
                 })
                 .on('select2:select', function (e) {
