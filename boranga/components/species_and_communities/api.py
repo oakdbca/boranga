@@ -1603,6 +1603,14 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         # set the original species from the rename to historical
         rename_species_original_submit(instance, rename_instance, request)
 
+        # Change all occurrence records to point to the new species
+        occurrences = Occurrence.objects.filter(species=instance)
+        # Using .save here instead of .update so custom code runs that reassigns all
+        # OCRs to also
+        for occurrence in occurrences:
+            occurrence.species = rename_instance
+            occurrence.save(version_user=request.user)
+
         # Make sure the action log is accurate in terms of describing what has happened
         RENAME_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_FROM
         if species_queryset.exists():
