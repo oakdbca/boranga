@@ -6,12 +6,27 @@
                 label="Taxonomy"
                 :Index="taxonBody"
             >
-                <div class="row mb-3">
+                <div v-if="rename_species" class="row mb-3 align-items-center">
+                    <label for="" class="col-sm-3 col-form-label fw-bold"
+                        >Current Scientific Name:
+                    </label>
+                    <div class="col-sm-9">
+                        <span class="badge bg-primary fs-6">{{
+                            species_community_original.taxonomy_details
+                                .scientific_name
+                        }}</span>
+                    </div>
+                </div>
+                <div
+                    class="row mb-3"
+                    :class="rename_species ? 'border-bottom pb-4' : ''"
+                >
                     <label
                         for=""
                         class="col-sm-3 col-form-label"
                         :class="!scientificNameIsReadOnly ? 'fw-bold' : ''"
-                        >Scientific Name:
+                        ><template v-if="rename_species">Rename To</template
+                        ><template v-else>Scientific Name</template>:
                         <span
                             v-if="!scientificNameIsReadOnly"
                             class="text-danger"
@@ -22,7 +37,11 @@
                         <select
                             v-if="!scientificNameIsReadOnly"
                             :id="scientific_name_lookup"
-                            :ref="scientific_name_lookup"
+                            :ref="
+                                rename_species
+                                    ? 'scientific_name_lookup_rename'
+                                    : scientific_name_lookup
+                            "
                             :name="scientific_name_lookup"
                             class="form-select"
                         />
@@ -1895,7 +1914,13 @@ export default {
         },
         initialiseScientificNameLookup: function () {
             let vm = this;
-            $(vm.$refs[vm.scientific_name_lookup])
+            $(
+                vm.$refs[
+                    vm.rename_species
+                        ? 'scientific_name_lookup_rename'
+                        : vm.scientific_name_lookup
+                ]
+            )
                 .select2({
                     minimumInputLength: 2,
                     dropdownParent: $('#' + vm.select_scientific_name),

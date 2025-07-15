@@ -1715,17 +1715,7 @@ export default {
             this.$refs.species_combine.isModalOpen = true;
         },
         renameSpecies: async function () {
-            let rename_species_obj = null;
-            let response = await fetch(
-                `/api/species/${this.species_community.id}/rename_deep_copy.json`
-            );
-            const newRenameSpecies = await response.json();
-            if (newRenameSpecies) {
-                rename_species_obj = newRenameSpecies.species_obj;
-                this.$refs.species_rename.new_rename_species =
-                    rename_species_obj;
-                this.$refs.species_rename.isModalOpen = true;
-            }
+            this.$refs.species_rename.isModalOpen = true;
         },
         renameCommunity: async function () {
             this.$refs.community_rename.isModalOpen = true;
