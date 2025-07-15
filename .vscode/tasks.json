@@ -2,15 +2,16 @@
     "version": "2.0.0",
     "tasks": [
       {
-        "label": "node: serve",
+        "label": "vite",
         "path": "/boranga/frontend/boranga",
         "options": {
           "env": {
-            "PORT": "9001"
+            "HOST": "127.0.0.1",
+            "PORT": "5173"
           }
         },
         "type": "npm",
-        "script": "serve",
+        "script": "dev",
         "isBackground": true,
         "problemMatcher": [
           {
@@ -25,8 +26,8 @@
             },
             "background": {
               "activeOnStart": true,
-              "beginsPattern": "Starting development server",
-              "endsPattern": "Compiled successfully"
+              "beginsPattern": ".",
+              "endsPattern": ".",
             }
           }
         ]

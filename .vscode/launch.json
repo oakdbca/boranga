@@ -34,7 +34,7 @@
               "${workspaceFolder}/boranga/frontend/boranga/**/*.vue",
               "${workspaceFolder}/boranga/frontend/boranga/**/*.html"
             ],
-            "preLaunchTask": "node: serve"
+            "preLaunchTask": "vite"
         }
     ]
 }
