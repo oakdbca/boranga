@@ -1112,6 +1112,9 @@ class SpeciesUserAction(UserAction):
 
     ACTION_RENAME_SPECIES_TO = "Species {} renamed to new species {}"
     ACTION_RENAME_SPECIES_FROM = "Species {} created by renaming species {}"
+    ACTION_RENAME_SPECIES_BY_ACTIVATING = (
+        "Species {} reactivated by renaming species {}"
+    )
 
     ACTION_SPLIT_SPECIES_TO = "Species {} split into new species {}"
     ACTION_SPLIT_SPECIES_FROM = "Species {} created from a split of species {}"
