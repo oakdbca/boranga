@@ -113,6 +113,7 @@ from boranga.components.species_and_communities.serializers import (
 from boranga.components.species_and_communities.utils import (
     combine_species_original_submit,
     community_form_submit,
+    rename_deep_copy,
     rename_species_original_submit,
     species_form_submit,
 )
@@ -1569,167 +1570,70 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-    @detail_route(
-        methods=[
-            "GET",
-        ],
-        detail=True,
-    )
-    @renderer_classes((JSONRenderer,))
-    @transaction.atomic
-    def rename_deep_copy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        # related items to instance that needs to create for new rename instance as well
-        instance_documents = SpeciesDocument.objects.filter(species=instance.id)
-        instance_threats = ConservationThreat.objects.filter(species=instance.id)
-        instance_conservation_attributes = SpeciesConservationAttributes.objects.filter(
-            species=instance.id
-        )
-        instance_distribution = SpeciesDistribution.objects.filter(species=instance.id)
-
-        # clone the species instance into new rename instance
-        new_rename_instance = Species.objects.get(pk=instance.pk)
-        new_rename_instance.id = None
-        new_rename_instance.taxonomy_id = None
-        new_rename_instance.species_number = ""
-        new_rename_instance.processing_status = Species.PROCESSING_STATUS_DRAFT
-        new_rename_instance.lodgement_date = None
-        new_rename_instance.save(version_user=request.user)
-
-        # Copy the regions an districts
-        new_rename_instance.regions.add(*instance.regions.all())
-        new_rename_instance.districts.add(*instance.districts.all())
-
-        # Log action
-        new_rename_instance.log_user_action(
-            SpeciesUserAction.ACTION_COPY_SPECIES_FROM.format(
-                new_rename_instance.species_number,
-                instance.species_number,
-            ),
-            request,
-        )
-        request.user.log_user_action(
-            SpeciesUserAction.ACTION_COPY_SPECIES_FROM.format(
-                new_rename_instance.species_number,
-                instance.species_number,
-            ),
-            request,
-        )
-        instance.log_user_action(
-            SpeciesUserAction.ACTION_COPY_SPECIES_TO.format(
-                instance.species_number,
-                new_rename_instance.species_number,
-            ),
-            request,
-        )
-        request.user.log_user_action(
-            SpeciesUserAction.ACTION_COPY_SPECIES_TO.format(
-                instance.species_number,
-                new_rename_instance.species_number,
-            ),
-            request,
-        )
-
-        for new_document in instance_documents:
-            new_doc_instance = new_document
-            new_doc_instance.species = new_rename_instance
-            new_doc_instance.id = None
-            new_doc_instance.document_number = ""
-            new_doc_instance.save(version_user=request.user)
-            new_doc_instance.species.log_user_action(
-                SpeciesUserAction.ACTION_ADD_DOCUMENT.format(
-                    new_doc_instance.document_number,
-                    new_doc_instance.species.species_number,
-                ),
-                request,
-            )
-            request.user.log_user_action(
-                SpeciesUserAction.ACTION_ADD_DOCUMENT.format(
-                    new_doc_instance.document_number,
-                    new_doc_instance.species.species_number,
-                ),
-                request,
-            )
-
-        for new_threat in instance_threats:
-            new_threat_instance = new_threat
-            new_threat_instance.species = new_rename_instance
-            new_threat_instance.id = None
-            new_threat_instance.threat_number = ""
-            new_threat_instance.save(version_user=request.user)
-            new_threat_instance.species.log_user_action(
-                SpeciesUserAction.ACTION_ADD_THREAT.format(
-                    new_threat_instance.threat_number,
-                    new_threat_instance.species.species_number,
-                ),
-                request,
-            )
-            request.user.log_user_action(
-                SpeciesUserAction.ACTION_ADD_THREAT.format(
-                    new_threat_instance.threat_number,
-                    new_threat_instance.species.species_number,
-                ),
-                request,
-            )
-
-        for new_cons_attr in instance_conservation_attributes:
-            new_cons_attr_instance = new_cons_attr
-            new_cons_attr_instance.species = new_rename_instance
-            new_cons_attr_instance.id = None
-            new_cons_attr_instance.save()
-
-        for new_distribution in instance_distribution:
-            new_distribution.species = new_rename_instance
-            new_distribution.id = None
-            new_distribution.save()
-
-        serializer = InternalSpeciesSerializer(
-            new_rename_instance, context={"request": request}
-        )
-        res_json = {"species_obj": serializer.data}
-        res_json = json.dumps(res_json)
-        return HttpResponse(res_json, content_type="application/json")
-
     # used to submit the new species created while combining
     @detail_route(methods=["post"], detail=True)
     @renderer_classes((JSONRenderer,))
     @transaction.atomic
-    def rename_new_species_submit(self, request, *args, **kwargs):
+    def rename_species(self, request, *args, **kwargs):
+        # This is the original instance that is being renamed
         instance = self.get_object()
-        species_form_submit(instance, request)
-        # add parent ids to new species instance
-        parent_species_data = request.data.get("parent_species")
-        parent_instance = Species.objects.get(id=parent_species_data.get("id"))
-        instance.parent_species.add(parent_instance)
-        # set the original species from the rename  to historical and its conservation status to 'closed'
-        rename_species_original_submit(parent_instance, instance, request)
+
+        # Make sure the taxonomy is actually changing
+        if request.data["taxonomy_id"] == instance.taxonomy_id:
+            raise serializers.ValidationError(
+                "Cannot rename species to the same taxonomy"
+            )
+
+        rename_instance = None
+        # Check if the taxonomy is already in use
+        species_queryset = Species.objects.filter(
+            taxonomy_id=request.data["taxonomy_id"]
+        )
+        if species_queryset.exists():
+            rename_instance = species_queryset.first()
+            rename_instance.processing_status = Species.PROCESSING_STATUS_ACTIVE
+            rename_instance.save(version_user=request.user)
+        else:
+            rename_instance = rename_deep_copy(instance, request)
+            rename_instance.taxonomy_id = request.data["taxonomy_id"]
+            species_form_submit(rename_instance, request)
+
+        rename_instance.parent_species.add(instance)
+
+        # set the original species from the rename to historical
+        rename_species_original_submit(instance, rename_instance, request)
+
+        # Make sure the action log is accurate in terms of describing what has happened
+        RENAME_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_FROM
+        if species_queryset.exists():
+            SpeciesUserAction.ACTION_RENAME_SPECIES_BY_REACTIVATING
 
         # Log action
+        rename_instance.log_user_action(
+            RENAME_ACTION.format(
+                rename_instance.species_number,
+                instance,
+            ),
+            request,
+        )
+        request.user.log_user_action(
+            RENAME_ACTION.format(
+                rename_instance.species_number,
+                instance,
+            ),
+            request,
+        )
         instance.log_user_action(
-            SpeciesUserAction.ACTION_RENAME_SPECIES_FROM.format(
-                instance.species_number,
-                parent_instance,
-            ),
-            request,
-        )
-        request.user.log_user_action(
-            SpeciesUserAction.ACTION_RENAME_SPECIES_FROM.format(
-                instance.species_number,
-                parent_instance,
-            ),
-            request,
-        )
-        parent_instance.log_user_action(
             SpeciesUserAction.ACTION_RENAME_SPECIES_TO.format(
-                parent_instance,
-                instance.species_number,
+                instance,
+                rename_instance.species_number,
             ),
             request,
         )
         request.user.log_user_action(
             SpeciesUserAction.ACTION_RENAME_SPECIES_TO.format(
-                parent_instance,
-                instance.species_number,
+                instance,
+                rename_instance.species_number,
             ),
             request,
         )

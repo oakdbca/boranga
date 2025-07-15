@@ -3,6 +3,7 @@ import logging
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.http import HttpRequest
 from django.utils import timezone
 
 from boranga.components.species_and_communities.email import (
@@ -15,7 +16,11 @@ from boranga.components.species_and_communities.email import (
 from boranga.components.species_and_communities.models import (
     Community,
     CommunityUserAction,
+    ConservationThreat,
     Species,
+    SpeciesConservationAttributes,
+    SpeciesDistribution,
+    SpeciesDocument,
     SpeciesUserAction,
 )
 
@@ -121,3 +126,112 @@ def rename_species_original_submit(species_instance, new_species, request):
     send_species_rename_email_notification(request, species_instance, new_species)
 
     return species_instance
+
+
+@transaction.atomic
+def rename_deep_copy(instance: Species, request: HttpRequest) -> Species:
+    # related items to instance that needs to create for new rename instance as well
+    instance_documents = SpeciesDocument.objects.filter(species=instance.id)
+    instance_threats = ConservationThreat.objects.filter(species=instance.id)
+    instance_conservation_attributes = SpeciesConservationAttributes.objects.filter(
+        species=instance.id
+    )
+    instance_distribution = SpeciesDistribution.objects.filter(species=instance.id)
+
+    # clone the species instance into new rename instance
+    new_rename_instance = Species.objects.get(pk=instance.pk)
+    new_rename_instance.id = None
+    new_rename_instance.taxonomy_id = None
+    new_rename_instance.species_number = ""
+    new_rename_instance.processing_status = Species.PROCESSING_STATUS_DRAFT
+    new_rename_instance.lodgement_date = None
+    new_rename_instance.save(version_user=request.user)
+
+    # Copy the regions an districts
+    new_rename_instance.regions.add(*instance.regions.all())
+    new_rename_instance.districts.add(*instance.districts.all())
+
+    # Log action
+    new_rename_instance.log_user_action(
+        SpeciesUserAction.ACTION_COPY_SPECIES_FROM.format(
+            new_rename_instance.species_number,
+            instance.species_number,
+        ),
+        request,
+    )
+    request.user.log_user_action(
+        SpeciesUserAction.ACTION_COPY_SPECIES_FROM.format(
+            new_rename_instance.species_number,
+            instance.species_number,
+        ),
+        request,
+    )
+    instance.log_user_action(
+        SpeciesUserAction.ACTION_COPY_SPECIES_TO.format(
+            instance.species_number,
+            new_rename_instance.species_number,
+        ),
+        request,
+    )
+    request.user.log_user_action(
+        SpeciesUserAction.ACTION_COPY_SPECIES_TO.format(
+            instance.species_number,
+            new_rename_instance.species_number,
+        ),
+        request,
+    )
+
+    for new_document in instance_documents:
+        new_doc_instance = new_document
+        new_doc_instance.species = new_rename_instance
+        new_doc_instance.id = None
+        new_doc_instance.document_number = ""
+        new_doc_instance.save(version_user=request.user)
+        new_doc_instance.species.log_user_action(
+            SpeciesUserAction.ACTION_ADD_DOCUMENT.format(
+                new_doc_instance.document_number,
+                new_doc_instance.species.species_number,
+            ),
+            request,
+        )
+        request.user.log_user_action(
+            SpeciesUserAction.ACTION_ADD_DOCUMENT.format(
+                new_doc_instance.document_number,
+                new_doc_instance.species.species_number,
+            ),
+            request,
+        )
+
+    for new_threat in instance_threats:
+        new_threat_instance = new_threat
+        new_threat_instance.species = new_rename_instance
+        new_threat_instance.id = None
+        new_threat_instance.threat_number = ""
+        new_threat_instance.save(version_user=request.user)
+        new_threat_instance.species.log_user_action(
+            SpeciesUserAction.ACTION_ADD_THREAT.format(
+                new_threat_instance.threat_number,
+                new_threat_instance.species.species_number,
+            ),
+            request,
+        )
+        request.user.log_user_action(
+            SpeciesUserAction.ACTION_ADD_THREAT.format(
+                new_threat_instance.threat_number,
+                new_threat_instance.species.species_number,
+            ),
+            request,
+        )
+
+    for new_cons_attr in instance_conservation_attributes:
+        new_cons_attr_instance = new_cons_attr
+        new_cons_attr_instance.species = new_rename_instance
+        new_cons_attr_instance.id = None
+        new_cons_attr_instance.save()
+
+    for new_distribution in instance_distribution:
+        new_distribution.species = new_rename_instance
+        new_distribution.id = None
+        new_distribution.save()
+
+    return new_rename_instance
