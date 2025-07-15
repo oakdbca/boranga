@@ -814,7 +814,12 @@ export default {
                     this.stopEditingCountdown();
                     this.occurrence = data;
                     this.original_occurrence = helpers.copyObject(data);
-
+                    this.$router.replace({
+                        query: {
+                            ...this.$route.query,
+                            action: 'view',
+                        },
+                    });
                     swal.fire({
                         title: 'Locked',
                         text: 'Occurrence has been Locked',
@@ -866,6 +871,12 @@ export default {
                         this.occurrence.editing_window_minutes;
                     this.serverDatetimeUpdated =
                         this.occurrence.datetime_updated;
+                    this.$router.replace({
+                        query: {
+                            ...this.$route.query,
+                            action: 'edit',
+                        },
+                    });
                     this.startEditingCountdown();
                     this.startPollingForUpdates();
                     swal.fire({
