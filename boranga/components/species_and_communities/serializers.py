@@ -11,6 +11,7 @@ from boranga.components.main.serializers import (
     BaseSerializer,
     CommunicationLogEntrySerializer,
     EmailUserSerializer,
+    ListMultipleChoiceField,
     SafeFileUrlField,
 )
 from boranga.components.species_and_communities.models import (
@@ -508,13 +509,13 @@ class SaveSpeciesConservationAttributesSerializer(BaseModelSerializer):
     species_id = serializers.IntegerField(
         required=False, allow_null=True, write_only=True
     )
-    flowering_period = serializers.MultipleChoiceField(
+    flowering_period = ListMultipleChoiceField(
         choices=SpeciesConservationAttributes.PERIOD_CHOICES,
         allow_null=True,
         allow_blank=True,
         required=False,
     )
-    fruiting_period = serializers.MultipleChoiceField(
+    fruiting_period = ListMultipleChoiceField(
         choices=SpeciesConservationAttributes.PERIOD_CHOICES,
         allow_null=True,
         allow_blank=True,
@@ -526,7 +527,7 @@ class SaveSpeciesConservationAttributesSerializer(BaseModelSerializer):
     root_morphology_id = serializers.IntegerField(
         required=False, allow_null=True, write_only=True
     )
-    breeding_period = serializers.MultipleChoiceField(
+    breeding_period = ListMultipleChoiceField(
         choices=SpeciesConservationAttributes.PERIOD_CHOICES,
         allow_null=True,
         allow_blank=True,

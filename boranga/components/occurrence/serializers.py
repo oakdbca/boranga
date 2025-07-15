@@ -19,6 +19,7 @@ from boranga.components.main.serializers import (
     EmailUserSerializer,
     IntegerFieldEmptytoNullSerializerMixin,
     LimitedEmailUserSerializer,
+    ListMultipleChoiceField,
     SafeFileUrlField,
     YesNoBooleanField,
 )
@@ -304,7 +305,7 @@ class OccurrenceSerializer(BaseModelSerializer):
     label = serializers.SerializerMethodField()
     model_name = serializers.SerializerMethodField()
     occurrence_reports = serializers.SerializerMethodField()
-    occurrence_source = serializers.MultipleChoiceField(
+    occurrence_source = ListMultipleChoiceField(
         choices=Occurrence.OCCURRENCE_SOURCE_CHOICES,
         allow_null=True,
         allow_blank=True,
@@ -697,11 +698,11 @@ class ListInternalOccurrenceReportSerializer(BaseModelSerializer):
 
 
 class OCRHabitatCompositionSerializer(BaseModelSerializer):
-    land_form = serializers.MultipleChoiceField(
+    land_form = ListMultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
     )
     land_form_names = serializers.SerializerMethodField()
-    soil_type = serializers.MultipleChoiceField(
+    soil_type = ListMultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
     )
     soil_type_names = serializers.SerializerMethodField()
@@ -913,7 +914,7 @@ class OCRPlantCountSerializer(BaseModelSerializer):
 
 class OCRAnimalObservationSerializer(BaseModelSerializer):
 
-    primary_detection_method = serializers.MultipleChoiceField(
+    primary_detection_method = ListMultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
     )
     secondary_sign_name = serializers.CharField(
@@ -922,7 +923,7 @@ class OCRAnimalObservationSerializer(BaseModelSerializer):
     animal_behaviour_name = serializers.CharField(
         source="animal_behaviour.name", allow_null=True
     )
-    reproductive_state = serializers.MultipleChoiceField(
+    reproductive_state = ListMultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
     )
     animal_health_name = serializers.CharField(
@@ -1943,11 +1944,11 @@ class OccurrenceReportReferralSerializer(BaseModelSerializer):
 class SaveOCRHabitatCompositionSerializer(BaseModelSerializer):
     # write_only removed from below as the serializer will not return that field in serializer.data
     occurrence_report_id = serializers.IntegerField(required=False, allow_null=True)
-    land_form = serializers.MultipleChoiceField(
+    land_form = ListMultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
     )
     rock_type_id = serializers.IntegerField(required=False, allow_null=True)
-    soil_type = serializers.MultipleChoiceField(
+    soil_type = ListMultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
     )
     soil_colour_id = serializers.IntegerField(required=False, allow_null=True)
@@ -2159,10 +2160,10 @@ class SaveOCRAnimalObservationSerializer(
     IntegerFieldEmptytoNullSerializerMixin, BaseModelSerializer
 ):
     occurrence_report_id = serializers.IntegerField(required=False, allow_null=True)
-    primary_detection_method = serializers.MultipleChoiceField(
+    primary_detection_method = ListMultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
     )
-    reproductive_state = serializers.MultipleChoiceField(
+    reproductive_state = ListMultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
     )
     obs_date = serializers.DateField(format="%Y-%m-%d", required=False, allow_null=True)
@@ -2898,7 +2899,7 @@ class SaveOccurrenceSerializer(BaseModelSerializer):
     community_id = serializers.IntegerField(
         required=False, allow_null=True, write_only=True
     )
-    occurrence_source = serializers.MultipleChoiceField(
+    occurrence_source = ListMultipleChoiceField(
         choices=Occurrence.OCCURRENCE_SOURCE_CHOICES,
         allow_null=True,
         allow_blank=True,
@@ -2965,11 +2966,11 @@ class SaveOccurrenceSerializer(BaseModelSerializer):
 
 class OCCHabitatCompositionSerializer(BaseModelSerializer):
 
-    land_form = serializers.MultipleChoiceField(
+    land_form = ListMultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
     )
     copied_ocr = serializers.SerializerMethodField()
-    soil_type = serializers.MultipleChoiceField(
+    soil_type = ListMultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
     )
     soil_condition = serializers.CharField(
@@ -3234,7 +3235,7 @@ class OCCPlantCountSerializer(BaseModelSerializer):
 
 class OCCAnimalObservationSerializer(BaseModelSerializer):
 
-    primary_detection_method = serializers.MultipleChoiceField(
+    primary_detection_method = ListMultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
     )
     secondary_sign_name = serializers.CharField(
@@ -3243,7 +3244,7 @@ class OCCAnimalObservationSerializer(BaseModelSerializer):
     animal_behaviour_name = serializers.CharField(
         source="animal_behaviour.name", allow_null=True
     )
-    reproductive_state = serializers.MultipleChoiceField(
+    reproductive_state = ListMultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
     )
     animal_health_name = serializers.CharField(
@@ -3398,11 +3399,11 @@ class OCCContactDetailSerializer(BaseModelSerializer):
 class SaveOCCHabitatCompositionSerializer(BaseModelSerializer):
     # write_only removed from below as the serializer will not return that field in serializer.data
     occurrence_id = serializers.IntegerField(required=False, allow_null=True)
-    land_form = serializers.MultipleChoiceField(
+    land_form = ListMultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
     )
     rock_type_id = serializers.IntegerField(required=False, allow_null=True)
-    soil_type = serializers.MultipleChoiceField(
+    soil_type = ListMultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
     )
     soil_colour_id = serializers.IntegerField(required=False, allow_null=True)
@@ -3559,10 +3560,10 @@ class SaveOCCAnimalObservationSerializer(
     IntegerFieldEmptytoNullSerializerMixin, BaseModelSerializer
 ):
     occurrence_id = serializers.IntegerField(required=False, allow_null=True)
-    primary_detection_method = serializers.MultipleChoiceField(
+    primary_detection_method = ListMultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
     )
-    reproductive_state = serializers.MultipleChoiceField(
+    reproductive_state = ListMultipleChoiceField(
         choices=[], allow_null=True, allow_blank=True, required=False
     )
     obs_date = serializers.DateField(

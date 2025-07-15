@@ -198,6 +198,7 @@ export default {
                                 confirmButton: 'btn btn-primary',
                             },
                         });
+                        vm.saveError = true;
                         return;
                     }
                     return true;
@@ -273,7 +274,20 @@ export default {
                                     body: JSON.stringify(payload),
                                 }).then(
                                     async (response) => {
-                                        vm.new_species = await response.json();
+                                        const data = await response.json();
+                                        if (!response.ok) {
+                                            swal.fire({
+                                                title: 'Submit Error',
+                                                text: JSON.stringify(data),
+                                                icon: 'error',
+                                                customClass: {
+                                                    confirmButton:
+                                                        'btn btn-primary',
+                                                },
+                                            });
+                                            return;
+                                        }
+                                        vm.new_species = data;
                                         vm.$router.push({
                                             name: 'internal-species-communities-dash',
                                         });

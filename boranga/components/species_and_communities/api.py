@@ -204,7 +204,7 @@ class GetScientificName(views.APIView):
         search_term = request.GET.get("term", "")
         group_type_id = request.GET.get("group_type_id", "")
         # identifies the request as for a species profile - we exclude those taxonomies already taken
-        species_profile = request.GET.get("species_profile", False)
+        species_profile = request.GET.get("species_profile", "false").lower() == "true"
         # identifies the request as for a species profile dependent record - we only include those taxonomies in use
         has_species = request.GET.get("has_species", False)
         active_only = request.GET.get("active_only", False)
