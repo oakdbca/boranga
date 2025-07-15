@@ -529,51 +529,49 @@ export default {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(payload),
-            }).then(async (response) => {
-                const data = await response.json();
-                if (!response.ok) {
+            })
+                .then(async (response) => {
+                    const data = await response.json();
+                    if (!response.ok) {
+                        swal.fire({
+                            title: 'Save Error',
+                            text: JSON.stringify(data),
+                            icon: 'error',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            },
+                        });
+                        vm.isSaved = false;
+                        return;
+                    }
+                    vm.occurrence = data;
+                    vm.original_occurrence = helpers.copyObject(data);
+                    vm.updateEditingWindowVarsFromOccObj();
                     swal.fire({
-                        title: 'Save Error',
-                        text: JSON.stringify(data),
-                        icon: 'error',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
+                        title: 'Saved',
+                        text: 'Your changes have been saved',
+                        icon: 'success',
+                        showConfirmButton: false,
+                        timer: 1200,
                     });
-                    vm.savingOccurrence = false;
-                    vm.isSaved = false;
+                    vm.isSaved = true;
+
+                    // Update the occurrence object with the response data
+                    vm.original_occurrence = helpers.copyObject(data);
+                    vm.occurrence = helpers.copyObject(data);
+                    vm.combine_key++;
+                    vm.$refs.occurrence.$refs.occ_location.incrementComponentMapKey();
+                    vm.$refs.occurrence.$refs.occ_location.refreshDatatables();
+                    vm.$nextTick(() => {
+                        vm.resetDirtyState();
+                    });
+                })
+                .finally(() => {
                     vm.$refs.occurrence.$refs.occ_location.$refs.component_map.setLoadingMap(
                         false
                     );
-                    return;
-                }
-                vm.occurrence = data;
-                vm.original_occurrence = helpers.copyObject(data);
-                vm.updateEditingWindowVarsFromOccObj();
-                swal.fire({
-                    title: 'Saved',
-                    text: 'Your changes have been saved',
-                    icon: 'success',
-                    showConfirmButton: false,
-                    timer: 1200,
+                    vm.savingOccurrence = false;
                 });
-                vm.savingOccurrence = false;
-                vm.isSaved = true;
-
-                // Update the occurrence object with the response data
-                vm.original_occurrence = helpers.copyObject(data);
-                vm.occurrence = helpers.copyObject(data);
-                vm.combine_key++;
-
-                vm.$refs.occurrence.$refs.occ_location.$refs.component_map.setLoadingMap(
-                    false
-                );
-                vm.$refs.occurrence.$refs.occ_location.incrementComponentMapKey();
-                vm.$refs.occurrence.$refs.occ_location.refreshDatatables();
-                vm.$nextTick(() => {
-                    vm.resetDirtyState();
-                });
-            });
         },
         resetDirtyState: function () {
             this.$refs.occurrence.resetDirtyState();
