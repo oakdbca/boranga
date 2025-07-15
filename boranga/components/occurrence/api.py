@@ -1703,15 +1703,11 @@ class OccurrenceReportViewSet(
             instance, data=proposal_data, partial=True
         )
         serializer.is_valid(raise_exception=True)
-        if serializer.is_valid():
-            if (
-                instance.processing_status
-                == OccurrenceReport.PROCESSING_STATUS_UNLOCKED
-            ):
-                serializer.save(no_revision=True)
-                self.unlocked_back_to_assessor()
-            else:
-                serializer.save(version_user=request.user)
+        if instance.processing_status == OccurrenceReport.PROCESSING_STATUS_UNLOCKED:
+            serializer.save(no_revision=True)
+            self.unlocked_back_to_assessor()
+        else:
+            serializer.save(version_user=request.user)
 
         final_instance = self.get_object()
         serializer = self.get_serializer(final_instance)
@@ -4430,25 +4426,22 @@ class OccurrenceViewSet(
                     update_site.save(version_user=request.user)
                 except Exception as e:
                     logger.exception(e)
-
         serializer = SaveOccurrenceSerializer(instance, data=request_data, partial=True)
         serializer.is_valid(raise_exception=True)
+        serializer.save(version_user=request.user)
 
-        if serializer.is_valid():
-            serializer.save(version_user=request.user)
-
-            instance.log_user_action(
-                OccurrenceUserAction.ACTION_SAVE_OCCURRENCE.format(
-                    instance.occurrence_number
-                ),
-                request,
-            )
-            request.user.log_user_action(
-                OccurrenceUserAction.ACTION_SAVE_OCCURRENCE.format(
-                    instance.occurrence_number
-                ),
-                request,
-            )
+        instance.log_user_action(
+            OccurrenceUserAction.ACTION_SAVE_OCCURRENCE.format(
+                instance.occurrence_number
+            ),
+            request,
+        )
+        request.user.log_user_action(
+            OccurrenceUserAction.ACTION_SAVE_OCCURRENCE.format(
+                instance.occurrence_number
+            ),
+            request,
+        )
 
         final_instance = self.get_object()
         serializer = self.get_serializer(final_instance)
