@@ -317,3 +317,25 @@ class YesNoBooleanField(serializers.BooleanField):
             elif data in ["no", "false", "0"]:
                 return False
         return super().to_internal_value(data)
+
+
+class ListMultipleChoiceField(serializers.MultipleChoiceField):
+    """
+    A field that allows multiple choices to be selected, represented as a list.
+
+    The default behavior is for these methods to return a set which causes issues with
+    django dirtyfields. This implementation returns a list instead which solves the issue.
+    """
+
+    def to_internal_value(self, data):
+        if isinstance(data, str) or not hasattr(data, "__iter__"):
+            self.fail("not_a_list", input_type=type(data).__name__)
+        if not self.allow_empty and len(data) == 0:
+            self.fail("empty")
+        return [
+            super(serializers.MultipleChoiceField, self).to_internal_value(item)
+            for item in data
+        ]
+
+    def to_representation(self, value):
+        return [self.choice_strings_to_values.get(str(item), item) for item in value]
