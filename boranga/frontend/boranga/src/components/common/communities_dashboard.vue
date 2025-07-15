@@ -49,7 +49,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div v-if="is_internal" class="col-md-3">
                     <div class="form-group">
                         <label for="submitter-category"
                             >Publication Status:</label
