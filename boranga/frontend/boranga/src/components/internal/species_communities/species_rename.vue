@@ -111,7 +111,6 @@ export default {
     },
     watch: {
         isModalOpen: function (newValue) {
-            let vm = this;
             if (newValue) {
                 this.species_community_original_copy = Object.assign(
                     {},
