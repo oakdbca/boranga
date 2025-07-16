@@ -522,7 +522,7 @@ class Species(RevisionedMixin):
         :return: True if the application is in one of the editable status.
         """
         user_editable_state = [
-            "active",
+            Species.PROCESSING_STATUS_ACTIVE,
         ]
         return self.processing_status in user_editable_state
 
@@ -531,8 +531,10 @@ class Species(RevisionedMixin):
         """
         :return: True if the application is in one of the approved status.
         """
-        # return self.customer_status in self.CUSTOMER_EDITABLE_STATE
-        user_viewable_state = ["active", "historical"]
+        user_viewable_state = [
+            Species.PROCESSING_STATUS_ACTIVE,
+            Species.PROCESSING_STATUS_HISTORICAL,
+        ]
         return self.processing_status in user_viewable_state
 
     @property
@@ -540,7 +542,10 @@ class Species(RevisionedMixin):
         """
         :return: True if the application is in one of the processable status for Assessor(species) role.
         """
-        officer_view_state = ["draft", "historical"]
+        officer_view_state = [
+            Species.PROCESSING_STATUS_DRAFT,
+            Species.PROCESSING_STATUS_HISTORICAL,
+        ]
         if self.processing_status in officer_view_state:
             return False
         else:
@@ -548,7 +553,10 @@ class Species(RevisionedMixin):
 
     @property
     def is_deletable(self):
-        return self.processing_status == "draft" and not self.species_number
+        return (
+            self.processing_status == Species.PROCESSING_STATUS_DRAFT
+            and not self.species_number
+        )
 
     @property
     def is_flora_application(self):
@@ -580,12 +588,12 @@ class Species(RevisionedMixin):
     @property
     def status_without_assessor(self):
         status_without_assessor = [
-            "with_approver",
-            "approved",
-            "closed",
-            "declined",
-            "draft",
-            "with_referral",
+            Species.PROCESSING_STATUS_WITH_APPROVER,
+            Species.PROCESSING_STATUS_APPROVED,
+            Species.PROCESSING_STATUS_CLOSED,
+            Species.PROCESSING_STATUS_DECLINED,
+            Species.PROCESSING_STATUS_DRAFT,
+            Species.PROCESSING_STATUS_WITH_REFERRAL,
         ]
         if self.processing_status in status_without_assessor:
             return True
@@ -657,7 +665,10 @@ class Species(RevisionedMixin):
         return is_species_communities_approver(request) or request.user.is_superuser
 
     def has_user_edit_mode(self, request):
-        officer_view_state = ["draft", "historical"]
+        officer_view_state = [
+            Species.PROCESSING_STATUS_DRAFT,
+            Species.PROCESSING_STATUS_HISTORICAL,
+        ]
         if self.processing_status in officer_view_state:
             return False
 
@@ -1323,7 +1334,10 @@ class Community(RevisionedMixin):
         """
         :return: True if the application is in one of the approved status.
         """
-        user_viewable_state = ["active", "historical"]
+        user_viewable_state = [
+            Community.PROCESSING_STATUS_ACTIVE,
+            Community.PROCESSING_STATUS_HISTORICAL,
+        ]
         return self.processing_status in user_viewable_state
 
     @property
@@ -1331,7 +1345,10 @@ class Community(RevisionedMixin):
         """
         :return: True if the application is in one of the processable status for Assessor(species) role.
         """
-        officer_view_state = ["draft", "historical"]
+        officer_view_state = [
+            Community.PROCESSING_STATUS_DRAFT,
+            Community.PROCESSING_STATUS_HISTORICAL,
+        ]
         if self.processing_status in officer_view_state:
             return False
         else:
@@ -1365,7 +1382,10 @@ class Community(RevisionedMixin):
         An application can be deleted only if it is a draft and it hasn't been lodged yet
         :return:
         """
-        return self.processing_status == "draft" and not self.community_number
+        return (
+            self.processing_status == Community.PROCESSING_STATUS_DRAFT
+            and not self.community_number
+        )
 
     @property
     def is_community_application(self):
@@ -1379,12 +1399,12 @@ class Community(RevisionedMixin):
     @property
     def status_without_assessor(self):
         status_without_assessor = [
-            "with_approver",
-            "approved",
-            "closed",
-            "declined",
-            "draft",
-            "with_referral",
+            Community.PROCESSING_STATUS_WITH_APPROVER,
+            Community.PROCESSING_STATUS_APPROVED,
+            Community.PROCESSING_STATUS_CLOSED,
+            Community.PROCESSING_STATUS_DECLINED,
+            Community.PROCESSING_STATUS_DRAFT,
+            Community.PROCESSING_STATUS_WITH_REFERRAL,
         ]
         if self.processing_status in status_without_assessor:
             return True
@@ -1400,7 +1420,10 @@ class Community(RevisionedMixin):
         return is_species_communities_approver(request) or request.user.is_superuser
 
     def has_user_edit_mode(self, request):
-        officer_view_state = ["draft", "historical"]
+        officer_view_state = [
+            Community.PROCESSING_STATUS_DRAFT,
+            Community.PROCESSING_STATUS_HISTORICAL,
+        ]
         if self.processing_status in officer_view_state:
             return False
 
