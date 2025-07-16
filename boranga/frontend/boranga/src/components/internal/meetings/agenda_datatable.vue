@@ -265,7 +265,6 @@ export default {
     data: function () {
         return {
             isModalOpen: false,
-            new_species_list: [],
             group_types: [],
             group_name: null,
             species_agenda_cs_url:
