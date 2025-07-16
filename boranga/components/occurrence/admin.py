@@ -54,6 +54,8 @@ from boranga.components.occurrence.models import (
 )
 from boranga.components.spatial.utils import wkb_to_geojson
 
+from import_export.admin import ImportMixin
+
 
 class GeometryField(forms.GeometryField):
     widget = forms.OSMWidget(
@@ -372,6 +374,7 @@ class OccurrenceTenureVestingAdmin(admin.ModelAdmin):
 
 class AnimalBehaviourAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -384,6 +387,7 @@ class AnimalBehaviourAdmin(
 
 class AreaAssessmentAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -422,6 +426,7 @@ class DatumAdmin(
 
 class WildStatusAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -433,6 +438,7 @@ class WildStatusAdmin(
 
 class CoordinateSourceAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -444,6 +450,7 @@ class CoordinateSourceAdmin(
 
 class SoilTypeAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -455,6 +462,7 @@ class SoilTypeAdmin(
 
 class SoilConditionAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -466,6 +474,7 @@ class SoilConditionAdmin(
 
 class SoilColourAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -477,6 +486,7 @@ class SoilColourAdmin(
 
 class SiteTypeAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -488,6 +498,7 @@ class SiteTypeAdmin(
 
 class SecondarySignAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -499,6 +510,7 @@ class SecondarySignAdmin(
 
 class SampleTypeAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -514,6 +526,7 @@ class SampleTypeAdmin(
 
 class SampleDestinationAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -526,6 +539,7 @@ class SampleDestinationAdmin(
 
 class RockTypeAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -538,6 +552,7 @@ class RockTypeAdmin(
 
 class ReproductiveStateAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -550,6 +565,7 @@ class ReproductiveStateAdmin(
 
 class LandFormAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -562,6 +578,7 @@ class LandFormAdmin(
 
 class PrimaryDetectionMethodAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -574,6 +591,7 @@ class PrimaryDetectionMethodAdmin(
 
 class PlantCountMethodAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -586,6 +604,7 @@ class PlantCountMethodAdmin(
 
 class PlantCountAccuracyAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -598,6 +617,7 @@ class PlantCountAccuracyAdmin(
 
 class PlantConditionAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -610,6 +630,7 @@ class PlantConditionAdmin(
 
 class ObservationMethodAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -622,6 +643,7 @@ class ObservationMethodAdmin(
 
 class LocationAccuracyAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -634,6 +656,7 @@ class LocationAccuracyAdmin(
 
 class IntensityAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -646,6 +669,7 @@ class IntensityAdmin(
 
 class IdentificationCertaintyAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -658,6 +682,7 @@ class IdentificationCertaintyAdmin(
 
 class DrainageAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -670,6 +695,7 @@ class DrainageAdmin(
 
 class DeathReasonAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -682,6 +708,7 @@ class DeathReasonAdmin(
 
 class CountedSubjectAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -749,6 +776,7 @@ class ObservationTimeAdmin(
 
 class AnimalHealthAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -761,6 +789,7 @@ class AnimalHealthAdmin(
 
 class SpeciesListRelatesToAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
@@ -773,6 +802,7 @@ class SpeciesListRelatesToAdmin(
 
 class SpeciesRoleAdmin(
     CsvExportMixin,
+    ImportMixin,
     ArchivableModelAdminMixin,
     OrderedModelAdmin,
     DeleteProtectedModelAdmin,
