@@ -8,6 +8,8 @@ from boranga.admin import (
 from boranga.components.meetings import models
 from boranga.components.meetings.models import CommitteeMembers
 
+from import_export.admin import ImportMixin
+
 
 class MeetingRoomAdmin(
     CsvExportMixin, ArchivableModelAdminMixin, DeleteProtectedModelAdmin
@@ -28,7 +30,7 @@ class CommitteeMembersAdmin(
 
 
 class CommitteeAdmin(
-    CsvExportMixin, ArchivableModelAdminMixin, DeleteProtectedModelAdmin
+    ImportMixin, CsvExportMixin, ArchivableModelAdminMixin, DeleteProtectedModelAdmin
 ):
     list_display = ["name", "id"]
     inlines = [CommitteeMembersInline]

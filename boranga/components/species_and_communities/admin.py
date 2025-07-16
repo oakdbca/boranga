@@ -28,6 +28,7 @@ from boranga.components.species_and_communities.models import (
     ThreatCategory,
 )
 
+from import_export.admin import ImportMixin
 
 class DocumentCategoryAdmin(
     CsvExportMixin,
@@ -62,6 +63,7 @@ class DocumentSubCategoryAdmin(
 
 class ThreatCategoryAdmin(
     CsvExportMixin,
+    ImportMixin,
     OrderedModelAdmin,
     ArchivableModelAdminMixin,
     DeleteProtectedModelAdmin,
@@ -76,6 +78,7 @@ class ThreatCategoryAdmin(
 
 class ThreatAgentAdmin(
     CsvExportMixin,
+    ImportMixin,
     OrderedModelAdmin,
     ArchivableModelAdminMixin,
     DeleteProtectedModelAdmin,
@@ -90,6 +93,7 @@ class ThreatAgentAdmin(
 
 class PotentialThreatOnsetAdmin(
     CsvExportMixin,
+    ImportMixin,
     OrderedModelAdmin,
     ArchivableModelAdminMixin,
     DeleteProtectedModelAdmin,
@@ -104,6 +108,7 @@ class PotentialThreatOnsetAdmin(
 
 class PotentialImpactAdmin(
     CsvExportMixin,
+    ImportMixin,
     OrderedModelAdmin,
     ArchivableModelAdminMixin,
     DeleteProtectedModelAdmin,
@@ -115,6 +120,7 @@ class PotentialImpactAdmin(
 
 class CurrentImpactAdmin(
     CsvExportMixin,
+    ImportMixin,
     OrderedModelAdmin,
     ArchivableModelAdminMixin,
     DeleteProtectedModelAdmin,
