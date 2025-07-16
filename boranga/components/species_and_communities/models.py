@@ -831,55 +831,55 @@ class Species(RevisionedMixin):
         self.image_doc = document
         self.save()
 
+    @transaction.atomic
     def clone_documents(self, request):
-        with transaction.atomic():
-            # clone documents from original species to new species
-            original_species_documents = request.data["documents"]
-            for doc_id in original_species_documents:
-                new_species_doc = SpeciesDocument.objects.get(id=doc_id)
-                new_species_doc.species = self
-                new_species_doc.id = None
-                new_species_doc.document_number = ""
-                new_species_doc.save(version_user=request.user)
-                new_species_doc.species.log_user_action(
-                    SpeciesUserAction.ACTION_ADD_DOCUMENT.format(
-                        new_species_doc.document_number,
-                        new_species_doc.species.species_number,
-                    ),
-                    request,
-                )
-                request.user.log_user_action(
-                    SpeciesUserAction.ACTION_ADD_DOCUMENT.format(
-                        new_species_doc.document_number,
-                        new_species_doc.species.species_number,
-                    ),
-                    request,
-                )
+        # clone documents from original species to new species
+        original_species_documents = request.data["documents"]
+        for doc_id in original_species_documents:
+            new_species_doc = SpeciesDocument.objects.get(id=doc_id)
+            new_species_doc.species = self
+            new_species_doc.id = None
+            new_species_doc.document_number = ""
+            new_species_doc.save(version_user=request.user)
+            new_species_doc.species.log_user_action(
+                SpeciesUserAction.ACTION_ADD_DOCUMENT.format(
+                    new_species_doc.document_number,
+                    new_species_doc.species.species_number,
+                ),
+                request,
+            )
+            request.user.log_user_action(
+                SpeciesUserAction.ACTION_ADD_DOCUMENT.format(
+                    new_species_doc.document_number,
+                    new_species_doc.species.species_number,
+                ),
+                request,
+            )
 
+    @transaction.atomic
     def clone_threats(self, request):
-        with transaction.atomic():
-            # clone threats from original species to new species
-            original_species_threats = request.data["threats"]
-            for threat_id in original_species_threats:
-                new_species_threat = ConservationThreat.objects.get(id=threat_id)
-                new_species_threat.species = self
-                new_species_threat.id = None
-                new_species_threat.threat_number = ""
-                new_species_threat.save()
-                new_species_threat.species.log_user_action(
-                    SpeciesUserAction.ACTION_ADD_THREAT.format(
-                        new_species_threat.threat_number,
-                        new_species_threat.species.species_number,
-                    ),
-                    request,
-                )
-                request.user.log_user_action(
-                    SpeciesUserAction.ACTION_ADD_THREAT.format(
-                        new_species_threat.threat_number,
-                        new_species_threat.species.species_number,
-                    ),
-                    request,
-                )
+        # clone threats from original species to new species
+        original_species_threats = request.data["threats"]
+        for threat_id in original_species_threats:
+            new_species_threat = ConservationThreat.objects.get(id=threat_id)
+            new_species_threat.species = self
+            new_species_threat.id = None
+            new_species_threat.threat_number = ""
+            new_species_threat.save()
+            new_species_threat.species.log_user_action(
+                SpeciesUserAction.ACTION_ADD_THREAT.format(
+                    new_species_threat.threat_number,
+                    new_species_threat.species.species_number,
+                ),
+                request,
+            )
+            request.user.log_user_action(
+                SpeciesUserAction.ACTION_ADD_THREAT.format(
+                    new_species_threat.threat_number,
+                    new_species_threat.species.species_number,
+                ),
+                request,
+            )
 
     @transaction.atomic
     def reopen(self, request):
