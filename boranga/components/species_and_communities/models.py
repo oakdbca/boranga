@@ -503,17 +503,10 @@ class Species(RevisionedMixin):
     @property
     def applicant_type(self):
         if self.submitter:
-            # return self.APPLICANT_TYPE_SUBMITTER
             return "SUB"
 
     @property
     def applicant_field(self):
-        # if self.org_applicant:
-        #     return 'org_applicant'
-        # elif self.proxy_applicant:
-        #     return 'proxy_applicant'
-        # else:
-        #     return 'submitter'
         return "submitter"
 
     @property
@@ -1112,7 +1105,7 @@ class SpeciesUserAction(UserAction):
 
     ACTION_RENAME_SPECIES_TO = "Species {} renamed to new species {}"
     ACTION_RENAME_SPECIES_FROM = "Species {} created by renaming species {}"
-    ACTION_RENAME_SPECIES_BY_ACTIVATING = (
+    ACTION_RENAME_SPECIES_BY_REACTIVATING = (
         "Species {} reactivated by renaming species {}"
     )
 
@@ -1296,8 +1289,6 @@ class Community(RevisionedMixin):
             return "{} {}".format(
                 email_user.first_name,
                 email_user.last_name,
-                # commented below to resolve the Uppercase context error for community submit
-                # email_user.addresses.all().first()
             )
 
     @property
@@ -1314,17 +1305,10 @@ class Community(RevisionedMixin):
     @property
     def applicant_type(self):
         if self.submitter:
-            # return self.APPLICANT_TYPE_SUBMITTER
             return "SUB"
 
     @property
     def applicant_field(self):
-        # if self.org_applicant:
-        #     return 'org_applicant'
-        # elif self.proxy_applicant:
-        #     return 'proxy_applicant'
-        # else:
-        #     return 'submitter'
         return "submitter"
 
     @property
@@ -1339,7 +1323,6 @@ class Community(RevisionedMixin):
         """
         :return: True if the application is in one of the approved status.
         """
-        # return self.customer_status in self.CUSTOMER_EDITABLE_STATE
         user_viewable_state = ["active", "historical"]
         return self.processing_status in user_viewable_state
 
@@ -1382,7 +1365,6 @@ class Community(RevisionedMixin):
         An application can be deleted only if it is a draft and it hasn't been lodged yet
         :return:
         """
-        # return self.customer_status == 'draft' and not self.community_number
         return self.processing_status == "draft" and not self.community_number
 
     @property
@@ -2157,9 +2139,6 @@ class SpeciesDocument(Document):
     def add_documents(self, request, *args, **kwargs):
         # save the files
         data = json.loads(request.data.get("data"))
-        # if not data.get('update'):
-        #     documents_qs = self.filter(input_name='species_doc', visible=True)
-        #     documents_qs.delete()
         for idx in range(data["num_files"]):
             self.check_file(request.data.get("file-" + str(idx)))
             _file = request.data.get("file-" + str(idx))
@@ -2229,9 +2208,6 @@ class CommunityDocument(Document):
     def add_documents(self, request, *args, **kwargs):
         # save the files
         data = json.loads(request.data.get("data"))
-        # if not data.get('update'):
-        #     documents_qs = self.filter(input_name='species_doc', visible=True)
-        #     documents_qs.delete()
         for idx in range(data["num_files"]):
             self.check_file(request.data.get("file-" + str(idx)))
             _file = request.data.get("file-" + str(idx))
@@ -2689,7 +2665,6 @@ class CommunityConservationAttributes(BaseModel):
         related_name="community_conservation_attributes",
     )
 
-    # habitat_growth_form = models.CharField(max_length=200,null=True, blank=True)
     pollinator_information = models.CharField(max_length=1000, null=True, blank=True)
     minimum_fire_interval_from = models.IntegerField(null=True, blank=True)
     minimum_fire_interval_to = models.IntegerField(null=True, blank=True)
@@ -2800,7 +2775,6 @@ class SystemEmail(BaseModel):
 
 # Species Document History
 reversion.register(SpeciesDocument)
-# reversion.register(DocumentCategory)
 
 # Species History
 reversion.register(
@@ -2813,7 +2787,6 @@ reversion.register(
     ],
 )
 reversion.register(Taxonomy, follow=["taxon_previous_queryset", "vernaculars"])
-# reversion.register(CrossReference, follow=["old_taxonomy"])
 reversion.register(TaxonPreviousName)
 reversion.register(SpeciesDistribution)
 reversion.register(SpeciesConservationAttributes)
