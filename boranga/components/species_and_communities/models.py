@@ -1356,8 +1356,8 @@ class Community(RevisionedMixin):
 
     def can_user_save(self, request):
         user_closed_state = [
-            Species.PROCESSING_STATUS_HISTORICAL,
-            Species.PROCESSING_STATUS_DISCARDED,
+            Community.PROCESSING_STATUS_HISTORICAL,
+            Community.PROCESSING_STATUS_DISCARDED,
         ]
 
         if self.processing_status in user_closed_state:
@@ -1366,7 +1366,7 @@ class Community(RevisionedMixin):
         return is_species_communities_approver(request) or request.user.is_superuser
 
     def can_user_submit(self, request):
-        user_submissable_state = [Species.PROCESSING_STATUS_DRAFT]
+        user_submissable_state = [Community.PROCESSING_STATUS_DRAFT]
 
         if not self.can_user_save(request):
             return False
