@@ -12,6 +12,7 @@ from django.core.files.storage import FileSystemStorage
 from django.db import models, transaction
 from django.db.models import Sum
 from django.db.models.functions import Cast
+from django.http import HttpRequest
 from django.utils.functional import cached_property
 from ledger_api_client.managed_models import SystemGroup
 from multiselectfield import MultiSelectField
@@ -832,10 +833,10 @@ class Species(RevisionedMixin):
         self.save()
 
     @transaction.atomic
-    def clone_documents(self, request):
-        # clone documents from original species to new species
-        original_species_documents = request.data["documents"]
-        for doc_id in original_species_documents:
+    def clone_documents(
+        self: "Species", clone_from: "Species", request: HttpRequest
+    ) -> None:
+        for doc_id in clone_from.species_documents.values_list("id", flat=True):
             new_species_doc = SpeciesDocument.objects.get(id=doc_id)
             new_species_doc.species = self
             new_species_doc.id = None
@@ -857,9 +858,11 @@ class Species(RevisionedMixin):
             )
 
     @transaction.atomic
-    def clone_threats(self, request):
+    def clone_threats(self, clone_from: "Species", request: HttpRequest) -> None:
         # clone threats from original species to new species
-        original_species_threats = request.data["threats"]
+        original_species_threats = clone_from.species_threats.values_list(
+            "id", flat=True
+        )
         for threat_id in original_species_threats:
             new_species_threat = ConservationThreat.objects.get(id=threat_id)
             new_species_threat.species = self
@@ -1120,8 +1123,12 @@ class SpeciesUserAction(UserAction):
         "Species {} reactivated by renaming species {}"
     )
 
-    ACTION_SPLIT_SPECIES_TO = "Species {} split into new species {}"
-    ACTION_SPLIT_SPECIES_FROM = "Species {} created from a split of species {}"
+    ACTION_SPLIT_SPECIES_TO_NEW = "Species {} split into new species {}"
+    ACTION_SPLIT_SPECIES_TO_EXISTING = "Species {} split into existing species {}"
+    ACTION_SPLIT_SPECIES_FROM_NEW = "Species {} created from a split of species {}"
+    ACTION_SPLIT_SPECIES_FROM_EXISTING = (
+        "Species {} reactivated by a split of species {}"
+    )
 
     ACTION_COMBINE_SPECIES_TO = "Species {} combined into new species {}"
     ACTION_COMBINE_SPECIES_FROM = "Species {} created from a combination of species {}"

@@ -1,6 +1,21 @@
 <template lang="html">
     <div id="species">
         <FormSection :form-collapse="false" label="Taxonomy" :Index="taxonBody">
+            <div v-if="showRetainOriginalSpeciesCheckbox" class="row mb-3">
+                <div for="" class="col-sm-3">Retain Original Species?</div>
+                <div class="col-sm-8">
+                    <div class="form-check">
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            name="retain-original-species"
+                            id="retain-original-species"
+                            v-model="retainOriginalSpecies"
+                            @change="toggleRetainOriginalSpecies"
+                        />
+                    </div>
+                </div>
+            </div>
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
                     >Scientific Name:</label
@@ -1717,36 +1732,41 @@ export default {
             type: Object,
             required: true,
         },
+        splitSpeciesListContainsOriginalTaxonomy: {
+            type: Boolean,
+            required: true,
+        },
     },
     data: function () {
         let vm = this;
         return {
             scientific_name_lookup:
-                'scientific_name_lookup' + vm.species_community.id,
+                'scientific_name_lookup' + vm.species_community.index,
             select_scientific_name:
-                'select_scientific_name' + vm.species_community.id,
+                'select_scientific_name' + vm.species_community.index,
             select_flowering_period:
-                'select_flowering_period' + vm.species_community.id,
+                'select_flowering_period' + vm.species_community.index,
             select_flowering_period_readonly:
-                'select_flowering_period_readonly' + vm.species_community.id,
+                'select_flowering_period_readonly' + vm.species_community.index,
             select_fruiting_period:
-                'select_fruiting_period' + vm.species_community.id,
+                'select_fruiting_period' + vm.species_community.index,
             select_fruiting_period_readonly:
-                'select_fruiting_period_readonly' + vm.species_community.id,
+                'select_fruiting_period_readonly' + vm.species_community.index,
             select_breeding_period:
-                'select_breeding_period' + vm.species_community.id,
+                'select_breeding_period' + vm.species_community.index,
             select_breeding_period_readonly:
-                'select_breeding_period_readonly' + vm.species_community.id,
-            select_regions: 'select_regions' + vm.species_community.id,
+                'select_breeding_period_readonly' + vm.species_community.index,
+            select_regions: 'select_regions' + vm.species_community.index,
             select_regions_read_only:
-                'select_regions_read_only' + vm.species_community.id,
+                'select_regions_read_only' + vm.species_community.index,
             select_districts_read_only:
-                'select_districts_read_only' + vm.species_community.id,
-            select_districts: 'select_districts' + vm.species_community.id,
+                'select_districts_read_only' + vm.species_community.index,
+            select_districts: 'select_districts' + vm.species_community.index,
             taxonBody: 'taxonBody' + uuid(),
             distributionBody: 'distributionBody' + uuid(),
             conservationBody: 'conservationBody' + uuid(),
             generalBody: 'generalBody' + uuid(),
+            retainOriginalSpecies: false,
             //---to show fields related to Fauna
             isFauna: vm.species_community.group_type === 'fauna' ? true : false,
             //----list of values dictionary
@@ -1816,6 +1836,13 @@ export default {
             } else {
                 return this.species_community.readonly;
             }
+        },
+        showRetainOriginalSpeciesCheckbox: function () {
+            return (
+                !this.splitSpeciesListContainsOriginalTaxonomy ||
+                this.species_community.taxonomy_id ===
+                    this.species_original.taxonomy_id
+            );
         },
     },
     watch: {
@@ -2050,6 +2077,19 @@ export default {
                 });
             }
         },
+        resetTaxonomyDetails: function () {
+            let vm = this;
+            vm.species_community.taxonomy_id = '';
+            vm.species_display = '';
+            vm.common_name = '';
+            vm.taxon_name_id = '';
+            vm.taxon_previous_name = '';
+            vm.phylogenetic_group = '';
+            vm.family = '';
+            vm.genus = '';
+            vm.name_authority = '';
+            vm.name_comments = '';
+        },
         initialiseScientificNameLookup: function () {
             let vm = this;
             $(vm.$refs[vm.scientific_name_lookup])
@@ -2068,14 +2108,52 @@ export default {
                                 type: 'public',
                                 group_type_id:
                                     vm.species_community.group_type_id,
-                                species_profile: true, // This parameter makes sure the query only returns records that don't yet have a species profile
+                                species_profile: false,
                             };
                             return query;
                         },
                     },
                 })
+                .on('select2:selecting', function (e) {
+                    let data = e.params.args.data.id;
+                    if (
+                        vm.splitSpeciesListContainsOriginalTaxonomy &&
+                        vm.species_original.taxonomy_id === data
+                    ) {
+                        e.preventDefault();
+                        swal.fire({
+                            title: 'Original Taxonomy Already Selected',
+                            text: 'There is already a split species with the same taxonomy as the original species.',
+                            icon: 'info',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            },
+                            didClose: () => {
+                                vm.resetTaxonomyDetails();
+                                vm.$nextTick(() => {
+                                    $(
+                                        vm.$refs[vm.scientific_name_lookup]
+                                    ).select2('open');
+                                });
+                            },
+                        });
+                        return false;
+                    }
+                })
                 .on('select2:select', function (e) {
                     let data = e.params.data.id;
+                    if (
+                        vm.retainOriginalSpecies &&
+                        data != vm.species_original.taxonomy_id
+                    ) {
+                        vm.retainOriginalSpecies = false;
+                    }
+                    if (
+                        !vm.retainOriginalSpecies &&
+                        data == vm.species_original.taxonomy_id
+                    ) {
+                        vm.retainOriginalSpecies = true;
+                    }
                     vm.species_community.taxonomy_id = data;
                     vm.species_community.taxonomy_details = e.params.data;
                     vm.species_display = e.params.data.scientific_name;
@@ -2089,16 +2167,16 @@ export default {
                     vm.name_comments = e.params.data.name_comments;
                 })
                 .on('select2:unselect', function () {
+                    vm.resetTaxonomyDetails();
                     vm.species_community.taxonomy_id = '';
-                    vm.species_display = '';
-                    vm.common_name = '';
-                    vm.taxon_name_id = '';
-                    vm.taxon_previous_name = '';
-                    vm.phylogenetic_group = '';
-                    vm.family = '';
-                    vm.genus = '';
-                    vm.name_authority = '';
-                    vm.name_comments = '';
+                    vm.species_community.taxonomy_details = null;
+                    vm.retainOriginalSpecies = false;
+                })
+                .on('select2:clear', function () {
+                    vm.resetTaxonomyDetails();
+                    vm.species_community.taxonomy_id = '';
+                    vm.species_community.taxonomy_details = null;
+                    vm.retainOriginalSpecies = false;
                 })
                 .on('select2:open', function () {
                     const searchField = $(
@@ -2540,7 +2618,6 @@ export default {
                 }
             }
         },
-
         initialiseRegionSelect: function () {
             let vm = this;
             $(vm.$refs.regions_select)
@@ -2574,7 +2651,6 @@ export default {
                 dropdownParent: $('#' + vm.select_regions_read_only),
                 placeholder: 'Select Region',
             });
-            //vm.chainedSelectReadonlyDistricts(vm.species_original.regions,"fetch")
         },
         initialiseDistrictSelect: function () {
             let vm = this;
@@ -2601,6 +2677,53 @@ export default {
                 multiple: true,
                 placeholder: 'Select District',
             });
+        },
+        toggleRetainOriginalSpecies: function (event) {
+            this.retainOriginalSpecies = event.target.checked;
+            if (this.retainOriginalSpecies) {
+                // 1. Add the option if it doesn't exist
+                if (
+                    $(this.$refs[this.scientific_name_lookup]).find(
+                        "option[value='" +
+                            this.species_original.taxonomy_details.id +
+                            "']"
+                    ).length === 0
+                ) {
+                    $(this.$refs[this.scientific_name_lookup]).append(
+                        new Option(
+                            this.species_original.taxonomy_details.text,
+                            this.species_original.taxonomy_details.id,
+                            true,
+                            true
+                        )
+                    );
+                }
+
+                // Manually call the logic from select2:select
+                const data = this.species_original.taxonomy_details;
+                this.species_community.taxonomy_details = data;
+                this.species_display = data.scientific_name;
+                this.common_name = data.common_name;
+                this.taxon_name_id = data.taxon_name_id;
+                this.taxon_previous_name = data.taxon_previous_name;
+                this.phylogenetic_group = data.phylogenetic_group;
+                this.family = data.family_name;
+                this.genus = data.genera_name;
+                this.name_authority = data.name_authority;
+                this.name_comments = data.name_comments;
+
+                this.species_community.taxonomy_id =
+                    this.species_original.taxonomy_details.id;
+                $(this.$refs[this.scientific_name_lookup])
+                    .val(this.species_original.taxonomy_details.id)
+                    .trigger('change');
+            } else {
+                $(this.$refs[this.scientific_name_lookup])
+                    .val('')
+                    .trigger('change');
+                $(this.$refs[this.scientific_name_lookup]).select2('open');
+                this.resetTaxonomyDetails();
+            }
         },
     },
 };

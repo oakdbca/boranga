@@ -1427,49 +1427,187 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
     @detail_route(methods=["post"], detail=True)
     @renderer_classes((JSONRenderer,))
     @transaction.atomic
-    def split_new_species_submit(self, request, *args, **kwargs):
+    def split_species(self, request, *args, **kwargs):
+        # This is the original instance that is being split
         instance = self.get_object()
-        species_form_submit(instance, request)
 
-        # add parent id to new species instance
-        parent_species_data = request.data.get("parent_species")
-        parent_species = Species.objects.get(id=parent_species_data.get("id"))
-        instance.parent_species.add(parent_species)
+        if not instance.can_user_split:
+            raise serializers.ValidationError(
+                "Cannot split species record in current state"
+            )
 
-        # copy/clone the original species document and create new for new split species
-        instance.clone_documents(request)
-        instance.clone_threats(request)
-        instance.save(version_user=request.user)
+        split_species_list = request.data.get("split_species_list", None)
+        if not split_species_list:
+            raise serializers.ValidationError(
+                "No split species list provided in request data"
+            )
 
-        # Log the action
-        parent_species.log_user_action(
-            SpeciesUserAction.ACTION_SPLIT_SPECIES_TO.format(
-                parent_species.species_number,
-                instance.species_number,
-            ),
-            request,
-        )
-        request.user.log_user_action(
-            SpeciesUserAction.ACTION_SPLIT_SPECIES_TO.format(
-                parent_species.species_number,
-                instance.species_number,
-            ),
-            request,
-        )
-        instance.log_user_action(
-            SpeciesUserAction.ACTION_SPLIT_SPECIES_FROM.format(
-                instance.species_number,
-                parent_species.species_number,
-            ),
-            request,
-        )
-        request.user.log_user_action(
-            SpeciesUserAction.ACTION_SPLIT_SPECIES_FROM.format(
-                instance.species_number,
-                parent_species.species_number,
-            ),
-            request,
-        )
+        split_species_contains_original = False
+
+        # Process each new species in the request data
+        for index, split_species in enumerate(split_species_list):
+            # Check if a boranga profile exists for this taxonomy
+            taxonomy_id = split_species.get("taxonomy_id")
+            if instance.taxonomy_id == taxonomy_id:
+                split_species_contains_original = True
+                continue
+
+            if not taxonomy_id:
+                raise serializers.ValidationError(
+                    f"Split Species {index+1} is missing a Taxonomy ID"
+                )
+            species_queryset = Species.objects.filter(taxonomy_id=taxonomy_id)
+            species_exists = species_queryset.exists()
+            if species_exists:
+                # If it exists, we will use the existing species instance
+                split_species_instance = species_queryset.first()
+                split_species_instance.processing_status = (
+                    Species.PROCESSING_STATUS_ACTIVE
+                )
+                split_species_instance.save(version_user=request.user)
+            else:
+                split_species_instance = Species(
+                    taxonomy_id=taxonomy_id,
+                    group_type_id=instance.group_type_id,
+                    processing_status=Species.PROCESSING_STATUS_ACTIVE,
+                )
+                split_species_instance.save(version_user=request.user)
+                split_species_instance.clone_documents(instance, request)
+                split_species_instance.clone_threats(instance, request)
+                species_form_submit(split_species_instance, request, split=True)
+
+            split_species_instance.parent_species.add(instance)
+
+            SPLIT_TO_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_TO_NEW
+            SPLIT_FROM_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_FROM_NEW
+            if species_exists:
+                SPLIT_TO_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_TO_EXISTING
+                SPLIT_FROM_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_FROM_EXISTING
+
+            # Log the action
+            instance.log_user_action(
+                SPLIT_TO_ACTION.format(
+                    instance.species_number,
+                    split_species_instance.species_number,
+                ),
+                request,
+            )
+            request.user.log_user_action(
+                SPLIT_TO_ACTION.format(
+                    instance.species_number,
+                    split_species_instance.species_number,
+                ),
+                request,
+            )
+            instance.log_user_action(
+                SPLIT_FROM_ACTION.format(
+                    split_species_instance.species_number,
+                    instance.species_number,
+                ),
+                request,
+            )
+            request.user.log_user_action(
+                SPLIT_FROM_ACTION.format(
+                    split_species_instance.species_number,
+                    instance.species_number,
+                ),
+                request,
+            )
+
+        # Process the OCC assignments
+        original_taxonomy_occurrence_count = Occurrence.objects.filter(
+            species__taxonomy_id=instance.taxonomy_id,
+        ).count()
+        if original_taxonomy_occurrence_count:
+            occurrence_assignments_dict = request.data.get(
+                "occurrence_assignments", None
+            )
+            if not occurrence_assignments_dict:
+                raise serializers.ValidationError(
+                    "No occurrence assignments provided in request data"
+                )
+            # Check that occurrence_assignments_dict is a valid python dict
+            if not isinstance(occurrence_assignments_dict, dict):
+                raise serializers.ValidationError(
+                    "Occurrence assignments must be in a javascript object/python dictionary format"
+                )
+            if original_taxonomy_occurrence_count != len(occurrence_assignments_dict):
+                raise serializers.ValidationError(
+                    "Invalid number of occurrence assignments."
+                )
+
+            for occurrence_id, taxonomy_id in occurrence_assignments_dict.items():
+                # Process each assignment
+                if not occurrence_id:
+                    raise serializers.ValidationError(
+                        "Occurrence ID is missing in the assignment"
+                    )
+                if not isinstance(occurrence_id, int):
+                    raise serializers.ValidationError(
+                        f"Occurrence ID {occurrence_id} must be an integer"
+                    )
+                occurrence = Occurrence.objects.filter(id=occurrence_id).first()
+                if not occurrence:
+                    raise serializers.ValidationError(
+                        f"Occurrence with ID {occurrence_id} does not exist"
+                    )
+                # Get the taxonomy id from the assignment
+                if not taxonomy_id:
+                    raise serializers.ValidationError(
+                        f"Taxonomy ID is missing for occurrence {occurrence_id}"
+                    )
+                if not isinstance(taxonomy_id, int):
+                    raise serializers.ValidationError(
+                        f"Taxonomy ID for occurrence {occurrence_id} must be an integer"
+                    )
+                if taxonomy_id == instance.taxonomy_id:
+                    # No need to reassign the occurrence to the same species
+                    continue
+
+                taxonomy = Taxonomy.objects.filter(id=taxonomy_id).first()
+                if not taxonomy:
+                    raise serializers.ValidationError(
+                        f"Taxonomy with ID {taxonomy_id} does not exist"
+                    )
+                species = Species.objects.filter(taxonomy_id=taxonomy_id).first()
+                if not species:
+                    raise serializers.ValidationError(
+                        f"Species with taxonomy ID {taxonomy_id} does not exist"
+                    )
+
+                # Assign the occurrence to the new species
+                occurrence.species = species
+                # When the occurrence is saved, the custom save method will
+                # reassign all OCRs to also point to the new species as well
+                occurrence.save(version_user=request.user)
+
+        if not split_species_contains_original:
+            # Set the original species from the split to historical and its conservation status to 'closed'
+            instance.processing_status = Species.PROCESSING_STATUS_HISTORICAL
+
+            ret1 = send_species_split_email_notification(request, instance)
+
+            if not (settings.WORKING_FROM_HOME and settings.DEBUG) and not ret1:
+                raise serializers.ValidationError(
+                    "Email could not be sent. Please try again later"
+                )
+
+            instance.save(version_user=request.user)
+
+            # Log action
+            instance.log_user_action(
+                SpeciesUserAction.ACTION_MAKE_HISTORICAL.format(
+                    instance.species_number
+                ),
+                request,
+            )
+
+            request.user.log_user_action(
+                SpeciesUserAction.ACTION_MAKE_HISTORICAL.format(
+                    instance.species_number
+                ),
+                request,
+            )
 
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
@@ -1605,8 +1743,8 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
 
         # Change all occurrence records to point to the new species
         occurrences = Occurrence.objects.filter(species=instance)
-        # Using .save here instead of .update so custom code runs that reassigns all
-        # OCRs to also
+        # Using a loop with .save here instead of a single .update so custom code runs that reassigns all
+        # OCRs to also point to the new species
         for occurrence in occurrences:
             occurrence.species = rename_instance
             occurrence.save(version_user=request.user)

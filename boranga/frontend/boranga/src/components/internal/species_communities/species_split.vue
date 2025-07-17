@@ -11,7 +11,7 @@
             <div class="container-fluid">
                 <div class="row">
                     <form class="form-horizontal" name="splitSpeciesForm">
-                        <alert v-if="showError" type="danger"
+                        <alert v-if="errorString" type="danger"
                             ><strong>{{ errorString }}</strong></alert
                         >
                         <div>
@@ -22,10 +22,10 @@
                                     class="nav nav-pills"
                                     role="tablist"
                                 >
-                                    <li class="nav-item">
+                                    <li class="nav-item me-2">
                                         <a
                                             id="pills-original-tab"
-                                            class="nav-link"
+                                            class="nav-link small py-2"
                                             data-bs-toggle="pill"
                                             :href="'#' + originalBody"
                                             role="tab"
@@ -43,9 +43,9 @@
                                     <li
                                         v-for="(
                                             species, index
-                                        ) in new_species_list"
+                                        ) in split_species_list"
                                         :key="'li' + species.id"
-                                        class="nav-item"
+                                        class="nav-item d-flex align-items-center"
                                     >
                                         <a
                                             :id="
@@ -53,7 +53,7 @@
                                                 index +
                                                 '-tab'
                                             "
-                                            class="nav-link"
+                                            class="nav-link split-species-tab small py-2"
                                             data-bs-toggle="pill"
                                             :href="'#species-body-' + index"
                                             role="tab"
@@ -62,29 +62,48 @@
                                             "
                                             aria-selected="false"
                                         >
-                                            {{ species.species_number }}
-                                            <span :id="index" class="ms-2"
+                                            Split {{ index + 1 }}
+                                            <span
+                                                v-if="index > 1"
+                                                :id="index"
+                                                class="ms-2"
+                                                @click.stop.prevent="
+                                                    removeSpeciesTab(index)
+                                                "
                                                 ><i
                                                     class="bi bi-trash3-fill"
                                                 ></i
                                             ></span>
                                         </a>
                                     </li>
-                                    <li class="nav-item">
+                                    <li class="nav-item me-2">
                                         <a
                                             id="btnAdd"
                                             href="#"
                                             role="button"
-                                            class="nav-link"
-                                            @click.prevent="addSpecies"
+                                            class="nav-link small py-2"
+                                            @click.prevent="addSpeciesTab"
                                             ><i class="bi bi-window-plus"></i>
-                                            Add Another Species</a
+                                            Add</a
+                                        >
+                                    </li>
+                                    <li class="nav-item me-2">
+                                        <a
+                                            id="assign-occurrences"
+                                            class="nav-link small py-2"
+                                            data-bs-toggle="pill"
+                                            href="#assign-occurrences-tab-pane"
+                                            role="tab"
+                                            aria-controls="assign-occurrences-tab-pane"
+                                            aria-selected="false"
+                                            ><i class="bi bi-list-check"></i>
+                                            Assign OCCs</a
                                         >
                                     </li>
                                     <li class="nav-item">
                                         <a
                                             id="finalise-split"
-                                            class="nav-link"
+                                            class="nav-link small py-2"
                                             data-bs-toggle="pill"
                                             href="#finalise-split-tab-pane"
                                             role="tab"
@@ -128,7 +147,7 @@
                                     <div
                                         v-for="(
                                             species, index
-                                        ) in new_species_list"
+                                        ) in split_species_list"
                                         :id="'species-body-' + index"
                                         :key="'div' + species.id"
                                         class="tab-pane fade"
@@ -147,15 +166,224 @@
                                             :species_original="
                                                 species_community_original
                                             "
+                                            :split-species-list-contains-original-taxonomy="
+                                                splitSpeciesListContainsOriginalTaxonomy
+                                            "
                                             :is_internal="true"
                                         >
                                         </SpeciesSplitForm>
                                     </div>
                                     <div
+                                        id="assign-occurrences-tab-pane"
+                                        class="tab-pane fade"
+                                        role="tabpanel"
+                                        aria-labelledby="assign-occurrences"
+                                    >
+                                        <div
+                                            v-if="
+                                                species_community_original &&
+                                                uniqueScientificNames
+                                            "
+                                        >
+                                            <div
+                                                v-if="occurrences.length > 0"
+                                                class="border rounded p-1"
+                                                :class="
+                                                    allOccurrencesAssigned
+                                                        ? 'border-3 border-success'
+                                                        : ''
+                                                "
+                                            >
+                                                <table
+                                                    class="table table-sm"
+                                                    style="
+                                                        table-layout: fixed;
+                                                        width: 100%;
+                                                    "
+                                                >
+                                                    <colgroup>
+                                                        <col
+                                                            style="width: 25%"
+                                                        />
+                                                        <col
+                                                            v-for="i in split_species_taxonomy_ids.length"
+                                                            :key="i"
+                                                            :style="{
+                                                                width:
+                                                                    abbrColPercent +
+                                                                    '%',
+                                                            }"
+                                                        />
+                                                    </colgroup>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>
+                                                                Occs for
+                                                                {{
+                                                                    species_community_original
+                                                                        .taxonomy_details
+                                                                        .scientific_name
+                                                                }}
+                                                            </th>
+                                                            <th
+                                                                v-for="name in uniqueScientificNames"
+                                                                :key="
+                                                                    name.scientificName
+                                                                "
+                                                                :title="
+                                                                    name.full
+                                                                "
+                                                                class="text-center"
+                                                                :style="{
+                                                                    width:
+                                                                        abbrColPercent +
+                                                                        '%',
+                                                                }"
+                                                            >
+                                                                {{ name.abbr }}
+                                                            </th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr
+                                                            class="border-bottom border-dark"
+                                                        >
+                                                            <td
+                                                                class="text-muted"
+                                                            >
+                                                                Select All
+                                                            </td>
+                                                            <td
+                                                                v-for="(
+                                                                    taxonomy_id,
+                                                                    i
+                                                                ) in split_species_taxonomy_ids"
+                                                                :key="i"
+                                                                class="text-center"
+                                                                :style="{
+                                                                    width:
+                                                                        abbrColPercent +
+                                                                        '%',
+                                                                }"
+                                                            >
+                                                                <div
+                                                                    class="form-check form-check-inline"
+                                                                >
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        class="form-check-input mt-2"
+                                                                        @change="
+                                                                            toggleSelectAll(
+                                                                                $event,
+                                                                                taxonomy_id
+                                                                            )
+                                                                        "
+                                                                        :checked="
+                                                                            selectAllCheckedState[
+                                                                                uniqueScientificNames[
+                                                                                    i
+                                                                                ]
+                                                                                    .slug
+                                                                            ]
+                                                                        "
+                                                                    />
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        <tr
+                                                            v-for="occurrence in occurrences"
+                                                            :key="occurrence.id"
+                                                            :id="
+                                                                'occurrence-' +
+                                                                occurrence.id
+                                                            "
+                                                            class="occurrence-assignment-row"
+                                                        >
+                                                            <td
+                                                                class="abbr-nowrap small"
+                                                                :title="
+                                                                    occurrence.occurrence_name
+                                                                "
+                                                            >
+                                                                {{
+                                                                    occurrence.occurrence_number
+                                                                }}
+                                                                -
+                                                                {{
+                                                                    occurrence.occurrence_name
+                                                                }}
+                                                            </td>
+                                                            <td
+                                                                v-for="(
+                                                                    taxonomyId,
+                                                                    index
+                                                                ) in split_species_taxonomy_ids"
+                                                                :key="index"
+                                                                class="text-center"
+                                                                :style="{
+                                                                    width:
+                                                                        abbrColPercent +
+                                                                        '%',
+                                                                }"
+                                                            >
+                                                                <div
+                                                                    class="form-check form-check-inline"
+                                                                >
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        :name="
+                                                                            'occurrence:' +
+                                                                            occurrence.id
+                                                                        "
+                                                                        :checked="
+                                                                            assignmentCheckedState[
+                                                                                occurrence
+                                                                                    .id
+                                                                            ] ===
+                                                                            taxonomyId
+                                                                        "
+                                                                        @change="
+                                                                            onOccurrenceCheckboxChange(
+                                                                                occurrence.id,
+                                                                                taxonomyId,
+                                                                                $event
+                                                                            )
+                                                                        "
+                                                                        class="form-check-input mt-2"
+                                                                        :data-slug="
+                                                                            uniqueScientificNames[
+                                                                                index
+                                                                            ]
+                                                                                .slug
+                                                                        "
+                                                                    />
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <template v-else>
+                                                <div class="alert alert-info">
+                                                    The original species ({{
+                                                        species_community_original.species_number
+                                                    }}
+                                                    -
+                                                    {{
+                                                        species_community_original
+                                                            .taxonomy_details
+                                                            .scientific_name
+                                                    }}) has no occurrences to
+                                                    assign.
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <div
                                         v-if="
                                             species_community_original &&
-                                            new_species_list &&
-                                            new_species_list.length > 0
+                                            split_species_list &&
+                                            split_species_list.length > 0
                                         "
                                         id="finalise-split-tab-pane"
                                         class="tab-pane"
@@ -169,8 +397,7 @@
                                         </p>
 
                                         <p>
-                                            You are about to split the following
-                                            species:
+                                            You are about to split the species:
                                         </p>
 
                                         <div class="border-bottom mb-3 pb-3">
@@ -195,34 +422,27 @@
                                             >
                                         </div>
 
-                                        <p>Into the new species:</p>
+                                        <p>Into the following species:</p>
 
                                         <div class="border-bottom mb-3 pb-3">
                                             <ul class="mb-3">
                                                 <li
-                                                    v-for="species in new_species_list"
+                                                    v-for="species in split_species_list"
                                                     :key="species.id"
                                                     class="text-secondary mb-3"
                                                 >
                                                     <span
+                                                        v-if="
+                                                            species &&
+                                                            species.taxonomy_details
+                                                        "
                                                         class="badge bg-light text-primary text-capitalize border p-2 fs-6 me-2"
-                                                        >{{
-                                                            species.species_number
+                                                    >
+                                                        {{
+                                                            species
+                                                                .taxonomy_details
+                                                                .scientific_name
                                                         }}
-                                                        <template
-                                                            v-if="
-                                                                species.taxonomy_details &&
-                                                                species
-                                                                    .taxonomy_details
-                                                                    .scientific_name
-                                                            "
-                                                            >-
-                                                            {{
-                                                                species
-                                                                    .taxonomy_details
-                                                                    .scientific_name
-                                                            }}</template
-                                                        >
                                                     </span>
                                                 </li>
                                             </ul>
@@ -303,21 +523,46 @@ export default {
             species2Body: 'species2Body' + uuid(),
             species_community_original: null,
             submitSpeciesSplit: false,
+            assignmentCheckedState: {},
+            occurrences: [],
             isModalOpen: false,
             finalise_split_loading: false,
-            new_species_list: [],
+            split_species_list: [],
             form: null,
-            errors: false,
             errorString: '',
         };
+    },
+    watch: {
+        isModalOpen: function (newVal) {
+            if (newVal) {
+                this.$nextTick(() => {
+                    // Show the first tab by default
+                    let originalTab = bootstrap.Tab.getOrCreateInstance(
+                        document.querySelector('#pills-original-tab')
+                    );
+                    originalTab.show();
+                    // Create two new species tabs if the original species is provided
+                    this.addSpeciesTab();
+                    this.addSpeciesTab();
+                    // Select the first split species tab
+                    this.$nextTick(() => {
+                        // Show the first split species tab
+                        let splitSpeciesTabs =
+                            document.querySelectorAll('.split-species-tab');
+                        if (splitSpeciesTabs.length > 0) {
+                            let firstTabEl = splitSpeciesTabs[0];
+                            let firstTab =
+                                bootstrap.Tab.getOrCreateInstance(firstTabEl);
+                            firstTab.show();
+                        }
+                    });
+                });
+            }
+        },
     },
     computed: {
         csrf_token: function () {
             return helpers.getCookie('csrftoken');
-        },
-        showError: function () {
-            var vm = this;
-            return vm.errors;
         },
         title: function () {
             return this.species_community_original != null
@@ -329,30 +574,87 @@ export default {
             var vm = this;
             return `/api/species/${vm.species_community_original.id}/species_split_save.json`;
         },
+        split_species_taxonomy_ids: function () {
+            return this.split_species_list
+                .filter(
+                    (species) =>
+                        species != null &&
+                        species.taxonomy_id &&
+                        species.taxonomy_details != null
+                )
+                .map((species) => species.taxonomy_id);
+        },
+        splitSpeciesListContainsOriginalTaxonomy: function () {
+            return (
+                this.split_species_list.length > 0 &&
+                this.split_species_list.some(
+                    (species) =>
+                        species.taxonomy_id ===
+                        this.species_community_original.taxonomy_id
+                )
+            );
+        },
+        uniqueScientificNames: function () {
+            return this.abbreviateUnique(
+                this.split_species_list
+                    .filter((species) => species.taxonomy_details != null)
+                    .map((species) => species.taxonomy_details.scientific_name)
+                    .filter(
+                        (scientificName) =>
+                            scientificName !== '' && scientificName != null
+                    ),
+                7
+            );
+        },
+        abbrColPercent() {
+            // 1 for the first column, rest for split species
+            const n = this.split_species_list.length;
+            if (n === 0) return 0;
+            // For example, reserve 25% for the first column, rest for split species
+            const abbrCols = n;
+            const abbrPercent = Math.floor(75 / abbrCols); // 75% divided among split species
+            return abbrPercent;
+        },
+        selectAllCheckedState() {
+            const state = {};
+            this.uniqueScientificNames.forEach((name, i) => {
+                const taxonomy_id = this.split_species_taxonomy_ids[i];
+                state[name.slug] =
+                    this.occurrences.length > 0 &&
+                    this.occurrences.every(
+                        (occurrence) =>
+                            this.assignmentCheckedState[occurrence.id] ===
+                            taxonomy_id
+                    );
+            });
+            return state;
+        },
+        allOccurrencesAssigned: function () {
+            return (
+                this.occurrences.length > 0 &&
+                this.assignmentCheckedState &&
+                Object.values(this.assignmentCheckedState).length > 0 &&
+                Object.values(this.assignmentCheckedState).every(
+                    (value) =>
+                        value !== null &&
+                        value !== '' &&
+                        value !== undefined &&
+                        value !== false
+                )
+            );
+        },
     },
     mounted: function () {
         let vm = this;
         vm.form = document.forms.splitSpeciesForm;
-        this.$nextTick(() => {
-            vm.eventListeners();
-        });
-    },
-    updated: function () {
-        if (!this.finalise_split_loading) {
-            //  to show the the added species active i.e the last Tab
-            var lastTabEl = document.querySelector(
-                '#split-pills-tab li:nth-last-child(3) a'
-            );
-            var lastTab = new bootstrap.Tab(lastTabEl);
-            lastTab.show();
-        }
+        vm.beforeShowFinaliseTab();
+        vm.beforeShowAssignOccurrencesTab();
     },
     methods: {
-        tabClicked: function () {},
         ok: function () {
             let vm = this;
             if ($(vm.form).valid()) {
-                vm.sendData();
+                vm.processSplitSpecies();
             }
         },
         cancel: function () {
@@ -375,19 +677,9 @@ export default {
             });
         },
         close: function () {
-            let vm = this;
-            if (vm.new_species_list.length > 0) {
-                for (
-                    var index = 0;
-                    index < vm.new_species_list.length;
-                    index++
-                ) {
-                    vm.removeSpecies(vm.new_species_list[index].id);
-                }
-            }
-            vm.new_species_list = [];
             this.isModalOpen = false;
-            this.errors = false;
+            this.split_species_list = [];
+            this.errorString = '';
         },
         save_before_submit: async function (new_species) {
             let vm = this;
@@ -440,48 +732,44 @@ export default {
         can_submit: function () {
             let vm = this;
             let blank_fields = [];
-            for (let index = 0; index < vm.new_species_list.length; index++) {
+            for (let index = 0; index < vm.split_species_list.length; index++) {
                 if (
-                    vm.new_species_list[index].taxonomy_id == null ||
-                    vm.new_species_list[index].taxonomy_id == ''
+                    vm.split_species_list[index].taxonomy_id == null ||
+                    vm.split_species_list[index].taxonomy_id == ''
                 ) {
                     blank_fields.push(
-                        ' Species ' +
-                            vm.new_species_list[index].species_number +
+                        ' Split Species ' +
+                            (index + 1) +
                             ' Scientific Name is missing'
                     );
                 }
                 if (
-                    vm.new_species_list[index].distribution.distribution ==
+                    vm.split_species_list[index].distribution.distribution ==
                         null ||
-                    vm.new_species_list[index].distribution.distribution == ''
+                    vm.split_species_list[index].distribution.distribution == ''
                 ) {
                     blank_fields.push(
-                        ' Species ' +
-                            vm.new_species_list[index].species_number +
+                        ' Split Species ' +
+                            (index + 1) +
                             ' Distribution is missing'
                     );
                 }
                 if (
-                    vm.new_species_list[index].regions == null ||
-                    vm.new_species_list[index].regions == '' ||
-                    vm.new_species_list[index].regions.length == 0
+                    vm.split_species_list[index].regions == null ||
+                    vm.split_species_list[index].regions == '' ||
+                    vm.split_species_list[index].regions.length == 0
                 ) {
                     blank_fields.push(
-                        ' Species ' +
-                            vm.new_species_list[index].species_number +
-                            ' Region is missing'
+                        ' Split Species ' + (index + 1) + ' Region is missing'
                     );
                 }
                 if (
-                    vm.new_species_list[index].districts == null ||
-                    vm.new_species_list[index].districts == '' ||
-                    vm.new_species_list[index].districts.length == 0
+                    vm.split_species_list[index].districts == null ||
+                    vm.split_species_list[index].districts == '' ||
+                    vm.split_species_list[index].districts.length == 0
                 ) {
                     blank_fields.push(
-                        ' Species ' +
-                            vm.new_species_list[index].species_number +
-                            ' District is missing'
+                        ' Split Species ' + (index + 1) + ' District is missing'
                     );
                 }
             }
@@ -491,7 +779,7 @@ export default {
                 return blank_fields;
             }
         },
-        sendData: async function () {
+        processSplitSpecies: async function () {
             let vm = this;
 
             var missing_data = vm.can_submit();
@@ -506,7 +794,10 @@ export default {
                 });
                 return false;
             }
-
+            let payload = {
+                split_species_list: vm.split_species_list,
+                occurrence_assignments: vm.assignmentCheckedState,
+            };
             vm.submitSpeciesSplit = true;
             swal.fire({
                 title: 'Split Species',
@@ -519,145 +810,15 @@ export default {
                     cancelButton: 'btn btn-secondary',
                 },
                 reverseButtons: true,
-            }).then(
-                async (swalresult) => {
+            })
+                .then(async (swalresult) => {
                     if (swalresult.isConfirmed) {
                         vm.finalise_split_loading = true;
-                        for (
-                            let index = 0;
-                            index < vm.new_species_list.length;
-                            index++
-                        ) {
-                            let new_species = vm.new_species_list[index];
-                            //-- save new species before submit
-                            let result =
-                                await vm.save_before_submit(new_species);
-                            if (result) {
-                                // add the parent species to the new species object
-                                new_species.parent_species =
-                                    vm.species_community_original;
-                                let payload = new Object();
-                                Object.assign(payload, new_species);
-                                let submit_url = helpers.add_endpoint_json(
-                                    api_endpoints.species,
-                                    new_species.id + '/split_new_species_submit'
-                                );
-                                fetch(submit_url, {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify(payload),
-                                }).then(
-                                    async (response) => {
-                                        vm.new_species = await response.json();
-                                        //-- to change status of original species only after all new split species are submitted
-                                        if (
-                                            index ==
-                                            vm.new_species_list.length - 1
-                                        ) {
-                                            vm.submit_original_species();
-                                        }
-                                    },
-                                    (err) => {
-                                        swal.fire({
-                                            title: 'Submit Error',
-                                            text: helpers.apiVueResourceError(
-                                                err
-                                            ),
-                                            icon: 'error',
-                                            customClass: {
-                                                confirmButton:
-                                                    'btn btn-primary',
-                                            },
-                                        });
-                                        vm.saveError = true;
-                                    }
-                                );
-                            }
-                        }
-                    } else {
-                        vm.submitSpeciesSplit = false;
-                    }
-                },
-                () => {
-                    vm.submitSpeciesSplit = false;
-                }
-            );
-        },
-        submit_original_species: function () {
-            let vm = this;
-            let payload = new Object();
-            Object.assign(payload, vm.species_community_original);
-            let submit_url = helpers.add_endpoint_json(
-                api_endpoints.species,
-                vm.species_community_original.id + '/change_status_historical'
-            );
-            fetch(submit_url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
-            }).then(
-                async (response) => {
-                    vm.species_community_original = await response.json();
-                    vm.$router.push({
-                        name: 'internal-species-communities-dash',
-                    });
-                },
-                (err) => {
-                    swal.fire({
-                        title: 'Submit Error',
-                        text: helpers.apiVueResourceError(err),
-                        icon: 'error',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
-                    });
-                }
-            );
-        },
-        removeSpecies: function (species_id) {
-            try {
-                // In this case we are allowing a http DELETE call to remove the species
-                fetch(api_endpoints.remove_species_proposal(species_id), {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
-            } catch (err) {
-                console.log(err);
-                if (this.is_internal) {
-                    return err;
-                }
-            }
-        },
-        addSpecies: function () {
-            let vm = this;
-            swal.fire({
-                title: 'Add Another Species',
-                text: 'Are you sure you want to add another species to the split?',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Add Another Species',
-                reverseButtons: true,
-                customClass: {
-                    confirmButton: 'btn btn-primary',
-                    cancelButton: 'btn btn-secondary',
-                },
-            }).then(async (swalresult) => {
-                if (swalresult.isConfirmed) {
-                    let newSpeciesId = null;
-                    try {
-                        const createUrl = api_endpoints.species + '/';
-                        let payload = new Object();
-                        payload.group_type_id =
-                            vm.species_community_original.group_type_id;
-                        payload.parent_species_id =
-                            vm.species_community_original.id;
-                        fetch(createUrl, {
+                        let submit_url = helpers.add_endpoint_json(
+                            api_endpoints.species,
+                            vm.species_community_original.id + '/split_species'
+                        );
+                        fetch(submit_url, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -666,59 +827,319 @@ export default {
                         }).then(
                             async (response) => {
                                 const data = await response.json();
-                                newSpeciesId = data.id;
-                                fetch(
-                                    `/api/species/${newSpeciesId}/internal_species.json`
-                                ).then(
-                                    async (response) => {
-                                        const data = await response.json();
-                                        let species_obj = data.species_obj;
-                                        //---documents array added to store the select document ids in from the child component
-                                        species_obj.documents = [];
-                                        //---threats array added to store the select threat ids in from the child component
-                                        species_obj.threats = [];
-                                        vm.new_species_list.push(species_obj); //--temp species_obj
-                                    },
-                                    (err) => {
-                                        console.log(err);
-                                    }
-                                );
+                                if (!response.ok) {
+                                    swal.fire({
+                                        title: 'Error',
+                                        text: JSON.stringify(data),
+                                        icon: 'error',
+                                        customClass: {
+                                            confirmButton: 'btn btn-primary',
+                                        },
+                                    });
+                                    return;
+                                }
+                                vm.$router.push({
+                                    name: 'internal-species-communities-dash',
+                                });
                             },
-                            (error) => {
-                                console.log(error);
+                            (err) => {
+                                swal.fire({
+                                    title: 'Submit Error',
+                                    text: helpers.apiVueResourceError(err),
+                                    icon: 'error',
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary',
+                                    },
+                                });
+                                vm.saveError = true;
                             }
                         );
-                    } catch (err) {
-                        console.log(err);
-                        if (this.is_internal) {
-                            return err;
+                    }
+                })
+                .finally(() => {
+                    vm.finalise_split_loading = false;
+                    vm.submitSpeciesSplit = false;
+                });
+        },
+        addSpeciesTab: function () {
+            let vm = this;
+            let newSpecies = JSON.parse(
+                JSON.stringify(vm.species_community_original)
+            );
+            newSpecies.id = null;
+            newSpecies.species_number = '';
+            newSpecies.taxonomy_id = null;
+            newSpecies.taxonomy_details = {};
+            newSpecies.threats = [];
+            newSpecies.documents = [];
+            newSpecies.regions = [];
+            newSpecies.index = vm.split_species_list.length;
+            vm.split_species_list.push(newSpecies);
+            vm.$nextTick(() => {
+                // Show the last remaining split species tab
+                let splitSpeciesTabs =
+                    document.querySelectorAll('.split-species-tab');
+                let lastTabEl = splitSpeciesTabs[splitSpeciesTabs.length - 1];
+                let lastTab = bootstrap.Tab.getOrCreateInstance(lastTabEl);
+                lastTab.show();
+            });
+        },
+        removeSpeciesTab: function (index) {
+            let vm = this;
+            swal.fire({
+                title: 'Remove Species',
+                text: `Are you sure you want to remove species ${index + 1} from the split?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Remove Species',
+                reverseButtons: true,
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-secondary',
+                },
+            }).then(async (swalresult) => {
+                if (swalresult.isConfirmed) {
+                    vm.split_species_list.splice(index, 1);
+                    vm.$nextTick(() => {
+                        // Check if there are any split species tabs left
+                        if (vm.split_species_list.length === 0) {
+                            // Show the original species tab if no split species left
+                            let originalTabEl = document.querySelector(
+                                '#pills-original-tab'
+                            );
+                            let originalTab =
+                                bootstrap.Tab.getOrCreateInstance(
+                                    originalTabEl
+                                );
+                            originalTab.show();
+                        } else {
+                            // Show the last remaining split species tab
+                            let splitSpeciesTabs =
+                                document.querySelectorAll('.split-species-tab');
+                            let lastTabEl =
+                                splitSpeciesTabs[splitSpeciesTabs.length - 1];
+                            let lastTab =
+                                bootstrap.Tab.getOrCreateInstance(lastTabEl);
+                            lastTab.show();
                         }
+                    });
+                }
+            });
+        },
+        validateAtLeastTwoSplitSpecies: function (event, action) {
+            if (this.split_species_list.length < 2) {
+                event.preventDefault(); // Prevent the tab from being shown
+                swal.fire({
+                    title: 'Add at Least Two Split Species',
+                    text: `You must have at least two split species before you can ${action}.`,
+                    icon: 'info',
+                    customClass: {
+                        confirmButton: 'btn btn-primary',
+                    },
+                });
+                return false;
+            }
+            return true;
+        },
+        validateAllSplitSpeciesHaveTaxonomy: function (event, action) {
+            for (const species of this.split_species_list) {
+                if (!species.taxonomy_id || species.taxonomy_id === '') {
+                    event.preventDefault();
+                    swal.fire({
+                        title: 'Missing Scientific Name',
+                        text: `Each Split Species ${species.species_number} must have a scientific name before ${action}`,
+                        icon: 'info',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        },
+                    });
+                    return false;
+                }
+            }
+            return true;
+        },
+        beforeShowFinaliseTab: function () {
+            let vm = this;
+            // Add a bootstrap event before the finalise tab is shown
+            let tabEl = document.querySelector('#finalise-split');
+            tabEl.addEventListener('show.bs.tab', function (event) {
+                if (
+                    !vm.validateAtLeastTwoSplitSpecies(
+                        event,
+                        'finalising the split'
+                    )
+                ) {
+                    return;
+                }
+                if (
+                    !vm.validateAllSplitSpeciesHaveTaxonomy(
+                        event,
+                        'finalising the split'
+                    )
+                ) {
+                    return;
+                }
+                if (!vm.allOccurrencesAssigned) {
+                    event.preventDefault(); // Prevent the tab from being shown
+                    swal.fire({
+                        title: 'Unassigned Occurrences',
+                        text: `You have unassigned occurrences. Please assign all occurrences before finalising the split.`,
+                        icon: 'warning',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        },
+                        didClose: function () {
+                            let assignTabEl = document.querySelector(
+                                '#assign-occurrences'
+                            );
+                            let tab = bootstrap.Tab.getInstance(assignTabEl);
+                            tab.show();
+                        },
+                    });
+                }
+            });
+        },
+        beforeShowAssignOccurrencesTab: function () {
+            let vm = this;
+            // Add a bootstrap event before the assign occurrences tab is shown
+            let tabEl = document.querySelector('#assign-occurrences');
+            tabEl.addEventListener('show.bs.tab', async function (event) {
+                if (
+                    !vm.validateAtLeastTwoSplitSpecies(
+                        event,
+                        'assigning occurrences'
+                    )
+                ) {
+                    console.log('validateAtLeastTwoSplitSpecies failed');
+                    return false;
+                }
+                if (
+                    !vm.validateAllSplitSpeciesHaveTaxonomy(
+                        event,
+                        'assigning occurrences'
+                    )
+                ) {
+                    console.log('validateAllSplitSpeciesHaveTaxonomy failed');
+                    return false;
+                }
+                vm.occurrences = vm.fetchOccurrencesOfOriginalSpecies(
+                    vm.split_species_taxonomy_ids
+                );
+            });
+        },
+        abbreviateUnique: function (scientificNames, minChars = 1) {
+            function abbreviate(name, restLens = []) {
+                const words = name.trim().split(/\s+/);
+                if (words.length === 1) {
+                    // Single word: abbreviate to minChars or more as needed
+                    return words[0].slice(0, Math.max(minChars, 1));
+                }
+                // First word in full, rest abbreviated
+                let abbr = [words[0]];
+                for (let i = 1; i < words.length; i++) {
+                    const len = restLens[i - 1] || 1;
+                    abbr.push(words[i].slice(0, len));
+                }
+                return abbr.join(' ');
+            }
+
+            // Start with 1 letter for each word after the first
+            let restLensArr = scientificNames.map((name) => {
+                const words = name.trim().split(/\s+/);
+                return Array(words.length - 1).fill(1);
+            });
+            let abbrs = scientificNames.map((name, i) =>
+                abbreviate(name, restLensArr[i])
+            );
+
+            let unique = false;
+            while (!unique) {
+                unique = true;
+                let seen = {};
+                for (let i = 0; i < abbrs.length; i++) {
+                    if (seen[abbrs[i]] !== undefined) {
+                        unique = false;
+                        // For all with this abbreviation, increase the last abbreviated word by 1
+                        for (let j = 0; j < abbrs.length; j++) {
+                            if (abbrs[j] === abbrs[i]) {
+                                let restLens = restLensArr[j];
+                                // Increase the last word's abbreviation length
+                                if (restLens.length > 0) {
+                                    restLens[restLens.length - 1]++;
+                                }
+                                abbrs[j] = abbreviate(
+                                    scientificNames[j],
+                                    restLens
+                                );
+                            }
+                        }
+                    } else {
+                        seen[abbrs[i]] = i;
+                    }
+                }
+            }
+            // Return array of objects with both full and abbreviated names
+            return scientificNames.map((full, idx) => ({
+                full,
+                abbr: abbrs[idx],
+                slug: full.toLowerCase().replace(/\s+/g, '-').replace('.', ''),
+            }));
+        },
+        fetchOccurrencesOfOriginalSpecies: async function () {
+            const prevAssignments = { ...this.assignmentCheckedState };
+            fetch(api_endpoints.occurrences_by_species_id, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    species_id: this.species_community_original.id,
+                }),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    this.occurrences = data;
+                    // Only update assignmentCheckedState for new/removed occurrences
+                    const newAssignments = {};
+                    this.occurrences.forEach((occurrence) => {
+                        // Preserve previous assignment if exists, else set to false
+                        newAssignments[occurrence.id] =
+                            prevAssignments[occurrence.id] !== undefined
+                                ? prevAssignments[occurrence.id]
+                                : false;
+                    });
+                    this.assignmentCheckedState = newAssignments;
+                })
+                .catch((error) => {
+                    console.error('Error fetching occurrences:', error);
+                    this.errorString = 'Error fetching occurrences';
+                });
+        },
+        toggleSelectAll: function (event, taxonomyId) {
+            const shouldCheck = event.target.checked;
+            this.occurrences.forEach((occurrence) => {
+                if (shouldCheck) {
+                    // Assign all to this species
+                    this.assignmentCheckedState[occurrence.id] = taxonomyId;
+                } else {
+                    // Unassign all occurrences currently assigned to this species
+                    if (
+                        this.assignmentCheckedState[occurrence.id] ===
+                        taxonomyId
+                    ) {
+                        this.assignmentCheckedState[occurrence.id] = false;
                     }
                 }
             });
         },
-        eventListeners: function () {
-            let vm = this;
-            $('#splitSpecies .nav-pills').on('click', 'span', function () {
-                let species_obj = vm.new_species_list[$(this).attr('id')];
-                swal.fire({
-                    title: 'Remove Species',
-                    text: `Are you sure you want to remove species ${species_obj.species_number} from the split?`,
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Remove Species',
-                    reverseButtons: true,
-                    customClass: {
-                        confirmButton: 'btn btn-primary',
-                        cancelButton: 'btn btn-secondary',
-                    },
-                }).then(async (swalresult) => {
-                    if (swalresult.isConfirmed) {
-                        vm.removeSpecies(species_obj.id);
-                        vm.new_species_list.splice($(this).attr('id'), 1);
-                    }
-                });
-            });
+        onOccurrenceCheckboxChange(occurrenceId, taxonomyId, event) {
+            if (event.target.checked) {
+                // Only one per row: assign this taxonomyId
+                this.assignmentCheckedState[occurrenceId] = taxonomyId;
+            } else {
+                // Unchecked: clear assignment
+                this.assignmentCheckedState[occurrenceId] = false;
+            }
         },
     },
 };
@@ -728,5 +1149,12 @@ export default {
 .bi.bi-trash3-fill:hover {
     cursor: pointer;
     color: red;
+}
+
+.abbr-nowrap {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
 }
 </style>

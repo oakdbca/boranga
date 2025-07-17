@@ -144,7 +144,7 @@
                                     occurrence_report_obj.common_names.length >
                                         1
                                 "
-                                >(s)</template
+                                >s</template
                             ><template
                                 v-else-if="!occurrence_report_obj.species_id"
                             >

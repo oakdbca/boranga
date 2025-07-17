@@ -4483,3 +4483,13 @@ class SpeciesRoleSerializer(BaseModelSerializer):
         model = SpeciesRole
         fields = ("id", "name")
         read_only_fields = ("id",)
+
+
+class AssignOccurrenceSerializer(BaseModelSerializer):
+    class Meta:
+        model = Occurrence
+        fields = (
+            "id",
+            "occurrence_number",
+            "occurrence_name",
+        )

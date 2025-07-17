@@ -499,9 +499,7 @@ class SpeciesConservationAttributesSerializer(BaseModelSerializer):
             for rs in SpeciesConservationAttributes.PERIOD_CHOICES:
                 PERIOD_CHOICES.append([rs[0], rs[1]])
             self.fields["flowering_period", "fruiting_period", "breeding_period"] = (
-                serializers.MultipleChoiceField(
-                    choices=PERIOD_CHOICES, allow_blank=False
-                )
+                ListMultipleChoiceField(choices=PERIOD_CHOICES, allow_blank=False)
             )
 
 

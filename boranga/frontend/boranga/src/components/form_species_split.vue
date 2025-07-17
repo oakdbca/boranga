@@ -62,6 +62,9 @@
                         :is_internal="is_internal"
                         :species_community="species_community"
                         :species_original="species_original"
+                        :split-species-list-contains-original-taxonomy="
+                            splitSpeciesListContainsOriginalTaxonomy
+                        "
                     >
                     </SpeciesProfile>
                 </div>
@@ -130,6 +133,10 @@ export default {
         is_internal: {
             type: Boolean,
             default: false,
+        },
+        splitSpeciesListContainsOriginalTaxonomy: {
+            type: Boolean,
+            required: true,
         },
     },
     data: function () {
