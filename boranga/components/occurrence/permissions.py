@@ -74,7 +74,7 @@ class OccurrenceReportPermission(BasePermission):
     def is_authorised_to_update(self, request, obj):
         return (
             (
-                obj.can_user_edit
+                obj.can_user_edit(request)
                 and (request.user.id == obj.submitter or request.user.is_superuser)
             )
             or (obj.has_assessor_mode(request))
@@ -227,7 +227,7 @@ class ExternalOccurrenceReportPermission(BasePermission):
             return True
 
         if obj.submitter == request.user.id and (
-            obj.can_user_edit
+            obj.can_user_edit(request)
             or (hasattr(view, "action") and view.action == "process_shapefile_document")
         ):
             return (
@@ -298,7 +298,7 @@ class OccurrenceReportObjectPermission(BasePermission):
         user = request.user
         return (
             (
-                occurrence_report.can_user_edit
+                occurrence_report.can_user_edit(request)
                 and (
                     user.id == occurrence_report.submitter or request.user.is_superuser
                 )
@@ -364,7 +364,7 @@ class ExternalOccurrenceReportObjectPermission(BasePermission):
                     occurrence_report.submitter == request.user.id
                     or request.user.is_superuser
                 )
-                and occurrence_report.can_user_edit
+                and occurrence_report.can_user_edit(request)
             ):
                 return False
 
@@ -390,7 +390,7 @@ class ExternalOccurrenceReportObjectPermission(BasePermission):
         if (
             occurrence_report
             and occurrence_report.submitter == request.user.id
-            and occurrence_report.can_user_edit
+            and occurrence_report.can_user_edit(request)
         ):
             return (
                 is_contributor(request)
