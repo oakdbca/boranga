@@ -1748,6 +1748,9 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
 
         if species_queryset.exists():
             rename_instance = species_queryset.first()
+            logger.debug(
+                f"Renaming species {instance.species_number} to existing species {rename_instance.species_number}"
+            )
             if rename_instance.processing_status not in [
                 Species.PROCESSING_STATUS_DRAFT,
                 Species.PROCESSING_STATUS_HISTORICAL,
@@ -1778,7 +1781,7 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         # Make sure the action log is accurate in terms of describing what has happened
         RENAME_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_FROM
         if species_queryset.exists():
-            SpeciesUserAction.ACTION_RENAME_SPECIES_BY_REACTIVATING
+            RENAME_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_BY_REACTIVATING
 
         # Log action
         rename_instance.log_user_action(
