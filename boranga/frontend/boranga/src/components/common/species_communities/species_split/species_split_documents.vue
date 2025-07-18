@@ -13,12 +13,15 @@
                         :id="'doc_select_all' + species_community.id"
                         name="documentSelect"
                         value="selectAll"
+                        checked
                         @click="selectDocumentOption($event)"
                     />
                     <label class="form-check-label"
                         >Copy all documents to Species
-                        {{ species_community.species_number }}</label
-                    >
+                        <template v-if="species_community.taxonomy_details">{{
+                            species_community.taxonomy_details.scientific_name
+                        }}</template>
+                    </label>
                 </div>
                 <div class="col-sm-12 form-check form-check-inline mb-3">
                     <input
@@ -251,9 +254,19 @@ export default {
                             }
 
                             if (
-                                vm.species_community.documents.includes(full.id)
+                                vm.species_community.documents.includes(
+                                    full.id
+                                ) ||
+                                vm.$parent.document_selection === 'selectAll'
                             ) {
-                                return `<input class='form-check-input' type="checkbox" id="document_chkbox-${vm.species_community.id}-${full.id}" data-add-document="${full.id}"  checked>`;
+                                let disabledHtml = '';
+                                if (
+                                    vm.$parent.document_selection ===
+                                    'selectAll'
+                                ) {
+                                    disabledHtml = 'disabled';
+                                }
+                                return `<input class='form-check-input' type="checkbox" id="document_chkbox-${vm.species_community.id}-${full.id}" data-add-document="${full.id}"  checked ${disabledHtml} ${disabledHtml}>`;
                             } else {
                                 return `<input class='form-check-input' type="checkbox" id="document_chkbox-${vm.species_community.id}-${full.id}" data-add-document="${full.id}">`;
                             }
@@ -274,7 +287,6 @@ export default {
             },
         };
     },
-    computed: {},
     mounted: function () {
         let vm = this;
         this.$nextTick(() => {
@@ -298,15 +310,20 @@ export default {
             //--fetch the value of selected radio btn
             let selected_option = e.target.value;
             //----set the selected value to the parent variable so as to get the data when tab is reloaded/refreshed
+            if (vm.$parent.document_selection === selected_option) {
+                return;
+            }
             vm.$parent.document_selection = selected_option;
 
             if (selected_option == 'selectAll') {
                 //-- copy all original species documents to new species documents array
                 vm.species_community.documents = vm.original_species_documents;
+                vm.species_community.copy_all_documents = true;
                 this.$refs.documents_datatable.vmDataTable.ajax.reload();
             } else if (selected_option == 'individual') {
                 //----empty the array to later select individual
-                vm.species_community.documents = [];
+                vm.species_community.documents = vm.original_species_documents;
+                vm.species_community.copy_all_documents = false;
                 this.$refs.documents_datatable.vmDataTable.ajax.reload();
             }
         },
@@ -325,8 +342,12 @@ export default {
                     } else {
                         let doc_arr = vm.species_community.documents;
                         //---remove document id from array (for this arr.splice is used)
+                        id = parseInt(id);
                         var index = doc_arr.indexOf(id);
-                        vm.species_community.documents.splice(index, 1);
+                        if (index !== -1) {
+                            //---if the id is found in the array then remove it
+                            vm.species_community.documents.splice(index, 1);
+                        }
                     }
                 }
             );
@@ -347,22 +368,3 @@ export default {
     },
 };
 </script>
-
-<style lang="css" scoped>
-/*ul, li {
-        zoom:1;
-        display: inline;
-    }*/
-fieldset.scheduler-border {
-    border: 1px groove #ddd !important;
-    padding: 0 1.4em 1.4em 1.4em !important;
-    margin: 0 0 1.5em 0 !important;
-    -webkit-box-shadow: 0px 0px 0px 0px #000;
-    box-shadow: 0px 0px 0px 0px #000;
-}
-legend.scheduler-border {
-    width: inherit; /* Or auto */
-    padding: 0 10px; /* To give a bit of padding on the left and right */
-    border-bottom: none;
-}
-</style>

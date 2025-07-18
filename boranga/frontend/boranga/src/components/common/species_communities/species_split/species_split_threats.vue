@@ -9,11 +9,14 @@
                         type="radio"
                         name="threatSelect"
                         value="selectAll"
+                        checked
                         @click="selectThreatOption($event)"
                     />
                     <label class="form-check-label"
                         >Copy all threats to Species
-                        {{ species_community.species_number }}</label
+                        <template v-if="species_community.taxonomy_details">{{
+                            species_community.taxonomy_details.scientific_name
+                        }}</template></label
                     >
                 </div>
                 <div class="col-sm-12 form-check form-check-inline mb-3">
@@ -244,9 +247,18 @@ export default {
                             }
 
                             if (
-                                vm.species_community.threats.includes(full.id)
+                                vm.species_community.threats.includes(
+                                    full.id
+                                ) ||
+                                vm.$parent.threat_selection === 'selectAll'
                             ) {
-                                return `<input class='form-check-input' type="checkbox" id="threat_chkbox-${vm.species_community.id}-${full.id}" data-add-threat="${full.id}"  checked>`;
+                                let disabledHtml = '';
+                                if (
+                                    vm.$parent.threat_selection === 'selectAll'
+                                ) {
+                                    disabledHtml = 'disabled';
+                                }
+                                return `<input class='form-check-input' type="checkbox" id="threat_chkbox-${vm.species_community.id}-${full.id}" data-add-threat="${full.id}" ${disabledHtml} checked>`;
                             } else {
                                 return `<input class='form-check-input' type="checkbox" id="threat_chkbox-${vm.species_community.id}-${full.id}" data-add-threat="${full.id}">`;
                             }
@@ -267,7 +279,6 @@ export default {
             },
         };
     },
-    computed: {},
     mounted: function () {
         let vm = this;
         this.$nextTick(() => {
@@ -293,15 +304,19 @@ export default {
             //--fetch the value of selected radio btn
             let selected_option = e.target.value;
             //----set the selected value to the parent variable so as to get the data when tab is reloaded/refreshed
+            if (vm.$parent.threat_selection === selected_option) {
+                return;
+            }
             vm.$parent.threat_selection = selected_option;
 
             if (selected_option == 'selectAll') {
                 //-- copy all original species threats to new species threats array
                 vm.species_community.threats = vm.original_species_threats;
+                vm.species_community.copy_all_threats = true;
                 this.$refs.threats_datatable.vmDataTable.ajax.reload();
             } else if (selected_option == 'individual') {
                 //----empty the array to later select individual
-                vm.species_community.threats = [];
+                vm.species_community.copy_all_threats = false;
                 this.$refs.threats_datatable.vmDataTable.ajax.reload();
             }
         },
@@ -321,8 +336,12 @@ export default {
                     } else {
                         let threat_arr = vm.species_community.threats;
                         //---remove document id from array (for this arr.splice is used)
+                        id = parseInt(id);
                         var index = threat_arr.indexOf(id);
-                        vm.species_community.threats.splice(index, 1);
+                        if (index !== -1) {
+                            //---if the id is found in the array then remove it
+                            vm.species_community.threats.splice(index, 1);
+                        }
                     }
                 }
             );
@@ -343,22 +362,3 @@ export default {
     },
 };
 </script>
-
-<style lang="css" scoped>
-/*ul, li {
-        zoom:1;
-        display: inline;
-    }*/
-fieldset.scheduler-border {
-    border: 1px groove #ddd !important;
-    padding: 0 1.4em 1.4em 1.4em !important;
-    margin: 0 0 1.5em 0 !important;
-    -webkit-box-shadow: 0px 0px 0px 0px #000;
-    box-shadow: 0px 0px 0px 0px #000;
-}
-legend.scheduler-border {
-    width: inherit; /* Or auto */
-    padding: 0 10px; /* To give a bit of padding on the left and right */
-    border-bottom: none;
-}
-</style>

@@ -152,8 +152,8 @@ export default {
             relatedItemBody: 'relatedItemBody' + uuid(),
             values: null,
             reloadcount: 0,
-            document_selection: null,
-            threat_selection: null,
+            document_selection: 'selectAll',
+            threat_selection: 'selectAll',
         };
     },
     computed: {
