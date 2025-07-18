@@ -278,6 +278,12 @@ class OccurrenceReportObjectPermission(BasePermission):
             if view.basename == "ocr_amendment_request":
                 if not occurrence_report.has_assessor_mode(request):
                     return False
+            elif view.basename == "occurrencereportdocument":
+                # Allow for referees to upload documents
+                if not is_occurrence_report_referee(
+                    request, occurrence_report=occurrence_report
+                ):
+                    return False
             elif not self.is_authorised_to_update(request, occurrence_report):
                 return False
 
@@ -305,6 +311,7 @@ class OccurrenceReportObjectPermission(BasePermission):
             )
             or (occurrence_report.has_assessor_mode(request))
             or (occurrence_report.has_unlocked_mode(request))
+            or (occurrence_report.has_referral_mode(request))
         )
 
     def has_object_permission(self, request, view, obj):
