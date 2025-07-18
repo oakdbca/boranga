@@ -210,6 +210,7 @@ class GetScientificName(views.APIView):
         # identifies the request as for a species profile dependent record - we only include those taxonomies in use
         has_species = request.GET.get("has_species", False)
         active_only = request.GET.get("active_only", False)
+        exclude_taxonomy_ids = request.GET.getlist("exclude_taxonomy_ids[]", [])
 
         if not search_term:
             return Response({"results": []})
@@ -221,6 +222,9 @@ class GetScientificName(views.APIView):
 
         if has_species:
             taxonomies = taxonomies.exclude(species=None)
+
+        if exclude_taxonomy_ids:
+            taxonomies = taxonomies.exclude(id__in=exclude_taxonomy_ids)
 
         if active_only:
             taxonomies = taxonomies.filter(

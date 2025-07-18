@@ -65,6 +65,7 @@
                         :split-species-list-contains-original-taxonomy="
                             splitSpeciesListContainsOriginalTaxonomy
                         "
+                        :selectedTaxonomies="selectedTaxonomies"
                     >
                     </SpeciesProfile>
                 </div>
@@ -136,6 +137,10 @@ export default {
         },
         splitSpeciesListContainsOriginalTaxonomy: {
             type: Boolean,
+            required: true,
+        },
+        selectedTaxonomies: {
+            type: Array,
             required: true,
         },
     },

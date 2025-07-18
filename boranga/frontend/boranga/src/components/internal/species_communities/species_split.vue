@@ -170,6 +170,9 @@
                                                 splitSpeciesListContainsOriginalTaxonomy
                                             "
                                             :is_internal="true"
+                                            :selected-taxonomies="
+                                                split_species_taxonomy_ids
+                                            "
                                         >
                                         </SpeciesSplitForm>
                                     </div>

@@ -1736,6 +1736,10 @@ export default {
             type: Boolean,
             required: true,
         },
+        selectedTaxonomies: {
+            type: Array,
+            required: true,
+        },
     },
     data: function () {
         let vm = this;
@@ -2109,6 +2113,7 @@ export default {
                                 group_type_id:
                                     vm.species_community.group_type_id,
                                 species_profile: false,
+                                exclude_taxonomy_ids: vm.selectedTaxonomies,
                             };
                             return query;
                         },
@@ -2124,6 +2129,26 @@ export default {
                         swal.fire({
                             title: 'Original Taxonomy Already Selected',
                             text: 'There is already a split species with the same taxonomy as the original species.',
+                            icon: 'info',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            },
+                            didClose: () => {
+                                vm.resetTaxonomyDetails();
+                                vm.$nextTick(() => {
+                                    $(
+                                        vm.$refs[vm.scientific_name_lookup]
+                                    ).select2('open');
+                                });
+                            },
+                        });
+                        return false;
+                    }
+                    if (vm.selectedTaxonomies.includes(data)) {
+                        e.preventDefault();
+                        swal.fire({
+                            title: 'Taxonomy Already Selected',
+                            text: 'This taxonomy is already selected in another split species.',
                             icon: 'info',
                             customClass: {
                                 confirmButton: 'btn btn-primary',
