@@ -1729,6 +1729,11 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         # This is the original instance that is being renamed
         instance = self.get_object()
 
+        if not instance.can_user_rename:
+            raise serializers.ValidationError(
+                "Cannot rename species record in current state"
+            )
+
         # Make sure the taxonomy is actually changing
         if request.data["taxonomy_id"] == instance.taxonomy_id:
             raise serializers.ValidationError(
@@ -1740,8 +1745,16 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         species_queryset = Species.objects.filter(
             taxonomy_id=request.data["taxonomy_id"]
         )
+
         if species_queryset.exists():
             rename_instance = species_queryset.first()
+            if rename_instance.processing_status not in [
+                Species.PROCESSING_STATUS_DRAFT,
+                Species.PROCESSING_STATUS_HISTORICAL,
+            ]:
+                raise serializers.ValidationError(
+                    "Can only rename to a species that is in draft or historical state"
+                )
             rename_instance.processing_status = Species.PROCESSING_STATUS_ACTIVE
             rename_instance.save(version_user=request.user)
         else:

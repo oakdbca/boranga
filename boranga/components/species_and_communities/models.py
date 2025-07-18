@@ -518,6 +518,10 @@ class Species(RevisionedMixin):
         ]
 
     @property
+    def can_user_rename(self):
+        return self.processing_status == Species.PROCESSING_STATUS_ACTIVE
+
+    @property
     def can_user_split(self):
         """
         :return: True if the application is in one of the editable status.
