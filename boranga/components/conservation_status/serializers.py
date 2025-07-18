@@ -1721,7 +1721,7 @@ class ConservationStatusDocumentSerializer(BaseModelSerializer):
             and is_conservation_status_referee(request)
             and obj.conservation_status.referrals
             and obj.conservation_status.referrals.filter(referral=request.user.id).exists()
-            # and obj.uploaded_by == request.user.id # 
+            and obj.uploaded_by == request.user.id
         )
 
 

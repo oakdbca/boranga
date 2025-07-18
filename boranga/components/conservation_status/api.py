@@ -2330,6 +2330,8 @@ class ConservationStatusDocumentViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save(no_revision=True)
         instance.add_documents(request, version_user=request.user)
+        instance.uploaded_by = request.user.id
+        instance.save(version_user=request.user)
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
@@ -2344,6 +2346,8 @@ class ConservationStatusDocumentViewSet(
             instance.save()
 
         instance.add_documents(request, version_user=request.user)
+        instance.uploaded_by = request.user.id
+        instance.save(version_user=request.user)
         return Response(serializer.data)
 
 

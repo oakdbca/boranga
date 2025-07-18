@@ -3653,7 +3653,6 @@ class OccurrenceReportDocument(Document):
     document_sub_category = models.ForeignKey(
         DocumentSubCategory, null=True, blank=True, on_delete=models.SET_NULL
     )
-    uploaded_by = models.IntegerField(null=True)  # EmailUserRO
 
     class Meta:
         app_label = "boranga"
@@ -4786,7 +4785,6 @@ class OccurrenceDocument(Document):
     document_sub_category = models.ForeignKey(
         DocumentSubCategory, null=True, blank=True, on_delete=models.SET_NULL
     )
-    uploaded_by = models.IntegerField(null=True)  # EmailUserRO
 
     class Meta:
         app_label = "boranga"
