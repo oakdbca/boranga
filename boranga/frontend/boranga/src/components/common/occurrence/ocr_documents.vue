@@ -6,7 +6,10 @@
                 Management or Recovery Plans here</alert
             >
             <form class="form-horizontal" action="index.html" method="post">
-                <div v-if="!isReadOnly" class="col-sm-12">
+                <div
+                    v-if="!isReadOnly || currentUserIsReferralAssessor"
+                    class="col-sm-12"
+                >
                     <div class="text-end">
                         <button
                             type="button"
@@ -266,12 +269,24 @@ export default {
                             let links = '';
                             // to restrict submitter to edit doc when the report is in workflow
                             links += `<a href='#' data-view-document='${full.id}'>View</a><br>`;
-                            if (!vm.isReadOnly) {
+                            if (
+                                !vm.isReadOnly ||
+                                vm.currentUserIsReferralAssessor
+                            ) {
                                 if (full.active) {
-                                    links += `<a href='#${full.id}' data-edit-document='${full.id}'>Edit</a><br/>`;
-                                    links += `<a href='#' data-discard-document='${full.id}'>Discard</a><br>`;
+                                    // Only show edit and discard options if the user is a referree who has uploaded the document
+                                    // or if the document is accessible to the user
+                                    if (
+                                        !vm.currentUserIsReferralAssessor ||
+                                        full.can_referee_access
+                                    ) {
+                                        links += `<a href='#${full.id}' data-edit-document='${full.id}'>Edit</a><br/>`;
+                                        links += `<a href='#' data-discard-document='${full.id}'>Discard</a><br>`;
+                                    }
                                 } else {
-                                    links += `<a href='#' data-reinstate-document='${full.id}'>Reinstate</a><br>`;
+                                    if (!vm.currentUserIsReferralAssessor) {
+                                        links += `<a href='#' data-reinstate-document='${full.id}'>Reinstate</a><br>`;
+                                    }
                                 }
                             }
                             if (vm.is_internal) {
@@ -303,6 +318,24 @@ export default {
                 return this.is_readonly;
             }
             return this.occurrence_report_obj.readonly;
+        },
+        currentUserIsReferralAssessor: function () {
+            // Check if the current user is a referral who can assess
+            if (
+                this.occurrence_report_obj.processing_status != 'With Referral'
+            ) {
+                return false;
+            }
+
+            const assessor_mode = this.occurrence_report_obj.assessor_mode;
+            if (!assessor_mode) {
+                return false;
+            }
+            return (
+                assessor_mode.assessor_mode &&
+                assessor_mode.assessor_can_assess &&
+                assessor_mode.assessor_level == 'referral'
+            );
         },
     },
     mounted: function () {

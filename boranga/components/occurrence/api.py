@@ -2467,10 +2467,18 @@ class OccurrenceReportDocumentViewSet(
         if is_internal(self.request) or self.request.user.is_superuser:
             return OccurrenceReportDocument.objects.all().order_by("id")
         if is_contributor(self.request):
+
             return OccurrenceReportDocument.objects.filter(
-                occurrence_report__submitter=self.request.user.id,
-                active=True,
-                can_submitter_access=True,
+                Q(
+                    occurrence_report__referrals__referral=self.request.user.id,
+                    uploaded_by=self.request.user.id,
+                    active=True,
+                )
+                | Q(
+                    occurrence_report__submitter=self.request.user.id,
+                    active=True,
+                    can_submitter_access=True,
+                )
             )
         return OccurrenceReportDocument.objects.none()
 
