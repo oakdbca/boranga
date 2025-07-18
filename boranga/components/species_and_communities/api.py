@@ -1745,8 +1745,9 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         species_queryset = Species.objects.filter(
             taxonomy_id=request.data["taxonomy_id"]
         )
-
-        if species_queryset.exists():
+        species_exists = species_queryset.exists()
+        logger.debug(f"Species exists: {species_exists}")
+        if species_exists:
             rename_instance = species_queryset.first()
             logger.debug(
                 f"Renaming species {instance.species_number} to existing species {rename_instance.species_number}"
@@ -1779,34 +1780,36 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             occurrence.save(version_user=request.user)
 
         # Make sure the action log is accurate in terms of describing what has happened
-        RENAME_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_FROM
-        if species_queryset.exists():
-            RENAME_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_BY_REACTIVATING
+        RENAME_FROM_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_FROM
+        RENAME_TO_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_TO_NEW
+        if species_exists:
+            RENAME_FROM_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_BY_REACTIVATING
+            RENAME_TO_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_TO_EXISTING
 
         # Log action
         rename_instance.log_user_action(
-            RENAME_ACTION.format(
+            RENAME_FROM_ACTION.format(
                 rename_instance.species_number,
                 instance,
             ),
             request,
         )
         request.user.log_user_action(
-            RENAME_ACTION.format(
+            RENAME_FROM_ACTION.format(
                 rename_instance.species_number,
                 instance,
             ),
             request,
         )
         instance.log_user_action(
-            SpeciesUserAction.ACTION_RENAME_SPECIES_TO.format(
+            RENAME_TO_ACTION.format(
                 instance,
                 rename_instance.species_number,
             ),
             request,
         )
         request.user.log_user_action(
-            SpeciesUserAction.ACTION_RENAME_SPECIES_TO.format(
+            RENAME_TO_ACTION.format(
                 instance,
                 rename_instance.species_number,
             ),

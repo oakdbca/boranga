@@ -1121,7 +1121,8 @@ class SpeciesUserAction(UserAction):
     ACTION_COPY_SPECIES_TO = "Species {} copied to new species {}"
     ACTION_COPY_SPECIES_FROM = "Species {} copied from species {}"
 
-    ACTION_RENAME_SPECIES_TO = "Species {} renamed to new species {}"
+    ACTION_RENAME_SPECIES_TO_NEW = "Species {} renamed to new species {}"
+    ACTION_RENAME_SPECIES_TO_EXISTING = "Species {} renamed to existing species {}"
     ACTION_RENAME_SPECIES_FROM = "Species {} created by renaming species {}"
     ACTION_RENAME_SPECIES_BY_REACTIVATING = (
         "Species {} reactivated by renaming species {}"
