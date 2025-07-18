@@ -27,6 +27,7 @@ from boranga.components.users.serializers import SubmitterInformationSerializer
 from boranga.helpers import (
     is_conservation_status_approver,
     is_conservation_status_assessor,
+    is_conservation_status_referee,
     is_contributor,
     is_internal,
     is_new_external_contributor,
@@ -1207,7 +1208,12 @@ class SaveSpeciesConservationStatusSerializer(BaseConservationStatusSerializer):
         if not self.instance:
             return super().validate(attrs)
 
-        if (not self.instance.locked) and not attrs.get("effective_from"):
+        if (
+            self.instance.processing_status
+            != ConservationStatus.PROCESSING_STATUS_DRAFT
+            and not self.instance.locked
+            and not attrs.get("effective_from")
+        ):
             raise serializers.ValidationError(
                 {"Effective From": "An effective from date is required."}
             )
@@ -1707,10 +1713,26 @@ class ConservationStatusDocumentSerializer(BaseModelSerializer):
 
     def get_can_action(self, obj):
         request = self.context["request"]
-        return is_conservation_status_assessor(request) or (
-            obj.can_submitter_access
-            and is_contributor(request)
-            and request.user.id == obj.conservation_status.submitter
+
+        return (
+            is_conservation_status_assessor(request)
+            or (
+                obj.can_submitter_access
+                and is_contributor(request)
+                and request.user.id == obj.conservation_status.submitter
+            )
+            or (
+                obj.conservation_status.processing_status
+                in [
+                    ConservationStatus.PROCESSING_STATUS_WITH_REFERRAL,
+                ]
+                and is_conservation_status_referee(request)
+                and obj.conservation_status.referrals
+                and obj.conservation_status.referrals.filter(
+                    referral=request.user.id
+                ).exists()
+                and obj.uploaded_by == request.user.id
+            )
         )
 
 

@@ -209,6 +209,7 @@ class Document(RevisionedMixin, metaclass=AbstractModelMeta):
     description = models.TextField(blank=True, verbose_name="description", help_text="")
     uploaded_date = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=True)
+    uploaded_by = models.IntegerField(null=True)  # EmailUserRO
 
     class Meta:
         app_label = "boranga"
