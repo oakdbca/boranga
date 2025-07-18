@@ -6,7 +6,12 @@
                 Management or Recovery Plans here</alert
             >
             <form class="form-horizontal" action="index.html" method="post">
-                <div v-if="show_document_actions" class="col-sm-12">
+                <div
+                    v-if="
+                        show_document_actions || currentUserIsReferralAssessor
+                    "
+                    class="col-sm-12"
+                >
                     <div class="text-end">
                         <button
                             type="button"
@@ -258,6 +263,7 @@ export default {
                         mRender: function (data, type, full) {
                             let links = '';
                             links += `<a href='#' data-view-document='${full.id}'>View</a><br>`;
+                            // TOMORROW: make can_action apply to referral mode
                             if (full.can_action && vm.show_document_actions) {
                                 if (full.active) {
                                     links += `<a href='#${full.id}' data-edit-document='${full.id}'>Edit</a><br/>`;
@@ -290,14 +296,19 @@ export default {
     },
     computed: {
         show_document_actions: function () {
+            const assessor_mode = this.conservation_status_obj.assessor_mode;
             return (
                 this.conservation_status_obj.can_user_edit ||
                 (this.is_internal &&
-                    this.conservation_status_obj.assessor_mode &&
-                    this.conservation_status_obj.assessor_mode
-                        .assessor_can_assess &&
-                    this.conservation_status_obj.assessor_mode.assessor_level ==
-                        'assessor')
+                    assessor_mode &&
+                    assessor_mode.assessor_can_assess &&
+                    assessor_mode.assessor_level == 'assessor') ||
+                // Check if the user is a referee for the document
+                (this.conservation_status_obj.processing_status ==
+                    'With Referral' &&
+                    assessor_mode &&
+                    assessor_mode.assessor_can_assess &&
+                    assessor_mode.assessor_level == 'referral')
             );
         },
     },
