@@ -113,6 +113,7 @@ from boranga.helpers import (
     is_django_admin,
     is_occurrence_approver,
     is_occurrence_assessor,
+    is_occurrence_report_referee,
     member_ids,
     no_commas_validator,
 )
@@ -570,6 +571,21 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
             return False
 
         return is_occurrence_approver(request)
+
+    def has_referral_mode(self, request):
+        if self.processing_status != OccurrenceReport.PROCESSING_STATUS_WITH_REFERRAL:
+            return False
+
+        if request.user.is_superuser:
+            return True
+
+        if not self.referrals:
+            return False
+
+        if not self.referrals.filter(referral=request.user.id).exists():
+            return False
+
+        return is_occurrence_report_referee(request, occurrence_report=self)
 
     def has_unlocked_mode(self, request):
         status_with_assessor = [
