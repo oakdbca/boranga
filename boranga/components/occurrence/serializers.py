@@ -2482,6 +2482,7 @@ class OccurrenceReportLogEntrySerializer(CommunicationLogEntrySerializer):
 class OccurrenceReportDocumentSerializer(BaseModelSerializer):
     document_category_name = serializers.SerializerMethodField()
     document_sub_category_name = serializers.SerializerMethodField()
+    can_referee_access = serializers.SerializerMethodField()
     _file = SafeFileUrlField(
         allow_null=True,
         required=False,
@@ -2504,6 +2505,7 @@ class OccurrenceReportDocumentSerializer(BaseModelSerializer):
             "document_sub_category_name",
             "active",
             "can_submitter_access",
+            "can_referee_access",
         )
         read_only_fields = ("id", "document_number")
 
@@ -2514,6 +2516,24 @@ class OccurrenceReportDocumentSerializer(BaseModelSerializer):
     def get_document_sub_category_name(self, obj):
         if obj.document_sub_category:
             return obj.document_sub_category.document_sub_category_name
+
+    def get_can_referee_access(self, obj):
+        if not obj.active:
+            return False
+        try:
+            user = self.context.get("request").user
+        except AttributeError:
+            return False
+        else:
+            return (
+                obj.occurrence_report.processing_status
+                in [
+                    OccurrenceReport.PROCESSING_STATUS_WITH_REFERRAL,
+                ]
+                and obj.occurrence_report.referrals
+                and obj.occurrence_report.referrals.filter(referral=user.id).exists()
+                and obj.uploaded_by == user.id
+            )
 
 
 class SaveOccurrenceReportDocumentSerializer(BaseModelSerializer):
