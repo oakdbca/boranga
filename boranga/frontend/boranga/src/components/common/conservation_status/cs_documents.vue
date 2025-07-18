@@ -269,7 +269,9 @@ export default {
                                     links += `<a href='#${full.id}' data-edit-document='${full.id}'>Edit</a><br/>`;
                                     links += `<a href='#' data-discard-document='${full.id}'>Discard</a><br>`;
                                 } else {
-                                    links += `<a href='#' data-reinstate-document='${full.id}'>Reinstate</a><br>`;
+                                    if (!vm.currentUserIsReferralAssessor) {
+                                        links += `<a href='#' data-reinstate-document='${full.id}'>Reinstate</a><br>`;
+                                    }
                                 }
                                 if (vm.is_internal) {
                                     links += `<a href='#' data-history-document='${full.id}'>History</a><br>`;
@@ -304,11 +306,26 @@ export default {
                     assessor_mode.assessor_can_assess &&
                     assessor_mode.assessor_level == 'assessor') ||
                 // Check if the user is a referee for the document
-                (this.conservation_status_obj.processing_status ==
-                    'With Referral' &&
-                    assessor_mode &&
-                    assessor_mode.assessor_can_assess &&
-                    assessor_mode.assessor_level == 'referral')
+                this.currentUserIsReferralAssessor
+            );
+        },
+        currentUserIsReferralAssessor: function () {
+            // Check if the current user is a referral who can assess
+            if (
+                this.conservation_status_obj.processing_status !=
+                'With Referral'
+            ) {
+                return false;
+            }
+
+            const assessor_mode = this.conservation_status_obj.assessor_mode;
+            if (!assessor_mode) {
+                return false;
+            }
+            return (
+                assessor_mode.assessor_mode &&
+                assessor_mode.assessor_can_assess &&
+                assessor_mode.assessor_level == 'referral'
             );
         },
     },
