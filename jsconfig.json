@@ -1,0 +1,9 @@
+{
+    "vueCompilerOptions": {
+        "globalTypesPath": "boranga/frontend/boranga/node_modules/globals/index.d.ts",
+    },
+    "exclude": [
+        "node_modules",
+        "**/node_modules/*"
+    ]
+}
