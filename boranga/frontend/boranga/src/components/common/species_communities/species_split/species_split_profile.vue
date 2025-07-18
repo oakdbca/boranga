@@ -2083,6 +2083,9 @@ export default {
         },
         resetTaxonomyDetails: function () {
             let vm = this;
+            if (vm.species_community.taxonomy_details) {
+                vm.species_community.taxonomy_details = null;
+            }
             vm.species_community.taxonomy_id = '';
             vm.species_display = '';
             vm.common_name = '';
