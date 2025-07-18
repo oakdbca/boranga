@@ -1937,6 +1937,7 @@ export default {
                                 group_type_id:
                                     vm.species_community.group_type_id,
                                 species_profile: !vm.rename_species,
+                                species_rename: vm.rename_species,
                                 species_id: vm.species_community.id, // to filter species  current/non_current
                             };
                             return query;

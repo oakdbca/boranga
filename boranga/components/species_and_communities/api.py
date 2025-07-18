@@ -206,6 +206,7 @@ class GetScientificName(views.APIView):
         group_type_id = request.GET.get("group_type_id", "")
         # identifies the request as for a species profile - we exclude those taxonomies already taken
         species_profile = request.GET.get("species_profile", "false").lower() == "true"
+        species_rename = request.GET.get("species_rename", "false").lower() == "true"
         # identifies the request as for a species profile dependent record - we only include those taxonomies in use
         has_species = request.GET.get("has_species", False)
         active_only = request.GET.get("active_only", False)
@@ -224,6 +225,18 @@ class GetScientificName(views.APIView):
         if active_only:
             taxonomies = taxonomies.filter(
                 species__processing_status=Species.PROCESSING_STATUS_ACTIVE
+            )
+
+        if species_rename:
+            taxonomies_with_no_profile = Q(species=None)
+            draft_and_historical = Q(
+                species__processing_status__in=[
+                    Species.PROCESSING_STATUS_DRAFT,
+                    Species.PROCESSING_STATUS_HISTORICAL,
+                ]
+            )
+            taxonomies = taxonomies.filter(
+                taxonomies_with_no_profile | draft_and_historical
             )
 
         if group_type_id:
