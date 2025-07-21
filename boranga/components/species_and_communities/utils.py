@@ -17,6 +17,8 @@ from boranga.components.species_and_communities.models import (
     Community,
     CommunityUserAction,
     ConservationThreat,
+    District,
+    Region,
     Species,
     SpeciesConservationAttributes,
     SpeciesDistribution,
@@ -232,3 +234,84 @@ def rename_deep_copy(instance: Species, request: HttpRequest) -> Species:
         new_distribution.save()
 
     return new_rename_instance
+
+
+def process_split_species_general_data(
+    split_species_instance, split_species_request_data
+):
+    split_species_instance.department_file_numbers = split_species_request_data.get(
+        "department_file_numbers", None
+    )
+    split_species_instance.last_data_curation_date = split_species_request_data.get(
+        "last_data_curation_date", None
+    )
+    split_species_instance.conservation_plan_exists = (
+        split_species_request_data.get("conservation_plan_exists", False) == "true"
+    )
+    split_species_instance.comment = split_species_request_data.get("comment", None)
+
+
+def process_split_species_regions_and_districts(
+    split_species_instance, split_species_request_data
+):
+    regions_ids = split_species_request_data.get("regions", [])
+    districts_ids = split_species_request_data.get("districts", [])
+
+    if not regions_ids and not districts_ids:
+        raise ValidationError(
+            "At least one region or district must be provided for split species with taxonomy id: {}.".format(
+                split_species_instance.taxonomy_id
+            )
+        )
+
+    regions = Region.objects.filter(id__in=regions_ids)
+    districts = District.objects.filter(id__in=districts_ids)
+
+    split_species_instance.regions.set(regions)
+    split_species_instance.districts.set(districts)
+
+
+def process_split_species_distribution_data(
+    split_species_instance, split_species_request_data
+):
+    distribution_request_data = split_species_request_data.get("distribution", None)
+    if not distribution_request_data:
+        raise ValidationError(
+            "Distribution data is required for split species with taxonomy id: {}.".format(
+                split_species_instance.taxonomy_id
+            )
+        )
+
+    distribution_instance, created = SpeciesDistribution.objects.get_or_create(
+        species=split_species_instance
+    )
+
+    distribution_instance.number_of_occurrences = distribution_request_data.get(
+        "number_of_occurrences", None
+    )
+    distribution_instance.noo_auto = distribution_request_data.get("noo_auto", None)
+    distribution_instance.extent_of_occurrences = distribution_request_data.get(
+        "extent_of_occurrences", None
+    )
+    distribution_instance.eoo_auto = distribution_request_data.get("eoo_auto", None)
+    distribution_instance.area_of_occupancy = distribution_request_data.get(
+        "area_of_occupancy", None
+    )
+    distribution_instance.area_of_occupancy_actual = distribution_request_data.get(
+        "area_of_occupancy_actual", None
+    )
+    distribution_instance.aoo_actual_auto = distribution_request_data.get(
+        "aoo_actual_auto", None
+    )
+    distribution_instance.number_of_iucn_locations = distribution_request_data.get(
+        "number_of_iucn_locations", None
+    )
+    distribution_instance.number_of_iucn_subpopulations = distribution_request_data.get(
+        "number_of_iucn_subpopulations", None
+    )
+    distribution_instance.iucn_locations_auto = distribution_request_data.get(
+        "iucn_locations_auto", None
+    )
+    distribution_instance.distribution = distribution_request_data.get(
+        "distribution", None
+    )
