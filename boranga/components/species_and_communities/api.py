@@ -1464,8 +1464,19 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         # Process each new species in the request data
         for index, split_species in enumerate(split_species_list):
             # Check if a boranga profile exists for this taxonomy
-            taxonomy_id = split_species.get("taxonomy_id")
-            if instance.taxonomy_id == taxonomy_id:
+            taxonomy_id = split_species.get("taxonomy_id", None)
+
+            if not taxonomy_id:
+                raise serializers.ValidationError(
+                    f"Split Species {index+1} is missing a Taxonomy ID"
+                )
+
+            if not taxonomy_id.isdigit():
+                raise serializers.ValidationError(
+                    f"Split Species {index+1} Taxonomy ID must be an integer"
+                )
+
+            if instance.taxonomy_id == int(taxonomy_id):
                 split_species_contains_original = True
                 continue
 
@@ -1489,9 +1500,10 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                     processing_status=Species.PROCESSING_STATUS_ACTIVE,
                 )
                 split_species_instance.save(version_user=request.user)
-                split_species_instance.clone_documents(instance, request)
-                split_species_instance.clone_threats(instance, request)
                 species_form_submit(split_species_instance, request, split=True)
+
+            split_species_instance.copy_documents(instance, request, split_species)
+            split_species_instance.copy_threats(instance, request, split_species)
 
             split_species_instance.parent_species.add(instance)
 
@@ -1559,7 +1571,7 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                     raise serializers.ValidationError(
                         "Occurrence ID is missing in the assignment"
                     )
-                if not isinstance(occurrence_id, int):
+                if not occurrence_id.isdigit():
                     raise serializers.ValidationError(
                         f"Occurrence ID {occurrence_id} must be an integer"
                     )
