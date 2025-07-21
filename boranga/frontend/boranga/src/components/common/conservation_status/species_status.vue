@@ -1508,7 +1508,7 @@
 <script>
 import FormSection from '@/components/forms/section_toggle.vue';
 import CollapsibleComponent from '@/components/forms/collapsible_component.vue';
-import { api_endpoints } from '@/utils/hooks';
+import { api_endpoints, constants } from '@/utils/hooks';
 
 export default {
     name: 'SpeciesStatus',
@@ -1578,31 +1578,32 @@ export default {
             return (
                 this.conservation_status_obj.effective_from ||
                 this.conservation_status_obj.effective_to ||
-                ['Proposed DeListed', 'DeListed', 'Closed'].includes(
+                constants.EFFECTIVE_FROM_STATUSES.includes(
                     this.conservation_status_obj.processing_status
-                ) ||
-                !this.conservation_status_obj.locked
+                )
             );
         },
         show_effective_from: function () {
             return (
-                this.conservation_status_obj &&
-                (this.conservation_status_obj.effective_from ||
+                (this.conservation_status_obj &&
+                    this.conservation_status_obj.effective_from) ||
+                (constants.EFFECTIVE_FROM_STATUSES.includes(
+                    this.conservation_status_obj.processing_status
+                ) &&
                     !this.conservation_status_obj.locked)
             );
         },
         show_effective_to: function () {
             return (
-                this.conservation_status_obj &&
-                (this.conservation_status_obj.effective_to ||
-                    ['Proposed DeListed', 'DeListed', 'Closed'].includes(
-                        this.conservation_status_obj.processing_status
-                    ) ||
-                    !this.conservation_status_obj.locked)
+                (this.conservation_status_obj &&
+                    this.conservation_status_obj.effective_to) ||
+                constants.EFFECTIVE_TO_STATUSES.includes(
+                    this.conservation_status_obj.processing_status
+                )
             );
         },
         effective_to_mandatory: function () {
-            return ['Proposed DeListed', 'DeListed', 'Closed'].includes(
+            return constants.EFFECTIVE_TO_STATUSES.includes(
                 this.conservation_status_obj.processing_status
             );
         },
