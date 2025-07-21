@@ -113,6 +113,9 @@ from boranga.components.species_and_communities.serializers import (
 from boranga.components.species_and_communities.utils import (
     combine_species_original_submit,
     community_form_submit,
+    process_split_species_distribution_data,
+    process_split_species_general_data,
+    process_split_species_regions_and_districts,
     rename_deep_copy,
     rename_species_original_submit,
     species_form_submit,
@@ -1459,12 +1462,12 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 "No split species list provided in request data"
             )
 
-        split_species_contains_original = False
+        split_of_species_retains_original = False
 
         # Process each new species in the request data
-        for index, split_species in enumerate(split_species_list):
+        for index, split_species_request_data in enumerate(split_species_list):
             # Check if a boranga profile exists for this taxonomy
-            taxonomy_id = split_species.get("taxonomy_id", None)
+            taxonomy_id = split_species_request_data.get("taxonomy_id", None)
 
             if not taxonomy_id:
                 raise serializers.ValidationError(
@@ -1477,7 +1480,7 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 )
 
             if instance.taxonomy_id == int(taxonomy_id):
-                split_species_contains_original = True
+                split_of_species_retains_original = True
                 continue
 
             if not taxonomy_id:
@@ -1502,8 +1505,23 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 split_species_instance.save(version_user=request.user)
                 species_form_submit(split_species_instance, request, split=True)
 
-            split_species_instance.copy_documents(instance, request, split_species)
-            split_species_instance.copy_threats(instance, request, split_species)
+            process_split_species_general_data(
+                split_species_instance, split_species_request_data
+            )
+            process_split_species_regions_and_districts(
+                split_species_instance, split_species_request_data
+            )
+            process_split_species_distribution_data(
+                split_species_instance, split_species_request_data
+            )
+            split_species_instance.save(version_user=request.user)
+
+            split_species_instance.copy_documents(
+                instance, request, split_species_request_data
+            )
+            split_species_instance.copy_threats(
+                instance, request, split_species_request_data
+            )
 
             split_species_instance.parent_species.add(instance)
 
@@ -1610,7 +1628,7 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 # reassign all OCRs to also point to the new species as well
                 occurrence.save(version_user=request.user)
 
-        if not split_species_contains_original:
+        if not split_of_species_retains_original:
             # Set the original species from the split to historical and its conservation status to 'closed'
             instance.processing_status = Species.PROCESSING_STATUS_HISTORICAL
 
