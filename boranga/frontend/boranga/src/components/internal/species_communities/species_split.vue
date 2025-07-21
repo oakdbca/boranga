@@ -885,7 +885,6 @@ export default {
             newSpecies.copy_all_threats = true;
             newSpecies.threat_ids_to_copy = [];
             newSpecies.document_ids_to_copy = [];
-            newSpecies.regions = [];
             newSpecies.index = vm.split_species_list.length;
             vm.split_species_list.push(newSpecies);
             vm.$nextTick(() => {
