@@ -160,6 +160,7 @@
             </div>
         </FormSection>
         <FormSection
+            v-if="!thisSplitSpeciesHasOriginalTaxonomyId"
             :form-collapse="false"
             label="Distribution"
             :Index="distributionBody"
@@ -621,6 +622,7 @@
             </div>
         </FormSection>
         <FormSection
+            v-if="!thisSplitSpeciesHasOriginalTaxonomyId"
             :form-collapse="false"
             label="General"
             :Index="generalBody"
@@ -917,6 +919,12 @@ export default {
                 !this.splitSpeciesListContainsOriginalTaxonomy ||
                 this.species_community.taxonomy_id ===
                     this.species_original.taxonomy_id
+            );
+        },
+        thisSplitSpeciesHasOriginalTaxonomyId: function () {
+            return (
+                this.species_community.taxonomy_id ===
+                this.species_original.taxonomy_id
             );
         },
     },
