@@ -877,6 +877,7 @@ export default {
             newSpecies.documents = [];
             newSpecies.regions = [];
             newSpecies.index = vm.split_species_list.length;
+            newSpecies.copy_all_documents = true;
             vm.split_species_list.push(newSpecies);
             vm.$nextTick(() => {
                 // Show the last remaining split species tab
