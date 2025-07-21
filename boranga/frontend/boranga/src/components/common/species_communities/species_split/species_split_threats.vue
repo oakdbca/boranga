@@ -260,12 +260,24 @@ export default {
                 drawCallback: function () {
                     helpers.enablePopovers();
                 },
-                initComplete: function () {
+                initComplete: function (settings, json) {
                     helpers.enablePopovers();
                     // another option to fix the responsive table overflow css on tab switch
                     setTimeout(function () {
                         vm.adjust_table_width();
                     }, 100);
+                    // Ensure all checkboxes are checked if copy_all_documents is true
+                    if (vm.species_community.copy_all_documents && json) {
+                        // json is the array of document objects
+                        vm.species_community.threat_ids_to_copy = json.map(
+                            (doc) => doc.id
+                        );
+                        // Redraw to update checkboxes
+                        vm.$refs.threats_datatable.vmDataTable
+                            .rows()
+                            .invalidate()
+                            .draw(false);
+                    }
                 },
             },
         };
