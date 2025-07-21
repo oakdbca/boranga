@@ -1,8 +1,5 @@
 <template lang="html">
     <div id="species_split_documents">
-        copy_all_documents {{ species_community.copy_all_documents }}<br />
-        vm.original_document_ids
-        {{ original_document_ids }}<br />
         <FormSection
             :formCollapse="false"
             label="Documents"
