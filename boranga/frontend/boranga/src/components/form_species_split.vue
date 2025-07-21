@@ -29,7 +29,6 @@
                         role="tab"
                         aria-controls="pills-documents"
                         :aria-selected="documentBody"
-                        @click="tabClicked()"
                     >
                         Documents
                     </a>
@@ -43,7 +42,6 @@
                         role="tab"
                         :aria-controls="threatBody"
                         aria-selected="false"
-                        @click="tabClicked()"
                     >
                         Threats
                     </a>
@@ -76,7 +74,6 @@
                     aria-labelledby="pills-documents-tab"
                 >
                     <SpeciesDocuments
-                        :key="reloadcount"
                         id="speciesDocuments"
                         ref="species_documents"
                         :is_internal="is_internal"
@@ -92,7 +89,6 @@
                     aria-labelledby="pills-threats-tab"
                 >
                     <SpeciesThreats
-                        :key="reloadcount"
                         id="speciesThreats"
                         ref="species_threats"
                         :is_internal="is_internal"
@@ -151,7 +147,6 @@ export default {
             threatBody: 'threatBody' + uuid(),
             relatedItemBody: 'relatedItemBody' + uuid(),
             values: null,
-            reloadcount: 0,
             document_selection: 'selectAll',
             threat_selection: 'selectAll',
         };
@@ -171,12 +166,6 @@ export default {
     mounted: function () {
         let vm = this;
         vm.form = document.forms.new_species;
-    },
-    methods: {
-        //----function to resolve datatable exceeding beyond the div
-        tabClicked: function () {
-            this.reloadcount = this.reloadcount + 1;
-        },
     },
 };
 </script>
