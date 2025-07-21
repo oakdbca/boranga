@@ -18,6 +18,19 @@ export default {
         CLOSED: { ID: 'closed', TEXT: 'Closed' },
         UNLOCKED: { ID: 'unlocked', TEXT: 'Unlocked' },
     },
+    EFFECTIVE_FROM_STATUSES: [
+        'Approved',
+        'Proposed DeListed',
+        'DeListed',
+        'Closed',
+    ],
+    EFFECTIVE_TO_STATUSES: ['Proposed DeListed', 'DeListed', 'Closed'],
+    EFFECTIVE_DATES_STATUSES: [
+        'Approved',
+        'Proposed DeListed',
+        'DeListed',
+        'Closed',
+    ],
     GROUPS: {
         CONSERVATION_STATUS_ASSESSORS: 'Conservation Status Assessors',
         CONSERVATION_STATUS_APPROVERS: 'Conservation Status Approvers',
