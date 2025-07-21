@@ -367,17 +367,25 @@
                                                 </table>
                                             </div>
                                             <template v-else>
-                                                <div class="alert alert-info">
-                                                    The original species ({{
-                                                        species_community_original.species_number
-                                                    }}
-                                                    -
-                                                    {{
-                                                        species_community_original
-                                                            .taxonomy_details
-                                                            .scientific_name
-                                                    }}) has no occurrences to
-                                                    assign.
+                                                <div
+                                                    class="alert alert-info pb-0"
+                                                >
+                                                    <p>
+                                                        The original species ({{
+                                                            species_community_original.species_number
+                                                        }}
+                                                        -
+                                                        {{
+                                                            species_community_original
+                                                                .taxonomy_details
+                                                                .scientific_name
+                                                        }}) has no occurrences
+                                                        to assign.
+                                                    </p>
+                                                    <p>
+                                                        You can continue to the
+                                                        finalise split tab.
+                                                    </p>
                                                 </div>
                                             </template>
                                         </div>
@@ -873,11 +881,12 @@ export default {
             newSpecies.species_number = '';
             newSpecies.taxonomy_id = null;
             newSpecies.taxonomy_details = {};
-            newSpecies.threats = [];
-            newSpecies.documents = [];
+            newSpecies.copy_all_documents = true;
+            newSpecies.copy_all_threats = true;
+            newSpecies.threat_ids_to_copy = [];
+            newSpecies.document_ids_to_copy = [];
             newSpecies.regions = [];
             newSpecies.index = vm.split_species_list.length;
-            newSpecies.copy_all_documents = true;
             vm.split_species_list.push(newSpecies);
             vm.$nextTick(() => {
                 // Show the last remaining split species tab
@@ -1033,23 +1042,32 @@ export default {
         },
         abbreviateUnique: function (scientificNames, minChars = 1) {
             function abbreviate(name, restLens = []) {
-                const words = name.trim().split(/\s+/);
+                // Remove brackets, dots, and commas from the name
+                const cleaned = name.trim().replace(/[[\]().,]/g, '');
+                const words = cleaned.split(/\s+/);
                 if (words.length === 1) {
                     // Single word: abbreviate to minChars or more as needed
                     return words[0].slice(0, Math.max(minChars, 1));
                 }
-                // First word in full, rest abbreviated
+                // First word in full, rest abbreviated (unless number)
                 let abbr = [words[0]];
                 for (let i = 1; i < words.length; i++) {
-                    const len = restLens[i - 1] || 1;
-                    abbr.push(words[i].slice(0, len));
+                    const word = words[i];
+                    // If the word is a number, do not abbreviate it
+                    if (/^\d+$/.test(word)) {
+                        abbr.push(word);
+                    } else {
+                        const len = restLens[i - 1] || 1;
+                        abbr.push(word.slice(0, len));
+                    }
                 }
                 return abbr.join(' ');
             }
 
             // Start with 1 letter for each word after the first
             let restLensArr = scientificNames.map((name) => {
-                const words = name.trim().split(/\s+/);
+                const cleaned = name.trim().replace(/[[\]().,]/g, '');
+                const words = cleaned.split(/\s+/);
                 return Array(words.length - 1).fill(1);
             });
             let abbrs = scientificNames.map((name, i) =>
@@ -1063,13 +1081,19 @@ export default {
                 for (let i = 0; i < abbrs.length; i++) {
                     if (seen[abbrs[i]] !== undefined) {
                         unique = false;
-                        // For all with this abbreviation, increase the last abbreviated word by 1
+                        // For all with this abbreviation, increase the last abbreviated word by 1 (if not a number)
                         for (let j = 0; j < abbrs.length; j++) {
                             if (abbrs[j] === abbrs[i]) {
                                 let restLens = restLensArr[j];
-                                // Increase the last word's abbreviation length
-                                if (restLens.length > 0) {
-                                    restLens[restLens.length - 1]++;
+                                const cleaned = scientificNames[j]
+                                    .trim()
+                                    .replace(/[[\]().,]/g, '');
+                                const words = cleaned.split(/\s+/);
+                                for (let k = restLens.length - 1; k >= 0; k--) {
+                                    if (!/^\d+$/.test(words[k + 1])) {
+                                        restLens[k]++;
+                                        break;
+                                    }
                                 }
                                 abbrs[j] = abbreviate(
                                     scientificNames[j],
@@ -1086,7 +1110,11 @@ export default {
             return scientificNames.map((full, idx) => ({
                 full,
                 abbr: abbrs[idx],
-                slug: full.toLowerCase().replace(/\s+/g, '-').replace('.', ''),
+                slug: full
+                    .toLowerCase()
+                    .replace(/[\s[\]().,]+/g, '-')
+                    .replace(/-+/g, '-')
+                    .replace(/^-|-$/g, ''),
             }));
         },
         fetchOccurrencesOfOriginalSpecies: async function () {
