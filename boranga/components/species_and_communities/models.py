@@ -837,10 +837,19 @@ class Species(RevisionedMixin):
         self.save()
 
     @transaction.atomic
-    def clone_documents(
-        self: "Species", clone_from: "Species", request: HttpRequest
+    def copy_documents(
+        self: "Species",
+        copy_from: "Species",
+        request: HttpRequest,
+        split_species: object,
     ) -> None:
-        for doc_id in clone_from.species_documents.values_list("id", flat=True):
+        document_ids_queryset = copy_from.species_documents.all()
+        if not split_species["copy_all_documents"]:
+            document_ids_queryset = document_ids_queryset.filter(
+                id__in=split_species["document_ids_to_copy"]
+            )
+        document_ids_to_copy = document_ids_queryset.values_list("id", flat=True)
+        for doc_id in document_ids_to_copy:
             new_species_doc = SpeciesDocument.objects.get(id=doc_id)
             new_species_doc.species = self
             new_species_doc.id = None
@@ -862,12 +871,19 @@ class Species(RevisionedMixin):
             )
 
     @transaction.atomic
-    def clone_threats(self, clone_from: "Species", request: HttpRequest) -> None:
-        # clone threats from original species to new species
-        original_species_threats = clone_from.species_threats.values_list(
-            "id", flat=True
-        )
-        for threat_id in original_species_threats:
+    def copy_threats(
+        self: "Species",
+        copy_from: "Species",
+        request: HttpRequest,
+        split_species: object,
+    ) -> None:
+        threat_ids_queryset = copy_from.species_threats.all()
+        if not split_species["copy_all_documents"]:
+            threat_ids_queryset = threat_ids_queryset.filter(
+                id__in=split_species["threat_ids_to_copy"]
+            )
+        threat_ids_to_copy = threat_ids_queryset.values_list("id", flat=True)
+        for threat_id in threat_ids_to_copy:
             new_species_threat = ConservationThreat.objects.get(id=threat_id)
             new_species_threat.species = self
             new_species_threat.id = None
