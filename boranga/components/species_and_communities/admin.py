@@ -1,4 +1,5 @@
 from django.contrib.gis import admin
+from import_export.admin import ImportMixin
 from ordered_model.admin import OrderedModelAdmin
 
 from boranga.admin import (
@@ -12,6 +13,8 @@ from boranga.components.species_and_communities.models import (
     District,
     DocumentCategory,
     DocumentSubCategory,
+    FaunaGroup,
+    FaunaSubGroup,
     GroupType,
     InformalGroup,
     Kingdom,
@@ -28,7 +31,6 @@ from boranga.components.species_and_communities.models import (
     ThreatCategory,
 )
 
-from import_export.admin import ImportMixin
 
 class DocumentCategoryAdmin(
     CsvExportMixin,
@@ -59,6 +61,40 @@ class DocumentSubCategoryAdmin(
     list_filter = ["document_category"]
     search_fields = ["document_sub_category_name"]
     ordering = ("document_category", "order")
+
+
+@admin.register(FaunaGroup)
+class FaunaGroupAdmin(
+    CsvExportMixin,
+    ImportMixin,
+    OrderedModelAdmin,
+    ArchivableModelAdminMixin,
+    DeleteProtectedModelAdmin,
+):
+    list_display = [
+        "name",
+        "move_up_down_links",
+    ]
+    search_fields = ["name"]
+    ordering = ("order",)
+
+
+@admin.register(FaunaSubGroup)
+class FaunaSubGroupAdmin(
+    CsvExportMixin,
+    ImportMixin,
+    OrderedModelAdmin,
+    ArchivableModelAdminMixin,
+    DeleteProtectedModelAdmin,
+):
+    list_display = [
+        "name",
+        "fauna_group",
+        "move_up_down_links",
+    ]
+    list_filter = ["fauna_group"]
+    search_fields = ["name"]
+    ordering = ("fauna_group", "order")
 
 
 class ThreatCategoryAdmin(
