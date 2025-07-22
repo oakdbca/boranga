@@ -76,6 +76,9 @@ window.fetch = ((originalFetch) => {
                 icon: 'error',
                 title: 'Access Denied',
                 text: 'You do not have permission to perform this action.',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                },
             });
         }
 
