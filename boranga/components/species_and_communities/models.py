@@ -484,6 +484,20 @@ class Species(RevisionedMixin):
     parent_species = models.ManyToManyField("self", blank=True)
     comment = models.CharField(max_length=500, null=True, blank=True)
     department_file_numbers = models.CharField(max_length=512, null=True, blank=True)
+    fauna_group = models.ForeignKey(
+        FaunaGroup,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="species",
+    )
+    fauna_sub_group = models.ForeignKey(
+        FaunaSubGroup,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="species",
+    )
 
     class Meta:
         app_label = "boranga"
