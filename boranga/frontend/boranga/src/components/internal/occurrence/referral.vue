@@ -112,7 +112,7 @@
                                     :can-edit-status="canEditStatus"
                                     :referral="referral"
                                     :show_observer_contact_information="false"
-                                    :is_internal="profile.is_internal"
+                                    :is_internal="profile.user.is_internal"
                                     @refresh-occurrence-report="
                                         refreshOccurrenceReport()
                                     "

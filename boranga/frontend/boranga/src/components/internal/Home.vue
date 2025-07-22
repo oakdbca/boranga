@@ -20,25 +20,31 @@
                                             <td scope="row" class="fw-bold">
                                                 Name
                                             </td>
-                                            <td>{{ profile.full_name }}</td>
+                                            <td>
+                                                {{ profile.user.full_name }}
+                                            </td>
                                         </tr>
                                         <tr>
                                             <td scope="row" class="fw-bold">
                                                 Email
                                             </td>
-                                            <td>{{ profile.email }}</td>
+                                            <td>{{ profile.user.email }}</td>
                                         </tr>
-                                        <tr v-if="profile.phone_number">
+                                        <tr v-if="profile.user.phone_number">
                                             <td scope="row" class="fw-bold">
                                                 Phone Number
                                             </td>
-                                            <td>{{ profile.phone_number }}</td>
+                                            <td>
+                                                {{ profile.user.phone_number }}
+                                            </td>
                                         </tr>
-                                        <tr v-if="profile.mobile_number">
+                                        <tr v-if="profile.user.mobile_number">
                                             <td scope="row" class="fw-bold">
                                                 Mobile
                                             </td>
-                                            <td>{{ profile.mobile_number }}</td>
+                                            <td>
+                                                {{ profile.user.mobile_number }}
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -65,7 +71,7 @@
                             <div class="mb-4">
                                 <select
                                     id="area-of-interest"
-                                    v-model="profile.area_of_interest"
+                                    v-model="profile.user.area_of_interest"
                                     class="form-select text-muted"
                                     name="area-of-interest"
                                     placeholder="Name"
@@ -86,10 +92,11 @@
                                     This setting controls which tab will
                                     automatically be opened when browsing the
                                     Species and Communities<template
-                                        v-if="profile.is_internal"
+                                        v-if="profile.user.is_internal"
                                         >, Conservation Status and Occurrences
                                     </template>
-                                    page<template v-if="profile.is_internal"
+                                    page<template
+                                        v-if="profile.user.is_internal"
                                         >s</template
                                     >.
                                 </p>
@@ -114,17 +121,17 @@
                                 You are a member of the following groups:
                             </p>
                             <span
-                                v-for="group in profile.groups"
+                                v-for="group in profile.user.groups"
                                 :key="group"
                                 class="badge bg-primary me-2 p-2 mb-2"
                                 >{{ group }}</span
                             >
-                            <div v-if="profile.is_superuser" class="mt-3">
+                            <div v-if="profile.user.is_superuser" class="mt-3">
                                 <span class="badge bg-success me-2 p-2 mb-2"
                                     >You are a Superuser</span
                                 >
                             </div>
-                            <div v-if="profile.is_superuser">
+                            <div v-if="profile.user.is_superuser">
                                 <small class="text-muted"
                                     >* Superusers are a member of every group by
                                     default</small
