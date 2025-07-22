@@ -579,6 +579,7 @@ class SaveSpeciesConservationAttributesSerializer(BaseModelSerializer):
 
 
 class SpeciesDistributionSerializer(BaseModelSerializer):
+    extent_of_occurrences = serializers.FloatField(required=False, allow_null=True)
 
     class Meta:
         model = SpeciesDistribution
@@ -595,11 +596,17 @@ class SpeciesDistributionSerializer(BaseModelSerializer):
             "distribution",
         )
 
+    def to_internal_value(self, data):
+        if not data["extent_of_occurrences"]:
+            data["extent_of_occurrences"] = None
+        return super().to_internal_value(data)
+
 
 class SaveSpeciesDistributionSerializer(BaseModelSerializer):
     species_id = serializers.IntegerField(
         required=False, allow_null=True, write_only=True
     )
+    extent_of_occurrences = serializers.FloatField(required=False, allow_null=True)
 
     class Meta:
         model = SpeciesDistribution
@@ -916,6 +923,7 @@ class InternalSpeciesSerializer(BaseSpeciesSerializer):
 
 
 class CommunityDistributionSerializer(BaseModelSerializer):
+    extent_of_occurrences = serializers.FloatField(required=False, allow_null=True)
 
     class Meta:
         model = CommunityDistribution
@@ -934,12 +942,21 @@ class CommunityDistributionSerializer(BaseModelSerializer):
             "distribution",
         )
 
+    def to_internal_value(self, data):
+        if not data["extent_of_occurrences"]:
+            data["extent_of_occurrences"] = None
+        return super().to_internal_value(data)
+
 
 class SaveCommunityDistributionSerializer(BaseModelSerializer):
     community_id = serializers.IntegerField(
         required=False, allow_null=True, write_only=True
     )
     area_of_occupancy = serializers.IntegerField(
+        required=False,
+        allow_null=True,
+    )
+    extent_of_occurrences = serializers.FloatField(
         required=False,
         allow_null=True,
     )
