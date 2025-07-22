@@ -924,6 +924,7 @@ class InternalSpeciesSerializer(BaseSpeciesSerializer):
 
 class CommunityDistributionSerializer(BaseModelSerializer):
     extent_of_occurrences = serializers.FloatField(required=False, allow_null=True)
+    community_original_area = serializers.FloatField(required=False, allow_null=True)
 
     class Meta:
         model = CommunityDistribution
@@ -962,6 +963,7 @@ class SaveCommunityDistributionSerializer(BaseModelSerializer):
         required=False,
         allow_null=True,
     )
+    community_original_area = serializers.FloatField(required=False, allow_null=True)
 
     class Meta:
         model = CommunityDistribution
