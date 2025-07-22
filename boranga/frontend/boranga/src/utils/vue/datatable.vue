@@ -55,7 +55,45 @@ export default {
     methods: {
         initEvents: function () {
             let vm = this;
+            // Clone options to avoid mutating the prop
             var options = { ...vm.dtOptions };
+
+            // Add custom error handler to ajax
+            if (options.ajax) {
+                const originalAjax = options.ajax;
+                options.ajax = function (data, callback, settings) {
+                    // If ajax is a URL string, convert to object
+                    let ajaxOptions =
+                        typeof originalAjax === 'string'
+                            ? { url: originalAjax, type: 'GET' }
+                            : { ...originalAjax };
+
+                    $.ajax({
+                        ...ajaxOptions,
+                        data,
+                        success: function (json) {
+                            callback(json);
+                        },
+                        error: function (xhr) {
+                            if (xhr.status === 401 || xhr.status === 403) {
+                                setTimeout(() => {
+                                    window.location.href =
+                                        '/login/?next=' +
+                                        encodeURIComponent(
+                                            window.location.pathname
+                                        );
+                                }, 0);
+                                // Return empty data to suppress DataTables alerts
+                                callback({ data: [] });
+                            } else {
+                                // Optionally handle other errors
+                                callback({ data: [] });
+                            }
+                        },
+                    });
+                };
+            }
+
             vm.vmDataTable = $(this.$refs[this.id]).DataTable(options);
             $(this.$refs[this.id]).resize(function () {
                 vm.vmDataTable.draw(true);
