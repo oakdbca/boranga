@@ -13,7 +13,7 @@ from rest_framework.decorators import action as detail_route
 from rest_framework.decorators import action as list_route
 from rest_framework.decorators import renderer_classes
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
@@ -71,11 +71,18 @@ class GetProfile(views.APIView):
     renderer_classes = [
         JSONRenderer,
     ]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request, format=None):
+        if not request.user.is_authenticated:
+            return Response(
+                {
+                    "authenticated": False,
+                    "user": None,
+                }
+            )
         serializer = UserSerializer(request.user, context={"request": request})
-        return Response(serializer.data)
+        return Response({"authenticated": True, "user": serializer.data})
 
 
 class GetSubmitterCategories(views.APIView):
