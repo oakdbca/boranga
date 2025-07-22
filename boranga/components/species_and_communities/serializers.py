@@ -597,7 +597,7 @@ class SpeciesDistributionSerializer(BaseModelSerializer):
         )
 
     def to_internal_value(self, data):
-        if not data["extent_of_occurrences"]:
+        if data["extent_of_occurrences"] == "":
             data["extent_of_occurrences"] = None
         return super().to_internal_value(data)
 
@@ -943,8 +943,10 @@ class CommunityDistributionSerializer(BaseModelSerializer):
         )
 
     def to_internal_value(self, data):
-        if not data["extent_of_occurrences"]:
+        if data["extent_of_occurrences"] == "":
             data["extent_of_occurrences"] = None
+        if data["community_original_area"] == "":
+            data["community_original_area"] = None
         return super().to_internal_value(data)
 
 
