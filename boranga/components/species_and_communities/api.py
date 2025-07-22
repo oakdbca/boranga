@@ -647,6 +647,8 @@ class GetDocumentCategoriesDict(views.APIView):
 
 
 class GetSpeciesProfileDict(views.APIView):
+    permission_classes = [AllowAny]
+
     def get(self, request, format=None):
         flora_recruitment_type_list = []
         types = FloraRecruitmentType.objects.all()
