@@ -1,5 +1,4 @@
 import logging
-import traceback
 
 from django.core.exceptions import ValidationError
 from django.http import Http404
@@ -82,8 +81,7 @@ def custom_exception_handler(exc, context):
 
     else:
         # Handle all other exceptions
-        logger.exception(traceback.print_exc())
-
+        logger.exception(str(exc))
         exc = serializers.ValidationError(str(exc))
 
     return exception_handler(exc, context)
