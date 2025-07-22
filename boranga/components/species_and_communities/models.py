@@ -374,6 +374,44 @@ class InformalGroup(BaseModel):
         return f"{self.classification_system_fk.class_desc} {self.taxonomy.scientific_name} "
 
 
+class FloraGroup(ArchivableModel, OrderedModel, BaseModel):
+    objects = OrderedArchivableManager()
+
+    name = models.CharField(
+        unique=True, max_length=255, validators=[no_commas_validator]
+    )
+
+    class Meta:
+        app_label = "boranga"
+        ordering = ["order"]
+        verbose_name = "Flora Group"
+        verbose_name_plural = "Flora Groups"
+
+    def __str__(self):
+        return str(self.name)
+
+
+class FloraSubGroup(ArchivableModel, OrderedModel, BaseModel):
+    objects = OrderedArchivableManager()
+
+    name = models.CharField(
+        unique=True, max_length=255, validators=[no_commas_validator]
+    )
+    flora_group = models.ForeignKey(
+        FloraGroup, on_delete=models.CASCADE, related_name="sub_groups"
+    )
+    order_with_respect_to = "flora_group"
+
+    class Meta:
+        app_label = "boranga"
+        ordering = ["flora_group", "order"]
+        verbose_name = "Flora Sub Group"
+        verbose_name_plural = "Flora Sub Groups"
+
+    def __str__(self):
+        return str(self.name)
+
+
 class Species(RevisionedMixin):
     """
     Forms the basis for a Species and Communities record.
