@@ -566,20 +566,30 @@
                     class="row mb-3"
                 >
                     <label for="" class="col-sm-5 control-label"
-                        >Community Original Area (ha):</label
+                        >Community Original Area:</label
                     >
                     <div class="col-sm-4">
-                        <input
-                            id="community_original_area"
-                            v-model="
-                                species_community.distribution
-                                    .community_original_area
-                            "
-                            :disabled="isReadOnly"
-                            type="number"
-                            class="form-control"
-                            placeholder=""
-                        />
+                        <div class="input-group">
+                            <input
+                                id="community_original_area"
+                                v-model="
+                                    species_community.distribution
+                                        .community_original_area
+                                "
+                                :disabled="isReadOnly"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                max="9999999999.99"
+                                class="form-control"
+                                placeholder=""
+                            />
+                            <span
+                                id="community_original_area-addon"
+                                class="input-group-text"
+                                >ha</span
+                            >
+                        </div>
                     </div>
                 </div>
                 <div
@@ -1193,15 +1203,6 @@ export default {
             let vm = this;
             if (newVal == '') {
                 vm.species_community.distribution.number_of_iucn_locations =
-                    null;
-            }
-        },
-        'species_community.distribution.community_original_area': function (
-            newVal
-        ) {
-            let vm = this;
-            if (newVal == '') {
-                vm.species_community.distribution.community_original_area =
                     null;
             }
         },
