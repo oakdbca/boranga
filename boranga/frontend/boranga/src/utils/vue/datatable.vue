@@ -58,7 +58,6 @@ export default {
             // Clone options to avoid mutating the prop
             var options = { ...vm.dtOptions };
 
-            // Add custom error handler to ajax
             if (options.ajax) {
                 const originalAjax = options.ajax;
                 options.ajax = function (data, callback, settings) {
@@ -68,13 +67,20 @@ export default {
                             ? { url: originalAjax, type: 'GET' }
                             : { ...originalAjax };
 
+                    // Call the original data function to populate filters
+                    if (options.data && typeof options.data === 'function') {
+                        options.data.call(this, data);
+                    } else if (
+                        originalAjax.data &&
+                        typeof originalAjax.data === 'function'
+                    ) {
+                        originalAjax.data.call(this, data);
+                    }
+
                     $.ajax({
                         ...ajaxOptions,
-                        data,
+                        data, // This now includes filter parameters!
                         success: function (json) {
-                            // Ensure json is always an object with a data array
-                            // This is to deal with the cases where DRF returns an empty response
-                            // or a response that is not an object
                             if (!json || typeof json !== 'object') {
                                 json = {
                                     data: [],
@@ -85,7 +91,7 @@ export default {
                                             ? settings.draw
                                             : 0,
                                 };
-                            } else if (!Array.isArray(json.data)) {
+                            } else if (!('data' in json)) {
                                 json.data = [];
                             }
                             callback(json);
@@ -99,11 +105,25 @@ export default {
                                             window.location.pathname
                                         );
                                 }, 0);
-                                // Return empty data to suppress DataTables alerts
-                                callback({ data: [] });
+                                callback({
+                                    data: [],
+                                    recordsTotal: 0,
+                                    recordsFiltered: 0,
+                                    draw:
+                                        settings && settings.draw
+                                            ? settings.draw
+                                            : 0,
+                                });
                             } else {
-                                // Optionally handle other errors
-                                callback({ data: [] });
+                                callback({
+                                    data: [],
+                                    recordsTotal: 0,
+                                    recordsFiltered: 0,
+                                    draw:
+                                        settings && settings.draw
+                                            ? settings.draw
+                                            : 0,
+                                });
                             }
                         },
                     });
