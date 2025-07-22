@@ -58,6 +58,12 @@ class OccurrenceNotAuthorized(PermissionDenied):
     default_code = "occurrence_not_authorized"
 
 
+class InternalServerError(APIException):
+    status_code = 500
+    default_detail = "A server error occurred."
+    default_code = "internal_server_error"
+
+
 def custom_exception_handler(exc, context):
     """Custom django rest framework exception handler
     That makes sure all the exception responses are in json format since many django
@@ -82,6 +88,6 @@ def custom_exception_handler(exc, context):
     else:
         # Handle all other exceptions
         logger.exception(str(exc))
-        exc = serializers.ValidationError(str(exc))
+        exc = InternalServerError(str(exc))
 
     return exception_handler(exc, context)
