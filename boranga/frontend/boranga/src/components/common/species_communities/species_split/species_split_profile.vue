@@ -1,5 +1,10 @@
 <template lang="html">
     <div id="species">
+        {{ species_original }}<br />
+        species_community.regions
+        {{ species_community.regions }}<br />
+        species_community.districts
+        {{ species_community.districts }}
         <FormSection :form-collapse="false" label="Taxonomy" :Index="taxonBody">
             <div v-if="showRetainOriginalSpeciesCheckbox" class="row mb-3">
                 <div for="" class="col-sm-3">Retain Original Species?</div>
@@ -790,7 +795,7 @@
 <script>
 import { v4 as uuid } from 'uuid';
 import FormSection from '@/components/forms/section_toggle.vue';
-import { api_endpoints } from '@/utils/hooks';
+import { api_endpoints, helpers } from '@/utils/hooks';
 export default {
     name: 'SpeciesSplitProfile',
     components: {
@@ -867,6 +872,7 @@ export default {
             genus: null,
             name_authority: null,
             name_comments: null,
+            species_id: null,
             period_list: [
                 { id: 1, name: 'January' },
                 { id: 2, name: 'February' },
@@ -958,6 +964,13 @@ export default {
             } else {
                 vm.species_community.distribution.area_of_occupancy_actual =
                     null;
+            }
+        },
+        species_id: function (newVal) {
+            if (newVal) {
+                this.fetchSpeciesData();
+            } else {
+                this.clearSpeciesData();
             }
         },
     },
@@ -1175,6 +1188,7 @@ export default {
             vm.genus = '';
             vm.name_authority = '';
             vm.name_comments = '';
+            vm.species_id = null;
         },
         initialiseScientificNameLookup: function () {
             let vm = this;
@@ -1272,17 +1286,20 @@ export default {
                     vm.genus = e.params.data.genera_name;
                     vm.name_authority = e.params.data.name_authority;
                     vm.name_comments = e.params.data.name_comments;
+                    vm.species_id = e.params.data.species_id;
                 })
                 .on('select2:unselect', function () {
                     vm.resetTaxonomyDetails();
                     vm.species_community.taxonomy_id = '';
                     vm.species_community.taxonomy_details = null;
+                    vm.species_id = null;
                     vm.retainOriginalSpecies = false;
                 })
                 .on('select2:clear', function () {
                     vm.resetTaxonomyDetails();
                     vm.species_community.taxonomy_id = '';
                     vm.species_community.taxonomy_details = null;
+                    vm.species_id = null;
                     vm.retainOriginalSpecies = false;
                 })
                 .on('select2:open', function () {
@@ -1429,12 +1446,11 @@ export default {
             obj_field,
             select2_ref = ''
         ) {
+            let vm = this;
             // if checkbox is checked copy value from original  species to new species
             if ($('#' + chkbox).is(':checked') == true) {
                 this.species_community[obj_field] =
                     this.species_original[obj_field];
-                console.log(this.species_community[obj_field]);
-                console.log(select2_ref);
                 if (select2_ref != '') {
                     $(this.$refs[select2_ref])
                         .val(this.species_community[obj_field])
@@ -1446,7 +1462,9 @@ export default {
                 }
             } else {
                 if (select2_ref != '') {
-                    $(this.$refs[select2_ref]).val('').trigger('change');
+                    $(this.$refs[select2_ref])
+                        .val(vm.species_community.regions || '')
+                        .trigger('change');
                     this.chainedSelectDistricts(
                         this.species_community.regions,
                         'deselect'
@@ -1683,7 +1701,9 @@ export default {
         chainedSelectDistricts: function (regions, action) {
             let vm = this;
             if (action != 'fetch' && action != 'select') {
-                vm.species_community.districts = []; //-----to remove the previous selection
+                $(vm.$refs.districts_select)
+                    .val(vm.species_community.districts || '')
+                    .trigger('change');
             }
             vm.district_list = [];
             if (regions) {
@@ -1830,6 +1850,55 @@ export default {
                 $(this.$refs[this.scientific_name_lookup]).select2('open');
                 this.resetTaxonomyDetails();
             }
+        },
+        fetchSpeciesData: function () {
+            fetch(
+                helpers.add_endpoint_json(
+                    api_endpoints.species,
+                    this.species_id
+                )
+            )
+                .then((response) => response.json())
+                .then((data) => {
+                    // Set the data for the general and distribution sections and regions/districts
+                    this.species_community.department_file_numbers =
+                        data.department_file_numbers;
+                    this.species_community.last_data_curation_date =
+                        data.last_data_curation_date;
+                    this.species_community.conservation_plan_exists =
+                        data.conservation_plan_exists;
+                    this.species_community.conservation_plan_reference =
+                        data.conservation_plan_reference;
+                    this.species_community.comment = data.comment;
+                    this.species_community.distribution = data.distribution;
+                    // For each region in the data, populate the regions select2
+                    this.species_community.regions = data.regions;
+                    this.$refs.regions_select
+                        .select2('val', data.regions)
+                        .trigger('change');
+                    this.species_community.districts = data.districts;
+                    this.$refs.districts_select
+                        .select2('val', data.districts)
+                        .trigger('change');
+                })
+                .catch((error) => {
+                    console.error('Error fetching species data:', error);
+                });
+        },
+        resetSpeciesData: function () {
+            this.species_community.department_file_numbers =
+                this.species_original.department_file_numbers;
+            this.species_community.last_data_curation_date =
+                this.species_original.last_data_curation_date;
+            this.species_community.conservation_plan_exists =
+                this.species_original.conservation_plan_exists;
+            this.species_community.conservation_plan_reference =
+                this.species_original.conservation_plan_reference;
+            this.species_community.comment = this.species_original.comment;
+            this.species_community.distribution =
+                this.species_original.distribution;
+            this.species_community.regions = this.species_original.regions;
+            this.species_community.districts = this.species_original.districts;
         },
     },
 };

@@ -823,14 +823,14 @@ export default {
             let vm = this;
             if (proposal.assigned_officer) {
                 {
-                    if (proposal.assigned_officer == vm.profile.full_name)
+                    if (proposal.assigned_officer == vm.profile.user.full_name)
                         return true;
                     else return false;
                 }
             } else {
                 var assessor = proposal.allowed_assessors.filter(
                     function (elem) {
-                        return (elem.id = vm.profile.id);
+                        return (elem.id = vm.profile.user.id);
                     }
                 );
 

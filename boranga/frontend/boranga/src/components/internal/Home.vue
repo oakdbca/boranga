@@ -222,10 +222,10 @@ export default {
     },
     computed: {
         lastLogin: function () {
-            if (!this.profile) {
+            if (!this.profile?.user) {
                 return '';
             }
-            let localDate = new Date(this.profile.last_login);
+            let localDate = new Date(this.profile.user.last_login);
             return `${localDate.toLocaleDateString()} at ${localDate.toLocaleTimeString()}`;
         },
     },
@@ -246,12 +246,12 @@ export default {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    area_of_interest: vm.profile.area_of_interest,
+                    area_of_interest: vm.profile.user.area_of_interest,
                 }),
             }).then(
                 async (response) => {
                     const json = await response.json();
-                    vm.profile.area_of_interest = json.area_of_interest;
+                    vm.profile.user.area_of_interest = json.area_of_interest;
                 },
                 (error) => {
                     console.log(error);

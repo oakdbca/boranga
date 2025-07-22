@@ -187,7 +187,7 @@ export default {
     methods: {
         set_active_tab: function (group_name) {
             this.group_name = group_name;
-            if (!this.profile || !this.profile.area_of_interest) {
+            if (!this.profile?.user || !this.profile?.user.area_of_interest) {
                 localStorage.setItem('speciesCommunitiesActiveTab', group_name);
             }
             let elem = $('#pills-tab a[href="#pills-' + group_name + '"]');
@@ -204,8 +204,11 @@ export default {
                         let speciesCommunitiesActiveTab = localStorage.getItem(
                             'speciesCommunitiesActiveTab'
                         );
-                        if (vm.profile && vm.profile.area_of_interest) {
-                            vm.set_active_tab(vm.profile.area_of_interest);
+                        if (
+                            vm.profile?.user &&
+                            vm.profile.user.area_of_interest
+                        ) {
+                            vm.set_active_tab(vm.profile.user.area_of_interest);
                             return;
                         }
                         if (speciesCommunitiesActiveTab === null) {

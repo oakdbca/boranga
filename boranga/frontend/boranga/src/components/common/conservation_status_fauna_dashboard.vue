@@ -830,8 +830,8 @@ export default {
         },
         addFaunaCSVisibility: function () {
             return (
-                this.profile &&
-                this.profile.groups.find((i) =>
+                this.profile?.user &&
+                this.profile.user.groups.find((i) =>
                     [constants.GROUPS.INTERNAL_CONTRIBUTORS].includes(i)
                 )
             );
@@ -1575,9 +1575,10 @@ export default {
     mounted: function () {
         let vm = this;
         if (
-            vm.profile &&
-            vm.profile.groups &&
-            vm.profile.groups.includes(constants.GROUPS.INTERNAL_CONTRIBUTORS)
+            vm.profile?.user &&
+            vm.profile.user.groups.includes(
+                constants.GROUPS.INTERNAL_CONTRIBUTORS
+            )
         ) {
             vm.processing_statuses.push({
                 value: 'discarded_by_me',

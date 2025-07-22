@@ -357,8 +357,8 @@ export default {
     computed: {
         show_occurrences: function () {
             return (
-                this.profile &&
-                this.profile.groups.some((i) =>
+                this.profile?.user &&
+                this.profile.user.groups.some((i) =>
                     [
                         constants.GROUPS.READ_ONLY_USERS,
                         constants.GROUPS.CONSERVATION_STATUS_ASSESSORS,
@@ -372,8 +372,8 @@ export default {
         },
         show_occurrence_reports: function () {
             return (
-                this.profile &&
-                this.profile.groups.some((i) =>
+                this.profile?.user &&
+                this.profile.user.groups.some((i) =>
                     [
                         constants.GROUPS.READ_ONLY_USERS,
                         constants.GROUPS.CONSERVATION_STATUS_ASSESSORS,
@@ -422,7 +422,7 @@ export default {
     methods: {
         set_active_tab: function (group_name) {
             this.group_name = group_name;
-            if (!this.profile || !this.profile.area_of_interest) {
+            if (!this.profile?.user || !this.profile.user.area_of_interest) {
                 localStorage.setItem('occurrenceActiveTab', group_name);
             }
             let elem = $('#pills-tab a[href="#pills-' + group_name + '"]');
@@ -436,8 +436,11 @@ export default {
                 async (response) => {
                     vm.profile = await response.json();
                     vm.$nextTick(() => {
-                        if (vm.profile && vm.profile.area_of_interest) {
-                            vm.set_active_tab(vm.profile.area_of_interest);
+                        if (
+                            vm.profile?.user &&
+                            vm.profile.user.area_of_interest
+                        ) {
+                            vm.set_active_tab(vm.profile.user.area_of_interest);
                             return;
                         }
                         let occurrenceActiveTab = localStorage.getItem(
