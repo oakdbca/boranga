@@ -4,7 +4,7 @@ import traceback
 from django.core.exceptions import ValidationError
 from django.http import Http404
 from rest_framework import serializers
-from rest_framework.exceptions import APIException, PermissionDenied
+from rest_framework.exceptions import APIException, NotAuthenticated, PermissionDenied
 from rest_framework.views import exception_handler
 
 logger = logging.getLogger(__name__)
@@ -66,7 +66,9 @@ def custom_exception_handler(exc, context):
     """
 
     # Django rest framework errors are already in json format
-    if isinstance(exc, (serializers.ValidationError, Http404)):
+    if isinstance(
+        exc, (serializers.ValidationError, Http404, NotAuthenticated, PermissionDenied)
+    ):
         pass
 
     # handle django validation errors
