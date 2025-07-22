@@ -37,37 +37,49 @@ import '@/../node_modules/@fortawesome/fontawesome-free/css/all.min.css';
 
 extendMoment(moment);
 
-// Add CSRF Token to every request
-const customHeaders = new Headers({
-    'X-CSRFToken': helpers.getCookie('csrftoken'),
-});
-const customHeadersJSON = new Headers({
-    'X-CSRFToken': helpers.getCookie('csrftoken'),
-    'Content-Type': 'application/json',
-});
-
 const app = createApp(App);
 
 const fetch = window.fetch;
 window.fetch = ((originalFetch) => {
     return async (...args) => {
+        // Prepare headers
+        let headers;
         if (args.length > 1) {
-            if (typeof args[1].body === 'string') {
-                args[1].headers = customHeadersJSON;
-            } else {
-                args[1].headers = customHeaders;
-            }
+            headers =
+                args[1].headers instanceof Headers
+                    ? args[1].headers
+                    : new Headers(args[1].headers || {});
+        } else {
+            headers = new Headers();
         }
+
+        // Add CSRF token
+        headers.set('X-CSRFToken', helpers.getCookie('csrftoken'));
+
+        // Add Content-Type for JSON requests
+        if (args.length > 1 && typeof args[1].body === 'string') {
+            headers.set('Content-Type', 'application/json');
+        }
+
+        // Set headers back to args
+        if (args.length > 1) {
+            args[1].headers = headers;
+        } else {
+            args.push({ headers });
+        }
+
         // Await the response to check status
         const response = await originalFetch.apply(this, args);
 
-        // Handle 401/403 globally
+        // Redirect to login if 401 or 403 from /api endpoints (assume unauthenticated)
         if (
-            response.status === 401 &&
-            // Only redirect to login for requests to boranga api endpoints
-            args[0] &&
-            typeof args[0] === 'string' &&
-            new URL(args[0], window.location.origin).pathname.startsWith('/api')
+            response.status === 401 ||
+            (response.status === 403 &&
+                args[0] &&
+                typeof args[0] === 'string' &&
+                new URL(args[0], window.location.origin).pathname.startsWith(
+                    '/api'
+                ))
         ) {
             window.location.href =
                 '/login/?next=' + encodeURIComponent(window.location.pathname);
@@ -82,7 +94,6 @@ window.fetch = ((originalFetch) => {
             });
         }
 
-        // Return the response so the caller can process it (e.g., await response.json())
         return response;
     };
 })(fetch);
