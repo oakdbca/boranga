@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from decimal import Decimal
 
 import reversion
 import shapely.geometry as shp
@@ -9,6 +10,7 @@ from django.contrib.gis.db import models as gis_models
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.files.storage import FileSystemStorage
+from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.db.models import Sum
 from django.db.models.functions import Cast
@@ -1177,7 +1179,13 @@ class SpeciesDistribution(BaseModel):
     noo_auto = models.BooleanField(
         default=True
     )  # to check auto or manual entry of number_of_occurrences
-    extent_of_occurrences = models.IntegerField(null=True, blank=True)
+    extent_of_occurrences = models.DecimalField(
+        null=True,
+        blank=True,
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
     eoo_auto = models.BooleanField(
         default=True
     )  # extra boolean field to check auto or manual entry of extent_of_occurrences
@@ -1993,7 +2001,13 @@ class CommunityDistribution(BaseModel):
     noo_auto = models.BooleanField(
         default=True
     )  # to check auto or manual entry of number_of_occurrences
-    extent_of_occurrences = models.IntegerField(null=True, blank=True)
+    extent_of_occurrences = models.DecimalField(
+        null=True,
+        blank=True,
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
     eoo_auto = models.BooleanField(
         default=True
     )  # extra boolean field to check auto or manual entry of extent_of_occurrences
@@ -2006,7 +2020,13 @@ class CommunityDistribution(BaseModel):
     )  # to check auto or manual entry of area_of_occupancy_actual
     number_of_iucn_locations = models.IntegerField(null=True, blank=True)
     # Community Ecological Attributes
-    community_original_area = models.IntegerField(null=True, blank=True)
+    community_original_area = models.DecimalField(
+        null=True,
+        blank=True,
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
     community_original_area_accuracy = models.DecimalField(
         max_digits=15, decimal_places=5, null=True, blank=True
     )
