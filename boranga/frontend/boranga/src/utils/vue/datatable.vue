@@ -72,6 +72,22 @@ export default {
                         ...ajaxOptions,
                         data,
                         success: function (json) {
+                            // Ensure json is always an object with a data array
+                            // This is to deal with the cases where DRF returns an empty response
+                            // or a response that is not an object
+                            if (!json || typeof json !== 'object') {
+                                json = {
+                                    data: [],
+                                    recordsTotal: 0,
+                                    recordsFiltered: 0,
+                                    draw:
+                                        settings && settings.draw
+                                            ? settings.draw
+                                            : 0,
+                                };
+                            } else if (!Array.isArray(json.data)) {
+                                json.data = [];
+                            }
                             callback(json);
                         },
                         error: function (xhr) {
