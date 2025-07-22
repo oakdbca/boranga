@@ -638,15 +638,6 @@ class Species(RevisionedMixin):
             processing_status=ConservationStatus.PROCESSING_STATUS_APPROVED
         ).first()
 
-    def can_user_reopen(self, request):
-        user_editable_state = [
-            Species.PROCESSING_STATUS_HISTORICAL,
-        ]
-        if self.processing_status not in user_editable_state:
-            return False
-
-        return is_species_communities_approver(request) or request.user.is_superuser
-
     def can_user_save(self, request):
         user_closed_state = [
             Species.PROCESSING_STATUS_HISTORICAL,
@@ -903,16 +894,6 @@ class Species(RevisionedMixin):
                 ),
                 request,
             )
-
-    @transaction.atomic
-    def reopen(self, request):
-        if not self.processing_status == Species.PROCESSING_STATUS_HISTORICAL:
-            raise ValidationError(
-                "You cannot reopen a species that is not closed/historical"
-            )
-
-        self.processing_status = Species.PROCESSING_STATUS_ACTIVE
-        self.save(version_user=request.user)
 
     @transaction.atomic
     def discard(self, request):
@@ -1438,15 +1419,6 @@ class Community(RevisionedMixin):
             return True
         return False
 
-    def can_user_reopen(self, request):
-        user_editable_state = [
-            Community.PROCESSING_STATUS_HISTORICAL,
-        ]
-        if self.processing_status not in user_editable_state:
-            return False
-
-        return is_species_communities_approver(request) or request.user.is_superuser
-
     def has_user_edit_mode(self, request):
         officer_view_state = [
             Community.PROCESSING_STATUS_DRAFT,
@@ -1592,16 +1564,6 @@ class Community(RevisionedMixin):
         return self.conservation_status.filter(
             processing_status=ConservationStatus.PROCESSING_STATUS_APPROVED
         ).first()
-
-    @transaction.atomic
-    def reopen(self, request):
-        if not self.processing_status == Community.PROCESSING_STATUS_HISTORICAL:
-            raise ValidationError(
-                "You cannot reopen a community that is not closed/historical"
-            )
-
-        self.processing_status = Community.PROCESSING_STATUS_ACTIVE
-        self.save(version_user=request.user)
 
     @transaction.atomic
     def discard(self, request):
