@@ -843,6 +843,12 @@ class InternalSpeciesSerializer(BaseSpeciesSerializer):
     user_edit_mode = serializers.SerializerMethodField()
     can_user_edit = serializers.SerializerMethodField()
     can_add_log = serializers.SerializerMethodField()
+    fauna_group_name = serializers.CharField(
+        source="fauna_group.name", read_only=True, required=False, allow_null=True
+    )
+    fauna_sub_group_name = serializers.CharField(
+        source="fauna_sub_group.name", read_only=True, required=False, allow_null=True
+    )
 
     class Meta:
         model = Species
@@ -878,6 +884,10 @@ class InternalSpeciesSerializer(BaseSpeciesSerializer):
             "area_occurrence_convex_hull_km2",
             "can_add_log",
             "department_file_numbers",
+            "fauna_group",
+            "fauna_group_name",
+            "fauna_sub_group",
+            "fauna_sub_group_name",
         )
 
     def get_submitter(self, obj):
@@ -1408,6 +1418,8 @@ class SaveSpeciesSerializer(BaseSpeciesSerializer):
             "regions",
             "districts",
             "department_file_numbers",
+            "fauna_group",
+            "fauna_sub_group",
         )
         read_only_fields = ("id", "group_type")
 
