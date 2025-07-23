@@ -48,16 +48,13 @@
                 >
                 <div class="col-sm-8">
                     <input
-                        id="taxon_name_id"
+                        id="species_combine_taxon_name_id"
                         v-model="taxon_name_id"
                         :disabled="true"
                         type="text"
                         class="form-control"
                         placeholder=""
                     />
-                    <!-- gives error for the below when new species created as no taxonomy id is present -->
-                    <!-- <input :disabled="true" type="text" class="form-control" id="taxon_name_id" placeholder=""
-                    v-model="species_communities.taxonomy_details.taxon_name_id"/> -->
                 </div>
             </div>
             <div class="row mb-3">

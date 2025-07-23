@@ -47,7 +47,7 @@
                         />
                         <input
                             v-else
-                            id="taxon_name_id"
+                            id="scientific_name_lookup"
                             v-model="
                                 species_community.taxonomy_details
                                     .scientific_name
@@ -1179,28 +1179,30 @@
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <label
-                        for="conservation_plan_exists"
-                        class="col-sm-3 col-form-label"
+                    <label class="col-sm-3 col-form-label"
                         >Conservation Plan Exists:
                     </label>
                     <div class="col-sm-9">
-                        <label for="conservation_plan_exists" class="me-2"
+                        <label
+                            for="original_conservation_plan_exists_no"
+                            class="me-2"
                             >No</label
                         >
                         <input
-                            id="conservation_plan_exists"
+                            id="original_conservation_plan_exists_no"
                             v-model="species_community.conservation_plan_exists"
                             :disabled="isReadOnly"
                             type="radio"
                             :value="false"
                             class="form-check-input me-2"
                         />
-                        <label for="conservation_plan_exists" class="me-2"
+                        <label
+                            for="original_conservation_plan_exists_yes"
+                            class="me-2"
                             >Yes</label
                         >
                         <input
-                            id="conservation_plan_exists"
+                            id="original_conservation_plan_exists_yes"
                             v-model="species_community.conservation_plan_exists"
                             :disabled="isReadOnly"
                             type="radio"
@@ -1255,16 +1257,16 @@
                 Index="publishing"
             >
                 <div class="row mb-3">
-                    <label
-                        for="distribution_publishing"
-                        class="col-sm-3 col-form-label"
+                    <label class="col-sm-3 col-form-label"
                         >Distribution:
                     </label>
                     <div class="col-sm-9">
                         <div class="form-check form-check-inline">
-                            <label for="distribution_publishing">Private</label>
+                            <label for="distribution_publishing_private"
+                                >Private</label
+                            >
                             <input
-                                id="distribution_publishing"
+                                id="distribution_publishing_private"
                                 v-model="
                                     species_community.publishing_status
                                         .distribution_public
@@ -1276,9 +1278,11 @@
                             />
                         </div>
                         <div class="form-check form-check-inline">
-                            <label for="distribution_publishing">Public</label>
+                            <label for="distribution_publishing_public"
+                                >Public</label
+                            >
                             <input
-                                id="distribution_publishing"
+                                id="distribution_publishing_public"
                                 v-model="
                                     species_community.publishing_status
                                         .distribution_public
@@ -1292,18 +1296,16 @@
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <label
-                        for="conservation_status_publishing"
-                        class="col-sm-3 col-form-label"
+                    <label class="col-sm-3 col-form-label"
                         >Conservation Status:
                     </label>
                     <div class="col-sm-9">
                         <div class="form-check form-check-inline">
-                            <label for="conservation_status_publishing"
+                            <label for="conservation_status_publishing_private"
                                 >Private</label
                             >
                             <input
-                                id="conservation_status_publishing"
+                                id="conservation_status_publishing_private"
                                 v-model="
                                     species_community.publishing_status
                                         .conservation_status_public
@@ -1315,11 +1317,11 @@
                             />
                         </div>
                         <div class="form-check form-check-inline">
-                            <label for="conservation_status_publishing"
+                            <label for="conservation_status_publishing_public"
                                 >Public</label
                             >
                             <input
-                                id="conservation_status_publishing"
+                                id="conservation_status_publishing_public"
                                 v-model="
                                     species_community.publishing_status
                                         .conservation_status_public
@@ -1351,16 +1353,14 @@
                 </div>
             </div> -->
                 <div class="row mb-3">
-                    <label
-                        for="threats_publishing"
-                        class="col-sm-3 col-form-label"
-                        >Threats:
-                    </label>
+                    <label class="col-sm-3 col-form-label">Threats: </label>
                     <div class="col-sm-9">
                         <div class="form-check form-check-inline">
-                            <label for="threats_publishing">Private</label>
+                            <label for="threats_publishing_private"
+                                >Private</label
+                            >
                             <input
-                                id="threats_publishing"
+                                id="threats_publishing_private"
                                 v-model="
                                     species_community.publishing_status
                                         .threats_public
@@ -1372,9 +1372,11 @@
                             />
                         </div>
                         <div class="form-check form-check-inline">
-                            <label for="threats_publishing">Public</label>
+                            <label for="threats_publishing_public"
+                                >Public</label
+                            >
                             <input
-                                id="threats_publishing"
+                                id="threats_publishing_public"
                                 v-model="
                                     species_community.publishing_status
                                         .threats_public
