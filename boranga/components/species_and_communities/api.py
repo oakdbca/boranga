@@ -761,11 +761,13 @@ class SpeciesFilterBackend(DatatablesFilterBackend):
         if filter_common_name and not filter_common_name.lower() == "all":
             queryset = queryset.filter(taxonomy__vernaculars__id=filter_common_name)
 
-        filter_phylogenetic_group = request.POST.get("filter_phylogenetic_group")
-        if filter_phylogenetic_group and not filter_phylogenetic_group.lower() == "all":
-            queryset = queryset.filter(
-                taxonomy__informal_groups__classification_system_fk_id=filter_phylogenetic_group
-            )
+        filter_fauna_group = request.POST.get("filter_fauna_group")
+        if filter_fauna_group and not filter_fauna_group.lower() == "all":
+            queryset = queryset.filter(fauna_group_id=filter_fauna_group)
+
+        filter_fauna_sub_group = request.POST.get("filter_fauna_sub_group")
+        if filter_fauna_sub_group and not filter_fauna_sub_group.lower() == "all":
+            queryset = queryset.filter(fauna_sub_group_id=filter_fauna_sub_group)
 
         filter_family = request.POST.get("filter_family")
         if filter_family and not filter_family.lower() == "all":
