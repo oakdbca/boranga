@@ -1,10 +1,5 @@
 <template lang="html">
     <div id="species">
-        {{ species_original }}<br />
-        species_community.regions
-        {{ species_community.regions }}<br />
-        species_community.districts
-        {{ species_community.districts }}
         <FormSection :form-collapse="false" label="Taxonomy" :Index="taxonBody">
             <div v-if="showRetainOriginalSpeciesCheckbox" class="row mb-3">
                 <div for="" class="col-sm-3">Retain Original Species?</div>
@@ -29,143 +24,149 @@
                     <select
                         :id="scientific_name_lookup"
                         :ref="scientific_name_lookup"
-                        :disabled="isReadOnly"
                         :name="scientific_name_lookup"
                         class="form-control"
                     />
                 </div>
             </div>
-            <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label"></label>
-                <div class="col-sm-8">
-                    <textarea
-                        id="species_display"
-                        v-model="species_display"
-                        disabled
-                        class="form-control"
-                        rows="3"
-                    />
+            <template v-if="species_community.taxonomy_id">
+                <div class="row mb-3">
+                    <label for="" class="col-sm-3 control-label"></label>
+                    <div class="col-sm-8">
+                        <textarea
+                            id="species_display"
+                            v-model="species_display"
+                            disabled
+                            class="form-control"
+                            rows="3"
+                        />
+                    </div>
                 </div>
-            </div>
-            <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label"
-                    >Common Name:</label
-                >
-                <div class="col-sm-8">
-                    <textarea
-                        id="common_name"
-                        v-model="common_name"
-                        :disabled="true"
-                        class="form-control"
-                        rows="2"
-                        placeholder=""
-                    />
+                <div class="row mb-3">
+                    <label for="" class="col-sm-3 control-label"
+                        >Common Name:</label
+                    >
+                    <div class="col-sm-8">
+                        <textarea
+                            id="common_name"
+                            v-model="common_name"
+                            :disabled="true"
+                            class="form-control"
+                            rows="2"
+                            placeholder=""
+                        />
+                    </div>
                 </div>
-            </div>
-            <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label"
-                    >Taxon Name ID:</label
-                >
-                <div class="col-sm-8">
-                    <input
-                        id="taxon_name_id"
-                        v-model="taxon_name_id"
-                        :disabled="true"
-                        type="text"
-                        class="form-control"
-                        placeholder=""
-                    />
+                <div class="row mb-3">
+                    <label
+                        for="split_taxon_name_id"
+                        class="col-sm-3 control-label"
+                        >Taxon Name ID:</label
+                    >
+                    <div class="col-sm-8">
+                        <input
+                            id="split_taxon_name_id"
+                            v-model="taxon_name_id"
+                            :disabled="true"
+                            type="text"
+                            class="form-control"
+                            placeholder=""
+                        />
+                    </div>
                 </div>
-            </div>
-            <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label"
-                    >Previous Name:</label
-                >
-                <div class="col-sm-8">
-                    <input
-                        id="previous_name"
-                        v-model="taxon_previous_name"
-                        :disabled="true"
-                        type="text"
-                        class="form-control"
-                        placeholder=""
-                    />
+                <div class="row mb-3">
+                    <label for="" class="col-sm-3 control-label"
+                        >Previous Name:</label
+                    >
+                    <div class="col-sm-8">
+                        <input
+                            id="previous_name"
+                            v-model="taxon_previous_name"
+                            :disabled="true"
+                            type="text"
+                            class="form-control"
+                            placeholder=""
+                        />
+                    </div>
                 </div>
-            </div>
-            <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label"
-                    >Phylogenetic Group:</label
-                >
-                <div class="col-sm-8">
-                    <textarea
-                        id="phylogenetic_group"
-                        v-model="phylogenetic_group"
-                        :disabled="true"
-                        class="form-control"
-                        rows="1"
-                        placeholder=""
-                    />
+                <div class="row mb-3">
+                    <label for="" class="col-sm-3 control-label"
+                        >Phylogenetic Group:</label
+                    >
+                    <div class="col-sm-8">
+                        <textarea
+                            id="phylogenetic_group"
+                            v-model="phylogenetic_group"
+                            :disabled="true"
+                            class="form-control"
+                            rows="1"
+                            placeholder=""
+                        />
+                    </div>
                 </div>
-            </div>
-            <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label">Family:</label>
-                <div class="col-sm-8">
-                    <textarea
-                        id="family"
-                        v-model="family"
-                        :disabled="true"
-                        rows="1"
-                        class="form-control"
-                        placeholder=""
-                    />
+                <div class="row mb-3">
+                    <label for="" class="col-sm-3 control-label">Family:</label>
+                    <div class="col-sm-8">
+                        <textarea
+                            id="family"
+                            v-model="family"
+                            :disabled="true"
+                            rows="1"
+                            class="form-control"
+                            placeholder=""
+                        />
+                    </div>
                 </div>
-            </div>
-            <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label">Genus:</label>
-                <div class="col-sm-8">
-                    <textarea
-                        id="genus"
-                        v-model="genus"
-                        :disabled="true"
-                        rows="1"
-                        class="form-control"
-                        placeholder=""
-                    />
+                <div class="row mb-3">
+                    <label for="" class="col-sm-3 control-label">Genus:</label>
+                    <div class="col-sm-8">
+                        <textarea
+                            id="genus"
+                            v-model="genus"
+                            :disabled="true"
+                            rows="1"
+                            class="form-control"
+                            placeholder=""
+                        />
+                    </div>
                 </div>
-            </div>
-            <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label"
-                    >Name Authority:</label
-                >
-                <div class="col-sm-8">
-                    <textarea
-                        id="name_authority"
-                        v-model="name_authority"
-                        :disabled="true"
-                        rows="1"
-                        class="form-control"
-                        placeholder=""
-                    />
+                <div class="row mb-3">
+                    <label for="" class="col-sm-3 control-label"
+                        >Name Authority:</label
+                    >
+                    <div class="col-sm-8">
+                        <textarea
+                            id="name_authority"
+                            v-model="name_authority"
+                            :disabled="true"
+                            rows="1"
+                            class="form-control"
+                            placeholder=""
+                        />
+                    </div>
                 </div>
-            </div>
-            <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label"
-                    >Nomos names comments:</label
-                >
-                <div class="col-sm-8">
-                    <textarea
-                        id="comment"
-                        v-model="name_comments"
-                        :disabled="true"
-                        class="form-control"
-                        rows="3"
-                        placeholder=""
-                    />
+                <div class="row mb-3">
+                    <label for="" class="col-sm-3 control-label"
+                        >Nomos names comments:</label
+                    >
+                    <div class="col-sm-8">
+                        <textarea
+                            id="comment"
+                            v-model="name_comments"
+                            :disabled="true"
+                            class="form-control"
+                            rows="3"
+                            placeholder=""
+                        />
+                    </div>
                 </div>
-            </div>
+            </template>
         </FormSection>
         <FormSection
-            v-if="!thisSplitSpeciesHasOriginalTaxonomyId"
+            v-if="
+                species_community.taxonomy_id &&
+                !thisSplitSpeciesHasOriginalTaxonomyId
+            "
             :form-collapse="false"
             label="Distribution"
             :Index="distributionBody"
@@ -206,7 +207,6 @@
                     <textarea
                         id="distribution"
                         v-model="species_community.distribution.distribution"
-                        :disabled="isReadOnly"
                         class="form-control"
                         rows="1"
                         placeholder=""
@@ -243,7 +243,6 @@
                     <select
                         ref="regions_select"
                         v-model="species_community.regions"
-                        :disabled="isReadOnly"
                         style="width: 100%"
                         class="form-select input-sm"
                     >
@@ -290,7 +289,6 @@
                     <select
                         ref="districts_select"
                         v-model="species_community.districts"
-                        :disabled="isReadOnly"
                         class="form-select"
                     >
                         <option value="" selected disabled>
@@ -307,229 +305,473 @@
                 </div>
             </div>
             <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label"
+                <label for="" class="col-sm-4 col-form-label"
                     >{{ species_original.species_number }} Number of
                     Occurrences:</label
                 >
-                <div class="col-sm-6">
+                <div class="col-sm-4">
                     <input
-                        id="no_of_occurrences_orig"
+                        v-if="species_original.distribution.noo_auto"
+                        id="no_of_occurrences"
+                        v-model="species_original.occurrence_count"
+                        :disabled="true"
+                        type="number"
+                        class="form-control"
+                        placeholder=""
+                    />
+                    <input
+                        v-else
+                        id="no_of_occurrences"
+                        ref="number_of_occurrences"
                         v-model="
                             species_original.distribution.number_of_occurrences
                         "
-                        :disabled="true"
                         type="number"
                         class="form-control"
                         placeholder=""
                     />
                 </div>
+                <div class="col-sm-3 d-flex align-items-center">
+                    <div class="form-check form-check-inline">
+                        <input
+                            id="noo_auto"
+                            v-model="species_original.distribution.noo_auto"
+                            :disabled="true"
+                            type="radio"
+                            :value="true"
+                            class="form-check-input"
+                        />
+                        <label class="form-check-label">auto</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input
+                            id="noo_manual"
+                            v-model="species_original.distribution.noo_auto"
+                            :disabled="true"
+                            type="radio"
+                            :value="false"
+                            class="form-check-input"
+                        />
+                        <label class="form-check-label">manual</label>
+                    </div>
+                </div>
+                <div class="col-sm-1">
+                    <input
+                        :id="'no_of_occurrences' + species_community.id"
+                        class="form-check-input"
+                        type="checkbox"
+                        @change="
+                            checkDistributionInput(
+                                'no_of_occurrences' + species_community.id,
+                                'number_of_occurrences'
+                            )
+                        "
+                    />
+                </div>
             </div>
             <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label"
+                <label for="" class="col-sm-4 col-form-label"
                     >Number of Occurrences:</label
                 >
-                <div class="col-sm-6">
+                <div class="col-sm-4">
                     <input
+                        v-if="species_community.distribution.noo_auto"
                         id="no_of_occurrences"
+                        v-model="species_community.occurrence_count"
+                        type="number"
+                        class="form-control"
+                        placeholder=""
+                    />
+                    <input
+                        v-else
+                        id="no_of_occurrences"
+                        ref="number_of_occurrences"
                         v-model="
                             species_community.distribution.number_of_occurrences
                         "
-                        :disabled="isReadOnly"
                         type="number"
                         class="form-control"
                         placeholder=""
                     />
                 </div>
-                <div class="col-sm-3">
+                <div class="col-sm-3 d-flex align-items-center">
                     <div class="form-check form-check-inline">
                         <input
+                            id="noo_auto"
                             v-model="species_community.distribution.noo_auto"
-                            :disabled="isReadOnly"
                             type="radio"
-                            value="true"
-                            class="noo_auto form-check-input"
-                            name="noo_auto"
+                            :value="true"
+                            class="form-check-input"
                         />
                         <label class="form-check-label">auto</label>
                     </div>
                     <div class="form-check form-check-inline">
                         <input
+                            id="noo_manual"
                             v-model="species_community.distribution.noo_auto"
-                            :disabled="isReadOnly"
                             type="radio"
-                            value="false"
-                            class="noo_auto form-check-input"
-                            name="noo_auto"
+                            :value="false"
+                            class="form-check-input"
                         />
                         <label class="form-check-label">manual</label>
                     </div>
                 </div>
             </div>
             <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label"
-                    >{{ species_original.species_number }} Extent of Occurrences
-                    (km2):</label
-                >
-                <div class="col-sm-6">
-                    <input
-                        id="extent_of_occurrence_orig"
-                        v-model="
-                            species_original.distribution.extent_of_occurrences
-                        "
-                        :disabled="true"
-                        type="number"
-                        class="form-control"
-                        placeholder=""
-                    />
+                <label for="" class="col-sm-4 col-form-label"
+                    >{{ species_original.species_number }} Extent of
+                    Occurrences:
+                </label>
+                <div class="col-sm-4">
+                    <div class="input-group">
+                        <input
+                            v-if="species_original.distribution.eoo_auto"
+                            id="extent_of_occurrence"
+                            v-model="
+                                species_original.area_occurrence_convex_hull_km2
+                            "
+                            :disabled="true"
+                            type="number"
+                            class="form-control"
+                            placeholder=""
+                        />
+                        <input
+                            v-else
+                            id="extent_of_occurrence"
+                            ref="extent_of_occurrence"
+                            v-model="
+                                species_original.distribution
+                                    .extent_of_occurrences
+                            "
+                            :disabled="true"
+                            type="number"
+                            min="0.00"
+                            step="0.01"
+                            max="9999999999.99"
+                            class="form-control"
+                            placeholder=""
+                        />
+                        <span
+                            id="area_of_occupancy_km2-addon"
+                            class="input-group-text"
+                            >km&#xb2;</span
+                        >
+                    </div>
                 </div>
-            </div>
-            <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label"
-                    >Extent of Occurrences (km2):</label
-                >
-                <div class="col-sm-6">
-                    <input
-                        id="extent_of_occurrence"
-                        v-model="
-                            species_community.distribution.extent_of_occurrences
-                        "
-                        :disabled="isReadOnly"
-                        type="number"
-                        class="form-control"
-                        placeholder=""
-                    />
-                </div>
-                <div class="col-sm-3">
+                <div class="col-sm-3 d-flex align-items-center">
                     <div class="form-check form-check-inline">
                         <input
-                            v-model="species_community.distribution.eoo_auto"
-                            :disabled="isReadOnly"
+                            id="eoo_auto"
+                            v-model="species_original.distribution.eoo_auto"
+                            :disabled="true"
                             type="radio"
-                            value="true"
-                            class="eoo_auto form-check-input"
-                            name="eoo_auto"
+                            :value="true"
+                            class="form-check-input"
                         />
                         <label class="form-check-label">auto</label>
                     </div>
                     <div class="form-check form-check-inline">
                         <input
-                            v-model="species_community.distribution.eoo_auto"
-                            :disabled="isReadOnly"
+                            id="eoo_manual"
+                            v-model="species_original.distribution.eoo_auto"
+                            :disabled="true"
                             type="radio"
-                            value="false"
-                            class="eoo_auto form-check-input"
-                            name="eoo_auto"
+                            :value="false"
+                            class="form-check-input"
+                        />
+                        <label class="form-check-label">manual</label>
+                    </div>
+                </div>
+                <div class="col-sm-1">
+                    <input
+                        :id="'eoo_manual' + species_original.id"
+                        class="form-check-input"
+                        type="checkbox"
+                        @change="
+                            checkDistributionInput(
+                                'eoo_manual' + species_original.id,
+                                'extent_of_occurrences'
+                            )
+                        "
+                    />
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="" class="col-sm-4 col-form-label"
+                    >Extent of Occurrences:
+                </label>
+                <div class="col-sm-4">
+                    <div class="input-group">
+                        <input
+                            v-if="species_community.distribution.eoo_auto"
+                            id="extent_of_occurrence"
+                            v-model="
+                                species_community.area_occurrence_convex_hull_km2
+                            "
+                            type="number"
+                            class="form-control"
+                            placeholder=""
+                        />
+                        <input
+                            v-else
+                            id="extent_of_occurrence"
+                            ref="extent_of_occurrence"
+                            v-model="
+                                species_community.distribution
+                                    .extent_of_occurrences
+                            "
+                            type="number"
+                            min="0.00"
+                            step="0.01"
+                            max="9999999999.99"
+                            class="form-control"
+                            placeholder=""
+                        />
+                        <span
+                            id="area_of_occupancy_km2-addon"
+                            class="input-group-text"
+                            >km&#xb2;</span
+                        >
+                    </div>
+                </div>
+                <div class="col-sm-3 d-flex align-items-center">
+                    <div class="form-check form-check-inline">
+                        <input
+                            id="eoo_auto"
+                            v-model="species_community.distribution.eoo_auto"
+                            type="radio"
+                            :value="true"
+                            class="form-check-input"
+                        />
+                        <label class="form-check-label">auto</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input
+                            id="eoo_manual"
+                            v-model="species_community.distribution.eoo_auto"
+                            type="radio"
+                            :value="false"
+                            class="form-check-input"
                         />
                         <label class="form-check-label">manual</label>
                     </div>
                 </div>
             </div>
             <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label"
+                <label for="" class="col-sm-4 col-form-label"
+                    >{{ species_original.species_number }} Area of
+                    Occupancy:</label
+                >
+                <div class="col-sm-4">
+                    <div class="input-group">
+                        <input
+                            id="area_of_occupany"
+                            v-model="
+                                species_original.distribution.area_of_occupancy
+                            "
+                            :disabled="true"
+                            type="number"
+                            class="form-control"
+                            placeholder=""
+                        />
+                        <span
+                            id="area_of_occupancy_km2-addon"
+                            class="input-group-text"
+                            >km&#xb2;</span
+                        >
+                    </div>
+                </div>
+                <div class="col-sm-3"></div>
+                <div class="col-sm-1">
+                    <input
+                        :id="'area_of_occupancy' + species_original.id"
+                        class="form-check-input"
+                        type="checkbox"
+                        @change="
+                            checkDistributionInput(
+                                'area_of_occupancy' + species_original.id,
+                                'area_of_occupancy'
+                            )
+                        "
+                    />
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="" class="col-sm-4 col-form-label"
+                    >Area of Occupancy:</label
+                >
+
+                <div class="col-sm-4">
+                    <div class="input-group">
+                        <input
+                            id="area_of_occupany"
+                            v-model="
+                                species_community.distribution.area_of_occupancy
+                            "
+                            type="number"
+                            class="form-control"
+                            placeholder=""
+                        />
+                        <span
+                            id="area_of_occupancy_km2-addon"
+                            class="input-group-text"
+                            >km&#xb2;</span
+                        >
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="" class="col-sm-4 col-form-label"
                     >{{ species_original.species_number }} Actual Area of
-                    Occupancy<br />(km2):</label
-                >
-                <div class="col-sm-6">
-                    <input
-                        id="area_of_occupancy_actual_orig"
-                        v-model="
-                            species_original.distribution
-                                .area_of_occupancy_actual
-                        "
-                        :disabled="true"
-                        type="number"
-                        class="form-control"
-                        placeholder=""
-                    />
+                    Occupancy:
+                </label>
+                <div class="col-sm-4">
+                    <div class="input-group">
+                        <input
+                            v-if="species_original.distribution.aoo_actual_auto"
+                            id="area_of_occupancy_actual"
+                            v-model="species_original.area_of_occupancy_km2"
+                            :disabled="true"
+                            type="number"
+                            step="any"
+                            class="form-control"
+                            placeholder=""
+                            area-describedby=""
+                        />
+                        <input
+                            v-else
+                            id="area_of_occupancy_actual"
+                            ref="area_of_occupancy_actual"
+                            v-model="
+                                species_original.distribution
+                                    .area_of_occupancy_actual
+                            "
+                            :disabled="true"
+                            type="number"
+                            step="any"
+                            class="form-control"
+                            placeholder=""
+                        />
+                        <span
+                            id="area_of_occupancy_km2-addon"
+                            class="input-group-text"
+                            >km&#xb2;</span
+                        >
+                    </div>
                 </div>
-            </div>
-            <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label"
-                    >Actual Area of Occupancy<br />(km2):</label
-                >
-                <div class="col-sm-6">
-                    <input
-                        id="area_of_occupancy_actual"
-                        v-model="
-                            species_community.distribution
-                                .area_of_occupancy_actual
-                        "
-                        :disabled="isReadOnly"
-                        type="number"
-                        class="form-control"
-                        placeholder=""
-                    />
-                </div>
-                <div class="col-sm-3">
+                <div class="col-sm-3 d-flex align-items-center">
                     <div class="form-check form-check-inline">
                         <input
+                            id="aoo_actual_auto"
                             v-model="
-                                species_community.distribution.aoo_actual_auto
+                                species_original.distribution.aoo_actual_auto
                             "
-                            :disabled="isReadOnly"
+                            :disabled="true"
                             type="radio"
-                            value="true"
-                            class="aoo_actual_auto form-check-input"
-                            name="aoo_actual_auto"
+                            :value="true"
+                            class="form-check-input"
                         />
                         <label class="form-check-label">auto</label>
                     </div>
                     <div class="form-check form-check-inline">
                         <input
+                            id="aoo_actual_manual"
+                            v-model="
+                                species_original.distribution.aoo_actual_auto
+                            "
+                            :disabled="true"
+                            type="radio"
+                            :value="false"
+                            class="form-check-input"
+                        />
+                        <label class="form-check-label">manual</label>
+                    </div>
+                </div>
+                <div class="col-sm-1">
+                    <input
+                        :id="'aoo_actual_manual' + species_original.id"
+                        class="form-check-input"
+                        type="checkbox"
+                        @change="
+                            checkDistributionInput(
+                                'aoo_actual_manual' + species_original.id,
+                                'area_of_occupancy_actual'
+                            )
+                        "
+                    />
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="" class="col-sm-4 col-form-label"
+                    >Actual Area of Occupancy:
+                </label>
+                <div class="col-sm-4">
+                    <div class="input-group">
+                        <input
+                            v-if="
+                                species_community.distribution.aoo_actual_auto
+                            "
+                            id="area_of_occupancy_actual"
+                            v-model="species_community.area_of_occupancy_km2"
+                            type="number"
+                            step="any"
+                            class="form-control"
+                            placeholder=""
+                            area-describedby=""
+                        />
+                        <input
+                            v-else
+                            id="area_of_occupancy_actual"
+                            ref="area_of_occupancy_actual"
+                            v-model="
+                                species_community.distribution
+                                    .area_of_occupancy_actual
+                            "
+                            type="number"
+                            step="any"
+                            class="form-control"
+                            placeholder=""
+                        />
+                        <span
+                            id="area_of_occupancy_km2-addon"
+                            class="input-group-text"
+                            >km&#xb2;</span
+                        >
+                    </div>
+                </div>
+                <div class="col-sm-3 d-flex align-items-center">
+                    <div class="form-check form-check-inline">
+                        <input
+                            id="aoo_actual_auto"
                             v-model="
                                 species_community.distribution.aoo_actual_auto
                             "
-                            :disabled="isReadOnly"
                             type="radio"
-                            value="false"
-                            class="aoo_actual_auto form-check-input"
-                            name="aoo_actual_auto"
+                            :value="true"
+                            class="form-check-input"
+                        />
+                        <label class="form-check-label">auto</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input
+                            id="aoo_actual_manual"
+                            v-model="
+                                species_community.distribution.aoo_actual_auto
+                            "
+                            type="radio"
+                            :value="false"
+                            class="form-check-input"
                         />
                         <label class="form-check-label">manual</label>
                     </div>
                 </div>
             </div>
             <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label"
-                    >{{ species_original.species_number }} Area of Occupancy<br />(2km
-                    x 2km):</label
-                >
-                <div class="col-sm-6">
-                    <input
-                        id="area_of_occupany_orig"
-                        v-model="
-                            species_original.distribution.area_of_occupancy
-                        "
-                        :disabled="true"
-                        type="number"
-                        class="form-control"
-                        placeholder=""
-                    />
-                </div>
-            </div>
-            <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label"
-                    >Area of Occupancy<br />(10km x 10km):</label
-                >
-                <div class="col-sm-6">
-                    <input
-                        id="area_of_occupany"
-                        v-model="
-                            species_community.distribution.area_of_occupancy
-                        "
-                        :disabled="isReadOnly"
-                        type="number"
-                        class="form-control"
-                        placeholder=""
-                    />
-                </div>
-            </div>
-            <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label"
+                <label for="" class="col-sm-4 control-label"
                     >{{ species_original.species_number }} Number of IUCN
                     Locations:</label
                 >
-                <div class="col-sm-8">
+                <div class="col-sm-4">
                     <input
                         id="no_of_iucn_locations"
                         v-model="
@@ -542,6 +784,7 @@
                         placeholder=""
                     />
                 </div>
+                <div class="col-sm-3"></div>
                 <div class="col-sm-1">
                     <input
                         :id="'no_of_iucn_locations' + species_community.id"
@@ -557,17 +800,16 @@
                 </div>
             </div>
             <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label"
+                <label for="" class="col-sm-4 control-label"
                     >Number of IUCN Locations:</label
                 >
-                <div class="col-sm-8">
+                <div class="col-sm-4">
                     <input
                         id="no_of_iucn_locations"
                         v-model="
                             species_community.distribution
                                 .number_of_iucn_locations
                         "
-                        :disabled="isReadOnly"
                         type="number"
                         class="form-control"
                         placeholder=""
@@ -575,11 +817,11 @@
                 </div>
             </div>
             <div class="row mb-3">
-                <label for="" class="col-sm-3 col-form-label"
+                <label for="" class="col-sm-4 col-form-label"
                     >{{ species_original.species_number }} Number of IUCN
                     Sub-populations:</label
                 >
-                <div class="col-sm-8">
+                <div class="col-sm-4">
                     <input
                         id="number_of_iucn_subpopulations"
                         v-model="
@@ -592,6 +834,7 @@
                         placeholder=""
                     />
                 </div>
+                <div class="col-sm-3"></div>
                 <div class="col-sm-1">
                     <input
                         :id="'no_of_iucn_subpopulations' + species_community.id"
@@ -608,17 +851,16 @@
                 </div>
             </div>
             <div class="row mb-3">
-                <label for="" class="col-sm-3 col-form-label"
+                <label for="" class="col-sm-4 col-form-label"
                     >Number of IUCN Sub-populations:</label
                 >
-                <div class="col-sm-8">
+                <div class="col-sm-4">
                     <input
                         id="number_of_iucn_subpopulations"
                         v-model="
                             species_community.distribution
                                 .number_of_iucn_subpopulations
                         "
-                        :disabled="isReadOnly"
                         type="number"
                         class="form-control"
                         placeholder=""
@@ -627,7 +869,10 @@
             </div>
         </FormSection>
         <FormSection
-            v-if="!thisSplitSpeciesHasOriginalTaxonomyId"
+            v-if="
+                species_community.taxonomy_id &&
+                !thisSplitSpeciesHasOriginalTaxonomyId
+            "
             :form-collapse="false"
             label="General"
             :Index="generalBody"
@@ -669,14 +914,47 @@
                     <input
                         id="department_file_numbers"
                         v-model="species_community.department_file_numbers"
-                        :disabled="isReadOnly"
                         type="text"
                         class="form-control"
                         placeholder=""
                     />
                 </div>
             </div>
-
+            <div class="row mb-3">
+                <label for="" class="col-sm-3 control-label"
+                    >{{ species_original.species_number }} Last data curation
+                    date:
+                </label>
+                <div class="col-sm-8">
+                    <input
+                        ref="last_data_curation_date"
+                        v-model="species_original.last_data_curation_date"
+                        :disabled="true"
+                        type="date"
+                        class="form-control"
+                        name="last_data_curation_date"
+                        min="1990-01-01"
+                        :max="new Date().toISOString().split('T')[0]"
+                        @blur="checkDate()"
+                    />
+                </div>
+                <div class="col-sm-1">
+                    <input
+                        :id="
+                            'last_data_curation_date_chk' + species_community.id
+                        "
+                        class="form-check-input"
+                        type="checkbox"
+                        @change="
+                            checkDistributionInput(
+                                'last_data_curation_date_chk' +
+                                    species_community.id,
+                                'last_data_curation_date'
+                            )
+                        "
+                    />
+                </div>
+            </div>
             <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"
                     >Last data curation date:
@@ -685,7 +963,6 @@
                     <input
                         ref="last_data_curation_date"
                         v-model="species_community.last_data_curation_date"
-                        :disabled="isReadOnly"
                         type="date"
                         class="form-control"
                         name="last_data_curation_date"
@@ -696,30 +973,120 @@
                 </div>
             </div>
             <div class="row mb-3">
-                <label
-                    for="conservation_plan_exists"
-                    class="col-sm-3 col-form-label"
-                    >Conservation Plan Exists:
+                <label class="col-sm-3 col-form-label"
+                    >{{ species_original.species_number }} Conservation Plan
+                    Exists:
                 </label>
-                <div class="col-sm-9">
-                    <label for="conservation_plan_exists" class="me-2"
+                <div class="col-sm-8">
+                    <label
+                        for="original_conservation_plan_exists_no"
+                        class="me-2"
                         >No</label
                     >
                     <input
-                        id="conservation_plan_exists"
-                        v-model="species_community.conservation_plan_exists"
-                        :disabled="isReadOnly"
+                        id="original_conservation_plan_exists_no"
+                        v-model="species_original.conservation_plan_exists"
+                        :disabled="true"
                         type="radio"
                         :value="false"
                         class="form-check-input me-2"
                     />
-                    <label for="conservation_plan_exists" class="me-2"
+                    <label
+                        for="original_conservation_plan_exists_yes"
+                        class="me-2"
                         >Yes</label
                     >
                     <input
-                        id="conservation_plan_exists"
+                        id="original_conservation_plan_exists_yes"
+                        v-model="species_original.conservation_plan_exists"
+                        :disabled="true"
+                        type="radio"
+                        :value="true"
+                        class="form-check-input"
+                        @change="focusConservationPlanReference"
+                    />
+                </div>
+                <div class="col-sm-1">
+                    <input
+                        :id="
+                            'conservation_plan_exists_chk' +
+                            species_community.id
+                        "
+                        class="form-check-input"
+                        type="checkbox"
+                        @change="
+                            checkConservationInput(
+                                'conservation_plan_exists_chk' +
+                                    species_community.id,
+                                'conservation_plan_exists'
+                            )
+                        "
+                    />
+                </div>
+            </div>
+            <div
+                v-if="species_original.conservation_plan_exists"
+                class="row mb-3"
+            >
+                <label
+                    for="conservation_plan_reference"
+                    class="col-sm-3 col-form-label"
+                    >{{ species_original.species_number }} Conservation Plan
+                    Reference:
+                </label>
+                <div class="col-sm-8">
+                    <input
+                        ref="conservation_plan_reference"
+                        v-model="species_original.conservation_plan_reference"
+                        :disabled="true"
+                        type="text"
+                        class="form-control"
+                        name="conservation_plan_reference"
+                    />
+                </div>
+                <div class="col-sm-1">
+                    <input
+                        :id="
+                            'conservation_plan_reference_chk' +
+                            species_community.id
+                        "
+                        class="form-check-input"
+                        type="checkbox"
+                        @change="
+                            checkConservationInput(
+                                'conservation_plan_reference_chk' +
+                                    species_community.id,
+                                'conservation_plan_reference'
+                            )
+                        "
+                    />
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-sm-3 col-form-label"
+                    >Conservation Plan Exists:
+                </label>
+                <div class="col-sm-9">
+                    <label
+                        for="original_conservation_plan_exists_no"
+                        class="me-2"
+                        >No</label
+                    >
+                    <input
+                        id="original_conservation_plan_exists_no"
                         v-model="species_community.conservation_plan_exists"
-                        :disabled="isReadOnly"
+                        type="radio"
+                        :value="false"
+                        class="form-check-input me-2"
+                    />
+                    <label
+                        for="original_conservation_plan_exists_yes"
+                        class="me-2"
+                        >Yes</label
+                    >
+                    <input
+                        id="original_conservation_plan_exists_yes"
+                        v-model="species_community.conservation_plan_exists"
                         type="radio"
                         :value="true"
                         class="form-check-input"
@@ -736,11 +1103,10 @@
                     class="col-sm-3 col-form-label"
                     >Conservation Plan Reference:
                 </label>
-                <div class="col-sm-9">
+                <div class="col-sm-8">
                     <input
                         ref="conservation_plan_reference"
                         v-model="species_community.conservation_plan_reference"
-                        :disabled="isReadOnly"
                         type="text"
                         class="form-control"
                         name="conservation_plan_reference"
@@ -781,7 +1147,6 @@
                     <textarea
                         id="comment"
                         v-model="species_community.comment"
-                        :disabled="isReadOnly"
                         class="form-control"
                         rows="3"
                         placeholder=""
@@ -1198,7 +1563,8 @@ export default {
                     dropdownParent: $('#' + vm.select_scientific_name),
                     theme: 'bootstrap-5',
                     allowClear: true,
-                    placeholder: 'Select Scientific Name',
+                    placeholder:
+                        'Click to Search for the Scientific Name for this Split Species',
                     ajax: {
                         url: api_endpoints.scientific_name_lookup,
                         dataType: 'json',
@@ -1903,43 +2269,3 @@ export default {
     },
 };
 </script>
-
-<style lang="css" scoped>
-fieldset.scheduler-border {
-    border: 1px groove #ddd !important;
-    padding: 0 1.4em 1.4em 1.4em !important;
-    margin: 0 0 1.5em 0 !important;
-    -webkit-box-shadow: 0px 0px 0px 0px #000;
-    box-shadow: 0px 0px 0px 0px #000;
-}
-
-legend.scheduler-border {
-    width: inherit;
-    /* Or auto */
-    padding: 0 10px;
-    /* To give a bit of padding on the left and right */
-    border-bottom: none;
-}
-
-input[type='text'],
-select {
-    width: 100%;
-}
-
-input[type='number'] {
-    width: 50%;
-}
-
-.interval-margin {
-    margin-right: -100px;
-}
-
-.interval-range-true-input {
-    width: 20%;
-    margin-left: -80px;
-}
-
-.interval-range-true-choice {
-    width: 20%;
-}
-</style>
