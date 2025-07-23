@@ -170,10 +170,10 @@ SELECT
     ocr.observer_name AS obs_name,
     ocr.main_observer AS main_obs,
     ocr.organisation AS organistn,
-    pc.count_date AS pl_cnt_dat,
+    pc.obs_date AS pl_cnt_dat,
     pc.simple_alive AS pl_smp_alv,
     pc.detailed_alive_mature AS pl_alv_mat,
-    ao.count_date AS an_cnt_dat,
+    ao.obs_date AS an_cnt_dat,
     ao.alive_adult_male + ao.alive_adult_female + ao.alive_adult_unknown + ao.alive_juvenile_male + ao.alive_juvenile_female + ao.alive_juvenile_unknown + ao.alive_unsure_male + ao.alive_unsure_female + ao.alive_unsure_unknown AS an_alive
 FROM
     ocr
