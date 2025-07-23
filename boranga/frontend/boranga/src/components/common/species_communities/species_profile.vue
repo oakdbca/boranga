@@ -192,6 +192,120 @@
                         />
                     </div>
                 </div>
+                <template v-if="species_community.group_type === 'fauna'">
+                    <div class="row mb-3">
+                        <div class="col-sm-3">
+                            <label for="fauna_group" class="control-label"
+                                >Fauna Group</label
+                            >
+                        </div>
+                        <div class="col-sm-9">
+                            <template
+                                v-if="
+                                    fauna_groups &&
+                                    fauna_groups.length > 0 &&
+                                    species_community.fauna_group &&
+                                    !fauna_groups
+                                        .map((fauna_group) => fauna_group.id)
+                                        .includes(species_community.fauna_group)
+                                "
+                            >
+                                <input
+                                    v-if="species_community.fauna_group_name"
+                                    type="text"
+                                    class="form-control mb-3"
+                                    :value="
+                                        species_community.fauna_group_name +
+                                        ' (Now Archived)'
+                                    "
+                                    disabled
+                                />
+                                <div class="mb-3 text-muted">
+                                    Change fauna group to:
+                                </div>
+                            </template>
+                            <select
+                                id="fauna_group"
+                                ref="fauna_group"
+                                v-model="species_community.fauna_group"
+                                class="form-select"
+                                @change="filterSubCategory($event)"
+                                :disabled="isReadOnly"
+                            >
+                                <option :value="null">
+                                    No Fauna Group Selected
+                                </option>
+                                <option
+                                    v-for="fauna_group in fauna_groups"
+                                    :key="fauna_group.id"
+                                    :value="fauna_group.id"
+                                >
+                                    {{ fauna_group.name }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div v-if="species_community.fauna_group" class="row mb-3">
+                        <div class="col-sm-3">
+                            <label for="fauna_sub_group" class="control-label"
+                                >Fauna Sub Group</label
+                            >
+                        </div>
+                        <div class="col-sm-9">
+                            <template
+                                v-if="
+                                    faunaSubGroupsFilteredByFaunaGroup &&
+                                    faunaSubGroupsFilteredByFaunaGroup.length >
+                                        0 &&
+                                    species_community.fauna_sub_group &&
+                                    !faunaSubGroupsFilteredByFaunaGroup
+                                        .map(
+                                            (fauna_sub_group) =>
+                                                fauna_sub_group.id
+                                        )
+                                        .includes(
+                                            species_community.fauna_sub_group
+                                        )
+                                "
+                            >
+                                <input
+                                    v-if="
+                                        species_community.fauna_sub_group_name
+                                    "
+                                    type="text"
+                                    class="form-control mb-3"
+                                    :value="
+                                        species_community.fauna_sub_group_name +
+                                        ' (Now Archived)'
+                                    "
+                                    disabled
+                                />
+                                <div class="mb-3 text-muted">
+                                    Change fauna sub group to:
+                                </div>
+                            </template>
+                            <select
+                                id="fauna_sub_group"
+                                ref="fauna_sub_group"
+                                v-model="species_community.fauna_sub_group"
+                                class="form-select"
+                                @change="filterSubCategory($event)"
+                                :disabled="isReadOnly"
+                            >
+                                <option :value="null">
+                                    No Fauna Sub Group Selected
+                                </option>
+                                <option
+                                    v-for="fauna_sub_group in faunaSubGroupsFilteredByFaunaGroup"
+                                    :key="fauna_sub_group.id"
+                                    :value="fauna_sub_group.id"
+                                >
+                                    {{ fauna_sub_group.name }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </template>
             </FormSection>
             <FormSection
                 v-if="distribution_public || is_internal"
@@ -1374,6 +1488,8 @@ export default {
             post_fire_habitatat_interactions_list: [],
             // to display the species Taxonomy selected details
             species_display: '',
+            fauna_groups: [],
+            fauna_sub_groups: [],
             conservation_category: '',
             conservation_list: '',
             conservation_criteria: '',
@@ -1509,18 +1625,20 @@ export default {
                         0)
             );
         },
+        faunaSubGroupsFilteredByFaunaGroup: function () {
+            let vm = this;
+            if (vm.species_community.fauna_group) {
+                return vm.fauna_sub_groups.filter(
+                    (subGroup) =>
+                        subGroup.fauna_group_id ===
+                        vm.species_community.fauna_group
+                );
+            } else {
+                return [];
+            }
+        },
     },
     watch: {
-        // "species_community.distribution.eoo_auto": function(newVal) {
-        //     let vm=this;
-        //     var selectedValue = newVal;
-        //         if(selectedValue === "true"){
-        //             vm.species_community.distribution.extent_of_occurrences=vm.species_community.distribution.cal_extent_of_occurrences;
-        //         }
-        //         else{
-        //             vm.species_community.distribution.extent_of_occurrences=null;
-        //         }
-        // },
         'species_community.distribution.number_of_iucn_locations': function (
             newVal
         ) {
@@ -1538,6 +1656,12 @@ export default {
                         null;
                 }
             },
+        'species_community.fauna_group': function (newVal, oldVal) {
+            let vm = this;
+            if (newVal !== oldVal) {
+                vm.species_community.fauna_sub_group = null;
+            }
+        },
     },
     created: async function () {
         let vm = this;
@@ -1603,6 +1727,13 @@ export default {
             id: null,
             name: null,
         });
+        if (vm.species_community.group_type === 'fauna') {
+            const response = await fetch('/api/fauna_group_dict');
+            const data = await response.json();
+            console.debug('Fauna group list fetched successfully', data);
+            vm.fauna_groups = data.fauna_group_list;
+            vm.fauna_sub_groups = data.fauna_sub_group_list;
+        }
         vm.fetchRegions();
     },
     mounted: function () {
