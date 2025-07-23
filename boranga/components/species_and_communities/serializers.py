@@ -68,6 +68,12 @@ class ListSpeciesSerializer(BaseModelSerializer):
     commonwealth_conservation_category = serializers.SerializerMethodField()
     other_conservation_assessment = serializers.SerializerMethodField()
     conservation_criteria = serializers.SerializerMethodField()
+    fauna_group_name = serializers.CharField(
+        source="fauna_group.name", read_only=True, required=False, allow_null=True
+    )
+    fauna_sub_group_name = serializers.CharField(
+        source="fauna_sub_group.name", read_only=True, required=False, allow_null=True
+    )
 
     class Meta:
         model = Species
@@ -94,6 +100,10 @@ class ListSpeciesSerializer(BaseModelSerializer):
             "commonwealth_conservation_category",
             "other_conservation_assessment",
             "conservation_criteria",
+            "fauna_group",
+            "fauna_group_name",
+            "fauna_sub_group",
+            "fauna_sub_group_name",
         )
         datatables_always_serialize = (
             "id",
@@ -118,6 +128,10 @@ class ListSpeciesSerializer(BaseModelSerializer):
             "commonwealth_conservation_category",
             "other_conservation_assessment",
             "conservation_criteria",
+            "fauna_group",
+            "fauna_group_name",
+            "fauna_sub_group",
+            "fauna_sub_group_name",
         )
 
     def get_group_type(self, obj):
