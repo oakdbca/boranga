@@ -33,11 +33,6 @@
                                             aria-selected="true"
                                         >
                                             Original
-                                            {{
-                                                species_community_original
-                                                    ? species_community_original.species_number
-                                                    : ''
-                                            }}
                                         </a>
                                     </li>
                                     <li
