@@ -1660,14 +1660,6 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         if not split_of_species_retains_original:
             # Set the original species from the split to historical and its conservation status to 'closed'
             instance.processing_status = Species.PROCESSING_STATUS_HISTORICAL
-
-            ret1 = send_species_split_email_notification(request, instance)
-
-            if not (settings.WORKING_FROM_HOME and settings.DEBUG) and not ret1:
-                raise serializers.ValidationError(
-                    "Email could not be sent. Please try again later"
-                )
-
             instance.save(version_user=request.user)
 
             # Log action
@@ -1683,6 +1675,14 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                     instance.species_number
                 ),
                 request,
+            )
+
+        # TODO: This email must make sense for the new split functionality
+        # I.e. splitting to existing species and/or retaining original species
+        ret1 = send_species_split_email_notification(request, instance)
+        if not (settings.WORKING_FROM_HOME and settings.DEBUG) and not ret1:
+            raise serializers.ValidationError(
+                "Email could not be sent. Please try again later"
             )
 
         serializer = self.get_serializer(instance)
