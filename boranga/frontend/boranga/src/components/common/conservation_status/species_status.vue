@@ -23,11 +23,6 @@
                         />
                     </div>
                 </div>
-                <!-- conservation_status_obj:
-                {{ conservation_status_obj }} <br />
-                species_display:
-                {{ species_display }} -->
-
                 <div v-if="species_display" class="row mb-3">
                     <label
                         for="species_display"
