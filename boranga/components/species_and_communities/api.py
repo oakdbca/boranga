@@ -51,6 +51,8 @@ from boranga.components.species_and_communities.models import (
     District,
     DocumentCategory,
     DocumentSubCategory,
+    FaunaGroup,
+    FaunaSubGroup,
     FloraRecruitmentType,
     GroupType,
     InformalGroup,
@@ -641,6 +643,39 @@ class GetDocumentCategoriesDict(views.APIView):
         res_json = {
             "document_category_list": document_category_list,
             "document_sub_category_list": document_sub_category_list,
+        }
+        res_json = json.dumps(res_json)
+        return HttpResponse(res_json, content_type="application/json")
+
+
+class GetFaunaGroupDict(views.APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, format=None):
+        fauna_group_list = []
+        groups = FaunaGroup.objects.active()
+        if groups:
+            for option in groups:
+                fauna_group_list.append(
+                    {
+                        "id": option.id,
+                        "name": option.name,
+                    }
+                )
+        sub_groups = FaunaSubGroup.objects.active()
+        if sub_groups:
+            fauna_sub_group_list = []
+            for option in sub_groups:
+                fauna_sub_group_list.append(
+                    {
+                        "id": option.id,
+                        "name": option.name,
+                        "fauna_group_id": option.fauna_group_id,
+                    }
+                )
+        res_json = {
+            "fauna_group_list": fauna_group_list,
+            "fauna_sub_group_list": fauna_sub_group_list,
         }
         res_json = json.dumps(res_json)
         return HttpResponse(res_json, content_type="application/json")

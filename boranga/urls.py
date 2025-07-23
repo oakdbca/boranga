@@ -355,6 +355,11 @@ api_patterns = [
         name="get-document-categories-dict",
     ),
     re_path(
+        r"^api/fauna_group_dict$",
+        species_communities_api.GetFaunaGroupDict.as_view(),
+        name="get-fauna-group-dict",
+    ),
+    re_path(
         r"^api/occ_profile_dict$",
         occurrence_api.GetOCCProfileDict.as_view(),
         name="get-occ-profile-dict",
