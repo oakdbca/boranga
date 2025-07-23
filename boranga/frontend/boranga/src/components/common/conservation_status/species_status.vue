@@ -23,6 +23,11 @@
                         />
                     </div>
                 </div>
+                <!-- conservation_status_obj:
+                {{ conservation_status_obj }} <br />
+                species_display:
+                {{ species_display }} -->
+
                 <div v-if="species_display" class="row mb-3">
                     <label
                         for="species_display"
@@ -38,6 +43,61 @@
                         />
                     </div>
                 </div>
+                <div class="row mb-3">
+                    <label
+                        :for="select_common_name"
+                        class="col-sm-4 col-form-label fw-bold"
+                        >Common Name<template
+                            v-if="
+                                conservation_status_obj.species_id &&
+                                conservation_status_obj.common_names &&
+                                conservation_status_obj.common_names.length > 1
+                            "
+                            >s</template
+                        ><template
+                            v-else-if="!conservation_status_obj.species_id"
+                        >
+                            Lookup</template
+                        >:</label
+                    >
+
+                    <div :id="select_common_name" class="col-sm-8">
+                        <template v-if="!conservation_status_obj.species_id">
+                            <select
+                                :id="common_name_lookup"
+                                :ref="common_name_lookup"
+                                :disabled="isReadOnly"
+                                :name="common_name_lookup"
+                                class="form-control"
+                            />
+                        </template>
+                        <template
+                            v-else-if="
+                                conservation_status_obj.common_names &&
+                                conservation_status_obj.common_names.length > 0
+                            "
+                        >
+                            <template
+                                v-for="commonName in conservation_status_obj.common_names"
+                                :key="commonName"
+                            >
+                                <h5 class="d-inline">
+                                    <span class="badge bg-primary me-2">{{
+                                        commonName
+                                    }}</span>
+                                </h5></template
+                            >
+                        </template>
+                        <template v-else>
+                            <h5 class="d-inline">
+                                <span class="badge bg-secondary me-2"
+                                    ><i class="fa-solid fa-download"></i
+                                ></span>
+                            </h5>
+                        </template>
+                    </div>
+                </div>
+
                 <div v-if="taxon_previous_name" class="row mb-3">
                     <label for="previous_name" class="col-sm-4 col-form-label"
                         >Previous Name:</label
@@ -1542,6 +1602,10 @@ export default {
                 'scientific_name_lookup' + vm.conservation_status_obj.id,
             select_scientific_name:
                 'select_scientific_name' + vm.conservation_status_obj.id,
+            common_name_lookup:
+                'common_name_lookup' + vm.conservation_status_obj.id,
+            select_common_name:
+                'select_common_name' + vm.conservation_status_obj.id,
             isShowComment: false,
             isFauna:
                 vm.conservation_status_obj.group_type === 'fauna'
@@ -1797,6 +1861,7 @@ export default {
         let vm = this;
         vm.$nextTick(() => {
             vm.initialiseScientificNameLookup();
+            vm.initialiseCommonNameLookup();
         });
     },
     methods: {
@@ -1853,6 +1918,74 @@ export default {
                     $(vm.$refs[vm.scientific_name_lookup]).select2('open');
                 });
             }
+        },
+        initialiseCommonNameLookup: function () {
+            let vm = this;
+            $(vm.$refs[vm.common_name_lookup])
+                .select2({
+                    minimumInputLength: 2,
+                    dropdownParent: $('#' + vm.select_common_name),
+                    theme: 'bootstrap-5',
+                    allowClear: true,
+                    placeholder: 'Select Common Name',
+                    ajax: {
+                        // url: api_endpoints.common_name_lookup,
+                        url: api_endpoints.common_name_lookup_ocr_select,
+                        dataType: 'json',
+                        data: function (params) {
+                            var query = {
+                                term: params.term,
+                                type: 'public',
+                                group_type_id:
+                                    vm.conservation_status_obj.group_type_id,
+                                has_species: true,
+                            };
+                            return query;
+                        },
+                    },
+                })
+                .on('select2:select', function (e) {
+                    vm.conservation_status_obj.species_id =
+                        e.params.data.species_id;
+                    vm.conservation_status_obj.species_taxonomy_id =
+                        e.params.data.id;
+                    vm.conservation_status_obj.common_names =
+                        e.params.data.common_names_list;
+                    // Unfortunate to call this twice but the change event on the fieldset fires before
+                    // the select2:select event
+                    vm.$emit('saveConservationStatus');
+                    var newOption = new Option(
+                        e.params.data.scientific_name,
+                        e.params.data.id,
+                        false,
+                        true
+                    );
+                    $('#' + vm.scientific_name_lookup)
+                        .append(newOption)
+                        .trigger('change');
+
+                    vm.species_display = e.params.data.scientific_name;
+                    vm.taxon_previous_name = e.params.data.taxon_previous_name;
+                    $(vm.$refs[vm.common_name_lookup]).select2('destroy');
+                })
+                .on('select2:unselect', function (e) {
+                    // eslint-disable-next-line no-unused-vars
+                    var selected = $(e.currentTarget);
+                    vm.conservation_status_obj.species_id = null;
+                    vm.species_display = '';
+                    vm.taxon_previous_name = '';
+                    vm.$emit('saveConservationStatus');
+                })
+                // eslint-disable-next-line no-unused-vars
+                .on('select2:open', function (e) {
+                    const searchField = $(
+                        '[aria-controls="select2-' +
+                            vm.common_name_lookup +
+                            '-results"]'
+                    );
+                    // move focus to select2 field
+                    searchField[0].focus();
+                });
         },
         getSpeciesDisplay: function () {
             let vm = this;
