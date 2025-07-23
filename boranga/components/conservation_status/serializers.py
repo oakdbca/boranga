@@ -578,6 +578,7 @@ class BaseConservationStatusSerializer(BaseModelSerializer):
         read_only=True
     )
     other_conservation_assessment = serializers.SerializerMethodField(read_only=True)
+    common_names = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = ConservationStatus
@@ -627,6 +628,7 @@ class BaseConservationStatusSerializer(BaseModelSerializer):
             "locked",
             "datetime_updated",
             "editing_window_minutes",
+            "common_names",
         )
 
     def get_wa_legislative_list(self, obj):
@@ -732,6 +734,19 @@ class BaseConservationStatusSerializer(BaseModelSerializer):
     def get_is_submitter(self, obj):
         request = self.context["request"]
         return obj.submitter == request.user.id
+
+    def get_common_names(self, obj):
+        if obj.species:
+            return [
+                vernacular.vernacular_name
+                for vernacular in obj.species_taxonomy.vernaculars.all()
+            ]
+        elif obj.community:
+            return [
+                vernacular.vernacular_name
+                for vernacular in obj.community.taxonomy.vernaculars.all()
+            ]
+        return []
 
 
 class ConservationStatusSerializer(BaseConservationStatusSerializer):
@@ -962,6 +977,7 @@ class InternalConservationStatusSerializer(BaseConservationStatusSerializer):
             "locked",
             "datetime_updated",
             "editing_window_minutes",
+            "common_names",
         )
 
     def get_submitter(self, obj):
