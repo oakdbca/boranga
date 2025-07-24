@@ -20,7 +20,10 @@
                         Profile
                     </a>
                 </li>
-                <li class="nav-item">
+                <li
+                    v-if="!thisSplitSpeciesHasOriginalTaxonomyId"
+                    class="nav-item"
+                >
                     <a
                         class="nav-link"
                         id="pills-documents-tab"
@@ -29,12 +32,14 @@
                         role="tab"
                         aria-controls="pills-documents"
                         :aria-selected="documentBody"
-                        @click="tabClicked()"
                     >
                         Documents
                     </a>
                 </li>
-                <li class="nav-item">
+                <li
+                    v-if="!thisSplitSpeciesHasOriginalTaxonomyId"
+                    class="nav-item"
+                >
                     <a
                         id="pills-threats-tab"
                         class="nav-link"
@@ -43,7 +48,6 @@
                         role="tab"
                         :aria-controls="threatBody"
                         aria-selected="false"
-                        @click="tabClicked()"
                     >
                         Threats
                     </a>
@@ -62,6 +66,10 @@
                         :is_internal="is_internal"
                         :species_community="species_community"
                         :species_original="species_original"
+                        :split-species-list-contains-original-taxonomy="
+                            splitSpeciesListContainsOriginalTaxonomy
+                        "
+                        :selectedTaxonomies="selectedTaxonomies"
                     >
                     </SpeciesProfile>
                 </div>
@@ -72,7 +80,6 @@
                     aria-labelledby="pills-documents-tab"
                 >
                     <SpeciesDocuments
-                        :key="reloadcount"
                         id="speciesDocuments"
                         ref="species_documents"
                         :is_internal="is_internal"
@@ -88,7 +95,6 @@
                     aria-labelledby="pills-threats-tab"
                 >
                     <SpeciesThreats
-                        :key="reloadcount"
                         id="speciesThreats"
                         ref="species_threats"
                         :is_internal="is_internal"
@@ -131,6 +137,14 @@ export default {
             type: Boolean,
             default: false,
         },
+        splitSpeciesListContainsOriginalTaxonomy: {
+            type: Boolean,
+            required: true,
+        },
+        selectedTaxonomies: {
+            type: Array,
+            required: true,
+        },
     },
     data: function () {
         return {
@@ -139,9 +153,8 @@ export default {
             threatBody: 'threatBody' + uuid(),
             relatedItemBody: 'relatedItemBody' + uuid(),
             values: null,
-            reloadcount: 0,
-            document_selection: null,
-            threat_selection: null,
+            document_selection: 'selectAll',
+            threat_selection: 'selectAll',
         };
     },
     computed: {
@@ -155,16 +168,16 @@ export default {
         related_items_filter_list_url: function () {
             return '/api/species/filter_list.json';
         },
+        thisSplitSpeciesHasOriginalTaxonomyId: function () {
+            return (
+                this.species_community.taxonomy_id ===
+                this.species_original.taxonomy_id
+            );
+        },
     },
     mounted: function () {
         let vm = this;
         vm.form = document.forms.new_species;
-    },
-    methods: {
-        //----function to resolve datatable exceeding beyond the div
-        tabClicked: function () {
-            this.reloadcount = this.reloadcount + 1;
-        },
     },
 };
 </script>

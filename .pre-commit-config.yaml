@@ -27,7 +27,7 @@ repos:
         args: ["--profile", "black"]
 
   - repo: https://github.com/PyCQA/flake8
-    rev: 7.2.0
+    rev: 7.3.0
     hooks:
       - id: flake8
         args: ["--config=setup.cfg","--per-file-ignores=boranga/settings.py:F405,E402","--ignore=E203, W503"]

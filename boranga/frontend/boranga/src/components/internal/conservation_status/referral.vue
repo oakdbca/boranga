@@ -114,7 +114,7 @@
                                         conservation_status_obj
                                     "
                                     :referral="referral"
-                                    :is_internal="profile.is_internal"
+                                    :is_internal="profile.user.is_internal"
                                 >
                                 </ProposalConservationStatus>
                                 <input

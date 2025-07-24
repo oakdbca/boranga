@@ -12,19 +12,17 @@
                 <div class="row">
                     <form class="form-horizontal" name="makePublicForm">
                         <div class="row mb-3">
-                            <label
-                                for="distribution_publishing"
-                                class="col-sm-6 control-label"
+                            <label class="col-sm-6 control-label"
                                 >Distribution:
                             </label>
                             <div class="col-sm-6">
                                 <label
-                                    for="distribution_publishing"
+                                    for="make_public_distribution_publishing_private"
                                     class="me-2"
                                     >Private</label
                                 >
                                 <input
-                                    id="distribution_publishing"
+                                    id="make_public_distribution_publishing_private"
                                     v-model="
                                         species_community.publishing_status
                                             .distribution_public
@@ -35,12 +33,12 @@
                                     class="form-check-input me-2"
                                 />
                                 <label
-                                    for="distribution_publishing"
+                                    for="make_public_distribution_publishing_public"
                                     class="me-2"
                                     >Public</label
                                 >
                                 <input
-                                    id="distribution_publishing"
+                                    id="make_public_distribution_publishing_public"
                                     v-model="
                                         species_community.publishing_status
                                             .distribution_public
@@ -53,19 +51,17 @@
                             </div>
                         </div>
                         <div class="row mb-3">
-                            <label
-                                for="conservation_status_publishing"
-                                class="col-sm-6 control-label"
+                            <label class="col-sm-6 control-label"
                                 >Conservation Status:
                             </label>
                             <div class="col-sm-6">
                                 <label
-                                    for="conservation_status_publishing"
+                                    for="make_public_conservation_status_publishing_private"
                                     class="me-2"
                                     >Private</label
                                 >
                                 <input
-                                    id="conservation_status_publishing"
+                                    id="make_public_conservation_status_publishing_private"
                                     v-model="
                                         species_community.publishing_status
                                             .conservation_status_public
@@ -76,12 +72,12 @@
                                     class="form-check-input me-2"
                                 />
                                 <label
-                                    for="conservation_status_publishing"
+                                    for="make_public_conservation_status_publishing"
                                     class="me-2"
                                     >Public</label
                                 >
                                 <input
-                                    id="conservation_status_publishing"
+                                    id="make_public_conservation_status_publishing"
                                     v-model="
                                         species_community.publishing_status
                                             .conservation_status_public
@@ -108,17 +104,17 @@
                             </div>
                         </div> -->
                         <div class="row mb-3">
-                            <label
-                                for="threats_publishing"
-                                class="col-sm-6 control-label"
+                            <label class="col-sm-6 control-label"
                                 >Threats:
                             </label>
                             <div class="col-sm-6">
-                                <label for="threats_publishing" class="me-2"
+                                <label
+                                    for="make_public_threats_publishing_private"
+                                    class="me-2"
                                     >Private</label
                                 >
                                 <input
-                                    id="threats_publishing"
+                                    id="make_public_threats_publishing_private"
                                     v-model="
                                         species_community.publishing_status
                                             .threats_public
@@ -128,11 +124,13 @@
                                     :value="false"
                                     class="form-check-input me-2"
                                 />
-                                <label for="threats_publishing" class="me-2"
+                                <label
+                                    for="make_public_threats_publishing_public"
+                                    class="me-2"
                                     >Public</label
                                 >
                                 <input
-                                    id="threats_publishing"
+                                    id="make_public_threats_publishing_public"
                                     v-model="
                                         species_community.publishing_status
                                             .threats_public

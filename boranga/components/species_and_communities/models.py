@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from decimal import Decimal
 
 import reversion
 import shapely.geometry as shp
@@ -9,9 +10,11 @@ from django.contrib.gis.db import models as gis_models
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.files.storage import FileSystemStorage
+from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.db.models import Sum
 from django.db.models.functions import Cast
+from django.http import HttpRequest
 from django.utils.functional import cached_property
 from ledger_api_client.managed_models import SystemGroup
 from multiselectfield import MultiSelectField
@@ -371,6 +374,44 @@ class InformalGroup(BaseModel):
         return f"{self.classification_system_fk.class_desc} {self.taxonomy.scientific_name} "
 
 
+class FaunaGroup(ArchivableModel, OrderedModel, BaseModel):
+    objects = OrderedArchivableManager()
+
+    name = models.CharField(
+        unique=True, max_length=255, validators=[no_commas_validator]
+    )
+
+    class Meta:
+        app_label = "boranga"
+        ordering = ["order"]
+        verbose_name = "Fauna Group"
+        verbose_name_plural = "Fauna Groups"
+
+    def __str__(self):
+        return str(self.name)
+
+
+class FaunaSubGroup(ArchivableModel, OrderedModel, BaseModel):
+    objects = OrderedArchivableManager()
+
+    name = models.CharField(
+        unique=True, max_length=255, validators=[no_commas_validator]
+    )
+    fauna_group = models.ForeignKey(
+        FaunaGroup, on_delete=models.CASCADE, related_name="sub_groups"
+    )
+    order_with_respect_to = "fauna_group"
+
+    class Meta:
+        app_label = "boranga"
+        ordering = ["fauna_group", "order"]
+        verbose_name = "Fauna Sub Group"
+        verbose_name_plural = "Fauna Sub Groups"
+
+    def __str__(self):
+        return str(self.name)
+
+
 class Species(RevisionedMixin):
     """
     Forms the basis for a Species and Communities record.
@@ -443,6 +484,20 @@ class Species(RevisionedMixin):
     parent_species = models.ManyToManyField("self", blank=True)
     comment = models.CharField(max_length=500, null=True, blank=True)
     department_file_numbers = models.CharField(max_length=512, null=True, blank=True)
+    fauna_group = models.ForeignKey(
+        FaunaGroup,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="species",
+    )
+    fauna_sub_group = models.ForeignKey(
+        FaunaSubGroup,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="species",
+    )
 
     class Meta:
         app_label = "boranga"
@@ -503,17 +558,10 @@ class Species(RevisionedMixin):
     @property
     def applicant_type(self):
         if self.submitter:
-            # return self.APPLICANT_TYPE_SUBMITTER
             return "SUB"
 
     @property
     def applicant_field(self):
-        # if self.org_applicant:
-        #     return 'org_applicant'
-        # elif self.proxy_applicant:
-        #     return 'proxy_applicant'
-        # else:
-        #     return 'submitter'
         return "submitter"
 
     @property
@@ -524,12 +572,16 @@ class Species(RevisionedMixin):
         ]
 
     @property
+    def can_user_rename(self):
+        return self.processing_status == Species.PROCESSING_STATUS_ACTIVE
+
+    @property
     def can_user_split(self):
         """
         :return: True if the application is in one of the editable status.
         """
         user_editable_state = [
-            "active",
+            Species.PROCESSING_STATUS_ACTIVE,
         ]
         return self.processing_status in user_editable_state
 
@@ -538,8 +590,10 @@ class Species(RevisionedMixin):
         """
         :return: True if the application is in one of the approved status.
         """
-        # return self.customer_status in self.CUSTOMER_EDITABLE_STATE
-        user_viewable_state = ["active", "historical"]
+        user_viewable_state = [
+            Species.PROCESSING_STATUS_ACTIVE,
+            Species.PROCESSING_STATUS_HISTORICAL,
+        ]
         return self.processing_status in user_viewable_state
 
     @property
@@ -547,7 +601,10 @@ class Species(RevisionedMixin):
         """
         :return: True if the application is in one of the processable status for Assessor(species) role.
         """
-        officer_view_state = ["draft", "historical"]
+        officer_view_state = [
+            Species.PROCESSING_STATUS_DRAFT,
+            Species.PROCESSING_STATUS_HISTORICAL,
+        ]
         if self.processing_status in officer_view_state:
             return False
         else:
@@ -555,7 +612,10 @@ class Species(RevisionedMixin):
 
     @property
     def is_deletable(self):
-        return self.processing_status == "draft" and not self.species_number
+        return (
+            self.processing_status == Species.PROCESSING_STATUS_DRAFT
+            and not self.species_number
+        )
 
     @property
     def is_flora_application(self):
@@ -587,12 +647,12 @@ class Species(RevisionedMixin):
     @property
     def status_without_assessor(self):
         status_without_assessor = [
-            "with_approver",
-            "approved",
-            "closed",
-            "declined",
-            "draft",
-            "with_referral",
+            Species.PROCESSING_STATUS_WITH_APPROVER,
+            Species.PROCESSING_STATUS_APPROVED,
+            Species.PROCESSING_STATUS_CLOSED,
+            Species.PROCESSING_STATUS_DECLINED,
+            Species.PROCESSING_STATUS_DRAFT,
+            Species.PROCESSING_STATUS_WITH_REFERRAL,
         ]
         if self.processing_status in status_without_assessor:
             return True
@@ -632,15 +692,6 @@ class Species(RevisionedMixin):
             processing_status=ConservationStatus.PROCESSING_STATUS_APPROVED
         ).first()
 
-    def can_user_reopen(self, request):
-        user_editable_state = [
-            Species.PROCESSING_STATUS_HISTORICAL,
-        ]
-        if self.processing_status not in user_editable_state:
-            return False
-
-        return is_species_communities_approver(request) or request.user.is_superuser
-
     def can_user_save(self, request):
         user_closed_state = [
             Species.PROCESSING_STATUS_HISTORICAL,
@@ -664,7 +715,10 @@ class Species(RevisionedMixin):
         return is_species_communities_approver(request) or request.user.is_superuser
 
     def has_user_edit_mode(self, request):
-        officer_view_state = ["draft", "historical"]
+        officer_view_state = [
+            Species.PROCESSING_STATUS_DRAFT,
+            Species.PROCESSING_STATUS_HISTORICAL,
+        ]
         if self.processing_status in officer_view_state:
             return False
 
@@ -827,65 +881,73 @@ class Species(RevisionedMixin):
         self.image_doc = document
         self.save()
 
-    def clone_documents(self, request):
-        with transaction.atomic():
-            # clone documents from original species to new species
-            original_species_documents = request.data["documents"]
-            for doc_id in original_species_documents:
-                new_species_doc = SpeciesDocument.objects.get(id=doc_id)
-                new_species_doc.species = self
-                new_species_doc.id = None
-                new_species_doc.document_number = ""
-                new_species_doc.save(version_user=request.user)
-                new_species_doc.species.log_user_action(
-                    SpeciesUserAction.ACTION_ADD_DOCUMENT.format(
-                        new_species_doc.document_number,
-                        new_species_doc.species.species_number,
-                    ),
-                    request,
-                )
-                request.user.log_user_action(
-                    SpeciesUserAction.ACTION_ADD_DOCUMENT.format(
-                        new_species_doc.document_number,
-                        new_species_doc.species.species_number,
-                    ),
-                    request,
-                )
-
-    def clone_threats(self, request):
-        with transaction.atomic():
-            # clone threats from original species to new species
-            original_species_threats = request.data["threats"]
-            for threat_id in original_species_threats:
-                new_species_threat = ConservationThreat.objects.get(id=threat_id)
-                new_species_threat.species = self
-                new_species_threat.id = None
-                new_species_threat.threat_number = ""
-                new_species_threat.save()
-                new_species_threat.species.log_user_action(
-                    SpeciesUserAction.ACTION_ADD_THREAT.format(
-                        new_species_threat.threat_number,
-                        new_species_threat.species.species_number,
-                    ),
-                    request,
-                )
-                request.user.log_user_action(
-                    SpeciesUserAction.ACTION_ADD_THREAT.format(
-                        new_species_threat.threat_number,
-                        new_species_threat.species.species_number,
-                    ),
-                    request,
-                )
-
     @transaction.atomic
-    def reopen(self, request):
-        if not self.processing_status == Species.PROCESSING_STATUS_HISTORICAL:
-            raise ValidationError(
-                "You cannot reopen a species that is not closed/historical"
+    def copy_documents(
+        self: "Species",
+        copy_from: "Species",
+        request: HttpRequest,
+        split_species: object,
+    ) -> None:
+        document_ids_queryset = copy_from.species_documents.all()
+        if not split_species["copy_all_documents"]:
+            document_ids_queryset = document_ids_queryset.filter(
+                id__in=split_species["document_ids_to_copy"]
+            )
+        document_ids_to_copy = document_ids_queryset.values_list("id", flat=True)
+        for doc_id in document_ids_to_copy:
+            new_species_doc = SpeciesDocument.objects.get(id=doc_id)
+            new_species_doc.species = self
+            new_species_doc.id = None
+            new_species_doc.document_number = ""
+            new_species_doc.save(version_user=request.user)
+            new_species_doc.species.log_user_action(
+                SpeciesUserAction.ACTION_ADD_DOCUMENT.format(
+                    new_species_doc.document_number,
+                    new_species_doc.species.species_number,
+                ),
+                request,
+            )
+            request.user.log_user_action(
+                SpeciesUserAction.ACTION_ADD_DOCUMENT.format(
+                    new_species_doc.document_number,
+                    new_species_doc.species.species_number,
+                ),
+                request,
             )
 
-        self.processing_status = Species.PROCESSING_STATUS_ACTIVE
-        self.save(version_user=request.user)
+    @transaction.atomic
+    def copy_threats(
+        self: "Species",
+        copy_from: "Species",
+        request: HttpRequest,
+        split_species: object,
+    ) -> None:
+        threat_ids_queryset = copy_from.species_threats.all()
+        if not split_species["copy_all_documents"]:
+            threat_ids_queryset = threat_ids_queryset.filter(
+                id__in=split_species["threat_ids_to_copy"]
+            )
+        threat_ids_to_copy = threat_ids_queryset.values_list("id", flat=True)
+        for threat_id in threat_ids_to_copy:
+            new_species_threat = ConservationThreat.objects.get(id=threat_id)
+            new_species_threat.species = self
+            new_species_threat.id = None
+            new_species_threat.threat_number = ""
+            new_species_threat.save()
+            new_species_threat.species.log_user_action(
+                SpeciesUserAction.ACTION_ADD_THREAT.format(
+                    new_species_threat.threat_number,
+                    new_species_threat.species.species_number,
+                ),
+                request,
+            )
+            request.user.log_user_action(
+                SpeciesUserAction.ACTION_ADD_THREAT.format(
+                    new_species_threat.threat_number,
+                    new_species_threat.species.species_number,
+                ),
+                request,
+            )
 
     @transaction.atomic
     def discard(self, request):
@@ -1110,11 +1172,19 @@ class SpeciesUserAction(UserAction):
     ACTION_COPY_SPECIES_TO = "Species {} copied to new species {}"
     ACTION_COPY_SPECIES_FROM = "Species {} copied from species {}"
 
-    ACTION_RENAME_SPECIES_TO = "Species {} renamed to new species {}"
+    ACTION_RENAME_SPECIES_TO_NEW = "Species {} renamed to new species {}"
+    ACTION_RENAME_SPECIES_TO_EXISTING = "Species {} renamed to existing species {}"
     ACTION_RENAME_SPECIES_FROM = "Species {} created by renaming species {}"
+    ACTION_RENAME_SPECIES_BY_REACTIVATING = (
+        "Species {} reactivated by renaming species {}"
+    )
 
-    ACTION_SPLIT_SPECIES_TO = "Species {} split into new species {}"
-    ACTION_SPLIT_SPECIES_FROM = "Species {} created from a split of species {}"
+    ACTION_SPLIT_SPECIES_TO_NEW = "Species {} split into new species {}"
+    ACTION_SPLIT_SPECIES_TO_EXISTING = "Species {} split into existing species {}"
+    ACTION_SPLIT_SPECIES_FROM_NEW = "Species {} created from a split of species {}"
+    ACTION_SPLIT_SPECIES_FROM_EXISTING = (
+        "Species {} reactivated by a split of species {}"
+    )
 
     ACTION_COMBINE_SPECIES_TO = "Species {} combined into new species {}"
     ACTION_COMBINE_SPECIES_FROM = "Species {} created from a combination of species {}"
@@ -1161,7 +1231,13 @@ class SpeciesDistribution(BaseModel):
     noo_auto = models.BooleanField(
         default=True
     )  # to check auto or manual entry of number_of_occurrences
-    extent_of_occurrences = models.IntegerField(null=True, blank=True)
+    extent_of_occurrences = models.DecimalField(
+        null=True,
+        blank=True,
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
     eoo_auto = models.BooleanField(
         default=True
     )  # extra boolean field to check auto or manual entry of extent_of_occurrences
@@ -1293,8 +1369,6 @@ class Community(RevisionedMixin):
             return "{} {}".format(
                 email_user.first_name,
                 email_user.last_name,
-                # commented below to resolve the Uppercase context error for community submit
-                # email_user.addresses.all().first()
             )
 
     @property
@@ -1311,17 +1385,10 @@ class Community(RevisionedMixin):
     @property
     def applicant_type(self):
         if self.submitter:
-            # return self.APPLICANT_TYPE_SUBMITTER
             return "SUB"
 
     @property
     def applicant_field(self):
-        # if self.org_applicant:
-        #     return 'org_applicant'
-        # elif self.proxy_applicant:
-        #     return 'proxy_applicant'
-        # else:
-        #     return 'submitter'
         return "submitter"
 
     @property
@@ -1336,8 +1403,10 @@ class Community(RevisionedMixin):
         """
         :return: True if the application is in one of the approved status.
         """
-        # return self.customer_status in self.CUSTOMER_EDITABLE_STATE
-        user_viewable_state = ["active", "historical"]
+        user_viewable_state = [
+            Community.PROCESSING_STATUS_ACTIVE,
+            Community.PROCESSING_STATUS_HISTORICAL,
+        ]
         return self.processing_status in user_viewable_state
 
     @property
@@ -1345,7 +1414,10 @@ class Community(RevisionedMixin):
         """
         :return: True if the application is in one of the processable status for Assessor(species) role.
         """
-        officer_view_state = ["draft", "historical"]
+        officer_view_state = [
+            Community.PROCESSING_STATUS_DRAFT,
+            Community.PROCESSING_STATUS_HISTORICAL,
+        ]
         if self.processing_status in officer_view_state:
             return False
         else:
@@ -1353,8 +1425,8 @@ class Community(RevisionedMixin):
 
     def can_user_save(self, request):
         user_closed_state = [
-            Species.PROCESSING_STATUS_HISTORICAL,
-            Species.PROCESSING_STATUS_DISCARDED,
+            Community.PROCESSING_STATUS_HISTORICAL,
+            Community.PROCESSING_STATUS_DISCARDED,
         ]
 
         if self.processing_status in user_closed_state:
@@ -1363,7 +1435,7 @@ class Community(RevisionedMixin):
         return is_species_communities_approver(request) or request.user.is_superuser
 
     def can_user_submit(self, request):
-        user_submissable_state = [Species.PROCESSING_STATUS_DRAFT]
+        user_submissable_state = [Community.PROCESSING_STATUS_DRAFT]
 
         if not self.can_user_save(request):
             return False
@@ -1379,8 +1451,10 @@ class Community(RevisionedMixin):
         An application can be deleted only if it is a draft and it hasn't been lodged yet
         :return:
         """
-        # return self.customer_status == 'draft' and not self.community_number
-        return self.processing_status == "draft" and not self.community_number
+        return (
+            self.processing_status == Community.PROCESSING_STATUS_DRAFT
+            and not self.community_number
+        )
 
     @property
     def is_community_application(self):
@@ -1394,28 +1468,22 @@ class Community(RevisionedMixin):
     @property
     def status_without_assessor(self):
         status_without_assessor = [
-            "with_approver",
-            "approved",
-            "closed",
-            "declined",
-            "draft",
-            "with_referral",
+            Community.PROCESSING_STATUS_WITH_APPROVER,
+            Community.PROCESSING_STATUS_APPROVED,
+            Community.PROCESSING_STATUS_CLOSED,
+            Community.PROCESSING_STATUS_DECLINED,
+            Community.PROCESSING_STATUS_DRAFT,
+            Community.PROCESSING_STATUS_WITH_REFERRAL,
         ]
         if self.processing_status in status_without_assessor:
             return True
         return False
 
-    def can_user_reopen(self, request):
-        user_editable_state = [
+    def has_user_edit_mode(self, request):
+        officer_view_state = [
+            Community.PROCESSING_STATUS_DRAFT,
             Community.PROCESSING_STATUS_HISTORICAL,
         ]
-        if self.processing_status not in user_editable_state:
-            return False
-
-        return is_species_communities_approver(request) or request.user.is_superuser
-
-    def has_user_edit_mode(self, request):
-        officer_view_state = ["draft", "historical"]
         if self.processing_status in officer_view_state:
             return False
 
@@ -1556,16 +1624,6 @@ class Community(RevisionedMixin):
         return self.conservation_status.filter(
             processing_status=ConservationStatus.PROCESSING_STATUS_APPROVED
         ).first()
-
-    @transaction.atomic
-    def reopen(self, request):
-        if not self.processing_status == Community.PROCESSING_STATUS_HISTORICAL:
-            raise ValidationError(
-                "You cannot reopen a community that is not closed/historical"
-            )
-
-        self.processing_status = Community.PROCESSING_STATUS_ACTIVE
-        self.save(version_user=request.user)
 
     @transaction.atomic
     def discard(self, request):
@@ -1995,7 +2053,13 @@ class CommunityDistribution(BaseModel):
     noo_auto = models.BooleanField(
         default=True
     )  # to check auto or manual entry of number_of_occurrences
-    extent_of_occurrences = models.IntegerField(null=True, blank=True)
+    extent_of_occurrences = models.DecimalField(
+        null=True,
+        blank=True,
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
     eoo_auto = models.BooleanField(
         default=True
     )  # extra boolean field to check auto or manual entry of extent_of_occurrences
@@ -2008,7 +2072,13 @@ class CommunityDistribution(BaseModel):
     )  # to check auto or manual entry of area_of_occupancy_actual
     number_of_iucn_locations = models.IntegerField(null=True, blank=True)
     # Community Ecological Attributes
-    community_original_area = models.IntegerField(null=True, blank=True)
+    community_original_area = models.DecimalField(
+        null=True,
+        blank=True,
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
     community_original_area_accuracy = models.DecimalField(
         max_digits=15, decimal_places=5, null=True, blank=True
     )
@@ -2154,9 +2224,6 @@ class SpeciesDocument(Document):
     def add_documents(self, request, *args, **kwargs):
         # save the files
         data = json.loads(request.data.get("data"))
-        # if not data.get('update'):
-        #     documents_qs = self.filter(input_name='species_doc', visible=True)
-        #     documents_qs.delete()
         for idx in range(data["num_files"]):
             self.check_file(request.data.get("file-" + str(idx)))
             _file = request.data.get("file-" + str(idx))
@@ -2226,9 +2293,6 @@ class CommunityDocument(Document):
     def add_documents(self, request, *args, **kwargs):
         # save the files
         data = json.loads(request.data.get("data"))
-        # if not data.get('update'):
-        #     documents_qs = self.filter(input_name='species_doc', visible=True)
-        #     documents_qs.delete()
         for idx in range(data["num_files"]):
             self.check_file(request.data.get("file-" + str(idx)))
             _file = request.data.get("file-" + str(idx))
@@ -2686,7 +2750,6 @@ class CommunityConservationAttributes(BaseModel):
         related_name="community_conservation_attributes",
     )
 
-    # habitat_growth_form = models.CharField(max_length=200,null=True, blank=True)
     pollinator_information = models.CharField(max_length=1000, null=True, blank=True)
     minimum_fire_interval_from = models.IntegerField(null=True, blank=True)
     minimum_fire_interval_to = models.IntegerField(null=True, blank=True)
@@ -2797,7 +2860,6 @@ class SystemEmail(BaseModel):
 
 # Species Document History
 reversion.register(SpeciesDocument)
-# reversion.register(DocumentCategory)
 
 # Species History
 reversion.register(
@@ -2810,7 +2872,6 @@ reversion.register(
     ],
 )
 reversion.register(Taxonomy, follow=["taxon_previous_queryset", "vernaculars"])
-# reversion.register(CrossReference, follow=["old_taxonomy"])
 reversion.register(TaxonPreviousName)
 reversion.register(SpeciesDistribution)
 reversion.register(SpeciesConservationAttributes)

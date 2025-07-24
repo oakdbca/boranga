@@ -1009,9 +1009,9 @@ export default {
             return (
                 this.occurrence_report &&
                 this.occurrence_report.processing_status == 'Draft' &&
-                this.profile &&
-                (this.occurrence_report.submitter.id == this.profile.id ||
-                    this.profile.groups.includes('Occurrence Approvers'))
+                this.profile?.user &&
+                (this.occurrence_report.submitter.id == this.profile.user.id ||
+                    this.profile.user.groups.includes('Occurrence Approvers'))
             );
         },
     },
@@ -2148,7 +2148,7 @@ export default {
             let vm = this;
             let endPointAction = '/reassign_draft_to_user';
             let reassignUser = vm.selectedReassignUser;
-            if (vm.profile.id == emailuser_id) {
+            if (vm.profile.user.id == emailuser_id) {
                 reassignUser = 'yourself';
                 endPointAction = '/reassign_draft_to_request_user';
             }

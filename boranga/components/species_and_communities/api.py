@@ -51,6 +51,8 @@ from boranga.components.species_and_communities.models import (
     District,
     DocumentCategory,
     DocumentSubCategory,
+    FaunaGroup,
+    FaunaSubGroup,
     FloraRecruitmentType,
     GroupType,
     InformalGroup,
@@ -113,6 +115,10 @@ from boranga.components.species_and_communities.serializers import (
 from boranga.components.species_and_communities.utils import (
     combine_species_original_submit,
     community_form_submit,
+    process_split_species_distribution_data,
+    process_split_species_general_data,
+    process_split_species_regions_and_districts,
+    rename_deep_copy,
     rename_species_original_submit,
     species_form_submit,
 )
@@ -205,9 +211,11 @@ class GetScientificName(views.APIView):
         group_type_id = request.GET.get("group_type_id", "")
         # identifies the request as for a species profile - we exclude those taxonomies already taken
         species_profile = request.GET.get("species_profile", "false").lower() == "true"
+        species_rename = request.GET.get("species_rename", "false").lower() == "true"
         # identifies the request as for a species profile dependent record - we only include those taxonomies in use
         has_species = request.GET.get("has_species", False)
         active_only = request.GET.get("active_only", False)
+        exclude_taxonomy_ids = request.GET.getlist("exclude_taxonomy_ids[]", [])
 
         if not search_term:
             return Response({"results": []})
@@ -220,9 +228,24 @@ class GetScientificName(views.APIView):
         if has_species:
             taxonomies = taxonomies.exclude(species=None)
 
+        if exclude_taxonomy_ids:
+            taxonomies = taxonomies.exclude(id__in=exclude_taxonomy_ids)
+
         if active_only:
             taxonomies = taxonomies.filter(
                 species__processing_status=Species.PROCESSING_STATUS_ACTIVE
+            )
+
+        if species_rename:
+            taxonomies_with_no_profile = Q(species=None)
+            draft_and_historical = Q(
+                species__processing_status__in=[
+                    Species.PROCESSING_STATUS_DRAFT,
+                    Species.PROCESSING_STATUS_HISTORICAL,
+                ]
+            )
+            taxonomies = taxonomies.filter(
+                taxonomies_with_no_profile | draft_and_historical
             )
 
         if group_type_id:
@@ -625,7 +648,42 @@ class GetDocumentCategoriesDict(views.APIView):
         return HttpResponse(res_json, content_type="application/json")
 
 
+class GetFaunaGroupDict(views.APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, format=None):
+        fauna_group_list = []
+        groups = FaunaGroup.objects.active()
+        if groups:
+            for option in groups:
+                fauna_group_list.append(
+                    {
+                        "id": option.id,
+                        "name": option.name,
+                    }
+                )
+        sub_groups = FaunaSubGroup.objects.active()
+        if sub_groups:
+            fauna_sub_group_list = []
+            for option in sub_groups:
+                fauna_sub_group_list.append(
+                    {
+                        "id": option.id,
+                        "name": option.name,
+                        "fauna_group_id": option.fauna_group_id,
+                    }
+                )
+        res_json = {
+            "fauna_group_list": fauna_group_list,
+            "fauna_sub_group_list": fauna_sub_group_list,
+        }
+        res_json = json.dumps(res_json)
+        return HttpResponse(res_json, content_type="application/json")
+
+
 class GetSpeciesProfileDict(views.APIView):
+    permission_classes = [AllowAny]
+
     def get(self, request, format=None):
         flora_recruitment_type_list = []
         types = FloraRecruitmentType.objects.all()
@@ -703,11 +761,13 @@ class SpeciesFilterBackend(DatatablesFilterBackend):
         if filter_common_name and not filter_common_name.lower() == "all":
             queryset = queryset.filter(taxonomy__vernaculars__id=filter_common_name)
 
-        filter_phylogenetic_group = request.POST.get("filter_phylogenetic_group")
-        if filter_phylogenetic_group and not filter_phylogenetic_group.lower() == "all":
-            queryset = queryset.filter(
-                taxonomy__informal_groups__classification_system_fk_id=filter_phylogenetic_group
-            )
+        filter_fauna_group = request.POST.get("filter_fauna_group")
+        if filter_fauna_group and not filter_fauna_group.lower() == "all":
+            queryset = queryset.filter(fauna_group_id=filter_fauna_group)
+
+        filter_fauna_sub_group = request.POST.get("filter_fauna_sub_group")
+        if filter_fauna_sub_group and not filter_fauna_sub_group.lower() == "all":
+            queryset = queryset.filter(fauna_sub_group_id=filter_fauna_sub_group)
 
         filter_family = request.POST.get("filter_family")
         if filter_family and not filter_family.lower() == "all":
@@ -1327,16 +1387,6 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
     @detail_route(methods=["post"], detail=True)
     @renderer_classes((JSONRenderer,))
     @transaction.atomic
-    def reopen_species_community(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.reopen(request)
-        serializer = InternalSpeciesSerializer(instance, context={"request": request})
-
-        return Response(serializer.data)
-
-    @detail_route(methods=["post"], detail=True)
-    @renderer_classes((JSONRenderer,))
-    @transaction.atomic
     def update_publishing_status(self, request, *args, **kwargs):
         instance = self.get_object()
         request_data = request.data
@@ -1426,49 +1476,214 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
     @detail_route(methods=["post"], detail=True)
     @renderer_classes((JSONRenderer,))
     @transaction.atomic
-    def split_new_species_submit(self, request, *args, **kwargs):
+    def split_species(self, request, *args, **kwargs):
+        # This is the original instance that is being split
         instance = self.get_object()
-        species_form_submit(instance, request)
 
-        # add parent id to new species instance
-        parent_species_data = request.data.get("parent_species")
-        parent_species = Species.objects.get(id=parent_species_data.get("id"))
-        instance.parent_species.add(parent_species)
+        if not instance.can_user_split:
+            raise serializers.ValidationError(
+                "Cannot split species record in current state"
+            )
 
-        # copy/clone the original species document and create new for new split species
-        instance.clone_documents(request)
-        instance.clone_threats(request)
-        instance.save(version_user=request.user)
+        split_species_list = request.data.get("split_species_list", None)
+        if not split_species_list:
+            raise serializers.ValidationError(
+                "No split species list provided in request data"
+            )
 
-        # Log the action
-        parent_species.log_user_action(
-            SpeciesUserAction.ACTION_SPLIT_SPECIES_TO.format(
-                parent_species.species_number,
-                instance.species_number,
-            ),
-            request,
-        )
-        request.user.log_user_action(
-            SpeciesUserAction.ACTION_SPLIT_SPECIES_TO.format(
-                parent_species.species_number,
-                instance.species_number,
-            ),
-            request,
-        )
-        instance.log_user_action(
-            SpeciesUserAction.ACTION_SPLIT_SPECIES_FROM.format(
-                instance.species_number,
-                parent_species.species_number,
-            ),
-            request,
-        )
-        request.user.log_user_action(
-            SpeciesUserAction.ACTION_SPLIT_SPECIES_FROM.format(
-                instance.species_number,
-                parent_species.species_number,
-            ),
-            request,
-        )
+        split_of_species_retains_original = False
+
+        # Process each new species in the request data
+        for index, split_species_request_data in enumerate(split_species_list):
+            # Check if a boranga profile exists for this taxonomy
+            taxonomy_id = split_species_request_data.get("taxonomy_id", None)
+
+            if not taxonomy_id:
+                raise serializers.ValidationError(
+                    f"Split Species {index+1} is missing a Taxonomy ID"
+                )
+
+            if not taxonomy_id.isdigit():
+                raise serializers.ValidationError(
+                    f"Split Species {index+1} Taxonomy ID must be an integer"
+                )
+
+            if instance.taxonomy_id == int(taxonomy_id):
+                split_of_species_retains_original = True
+                continue
+
+            if not taxonomy_id:
+                raise serializers.ValidationError(
+                    f"Split Species {index+1} is missing a Taxonomy ID"
+                )
+            species_queryset = Species.objects.filter(taxonomy_id=taxonomy_id)
+            species_exists = species_queryset.exists()
+            if species_exists:
+                # If it exists, we will use the existing species instance
+                split_species_instance = species_queryset.first()
+                split_species_instance.processing_status = (
+                    Species.PROCESSING_STATUS_ACTIVE
+                )
+                split_species_instance.save(version_user=request.user)
+            else:
+                split_species_instance = Species(
+                    taxonomy_id=taxonomy_id,
+                    group_type_id=instance.group_type_id,
+                    processing_status=Species.PROCESSING_STATUS_ACTIVE,
+                )
+                split_species_instance.save(version_user=request.user)
+                species_form_submit(split_species_instance, request, split=True)
+
+            process_split_species_general_data(
+                split_species_instance, split_species_request_data
+            )
+            process_split_species_regions_and_districts(
+                split_species_instance, split_species_request_data
+            )
+            process_split_species_distribution_data(
+                split_species_instance, split_species_request_data
+            )
+            split_species_instance.save(version_user=request.user)
+
+            split_species_instance.copy_documents(
+                instance, request, split_species_request_data
+            )
+            split_species_instance.copy_threats(
+                instance, request, split_species_request_data
+            )
+
+            split_species_instance.parent_species.add(instance)
+
+            SPLIT_TO_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_TO_NEW
+            SPLIT_FROM_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_FROM_NEW
+            if species_exists:
+                SPLIT_TO_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_TO_EXISTING
+                SPLIT_FROM_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_FROM_EXISTING
+
+            # Log the action
+            instance.log_user_action(
+                SPLIT_TO_ACTION.format(
+                    instance.species_number,
+                    split_species_instance.species_number,
+                ),
+                request,
+            )
+            request.user.log_user_action(
+                SPLIT_TO_ACTION.format(
+                    instance.species_number,
+                    split_species_instance.species_number,
+                ),
+                request,
+            )
+            instance.log_user_action(
+                SPLIT_FROM_ACTION.format(
+                    split_species_instance.species_number,
+                    instance.species_number,
+                ),
+                request,
+            )
+            request.user.log_user_action(
+                SPLIT_FROM_ACTION.format(
+                    split_species_instance.species_number,
+                    instance.species_number,
+                ),
+                request,
+            )
+
+        # Process the OCC assignments
+        original_taxonomy_occurrence_count = Occurrence.objects.filter(
+            species__taxonomy_id=instance.taxonomy_id,
+        ).count()
+        if original_taxonomy_occurrence_count:
+            occurrence_assignments_dict = request.data.get(
+                "occurrence_assignments", None
+            )
+            if not occurrence_assignments_dict:
+                raise serializers.ValidationError(
+                    "No occurrence assignments provided in request data"
+                )
+            # Check that occurrence_assignments_dict is a valid python dict
+            if not isinstance(occurrence_assignments_dict, dict):
+                raise serializers.ValidationError(
+                    "Occurrence assignments must be in a javascript object/python dictionary format"
+                )
+            if original_taxonomy_occurrence_count != len(occurrence_assignments_dict):
+                raise serializers.ValidationError(
+                    "Invalid number of occurrence assignments."
+                )
+
+            for occurrence_id, taxonomy_id in occurrence_assignments_dict.items():
+                # Process each assignment
+                if not occurrence_id:
+                    raise serializers.ValidationError(
+                        "Occurrence ID is missing in the assignment"
+                    )
+                if not occurrence_id.isdigit():
+                    raise serializers.ValidationError(
+                        f"Occurrence ID {occurrence_id} must be an integer"
+                    )
+                occurrence = Occurrence.objects.filter(id=occurrence_id).first()
+                if not occurrence:
+                    raise serializers.ValidationError(
+                        f"Occurrence with ID {occurrence_id} does not exist"
+                    )
+                # Get the taxonomy id from the assignment
+                if not taxonomy_id:
+                    raise serializers.ValidationError(
+                        f"Taxonomy ID is missing for occurrence {occurrence_id}"
+                    )
+                if not isinstance(taxonomy_id, int):
+                    raise serializers.ValidationError(
+                        f"Taxonomy ID for occurrence {occurrence_id} must be an integer"
+                    )
+                if taxonomy_id == instance.taxonomy_id:
+                    # No need to reassign the occurrence to the same species
+                    continue
+
+                taxonomy = Taxonomy.objects.filter(id=taxonomy_id).first()
+                if not taxonomy:
+                    raise serializers.ValidationError(
+                        f"Taxonomy with ID {taxonomy_id} does not exist"
+                    )
+                species = Species.objects.filter(taxonomy_id=taxonomy_id).first()
+                if not species:
+                    raise serializers.ValidationError(
+                        f"Species with taxonomy ID {taxonomy_id} does not exist"
+                    )
+
+                # Assign the occurrence to the new species
+                occurrence.species = species
+                # When the occurrence is saved, the custom save method will
+                # reassign all OCRs to also point to the new species as well
+                occurrence.save(version_user=request.user)
+
+        if not split_of_species_retains_original:
+            # Set the original species from the split to historical and its conservation status to 'closed'
+            instance.processing_status = Species.PROCESSING_STATUS_HISTORICAL
+            instance.save(version_user=request.user)
+
+            # Log action
+            instance.log_user_action(
+                SpeciesUserAction.ACTION_MAKE_HISTORICAL.format(
+                    instance.species_number
+                ),
+                request,
+            )
+
+            request.user.log_user_action(
+                SpeciesUserAction.ACTION_MAKE_HISTORICAL.format(
+                    instance.species_number
+                ),
+                request,
+            )
+
+        # TODO: This email must make sense for the new split functionality
+        # I.e. splitting to existing species and/or retaining original species
+        ret1 = send_species_split_email_notification(request, instance)
+        if not (settings.WORKING_FROM_HOME and settings.DEBUG) and not ret1:
+            raise serializers.ValidationError(
+                "Email could not be sent. Please try again later"
+            )
 
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
@@ -1569,167 +1784,97 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-    @detail_route(
-        methods=[
-            "GET",
-        ],
-        detail=True,
-    )
-    @renderer_classes((JSONRenderer,))
-    @transaction.atomic
-    def rename_deep_copy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        # related items to instance that needs to create for new rename instance as well
-        instance_documents = SpeciesDocument.objects.filter(species=instance.id)
-        instance_threats = ConservationThreat.objects.filter(species=instance.id)
-        instance_conservation_attributes = SpeciesConservationAttributes.objects.filter(
-            species=instance.id
-        )
-        instance_distribution = SpeciesDistribution.objects.filter(species=instance.id)
-
-        # clone the species instance into new rename instance
-        new_rename_instance = Species.objects.get(pk=instance.pk)
-        new_rename_instance.id = None
-        new_rename_instance.taxonomy_id = None
-        new_rename_instance.species_number = ""
-        new_rename_instance.processing_status = Species.PROCESSING_STATUS_DRAFT
-        new_rename_instance.lodgement_date = None
-        new_rename_instance.save(version_user=request.user)
-
-        # Copy the regions an districts
-        new_rename_instance.regions.add(*instance.regions.all())
-        new_rename_instance.districts.add(*instance.districts.all())
-
-        # Log action
-        new_rename_instance.log_user_action(
-            SpeciesUserAction.ACTION_COPY_SPECIES_FROM.format(
-                new_rename_instance.species_number,
-                instance.species_number,
-            ),
-            request,
-        )
-        request.user.log_user_action(
-            SpeciesUserAction.ACTION_COPY_SPECIES_FROM.format(
-                new_rename_instance.species_number,
-                instance.species_number,
-            ),
-            request,
-        )
-        instance.log_user_action(
-            SpeciesUserAction.ACTION_COPY_SPECIES_TO.format(
-                instance.species_number,
-                new_rename_instance.species_number,
-            ),
-            request,
-        )
-        request.user.log_user_action(
-            SpeciesUserAction.ACTION_COPY_SPECIES_TO.format(
-                instance.species_number,
-                new_rename_instance.species_number,
-            ),
-            request,
-        )
-
-        for new_document in instance_documents:
-            new_doc_instance = new_document
-            new_doc_instance.species = new_rename_instance
-            new_doc_instance.id = None
-            new_doc_instance.document_number = ""
-            new_doc_instance.save(version_user=request.user)
-            new_doc_instance.species.log_user_action(
-                SpeciesUserAction.ACTION_ADD_DOCUMENT.format(
-                    new_doc_instance.document_number,
-                    new_doc_instance.species.species_number,
-                ),
-                request,
-            )
-            request.user.log_user_action(
-                SpeciesUserAction.ACTION_ADD_DOCUMENT.format(
-                    new_doc_instance.document_number,
-                    new_doc_instance.species.species_number,
-                ),
-                request,
-            )
-
-        for new_threat in instance_threats:
-            new_threat_instance = new_threat
-            new_threat_instance.species = new_rename_instance
-            new_threat_instance.id = None
-            new_threat_instance.threat_number = ""
-            new_threat_instance.save(version_user=request.user)
-            new_threat_instance.species.log_user_action(
-                SpeciesUserAction.ACTION_ADD_THREAT.format(
-                    new_threat_instance.threat_number,
-                    new_threat_instance.species.species_number,
-                ),
-                request,
-            )
-            request.user.log_user_action(
-                SpeciesUserAction.ACTION_ADD_THREAT.format(
-                    new_threat_instance.threat_number,
-                    new_threat_instance.species.species_number,
-                ),
-                request,
-            )
-
-        for new_cons_attr in instance_conservation_attributes:
-            new_cons_attr_instance = new_cons_attr
-            new_cons_attr_instance.species = new_rename_instance
-            new_cons_attr_instance.id = None
-            new_cons_attr_instance.save()
-
-        for new_distribution in instance_distribution:
-            new_distribution.species = new_rename_instance
-            new_distribution.id = None
-            new_distribution.save()
-
-        serializer = InternalSpeciesSerializer(
-            new_rename_instance, context={"request": request}
-        )
-        res_json = {"species_obj": serializer.data}
-        res_json = json.dumps(res_json)
-        return HttpResponse(res_json, content_type="application/json")
-
     # used to submit the new species created while combining
     @detail_route(methods=["post"], detail=True)
     @renderer_classes((JSONRenderer,))
     @transaction.atomic
-    def rename_new_species_submit(self, request, *args, **kwargs):
+    def rename_species(self, request, *args, **kwargs):
+        # This is the original instance that is being renamed
         instance = self.get_object()
-        species_form_submit(instance, request)
-        # add parent ids to new species instance
-        parent_species_data = request.data.get("parent_species")
-        parent_instance = Species.objects.get(id=parent_species_data.get("id"))
-        instance.parent_species.add(parent_instance)
-        # set the original species from the rename  to historical and its conservation status to 'closed'
-        rename_species_original_submit(parent_instance, instance, request)
+
+        if not instance.can_user_rename:
+            raise serializers.ValidationError(
+                "Cannot rename species record in current state"
+            )
+
+        # Make sure the taxonomy is actually changing
+        if request.data["taxonomy_id"] == instance.taxonomy_id:
+            raise serializers.ValidationError(
+                "Cannot rename species to the same taxonomy"
+            )
+
+        rename_instance = None
+        # Check if the taxonomy is already in use
+        species_queryset = Species.objects.filter(
+            taxonomy_id=request.data["taxonomy_id"]
+        )
+        species_exists = species_queryset.exists()
+        logger.debug(f"Species exists: {species_exists}")
+        if species_exists:
+            rename_instance = species_queryset.first()
+            logger.debug(
+                f"Renaming species {instance.species_number} to existing species {rename_instance.species_number}"
+            )
+            if rename_instance.processing_status not in [
+                Species.PROCESSING_STATUS_DRAFT,
+                Species.PROCESSING_STATUS_HISTORICAL,
+            ]:
+                raise serializers.ValidationError(
+                    "Can only rename to a species that is in draft or historical state"
+                )
+            rename_instance.processing_status = Species.PROCESSING_STATUS_ACTIVE
+            rename_instance.save(version_user=request.user)
+        else:
+            rename_instance = rename_deep_copy(instance, request)
+            rename_instance.taxonomy_id = request.data["taxonomy_id"]
+            species_form_submit(rename_instance, request)
+
+        rename_instance.parent_species.add(instance)
+
+        # set the original species from the rename to historical
+        rename_species_original_submit(instance, rename_instance, request)
+
+        # Change all occurrence records to point to the new species
+        occurrences = Occurrence.objects.filter(species=instance)
+        # Using a loop with .save here instead of a single .update so custom code runs that reassigns all
+        # OCRs to also point to the new species
+        for occurrence in occurrences:
+            occurrence.species = rename_instance
+            occurrence.save(version_user=request.user)
+
+        # Make sure the action log is accurate in terms of describing what has happened
+        RENAME_FROM_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_FROM
+        RENAME_TO_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_TO_NEW
+        if species_exists:
+            RENAME_FROM_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_BY_REACTIVATING
+            RENAME_TO_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_TO_EXISTING
 
         # Log action
+        rename_instance.log_user_action(
+            RENAME_FROM_ACTION.format(
+                rename_instance.species_number,
+                instance,
+            ),
+            request,
+        )
+        request.user.log_user_action(
+            RENAME_FROM_ACTION.format(
+                rename_instance.species_number,
+                instance,
+            ),
+            request,
+        )
         instance.log_user_action(
-            SpeciesUserAction.ACTION_RENAME_SPECIES_FROM.format(
-                instance.species_number,
-                parent_instance,
+            RENAME_TO_ACTION.format(
+                instance,
+                rename_instance.species_number,
             ),
             request,
         )
         request.user.log_user_action(
-            SpeciesUserAction.ACTION_RENAME_SPECIES_FROM.format(
-                instance.species_number,
-                parent_instance,
-            ),
-            request,
-        )
-        parent_instance.log_user_action(
-            SpeciesUserAction.ACTION_RENAME_SPECIES_TO.format(
-                parent_instance,
-                instance.species_number,
-            ),
-            request,
-        )
-        request.user.log_user_action(
-            SpeciesUserAction.ACTION_RENAME_SPECIES_TO.format(
-                parent_instance,
-                instance.species_number,
+            RENAME_TO_ACTION.format(
+                instance,
+                rename_instance.species_number,
             ),
             request,
         )
@@ -2143,16 +2288,6 @@ class CommunityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 request,
             )
 
-        serializer = InternalCommunitySerializer(instance, context={"request": request})
-
-        return Response(serializer.data)
-
-    @detail_route(methods=["post"], detail=True)
-    @renderer_classes((JSONRenderer,))
-    @transaction.atomic
-    def reopen_species_community(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.reopen(request)
         serializer = InternalCommunitySerializer(instance, context={"request": request})
 
         return Response(serializer.data)

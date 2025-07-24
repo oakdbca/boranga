@@ -55,7 +55,81 @@ export default {
     methods: {
         initEvents: function () {
             let vm = this;
+            // Clone options to avoid mutating the prop
             var options = { ...vm.dtOptions };
+
+            if (options.ajax) {
+                const originalAjax = options.ajax;
+                options.ajax = function (data, callback, settings) {
+                    // If ajax is a URL string, convert to object
+                    let ajaxOptions =
+                        typeof originalAjax === 'string'
+                            ? { url: originalAjax, type: 'GET' }
+                            : { ...originalAjax };
+
+                    // Call the original data function to populate filters
+                    if (options.data && typeof options.data === 'function') {
+                        options.data.call(this, data);
+                    } else if (
+                        originalAjax.data &&
+                        typeof originalAjax.data === 'function'
+                    ) {
+                        originalAjax.data.call(this, data);
+                    }
+
+                    $.ajax({
+                        ...ajaxOptions,
+                        data, // This now includes filter parameters!
+                        success: function (json) {
+                            if (!json || typeof json !== 'object') {
+                                json = {
+                                    data: [],
+                                    recordsTotal: 0,
+                                    recordsFiltered: 0,
+                                    draw:
+                                        settings && settings.draw
+                                            ? settings.draw
+                                            : 0,
+                                };
+                            } else if (!('data' in json)) {
+                                json.data = [];
+                            }
+                            callback(json);
+                        },
+                        error: function (xhr) {
+                            if (xhr.status === 401 || xhr.status === 403) {
+                                setTimeout(() => {
+                                    window.location.href =
+                                        '/login/?next=' +
+                                        encodeURIComponent(
+                                            window.location.pathname
+                                        );
+                                }, 0);
+                                callback({
+                                    data: [],
+                                    recordsTotal: 0,
+                                    recordsFiltered: 0,
+                                    draw:
+                                        settings && settings.draw
+                                            ? settings.draw
+                                            : 0,
+                                });
+                            } else {
+                                callback({
+                                    data: [],
+                                    recordsTotal: 0,
+                                    recordsFiltered: 0,
+                                    draw:
+                                        settings && settings.draw
+                                            ? settings.draw
+                                            : 0,
+                                });
+                            }
+                        },
+                    });
+                };
+            }
+
             vm.vmDataTable = $(this.$refs[this.id]).DataTable(options);
             $(this.$refs[this.id]).resize(function () {
                 vm.vmDataTable.draw(true);

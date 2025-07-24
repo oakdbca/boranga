@@ -133,6 +133,7 @@ from boranga.components.occurrence.permissions import (
     OccurrenceReportReassignDraftPermission,
 )
 from boranga.components.occurrence.serializers import (
+    AssignOccurrenceSerializer,
     AssociatedSpeciesTaxonomySerializer,
     BackToAssessorSerializer,
     CreateOccurrenceReportSerializer,
@@ -5233,6 +5234,19 @@ class OccurrenceViewSet(
             raise e
         else:
             return HttpResponse(res_json, content_type="application/json")
+
+    @list_route(detail=False, methods=["post"])
+    def by_species_id(self, request, *args, **kwargs):
+        species_id = request.data.get("species_id", None)
+        if not species_id:
+            raise serializers.ValidationError("species_id is required")
+
+        queryset = self.get_queryset().filter(species_id=species_id)
+        if not queryset.exists():
+            return Response([])
+
+        serializer = AssignOccurrenceSerializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class OccurrenceReportReferralViewSet(

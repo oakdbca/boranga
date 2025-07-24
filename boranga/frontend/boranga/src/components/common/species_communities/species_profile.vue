@@ -6,12 +6,27 @@
                 label="Taxonomy"
                 :Index="taxonBody"
             >
-                <div class="row mb-3">
+                <div v-if="rename_species" class="row mb-3 align-items-center">
+                    <label for="" class="col-sm-3 col-form-label fw-bold"
+                        >Current Scientific Name:
+                    </label>
+                    <div class="col-sm-9">
+                        <span class="badge bg-primary fs-6">{{
+                            species_community_original.taxonomy_details
+                                .scientific_name
+                        }}</span>
+                    </div>
+                </div>
+                <div
+                    class="row mb-3"
+                    :class="rename_species ? 'border-bottom pb-4' : ''"
+                >
                     <label
                         for=""
                         class="col-sm-3 col-form-label"
                         :class="!scientificNameIsReadOnly ? 'fw-bold' : ''"
-                        >Scientific Name:
+                        ><template v-if="rename_species">Rename To</template
+                        ><template v-else>Scientific Name</template>:
                         <span
                             v-if="!scientificNameIsReadOnly"
                             class="text-danger"
@@ -22,13 +37,17 @@
                         <select
                             v-if="!scientificNameIsReadOnly"
                             :id="scientific_name_lookup"
-                            :ref="scientific_name_lookup"
+                            :ref="
+                                rename_species
+                                    ? 'scientific_name_lookup_rename'
+                                    : scientific_name_lookup
+                            "
                             :name="scientific_name_lookup"
                             class="form-select"
                         />
                         <input
                             v-else
-                            id="taxon_name_id"
+                            id="scientific_name_lookup"
                             v-model="
                                 species_community.taxonomy_details
                                     .scientific_name
@@ -173,6 +192,120 @@
                         />
                     </div>
                 </div>
+                <template v-if="species_community.group_type === 'fauna'">
+                    <div class="row mb-3">
+                        <div class="col-sm-3">
+                            <label for="fauna_group" class="control-label"
+                                >Fauna Group</label
+                            >
+                        </div>
+                        <div class="col-sm-9">
+                            <template
+                                v-if="
+                                    fauna_groups &&
+                                    fauna_groups.length > 0 &&
+                                    species_community.fauna_group &&
+                                    !fauna_groups
+                                        .map((fauna_group) => fauna_group.id)
+                                        .includes(species_community.fauna_group)
+                                "
+                            >
+                                <input
+                                    v-if="species_community.fauna_group_name"
+                                    type="text"
+                                    class="form-control mb-3"
+                                    :value="
+                                        species_community.fauna_group_name +
+                                        ' (Now Archived)'
+                                    "
+                                    disabled
+                                />
+                                <div class="mb-3 text-muted">
+                                    Change fauna group to:
+                                </div>
+                            </template>
+                            <select
+                                id="fauna_group"
+                                ref="fauna_group"
+                                v-model="species_community.fauna_group"
+                                class="form-select"
+                                @change="filterSubCategory($event)"
+                                :disabled="isReadOnly"
+                            >
+                                <option :value="null">
+                                    No Fauna Group Selected
+                                </option>
+                                <option
+                                    v-for="fauna_group in fauna_groups"
+                                    :key="fauna_group.id"
+                                    :value="fauna_group.id"
+                                >
+                                    {{ fauna_group.name }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div v-if="species_community.fauna_group" class="row mb-3">
+                        <div class="col-sm-3">
+                            <label for="fauna_sub_group" class="control-label"
+                                >Fauna Sub Group</label
+                            >
+                        </div>
+                        <div class="col-sm-9">
+                            <template
+                                v-if="
+                                    faunaSubGroupsFilteredByFaunaGroup &&
+                                    faunaSubGroupsFilteredByFaunaGroup.length >
+                                        0 &&
+                                    species_community.fauna_sub_group &&
+                                    !faunaSubGroupsFilteredByFaunaGroup
+                                        .map(
+                                            (fauna_sub_group) =>
+                                                fauna_sub_group.id
+                                        )
+                                        .includes(
+                                            species_community.fauna_sub_group
+                                        )
+                                "
+                            >
+                                <input
+                                    v-if="
+                                        species_community.fauna_sub_group_name
+                                    "
+                                    type="text"
+                                    class="form-control mb-3"
+                                    :value="
+                                        species_community.fauna_sub_group_name +
+                                        ' (Now Archived)'
+                                    "
+                                    disabled
+                                />
+                                <div class="mb-3 text-muted">
+                                    Change fauna sub group to:
+                                </div>
+                            </template>
+                            <select
+                                id="fauna_sub_group"
+                                ref="fauna_sub_group"
+                                v-model="species_community.fauna_sub_group"
+                                class="form-select"
+                                @change="filterSubCategory($event)"
+                                :disabled="isReadOnly"
+                            >
+                                <option :value="null">
+                                    No Fauna Sub Group Selected
+                                </option>
+                                <option
+                                    v-for="fauna_sub_group in faunaSubGroupsFilteredByFaunaGroup"
+                                    :key="fauna_sub_group.id"
+                                    :value="fauna_sub_group.id"
+                                >
+                                    {{ fauna_sub_group.name }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </template>
             </FormSection>
             <FormSection
                 v-if="distribution_public || is_internal"
@@ -366,6 +499,9 @@
                                     "
                                     :disabled="isEOOReadOnly"
                                     type="number"
+                                    min="0.00"
+                                    step="0.01"
+                                    max="9999999999.99"
                                     class="form-control"
                                     placeholder=""
                                 />
@@ -1043,28 +1179,30 @@
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <label
-                        for="conservation_plan_exists"
-                        class="col-sm-3 col-form-label"
+                    <label class="col-sm-3 col-form-label"
                         >Conservation Plan Exists:
                     </label>
                     <div class="col-sm-9">
-                        <label for="conservation_plan_exists" class="me-2"
+                        <label
+                            for="original_conservation_plan_exists_no"
+                            class="me-2"
                             >No</label
                         >
                         <input
-                            id="conservation_plan_exists"
+                            id="original_conservation_plan_exists_no"
                             v-model="species_community.conservation_plan_exists"
                             :disabled="isReadOnly"
                             type="radio"
                             :value="false"
                             class="form-check-input me-2"
                         />
-                        <label for="conservation_plan_exists" class="me-2"
+                        <label
+                            for="original_conservation_plan_exists_yes"
+                            class="me-2"
                             >Yes</label
                         >
                         <input
-                            id="conservation_plan_exists"
+                            id="original_conservation_plan_exists_yes"
                             v-model="species_community.conservation_plan_exists"
                             :disabled="isReadOnly"
                             type="radio"
@@ -1119,16 +1257,16 @@
                 Index="publishing"
             >
                 <div class="row mb-3">
-                    <label
-                        for="distribution_publishing"
-                        class="col-sm-3 col-form-label"
+                    <label class="col-sm-3 col-form-label"
                         >Distribution:
                     </label>
                     <div class="col-sm-9">
                         <div class="form-check form-check-inline">
-                            <label for="distribution_publishing">Private</label>
+                            <label for="distribution_publishing_private"
+                                >Private</label
+                            >
                             <input
-                                id="distribution_publishing"
+                                id="distribution_publishing_private"
                                 v-model="
                                     species_community.publishing_status
                                         .distribution_public
@@ -1140,9 +1278,11 @@
                             />
                         </div>
                         <div class="form-check form-check-inline">
-                            <label for="distribution_publishing">Public</label>
+                            <label for="distribution_publishing_public"
+                                >Public</label
+                            >
                             <input
-                                id="distribution_publishing"
+                                id="distribution_publishing_public"
                                 v-model="
                                     species_community.publishing_status
                                         .distribution_public
@@ -1156,18 +1296,16 @@
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <label
-                        for="conservation_status_publishing"
-                        class="col-sm-3 col-form-label"
+                    <label class="col-sm-3 col-form-label"
                         >Conservation Status:
                     </label>
                     <div class="col-sm-9">
                         <div class="form-check form-check-inline">
-                            <label for="conservation_status_publishing"
+                            <label for="conservation_status_publishing_private"
                                 >Private</label
                             >
                             <input
-                                id="conservation_status_publishing"
+                                id="conservation_status_publishing_private"
                                 v-model="
                                     species_community.publishing_status
                                         .conservation_status_public
@@ -1179,11 +1317,11 @@
                             />
                         </div>
                         <div class="form-check form-check-inline">
-                            <label for="conservation_status_publishing"
+                            <label for="conservation_status_publishing_public"
                                 >Public</label
                             >
                             <input
-                                id="conservation_status_publishing"
+                                id="conservation_status_publishing_public"
                                 v-model="
                                     species_community.publishing_status
                                         .conservation_status_public
@@ -1215,16 +1353,14 @@
                 </div>
             </div> -->
                 <div class="row mb-3">
-                    <label
-                        for="threats_publishing"
-                        class="col-sm-3 col-form-label"
-                        >Threats:
-                    </label>
+                    <label class="col-sm-3 col-form-label">Threats: </label>
                     <div class="col-sm-9">
                         <div class="form-check form-check-inline">
-                            <label for="threats_publishing">Private</label>
+                            <label for="threats_publishing_private"
+                                >Private</label
+                            >
                             <input
-                                id="threats_publishing"
+                                id="threats_publishing_private"
                                 v-model="
                                     species_community.publishing_status
                                         .threats_public
@@ -1236,9 +1372,11 @@
                             />
                         </div>
                         <div class="form-check form-check-inline">
-                            <label for="threats_publishing">Public</label>
+                            <label for="threats_publishing_public"
+                                >Public</label
+                            >
                             <input
-                                id="threats_publishing"
+                                id="threats_publishing_public"
                                 v-model="
                                     species_community.publishing_status
                                         .threats_public
@@ -1352,6 +1490,8 @@ export default {
             post_fire_habitatat_interactions_list: [],
             // to display the species Taxonomy selected details
             species_display: '',
+            fauna_groups: [],
+            fauna_sub_groups: [],
             conservation_category: '',
             conservation_list: '',
             conservation_criteria: '',
@@ -1487,18 +1627,20 @@ export default {
                         0)
             );
         },
+        faunaSubGroupsFilteredByFaunaGroup: function () {
+            let vm = this;
+            if (vm.species_community.fauna_group) {
+                return vm.fauna_sub_groups.filter(
+                    (subGroup) =>
+                        subGroup.fauna_group_id ===
+                        vm.species_community.fauna_group
+                );
+            } else {
+                return [];
+            }
+        },
     },
     watch: {
-        // "species_community.distribution.eoo_auto": function(newVal) {
-        //     let vm=this;
-        //     var selectedValue = newVal;
-        //         if(selectedValue === "true"){
-        //             vm.species_community.distribution.extent_of_occurrences=vm.species_community.distribution.cal_extent_of_occurrences;
-        //         }
-        //         else{
-        //             vm.species_community.distribution.extent_of_occurrences=null;
-        //         }
-        // },
         'species_community.distribution.number_of_iucn_locations': function (
             newVal
         ) {
@@ -1516,6 +1658,12 @@ export default {
                         null;
                 }
             },
+        'species_community.fauna_group': function (newVal, oldVal) {
+            let vm = this;
+            if (newVal !== oldVal) {
+                vm.species_community.fauna_sub_group = null;
+            }
+        },
     },
     created: async function () {
         let vm = this;
@@ -1581,6 +1729,13 @@ export default {
             id: null,
             name: null,
         });
+        if (vm.species_community.group_type === 'fauna') {
+            const response = await fetch('/api/fauna_group_dict');
+            const data = await response.json();
+            console.debug('Fauna group list fetched successfully', data);
+            vm.fauna_groups = data.fauna_group_list;
+            vm.fauna_sub_groups = data.fauna_sub_group_list;
+        }
         vm.fetchRegions();
     },
     mounted: function () {
@@ -1895,7 +2050,13 @@ export default {
         },
         initialiseScientificNameLookup: function () {
             let vm = this;
-            $(vm.$refs[vm.scientific_name_lookup])
+            $(
+                vm.$refs[
+                    vm.rename_species
+                        ? 'scientific_name_lookup_rename'
+                        : vm.scientific_name_lookup
+                ]
+            )
                 .select2({
                     minimumInputLength: 2,
                     dropdownParent: $('#' + vm.select_scientific_name),
@@ -1912,6 +2073,7 @@ export default {
                                 group_type_id:
                                     vm.species_community.group_type_id,
                                 species_profile: !vm.rename_species,
+                                species_rename: vm.rename_species,
                                 species_id: vm.species_community.id, // to filter species  current/non_current
                             };
                             return query;

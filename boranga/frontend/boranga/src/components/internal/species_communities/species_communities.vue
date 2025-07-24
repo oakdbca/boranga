@@ -326,29 +326,6 @@
                             </div>
                         </div>
                     </div>
-                    <div v-else-if="canReopen" class="card-body border-top">
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <div class="col-sm-12">
-                                    <div class="row mb-2">
-                                        <div class="col-sm-12">
-                                            <strong>Action</strong><br />
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-sm-12">
-                                            <button
-                                                class="btn btn-primary w-100"
-                                                @click.prevent="reopen()"
-                                            >
-                                                Reopen</button
-                                            ><br />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
             <div class="col-md-9">
@@ -742,12 +719,6 @@ export default {
                 ? true
                 : false;
         },
-        canReopen: function () {
-            return this.species_community &&
-                this.species_community.can_user_reopen
-                ? true
-                : false;
-        },
         isPublic: function () {
             return this.species_community.group_type === 'community'
                 ? this.species_community.publishing_status.community_public
@@ -922,73 +893,6 @@ export default {
         },
         showReinstateImageModal: function () {
             this.$refs.reinstateImage.isModalOpen = true;
-        },
-        reopen: async function () {
-            swal.fire({
-                title: 'Reopen',
-                text: 'Are you sure you want to reopen this record?',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Reopen',
-                customClass: {
-                    confirmButton: 'btn btn-primary',
-                    cancelButton: 'btn btn-secondary',
-                },
-                reverseButtons: true,
-            }).then(async (swalresult) => {
-                let endpoint = api_endpoints.species;
-                if (this.species_community.group_type === 'community') {
-                    endpoint = api_endpoints.community;
-                }
-
-                if (swalresult.isConfirmed) {
-                    await fetch(
-                        `${endpoint}/${this.species_community.id}/reopen_species_community.json`,
-                        {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                        }
-                    ).then(
-                        async (response) => {
-                            if (!response.ok) {
-                                const data = await response.json();
-                                swal.fire({
-                                    title: 'Error',
-                                    text: JSON.stringify(data),
-                                    icon: 'error',
-                                    customClass: {
-                                        confirmButton: 'btn btn-primary',
-                                    },
-                                });
-                                return;
-                            }
-                            swal.fire({
-                                title: 'Reopened',
-                                text: 'Record has been reopened',
-                                icon: 'success',
-                                customClass: {
-                                    confirmButton: 'btn btn-primary',
-                                },
-                            }).then(async () => {
-                                this.$router.go(this.$router.currentRoute);
-                            });
-                        },
-                        (err) => {
-                            var errorText = helpers.apiVueResourceError(err);
-                            swal.fire({
-                                title: 'Reopen Error',
-                                text: errorText,
-                                icon: 'error',
-                                customClass: {
-                                    confirmButton: 'btn btn-primary',
-                                },
-                            });
-                        }
-                    );
-                }
-            });
         },
         reinstateImage: function (image) {
             var api_url = api_endpoints.species;
@@ -1587,86 +1491,6 @@ export default {
         splitSpecies: async function () {
             this.$refs.species_split.species_community_original =
                 this.species_community;
-            let newSpeciesId1 = null;
-            try {
-                const createUrl = api_endpoints.species + '/';
-                let payload = new Object();
-                payload.group_type_id = this.species_community.group_type_id;
-                let response = await fetch(createUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload),
-                });
-                const savedSpecies = await response.json();
-                if (savedSpecies) {
-                    newSpeciesId1 = savedSpecies.id;
-                    fetch(
-                        `/api/species/${newSpeciesId1}/internal_species.json`
-                    ).then(
-                        async (response) => {
-                            const data = await response.json();
-                            let species_obj = data.species_obj;
-                            //--- to add empty documents array
-                            species_obj.documents = [];
-                            //---empty threats array added to store the select threat ids in from the child component
-                            species_obj.threats = [];
-                            this.$refs.species_split.new_species_list.push(
-                                species_obj
-                            ); //--temp species_obj
-                        },
-                        (err) => {
-                            console.log(err);
-                        }
-                    );
-                }
-            } catch (err) {
-                console.log(err);
-                if (this.is_internal) {
-                    return err;
-                }
-            }
-            let newSpeciesId2 = null;
-            try {
-                const createUrl = api_endpoints.species + '/';
-                let payload = new Object();
-                payload.group_type_id = this.species_community.group_type_id;
-                let response = await fetch(createUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload),
-                });
-                const savedSpecies = await response.json();
-                if (savedSpecies) {
-                    newSpeciesId2 = savedSpecies.id;
-                    fetch(
-                        `/api/species/${newSpeciesId2}/internal_species.json`
-                    ).then(
-                        async (response) => {
-                            const data = await response.json();
-                            let species_obj = data.species_obj;
-                            // to add documents id array from original species
-                            species_obj.documents = [];
-                            //---empty threats array added to store the select threat ids in from the child component
-                            species_obj.threats = [];
-                            this.$refs.species_split.new_species_list.push(
-                                species_obj
-                            ); //--temp species_obj
-                        },
-                        (err) => {
-                            console.log(err);
-                        }
-                    );
-                }
-            } catch (err) {
-                console.log(err);
-                if (this.is_internal) {
-                    return err;
-                }
-            }
             this.$refs.species_split.isModalOpen = true;
         },
         combineSpecies: async function () {
@@ -1715,17 +1539,7 @@ export default {
             this.$refs.species_combine.isModalOpen = true;
         },
         renameSpecies: async function () {
-            let rename_species_obj = null;
-            let response = await fetch(
-                `/api/species/${this.species_community.id}/rename_deep_copy.json`
-            );
-            const newRenameSpecies = await response.json();
-            if (newRenameSpecies) {
-                rename_species_obj = newRenameSpecies.species_obj;
-                this.$refs.species_rename.new_rename_species =
-                    rename_species_obj;
-                this.$refs.species_rename.isModalOpen = true;
-            }
+            this.$refs.species_rename.isModalOpen = true;
         },
         renameCommunity: async function () {
             this.$refs.community_rename.isModalOpen = true;

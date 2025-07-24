@@ -100,7 +100,7 @@
                     <div class="form-group">
                         <label for="">Date Observed From:</label>
                         <input
-                            id="observed_from_date"
+                            id="occ_threats_observed_from_date"
                             v-model="filterObservedFromDate"
                             type="date"
                             class="form-control"
@@ -112,7 +112,7 @@
                     <div class="form-group">
                         <label for="">Date Observed To:</label>
                         <input
-                            id="observed_to_date"
+                            id="occ_threats_observed_to_date"
                             v-model="filterObservedToDate"
                             type="date"
                             class="form-control"

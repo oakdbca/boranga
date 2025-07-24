@@ -385,8 +385,8 @@ export default {
         },
         addFaunaOCRVisibility: function () {
             return (
-                this.profile &&
-                this.profile.groups.includes(
+                this.profile?.user &&
+                this.profile.user.groups.includes(
                     constants.GROUPS.INTERNAL_CONTRIBUTORS
                 )
             );

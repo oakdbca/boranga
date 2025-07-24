@@ -68,6 +68,12 @@ class ListSpeciesSerializer(BaseModelSerializer):
     commonwealth_conservation_category = serializers.SerializerMethodField()
     other_conservation_assessment = serializers.SerializerMethodField()
     conservation_criteria = serializers.SerializerMethodField()
+    fauna_group_name = serializers.CharField(
+        source="fauna_group.name", read_only=True, required=False, allow_null=True
+    )
+    fauna_sub_group_name = serializers.CharField(
+        source="fauna_sub_group.name", read_only=True, required=False, allow_null=True
+    )
 
     class Meta:
         model = Species
@@ -94,6 +100,10 @@ class ListSpeciesSerializer(BaseModelSerializer):
             "commonwealth_conservation_category",
             "other_conservation_assessment",
             "conservation_criteria",
+            "fauna_group",
+            "fauna_group_name",
+            "fauna_sub_group",
+            "fauna_sub_group_name",
         )
         datatables_always_serialize = (
             "id",
@@ -118,6 +128,10 @@ class ListSpeciesSerializer(BaseModelSerializer):
             "commonwealth_conservation_category",
             "other_conservation_assessment",
             "conservation_criteria",
+            "fauna_group",
+            "fauna_group_name",
+            "fauna_sub_group",
+            "fauna_sub_group_name",
         )
 
     def get_group_type(self, obj):
@@ -499,9 +513,7 @@ class SpeciesConservationAttributesSerializer(BaseModelSerializer):
             for rs in SpeciesConservationAttributes.PERIOD_CHOICES:
                 PERIOD_CHOICES.append([rs[0], rs[1]])
             self.fields["flowering_period", "fruiting_period", "breeding_period"] = (
-                serializers.MultipleChoiceField(
-                    choices=PERIOD_CHOICES, allow_blank=False
-                )
+                ListMultipleChoiceField(choices=PERIOD_CHOICES, allow_blank=False)
             )
 
 
@@ -581,6 +593,7 @@ class SaveSpeciesConservationAttributesSerializer(BaseModelSerializer):
 
 
 class SpeciesDistributionSerializer(BaseModelSerializer):
+    extent_of_occurrences = serializers.FloatField(required=False, allow_null=True)
 
     class Meta:
         model = SpeciesDistribution
@@ -597,11 +610,17 @@ class SpeciesDistributionSerializer(BaseModelSerializer):
             "distribution",
         )
 
+    def to_internal_value(self, data):
+        if data["extent_of_occurrences"] == "":
+            data["extent_of_occurrences"] = None
+        return super().to_internal_value(data)
+
 
 class SaveSpeciesDistributionSerializer(BaseModelSerializer):
     species_id = serializers.IntegerField(
         required=False, allow_null=True, write_only=True
     )
+    extent_of_occurrences = serializers.FloatField(required=False, allow_null=True)
 
     class Meta:
         model = SpeciesDistribution
@@ -837,8 +856,13 @@ class InternalSpeciesSerializer(BaseSpeciesSerializer):
     current_assessor = serializers.SerializerMethodField()
     user_edit_mode = serializers.SerializerMethodField()
     can_user_edit = serializers.SerializerMethodField()
-    can_user_reopen = serializers.SerializerMethodField()
     can_add_log = serializers.SerializerMethodField()
+    fauna_group_name = serializers.CharField(
+        source="fauna_group.name", read_only=True, required=False, allow_null=True
+    )
+    fauna_sub_group_name = serializers.CharField(
+        source="fauna_sub_group.name", read_only=True, required=False, allow_null=True
+    )
 
     class Meta:
         model = Species
@@ -860,7 +884,6 @@ class InternalSpeciesSerializer(BaseSpeciesSerializer):
             "processing_status",
             "readonly",
             "can_user_edit",
-            "can_user_reopen",
             "can_user_view",
             "submitter",
             "lodgement_date",
@@ -875,6 +898,10 @@ class InternalSpeciesSerializer(BaseSpeciesSerializer):
             "area_occurrence_convex_hull_km2",
             "can_add_log",
             "department_file_numbers",
+            "fauna_group",
+            "fauna_group_name",
+            "fauna_sub_group",
+            "fauna_sub_group_name",
         )
 
     def get_submitter(self, obj):
@@ -907,12 +934,6 @@ class InternalSpeciesSerializer(BaseSpeciesSerializer):
             return obj.can_user_edit
         return False
 
-    def get_can_user_reopen(self, obj):
-        request = self.context["request"]
-        if is_species_communities_approver(request):
-            return obj.can_user_reopen(request)
-        return False
-
     def get_current_assessor(self, obj):
         return {
             "id": self.context["request"].user.id,
@@ -926,6 +947,8 @@ class InternalSpeciesSerializer(BaseSpeciesSerializer):
 
 
 class CommunityDistributionSerializer(BaseModelSerializer):
+    extent_of_occurrences = serializers.FloatField(required=False, allow_null=True)
+    community_original_area = serializers.FloatField(required=False, allow_null=True)
 
     class Meta:
         model = CommunityDistribution
@@ -944,6 +967,13 @@ class CommunityDistributionSerializer(BaseModelSerializer):
             "distribution",
         )
 
+    def to_internal_value(self, data):
+        if data["extent_of_occurrences"] == "":
+            data["extent_of_occurrences"] = None
+        if data["community_original_area"] == "":
+            data["community_original_area"] = None
+        return super().to_internal_value(data)
+
 
 class SaveCommunityDistributionSerializer(BaseModelSerializer):
     community_id = serializers.IntegerField(
@@ -953,6 +983,11 @@ class SaveCommunityDistributionSerializer(BaseModelSerializer):
         required=False,
         allow_null=True,
     )
+    extent_of_occurrences = serializers.FloatField(
+        required=False,
+        allow_null=True,
+    )
+    community_original_area = serializers.FloatField(required=False, allow_null=True)
 
     class Meta:
         model = CommunityDistribution
@@ -1294,7 +1329,6 @@ class InternalCommunitySerializer(BaseCommunitySerializer):
     user_edit_mode = serializers.SerializerMethodField()
     can_user_edit = serializers.SerializerMethodField()
     can_add_log = serializers.SerializerMethodField()
-    can_user_reopen = serializers.SerializerMethodField()
     renamed_from = SimpleCommunityDisplaySerializer(read_only=True, allow_null=True)
     readonly = serializers.SerializerMethodField(read_only=True)
 
@@ -1319,7 +1353,6 @@ class InternalCommunitySerializer(BaseCommunitySerializer):
             "readonly",
             "can_user_edit",
             "can_user_view",
-            "can_user_reopen",
             "current_assessor",
             "user_edit_mode",
             "comment",
@@ -1365,12 +1398,6 @@ class InternalCommunitySerializer(BaseCommunitySerializer):
             return obj.can_user_edit
         return False
 
-    def get_can_user_reopen(self, obj):
-        request = self.context["request"]
-        if is_species_communities_approver(request):
-            return obj.can_user_reopen(request)
-        return False
-
     def get_current_assessor(self, obj):
         return {
             "id": self.context["request"].user.id,
@@ -1405,6 +1432,8 @@ class SaveSpeciesSerializer(BaseSpeciesSerializer):
             "regions",
             "districts",
             "department_file_numbers",
+            "fauna_group",
+            "fauna_sub_group",
         )
         read_only_fields = ("id", "group_type")
 

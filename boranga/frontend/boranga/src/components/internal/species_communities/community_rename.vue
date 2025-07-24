@@ -52,8 +52,8 @@
                                             .taxonomy_details.community_name
                                     }}</span
                                 >
-                                will be made historical but may be reopened
-                                later if required
+                                will be made historical (it may be reactivated
+                                using rename, split or combine at a later date)
                             </li>
                         </ul>
                     </alert>

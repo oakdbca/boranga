@@ -31,6 +31,7 @@ export default {
         '/api/occurrence_report_bulk_import_schemas/',
     occurrence_report_bulk_import_schemas_by_group_type:
         '/api/occurrence_report_bulk_import_schemas/get_schema_list_by_group_type/',
+    occurrences_by_species_id: '/api/occurrence/by_species_id/',
     ocr_external_referee_invites: '/api/ocr_external_referee_invites',
     ocr_referrals: '/api/ocr_referrals.json',
     organisation_access_group_members: '/api/organisation_access_group_members',
@@ -81,7 +82,7 @@ export default {
     community_id_lookup: '/api/community_id_lookup',
     community_name_lookup: '/api/community_name_lookup',
     conservation_status_paginated_external:
-        '/api/conservation_status_paginated/conservation_status_external?format=datatables',
+        '/api/conservation_status_paginated/conservation_status_external/?format=datatables',
     conservation_status_referred_to_me:
         '/api/conservation_status_paginated/referred_to_me/?format=datatables',
     family_lookup: '/api/family_lookup',
@@ -97,7 +98,7 @@ export default {
     occurrence_internal_export:
         '/api/occurrence_paginated/occurrence_internal_export',
     occurrence_paginated_internal:
-        '/api/occurrence_paginated/occurrence_internal?format=datatables',
+        '/api/occurrence_paginated/occurrence_internal/?format=datatables',
     occurrence_report_external_export:
         '/api/occurrence_report_paginated/occurrence_report_external_export',
     occurrence_report_internal_export:
@@ -105,11 +106,11 @@ export default {
     community_occurrence_report_internal_export:
         '/api/occurrence_report_paginated/community_occurrence_report_internal_export',
     occurrence_report_paginated_external:
-        '/api/occurrence_report_paginated/occurrence_report_external?format=datatables',
+        '/api/occurrence_report_paginated/occurrence_report_external/?format=datatables',
     occurrence_report_paginated_internal:
-        '/api/occurrence_report_paginated/occurrence_report_internal?format=datatables',
+        '/api/occurrence_report_paginated/occurrence_report_internal/?format=datatables',
     occurrence_report_paginated_referred_to_me:
-        '/api/occurrence_report_paginated/referred_to_me?format=datatables',
+        '/api/occurrence_report_paginated/referred_to_me/?format=datatables',
     occurrence: '/api/occurrence/',
     phylo_group_lookup: '/api/phylo_group_lookup',
     proposals_paginated_external:

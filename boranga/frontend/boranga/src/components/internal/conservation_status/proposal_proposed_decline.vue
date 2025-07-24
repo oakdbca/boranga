@@ -17,8 +17,13 @@
                             <div class="form-group">
                                 <div class="row mb-3">
                                     <div class="col-sm-12">
-                                        <label class="control-label" for="Name"
-                                            >Details</label
+                                        <label
+                                            class="control-label fw-bold"
+                                            for="Name"
+                                            >Details / Reason
+                                            <span class="text-danger"
+                                                >*</span
+                                            ></label
                                         >
                                         <textarea
                                             ref="reason"
@@ -26,6 +31,7 @@
                                             style="width: 70%"
                                             class="form-control"
                                             name="reason"
+                                            required
                                         ></textarea>
                                     </div>
                                 </div>
@@ -140,6 +146,12 @@ export default {
             let vm = this;
             if ($(vm.form).valid()) {
                 vm.sendData();
+            } else {
+                // focs the first invalid field
+                let firstInvalid = $(vm.form).find('.error').first();
+                if (firstInvalid.length) {
+                    firstInvalid.focus();
+                }
             }
         },
         cancel: function () {

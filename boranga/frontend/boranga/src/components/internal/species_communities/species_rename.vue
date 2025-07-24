@@ -17,13 +17,15 @@
                         <div>
                             <div class="col-md-12">
                                 <SpeciesCommunitiesComponent
-                                    v-if="new_rename_species != null"
+                                    v-if="species_community_original_copy"
                                     id="rename_species"
                                     ref="rename_species"
                                     :species_community_original="
-                                        new_rename_species
+                                        species_community_original_copy
                                     "
-                                    :species_community="new_rename_species"
+                                    :species_community="
+                                        species_community_original_copy
+                                    "
                                     :is_internal="true"
                                     :is_readonly="true"
                                     :rename_species="true"
@@ -100,24 +102,39 @@ export default {
         return {
             newSpeciesBody: 'newSpeciesBody' + uuid(),
             speciesBody: 'speciesBody' + uuid(),
-            new_rename_species: null,
+            species_community_original_copy: null,
             submitSpeciesRename: false,
             isModalOpen: false,
             form: null,
             errorString: '',
         };
     },
-    computed: {
-        csrf_token: function () {
-            return helpers.getCookie('csrftoken');
+    watch: {
+        isModalOpen: function (newValue) {
+            if (newValue) {
+                this.species_community_original_copy = Object.assign(
+                    {},
+                    this.species_community_original
+                );
+                this.$nextTick(() => {
+                    const selectEl =
+                        this.$refs.rename_species.$refs.species_information
+                            .$refs.scientific_name_lookup_rename;
+                    $(selectEl).val(null).trigger('change');
+                    $(selectEl).select2('open');
+                });
+            }
         },
+    },
+    computed: {
         title: function () {
-            return this.new_rename_species != null
-                ? 'Rename Species ' +
-                      this.species_community_original.species_number +
-                      ' to ' +
-                      this.new_rename_species.species_number
-                : '';
+            if (!this.species_community_original_copy) {
+                return 'Rename Species';
+            }
+            return `Rename Species ${this.species_community_original_copy.species_number} ${
+                this.species_community_original_copy.taxonomy_details
+                    .scientific_name
+            }`;
         },
     },
     mounted: function () {
@@ -151,26 +168,8 @@ export default {
             });
         },
         close: function () {
-            let vm = this;
-            vm.removeSpecies(vm.new_rename_species.id);
             this.isModalOpen = false;
             this.errorString = '';
-        },
-        removeSpecies: function (species_id) {
-            try {
-                // In this case we are allowing a http DELETE call to remove the species
-                fetch(api_endpoints.remove_species_proposal(species_id), {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
-            } catch (err) {
-                console.log(err);
-                if (this.is_internal) {
-                    return err;
-                }
-            }
         },
         save_before_submit: async function (new_species) {
             let vm = this;
@@ -210,7 +209,7 @@ export default {
         },
         sendData: async function () {
             let vm = this;
-            if (!vm.new_rename_species.taxonomy_id) {
+            if (!vm.species_community_original_copy.taxonomy_id) {
                 swal.fire({
                     title: 'Please fix following errors',
                     text: 'Please select a species by searching for the scientific name',
@@ -223,97 +222,87 @@ export default {
             }
 
             if (
-                vm.new_rename_species.taxonomy_id &&
-                vm.new_rename_species.taxonomy_id ==
-                    vm.species_community_original.taxonomy_id
+                vm.species_community_original_copy.taxonomy_id ==
+                vm.species_community_original.taxonomy_id
             ) {
                 swal.fire({
                     title: 'Please fix following errors',
-                    text: 'Species To Rename already exists',
+                    text: 'The selected species is the same as the original species.',
                     icon: 'error',
                     customClass: {
                         confirmButton: 'btn btn-primary',
                     },
                 });
-            } else {
-                vm.submitSpeciesRename = true;
-                swal.fire({
-                    title: 'Rename Species',
-                    text: 'Are you sure you want to rename this species?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Rename Species',
-                    customClass: {
-                        confirmButton: 'btn btn-primary',
-                        cancelButton: 'btn btn-secondary',
-                    },
-                    reverseButtons: true,
-                })
-                    .then(async (swalresult) => {
-                        if (swalresult.isConfirmed) {
-                            //---save and submit the new rename species
-                            let new_species = vm.new_rename_species;
-                            //-- save new species before submit
-                            await vm.save_before_submit(new_species);
-                            if (!vm.saveError) {
-                                // add the parent species to the new species object
-                                new_species.parent_species =
-                                    vm.species_community_original;
-                                let payload = new Object();
-                                Object.assign(payload, new_species);
-                                let submit_url = helpers.add_endpoint_json(
-                                    api_endpoints.species,
-                                    new_species.id +
-                                        '/rename_new_species_submit'
-                                );
-                                fetch(submit_url, {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify(payload),
-                                }).then(
-                                    async (response) => {
-                                        const data = await response.json();
-                                        if (!response.ok) {
-                                            swal.fire({
-                                                title: 'Submit Error',
-                                                text: JSON.stringify(data),
-                                                icon: 'error',
-                                                customClass: {
-                                                    confirmButton:
-                                                        'btn btn-primary',
-                                                },
-                                            });
-                                            return;
-                                        }
-                                        vm.new_species = data;
-                                        vm.$router.push({
-                                            name: 'internal-species-communities-dash',
-                                        });
-                                    },
-                                    (err) => {
-                                        swal.fire({
-                                            title: 'Submit Error',
-                                            text: helpers.apiVueResourceError(
-                                                err
-                                            ),
-                                            icon: 'error',
-                                            customClass: {
-                                                confirmButton:
-                                                    'btn btn-primary',
-                                            },
-                                        });
-                                        vm.saveError = true;
-                                    }
-                                );
-                            }
-                        }
-                    })
-                    .finally(() => {
-                        vm.submitSpeciesRename = false;
-                    });
+                return false;
             }
+
+            vm.submitSpeciesRename = true;
+            swal.fire({
+                title: 'Rename Species',
+                text: 'Are you sure you want to rename this species?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Rename Species',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-secondary',
+                },
+                reverseButtons: true,
+            })
+                .then(async (swalresult) => {
+                    if (swalresult.isConfirmed) {
+                        fetch(
+                            helpers.add_endpoint_json(
+                                api_endpoints.species,
+                                vm.species_community_original.id +
+                                    '/rename_species'
+                            ),
+                            {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(
+                                    vm.species_community_original_copy
+                                ),
+                            }
+                        ).then(
+                            async (response) => {
+                                const data = await response.json();
+                                if (!response.ok) {
+                                    swal.fire({
+                                        title: 'Submit Error',
+                                        text: JSON.stringify(data),
+                                        icon: 'error',
+                                        customClass: {
+                                            confirmButton: 'btn btn-primary',
+                                        },
+                                    });
+                                    vm.saveError = true;
+                                    return;
+                                }
+                                vm.new_species = data;
+                                vm.$router.push({
+                                    name: 'internal-species-communities-dash',
+                                });
+                            },
+                            (err) => {
+                                swal.fire({
+                                    title: 'Submit Error',
+                                    text: helpers.apiVueResourceError(err),
+                                    icon: 'error',
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary',
+                                    },
+                                });
+                                vm.saveError = true;
+                            }
+                        );
+                    }
+                })
+                .finally(() => {
+                    vm.submitSpeciesRename = false;
+                });
         },
     },
 };
