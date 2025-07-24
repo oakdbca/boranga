@@ -326,6 +326,7 @@
                         v-model="
                             species_original.distribution.number_of_occurrences
                         "
+                        :disabled="true"
                         type="number"
                         class="form-control"
                         placeholder=""
@@ -1191,18 +1192,6 @@ export default {
                 'scientific_name_lookup' + vm.species_community.index,
             select_scientific_name:
                 'select_scientific_name' + vm.species_community.index,
-            select_flowering_period:
-                'select_flowering_period' + vm.species_community.index,
-            select_flowering_period_readonly:
-                'select_flowering_period_readonly' + vm.species_community.index,
-            select_fruiting_period:
-                'select_fruiting_period' + vm.species_community.index,
-            select_fruiting_period_readonly:
-                'select_fruiting_period_readonly' + vm.species_community.index,
-            select_breeding_period:
-                'select_breeding_period' + vm.species_community.index,
-            select_breeding_period_readonly:
-                'select_breeding_period_readonly' + vm.species_community.index,
             select_regions: 'select_regions' + vm.species_community.index,
             select_regions_read_only:
                 'select_regions_read_only' + vm.species_community.index,
@@ -1211,7 +1200,6 @@ export default {
             select_districts: 'select_districts' + vm.species_community.index,
             taxonBody: 'taxonBody' + uuid(),
             distributionBody: 'distributionBody' + uuid(),
-            conservationBody: 'conservationBody' + uuid(),
             generalBody: 'generalBody' + uuid(),
             retainOriginalSpecies: false,
             //---to show fields related to Fauna
@@ -1238,20 +1226,6 @@ export default {
             name_authority: null,
             name_comments: null,
             species_id: null,
-            period_list: [
-                { id: 1, name: 'January' },
-                { id: 2, name: 'February' },
-                { id: 3, name: 'March' },
-                { id: 4, name: 'April' },
-                { id: 5, name: 'May' },
-                { id: 6, name: 'June' },
-                { id: 7, name: 'July' },
-                { id: 8, name: 'August' },
-                { id: 9, name: 'September' },
-                { id: 10, name: 'October' },
-                { id: 11, name: 'November' },
-                { id: 12, name: 'December' },
-            ],
             minimum_fire_interval_range_original: false,
             average_lifespan_range_original: false,
             generation_length_range_original: false,
@@ -1260,16 +1234,6 @@ export default {
             average_lifespan_range_new: false,
             generation_length_range_new: false,
             time_to_maturity_range_new: false,
-            interval_choice: [
-                { id: 1, name: 'year/s' },
-                { id: 2, name: 'month/s' },
-            ],
-            errors: {
-                minimum_fire_interval_error: null,
-                average_lifespan_error: null,
-                generation_length_error: null,
-                time_to_maturity_error: null,
-            },
         };
     },
     computed: {
@@ -1354,86 +1318,6 @@ export default {
             vm.species_community.distribution.area_of_occupancy_actual =
                 vm.species_community.distribution.cal_area_of_occupancy_actual;
         }
-        if (
-            vm.species_original.conservation_attributes
-                .minimum_fire_interval_to != null &&
-            vm.species_original.conservation_attributes
-                .minimum_fire_interval_to != '' &&
-            vm.species_original.conservation_attributes
-                .minimum_fire_interval_to != undefined
-        ) {
-            vm.minimum_fire_interval_range_original = true;
-        }
-        if (
-            vm.species_community.conservation_attributes
-                .minimum_fire_interval_to != null &&
-            vm.species_community.conservation_attributes
-                .minimum_fire_interval_to != '' &&
-            vm.species_community.conservation_attributes
-                .minimum_fire_interval_to != undefined
-        ) {
-            vm.minimum_fire_interval_range_new = true;
-        }
-        if (
-            vm.species_original.conservation_attributes.average_lifespan_to !=
-                null &&
-            vm.species_original.conservation_attributes.average_lifespan_to !=
-                '' &&
-            vm.species_original.conservation_attributes.average_lifespan_to !=
-                undefined
-        ) {
-            vm.average_lifespan_range_original = true;
-        }
-        if (
-            vm.species_community.conservation_attributes.average_lifespan_to !=
-                null &&
-            vm.species_community.conservation_attributes.average_lifespan_to !=
-                '' &&
-            vm.species_community.conservation_attributes.average_lifespan_to !=
-                undefined
-        ) {
-            vm.average_lifespan_range_new = true;
-        }
-        if (
-            vm.species_original.conservation_attributes.generation_length_to !=
-                null &&
-            vm.species_original.conservation_attributes.generation_length_to !=
-                '' &&
-            vm.species_original.conservation_attributes.generation_length_to !=
-                undefined
-        ) {
-            vm.generation_length_range_original = true;
-        }
-        if (
-            vm.species_community.conservation_attributes.generation_length_to !=
-                null &&
-            vm.species_community.conservation_attributes.generation_length_to !=
-                '' &&
-            vm.species_community.conservation_attributes.generation_length_to !=
-                undefined
-        ) {
-            vm.generation_length_range_new = true;
-        }
-        if (
-            vm.species_original.conservation_attributes.time_to_maturity_to !=
-                null &&
-            vm.species_original.conservation_attributes.time_to_maturity_to !=
-                '' &&
-            vm.species_original.conservation_attributes.time_to_maturity_to !=
-                undefined
-        ) {
-            vm.time_to_maturity_range_original = true;
-        }
-        if (
-            vm.species_community.conservation_attributes.time_to_maturity_to !=
-                null &&
-            vm.species_community.conservation_attributes.time_to_maturity_to !=
-                '' &&
-            vm.species_community.conservation_attributes.time_to_maturity_to !=
-                undefined
-        ) {
-            vm.time_to_maturity_range_new = true;
-        }
         //------fetch list of values
         const response = await fetch('/api/species_profile_dict/');
         vm.species_profile_dict = await response.json();
@@ -1458,7 +1342,6 @@ export default {
     },
     mounted: function () {
         let vm = this;
-        vm.eventListeners();
         vm.initialiseScientificNameLookup();
         vm.loadTaxonomydetails();
         vm.initialiseRegionSelect();
@@ -1699,96 +1582,6 @@ export default {
                     vm.species_community.taxonomy_details.name_comments;
             }
         },
-        //--------on/off checkbox value to new species--------
-        checkHabitatForm: function () {
-            if (
-                $('#habitat_frm_chk' + this.species_community.id).is(
-                    ':checked'
-                ) == true
-            ) {
-                this.species_community.conservation_attributes.habitat_growth_form =
-                    this.species_original.conservation_attributes.habitat_growth_form;
-            } else {
-                this.species_community.conservation_attributes.habitat_growth_form =
-                    null;
-            }
-        },
-        checkConservationInput: function (chkbox, obj_field, select2_ref = '') {
-            const interval_fields = [
-                'minimum_fire_interval',
-                'average_lifespan',
-                'generation_length',
-                'time_to_maturity',
-            ];
-            // if checkbox is checked copy value from original  species to new species
-            if ($('#' + chkbox).is(':checked') == true) {
-                if (interval_fields.includes(obj_field)) {
-                    this.species_community.conservation_attributes[
-                        obj_field + '_from'
-                    ] =
-                        this.species_original.conservation_attributes[
-                            obj_field + '_from'
-                        ];
-                    this.species_community.conservation_attributes[
-                        obj_field + '_to'
-                    ] =
-                        this.species_original.conservation_attributes[
-                            obj_field + '_to'
-                        ];
-                    this.species_community.conservation_attributes[
-                        obj_field + '_choice'
-                    ] =
-                        this.species_original.conservation_attributes[
-                            obj_field + '_choice'
-                        ];
-                    if (
-                        this.species_community.conservation_attributes[
-                            obj_field + '_to'
-                        ] != null
-                    ) {
-                        this[obj_field + '_range_new'] = true;
-                    } else {
-                        this[obj_field + '_range_new'] = false;
-                    }
-                } else {
-                    this.species_community.conservation_attributes[obj_field] =
-                        this.species_original.conservation_attributes[
-                            obj_field
-                        ];
-                    if (select2_ref != '') {
-                        $(this.$refs[select2_ref])
-                            .val(
-                                this.species_community.conservation_attributes[
-                                    obj_field
-                                ]
-                            )
-                            .trigger('change');
-                    }
-                }
-            } else {
-                if (interval_fields.includes(obj_field)) {
-                    this.species_community.conservation_attributes[
-                        obj_field + '_from'
-                    ] = null;
-                    this.species_community.conservation_attributes[
-                        obj_field + '_to'
-                    ] = null;
-                    this.species_community.conservation_attributes[
-                        obj_field + '_choice'
-                    ] = null;
-                    this[obj_field + '_range_new'] = false;
-                } else {
-                    this.species_community.conservation_attributes[obj_field] =
-                        null;
-                    if (select2_ref != '') {
-                        $(this.$refs[select2_ref]).val('').trigger('change');
-                        this.species_community.conservation_attributes[
-                            obj_field
-                        ] = [];
-                    }
-                }
-            }
-        },
         checkDistributionInput: function (chkbox, obj_field) {
             // if checkbox is checked copy value from original  species to new species
             if ($('#' + chkbox).is(':checked') == true) {
@@ -1862,162 +1655,6 @@ export default {
             });
             // Join the names with commas
             return selectedNames.join(', ');
-        },
-        //----------------------------------------------------------------
-        eventListeners: function () {
-            let vm = this;
-            $(vm.$refs.flowering_period_select)
-                .select2({
-                    dropdownParent: $('#' + vm.select_flowering_period),
-                    theme: 'bootstrap-5',
-                    allowClear: true,
-                    placeholder: 'Select Flowering Period',
-                    multiple: true,
-                })
-                .on('select2:select', function (e) {
-                    var selected = $(e.currentTarget);
-                    vm.species_community.conservation_attributes.flowering_period =
-                        selected.val();
-                })
-                .on('select2:unselect', function (e) {
-                    var selected = $(e.currentTarget);
-                    vm.species_community.conservation_attributes.flowering_period =
-                        selected.val();
-                });
-            $(vm.$refs.flowering_period_select_readonly).select2({
-                dropdownParent: $('#' + vm.select_flowering_period_readonly),
-                theme: 'bootstrap-5',
-                allowClear: true,
-                placeholder: 'Select Flowering Period',
-                multiple: true,
-            });
-            $(vm.$refs.fruiting_period_select)
-                .select2({
-                    dropdownParent: $('#' + vm.select_fruiting_period),
-                    theme: 'bootstrap-5',
-                    allowClear: true,
-                    placeholder: 'Select Fruiting Period',
-                    multiple: true,
-                })
-                .on('select2:select', function (e) {
-                    var selected = $(e.currentTarget);
-                    vm.species_community.conservation_attributes.fruiting_period =
-                        selected.val();
-                })
-                .on('select2:unselect', function (e) {
-                    var selected = $(e.currentTarget);
-                    vm.species_community.conservation_attributes.fruiting_period =
-                        selected.val();
-                });
-            $(vm.$refs.fruiting_period_select_readonly).select2({
-                dropdownParent: $('#' + vm.select_fruiting_period_readonly),
-                theme: 'bootstrap-5',
-                allowClear: true,
-                placeholder: 'Select Fruiting Period',
-                multiple: true,
-            });
-            $(vm.$refs.breeding_period_select)
-                .select2({
-                    dropdownParent: $('#' + vm.select_breeding_period),
-                    theme: 'bootstrap-5',
-                    allowClear: true,
-                    placeholder: 'Select Breeding Period',
-                    multiple: true,
-                })
-                .on('select2:select', function (e) {
-                    var selected = $(e.currentTarget);
-                    vm.species_community.conservation_attributes.breeding_period =
-                        selected.val();
-                })
-                .on('select2:unselect', function (e) {
-                    var selected = $(e.currentTarget);
-                    vm.species_community.conservation_attributes.breeding_period =
-                        selected.val();
-                });
-            $(vm.$refs.breeding_period_select_readonly).select2({
-                dropdownParent: $('#' + vm.select_breeding_period_readonly),
-                theme: 'bootstrap-5',
-                allowClear: true,
-                placeholder: 'Select Breeding Period',
-                multiple: true,
-            });
-        },
-        intervalMonthsComputedNew: function (field_from, field_choice) {
-            const totalMonths = parseInt(
-                this.species_community.conservation_attributes[field_from]
-            );
-            const intervalChoice =
-                this.species_community.conservation_attributes[field_choice];
-            // const isIntervalRange = this.minimum_fire_interval_range_new;
-
-            // if(totalMonths > 12 && intervalChoice == 2 && isIntervalRange == false){
-            if (totalMonths > 12 && intervalChoice == 2) {
-                const years = Math.floor(totalMonths / 12);
-                const months = totalMonths % 12;
-                return years + ' year/s ' + months + ' month/s';
-            } else {
-                return '';
-            }
-        },
-        intervalMonthsComputedOriginal: function (months, intervalChoice) {
-            const totalMonths = parseInt(months);
-
-            if (totalMonths > 12 && intervalChoice == 2) {
-                const years = Math.floor(totalMonths / 12);
-                const months = totalMonths % 12;
-                return years + ' year/s ' + months + ' month/s';
-            } else {
-                return '';
-            }
-        },
-        handleMinimumFireIntervalRange: function () {
-            if (this.minimum_fire_interval_range_new == false) {
-                this.species_community.conservation_attributes.minimum_fire_interval_to =
-                    null;
-            }
-        },
-        handleAverageLifespanRange: function () {
-            if (this.average_lifespan_range_new == false) {
-                this.species_community.conservation_attributes.average_lifespan_to =
-                    null;
-            }
-        },
-        handleGenerationLengthRange: function () {
-            if (this.generation_length_range_new == false) {
-                this.species_community.conservation_attributes.generation_length_to =
-                    null;
-            }
-        },
-        handleTimeToMaturityRange: function () {
-            if (this.time_to_maturity_range_new == false) {
-                this.species_community.conservation_attributes.time_to_maturity_to =
-                    null;
-            }
-        },
-        validateRange: function (
-            field_from,
-            field_to,
-            field_choice,
-            field_error
-        ) {
-            const rangeFrom = parseInt(
-                this.species_community.conservation_attributes[field_from]
-            );
-            const rangeTo = parseInt(
-                this.species_community.conservation_attributes[field_to]
-            );
-            const intervalChoice =
-                this.species_community.conservation_attributes[field_choice];
-            if (
-                (rangeFrom != null || rangeTo != null) &&
-                intervalChoice == null
-            ) {
-                this.errors[field_error] = 'Please select years/months';
-            } else if (rangeFrom >= rangeTo) {
-                this.errors[field_error] = 'Please enter a valid range';
-            } else {
-                this.errors[field_error] = '';
-            }
         },
         focusConservationPlanReference: function () {
             this.$nextTick(() => {
