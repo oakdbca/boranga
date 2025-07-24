@@ -273,6 +273,8 @@
                         :id="'districts_select_chk' + species_community.id"
                         class="form-check-input"
                         type="checkbox"
+                        v-model="districtsCheckboxChecked"
+                        :disabled="isOriginalDistrictCheckboxDisabled"
                         @change="
                             checkRegionDistrictInput(
                                 'districts_select_chk' + species_community.id,
@@ -381,6 +383,7 @@
                         v-model="species_community.occurrence_count"
                         type="number"
                         class="form-control"
+                        :disabled="species_community.distribution.noo_auto"
                         placeholder=""
                     />
                     <input
@@ -1201,20 +1204,19 @@ export default {
             taxonBody: 'taxonBody' + uuid(),
             distributionBody: 'distributionBody' + uuid(),
             generalBody: 'generalBody' + uuid(),
+
+            selected_species_community_copy: null,
+
             retainOriginalSpecies: false,
-            //---to show fields related to Fauna
-            isFauna: vm.species_community.group_type === 'fauna' ? true : false,
-            //----list of values dictionary
-            species_profile_dict: {},
-            //scientific_name_list: [],
+
+            isFauna: vm.species_community.group_type === 'fauna',
+
             region_list: [],
             district_list: [],
             district_list_readonly: [],
             filtered_district_list: [],
-            //---conservatiuon attributes field lists
-            flora_recruitment_type_list: [],
-            root_morphology_list: [],
-            post_fire_habitatat_interactions_list: [],
+            districtsCheckboxChecked: false,
+
             // to display the species Taxonomy selected details
             species_display: '',
             common_name: null,
@@ -1226,14 +1228,6 @@ export default {
             name_authority: null,
             name_comments: null,
             species_id: null,
-            minimum_fire_interval_range_original: false,
-            average_lifespan_range_original: false,
-            generation_length_range_original: false,
-            time_to_maturity_range_original: false,
-            minimum_fire_interval_range_new: false,
-            average_lifespan_range_new: false,
-            generation_length_range_new: false,
-            time_to_maturity_range_new: false,
         };
     },
     computed: {
@@ -1262,6 +1256,44 @@ export default {
                 this.species_original.taxonomy_id
             );
         },
+        isOriginalDistrictCheckboxDisabled() {
+            let validDistrictIds = [];
+            this.region_list.forEach((region) => {
+                if (
+                    this.species_community.regions &&
+                    this.species_community.regions.includes(region.value)
+                ) {
+                    region.districts.forEach((district) => {
+                        validDistrictIds.push(district.id);
+                    });
+                }
+            });
+
+            if (
+                !this.species_community.regions ||
+                this.species_community.regions.length === 0
+            ) {
+                return false;
+            }
+            if (validDistrictIds.length === 0) {
+                return false;
+            }
+
+            if (!this.districtsCheckboxChecked) {
+                // If unchecked, enable only if original districts are valid
+                return !this.species_original.districts.every((d) =>
+                    validDistrictIds.includes(d)
+                );
+            } else {
+                // If checked, enable only if revert districts are valid
+                const revertDistricts = this.selected_species_community_copy
+                    ? this.selected_species_community_copy.districts
+                    : this.species_original.districts;
+                return !revertDistricts.every((d) =>
+                    validDistrictIds.includes(d)
+                );
+            }
+        },
     },
     watch: {
         'species_community.distribution.noo_auto': function (newVal) {
@@ -1271,7 +1303,13 @@ export default {
                 vm.species_community.distribution.number_of_occurrences =
                     vm.species_community.distribution.cal_number_of_occurrences;
             } else {
-                vm.species_community.distribution.number_of_occurrences = null;
+                if (vm.species_id && vm.selected_species_community_copy) {
+                    vm.species_community.distribution.number_of_occurrences =
+                        vm.selected_species_community_copy.distribution.number_of_occurrences;
+                } else {
+                    vm.species_community.distribution.number_of_occurrences =
+                        null;
+                }
             }
         },
         'species_community.distribution.eoo_auto': function (newVal) {
@@ -1281,7 +1319,13 @@ export default {
                 vm.species_community.distribution.extent_of_occurrences =
                     vm.species_community.distribution.cal_extent_of_occurrences;
             } else {
-                vm.species_community.distribution.extent_of_occurrences = null;
+                if (vm.species_id && vm.selected_species_community_copy) {
+                    vm.species_community.distribution.extent_of_occurrences =
+                        vm.selected_species_community_copy.distribution.extent_of_occurrences;
+                } else {
+                    vm.species_community.distribution.extent_of_occurrences =
+                        null;
+                }
             }
         },
         'species_community.distribution.aoo_actual_auto': function (newVal) {
@@ -1291,15 +1335,52 @@ export default {
                 vm.species_community.distribution.area_of_occupancy_actual =
                     vm.species_community.distribution.cal_area_of_occupancy_actual;
             } else {
-                vm.species_community.distribution.area_of_occupancy_actual =
-                    null;
+                if (vm.species_id && vm.selected_species_community_copy) {
+                    vm.species_community.distribution.area_of_occupancy_actual =
+                        vm.selected_species_community_copy.distribution.area_of_occupancy_actual;
+                } else {
+                    vm.species_community.distribution.area_of_occupancy_actual =
+                        null;
+                }
+            }
+        },
+        'species_community.regions': function (newRegions) {
+            // Get all valid district IDs for the new regions
+            let validDistrictIds = [];
+            this.region_list.forEach((region) => {
+                if (newRegions && newRegions.includes(region.value)) {
+                    region.districts.forEach((district) => {
+                        validDistrictIds.push(district.id);
+                    });
+                }
+            });
+            // If the original districts are not all valid, uncheck the checkbox and revert districts
+            if (
+                !this.species_original.districts.every((d) =>
+                    validDistrictIds.includes(d)
+                )
+            ) {
+                this.districtsCheckboxChecked = false;
+                // Revert districts to previous value
+                const revertDistricts = this.selected_species_community_copy
+                    ? this.selected_species_community_copy.districts
+                    : [];
+                this.species_community.districts = revertDistricts;
+                // Update select2 widget
+                this.$nextTick(() => {
+                    if (this.$refs.districts_select) {
+                        $(this.$refs.districts_select)
+                            .val(this.species_community.districts)
+                            .trigger('change');
+                    }
+                });
             }
         },
         species_id: function (newVal) {
             if (newVal) {
                 this.fetchSpeciesData();
             } else {
-                this.clearSpeciesData();
+                this.resetSpeciesData();
             }
         },
     },
@@ -1318,26 +1399,6 @@ export default {
             vm.species_community.distribution.area_of_occupancy_actual =
                 vm.species_community.distribution.cal_area_of_occupancy_actual;
         }
-        //------fetch list of values
-        const response = await fetch('/api/species_profile_dict/');
-        vm.species_profile_dict = await response.json();
-        vm.flora_recruitment_type_list =
-            vm.species_profile_dict.flora_recruitment_type_list;
-        vm.flora_recruitment_type_list.splice(0, 0, {
-            id: null,
-            name: null,
-        });
-        vm.root_morphology_list = vm.species_profile_dict.root_morphology_list;
-        vm.root_morphology_list.splice(0, 0, {
-            id: null,
-            name: null,
-        });
-        vm.post_fire_habitatat_interactions_list =
-            vm.species_profile_dict.post_fire_habitatat_interactions_list;
-        vm.post_fire_habitatat_interactions_list.splice(0, 0, {
-            id: null,
-            name: null,
-        });
         vm.fetchRegions();
     },
     mounted: function () {
@@ -1535,7 +1596,9 @@ export default {
                     vm.genus = e.params.data.genera_name;
                     vm.name_authority = e.params.data.name_authority;
                     vm.name_comments = e.params.data.name_comments;
-                    vm.species_id = e.params.data.species_id;
+                    if (!vm.retainOriginalSpecies) {
+                        vm.species_id = e.params.data.species_id;
+                    }
                 })
                 .on('select2:unselect', function () {
                     vm.resetTaxonomyDetails();
@@ -1588,7 +1651,14 @@ export default {
                 this.species_community.distribution[obj_field] =
                     this.species_original.distribution[obj_field];
             } else {
-                this.species_community.distribution[obj_field] = null;
+                if (this.species_id && this.selected_species_community_copy) {
+                    this.species_community.distribution[obj_field] =
+                        this.selected_species_community_copy.distribution[
+                            obj_field
+                        ];
+                } else {
+                    this.species_community.distribution[obj_field] = null;
+                }
             }
         },
         checkCommentInput: function (chkbox, obj_field) {
@@ -1605,8 +1675,7 @@ export default {
             obj_field,
             select2_ref = ''
         ) {
-            let vm = this;
-            // if checkbox is checked copy value from original  species to new species
+            // if checkbox is checked copy value from original species to new species
             if ($('#' + chkbox).is(':checked') == true) {
                 this.species_community[obj_field] =
                     this.species_original[obj_field];
@@ -1619,17 +1688,56 @@ export default {
                         'select'
                     );
                 }
+                // --- Auto check and populate districts if regions are being copied ---
+                if (obj_field === 'regions') {
+                    // Get all valid district IDs for the selected regions
+                    let validDistrictIds = [];
+                    this.region_list.forEach((region) => {
+                        if (
+                            this.species_community.regions &&
+                            this.species_community.regions.includes(
+                                region.value
+                            )
+                        ) {
+                            region.districts.forEach((district) => {
+                                validDistrictIds.push(district.id);
+                            });
+                        }
+                    });
+                    // If original districts are valid for these regions, auto check and populate
+                    if (
+                        this.species_original.districts.every((d) =>
+                            validDistrictIds.includes(d)
+                        )
+                    ) {
+                        this.districtsCheckboxChecked = true;
+                        this.species_community.districts =
+                            this.species_original.districts;
+                        this.$nextTick(() => {
+                            if (this.$refs.districts_select) {
+                                $(this.$refs.districts_select)
+                                    .val(this.species_community.districts)
+                                    .trigger('change');
+                            }
+                        });
+                    }
+                }
             } else {
                 if (select2_ref != '') {
-                    $(this.$refs[select2_ref])
-                        .val(vm.species_community.regions || '')
-                        .trigger('change');
-                    this.chainedSelectDistricts(
-                        this.species_community.regions,
-                        'deselect'
-                    );
+                    let regionIds = this.selected_species_community_copy
+                        ? this.selected_species_community_copy.regions
+                        : this.species_original.regions;
+                    $(this.$refs[select2_ref]).val(regionIds).trigger('change');
+                    this.chainedSelectDistricts(regionIds, 'deselect');
                 }
-                this.species_community[obj_field] = [];
+                this.species_community[obj_field] = this
+                    .selected_species_community_copy
+                    ? this.selected_species_community_copy[obj_field]
+                    : [];
+                // Uncheck districts checkbox if regions are unchecked
+                if (obj_field === 'regions') {
+                    this.districtsCheckboxChecked = false;
+                }
             }
         },
         getselectedRegionNames(species) {
@@ -1703,11 +1811,6 @@ export default {
         },
         chainedSelectDistricts: function (regions, action) {
             let vm = this;
-            if (action != 'fetch' && action != 'select') {
-                $(vm.$refs.districts_select)
-                    .val(vm.species_community.districts || '')
-                    .trigger('change');
-            }
             vm.district_list = [];
             if (regions) {
                 for (let r of regions) {
@@ -1717,7 +1820,7 @@ export default {
                     ).districts;
                     if (api_districts.length > 0) {
                         for (var i = 0; i < api_districts.length; i++) {
-                            this.district_list.push({
+                            vm.district_list.push({
                                 text: api_districts[i].name,
                                 value: api_districts[i].id,
                             });
@@ -1725,6 +1828,10 @@ export default {
                     }
                 }
             }
+            // Instead of duplicating Select2 code, just call:
+            this.$nextTick(() => {
+                this.initialiseDistrictSelect();
+            });
         },
         chainedSelectReadonlyDistricts: function (regions) {
             let vm = this;
@@ -1773,6 +1880,12 @@ export default {
                         'deselect'
                     );
                 });
+
+            // Set initial value after initialization
+            $(vm.$refs.regions_select)
+                .val(vm.species_community.regions)
+                .trigger('change');
+
             $(vm.$refs.regions_select_read_only).select2({
                 theme: 'bootstrap-5',
                 allowClear: true,
@@ -1799,6 +1912,12 @@ export default {
                     var selected = $(e.currentTarget);
                     vm.species_community.districts = selected.val();
                 });
+
+            // Set initial value after initialization
+            $(vm.$refs.districts_select)
+                .val(vm.species_community.districts)
+                .trigger('change');
+
             $(vm.$refs.districts_select_read_only).select2({
                 theme: 'bootstrap-5',
                 allowClear: true,
@@ -1863,6 +1982,9 @@ export default {
             )
                 .then((response) => response.json())
                 .then((data) => {
+                    this.selected_species_community_copy = JSON.parse(
+                        JSON.stringify(data)
+                    );
                     // Set the data for the general and distribution sections and regions/districts
                     this.species_community.department_file_numbers =
                         data.department_file_numbers;
@@ -1876,19 +1998,19 @@ export default {
                     this.species_community.distribution = data.distribution;
                     // For each region in the data, populate the regions select2
                     this.species_community.regions = data.regions;
-                    this.$refs.regions_select
-                        .select2('val', data.regions)
-                        .trigger('change');
                     this.species_community.districts = data.districts;
-                    this.$refs.districts_select
-                        .select2('val', data.districts)
-                        .trigger('change');
+                    this.initialiseRegionSelect();
+                    this.chainedSelectDistricts(
+                        this.species_community.regions,
+                        'fetch'
+                    );
                 })
                 .catch((error) => {
                     console.error('Error fetching species data:', error);
                 });
         },
         resetSpeciesData: function () {
+            this.selected_species_community_copy = null;
             this.species_community.department_file_numbers =
                 this.species_original.department_file_numbers;
             this.species_community.last_data_curation_date =
