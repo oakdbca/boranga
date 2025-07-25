@@ -302,11 +302,9 @@ export default {
                 },
                 initComplete: function () {
                     helpers.enablePopovers();
-                    // to fix the responsive table overflow css on tab switch
-                    // vm.$refs.documents_datatable.vmDataTable.draw('page');
-                    setTimeout(function () {
+                    vm.$nextTick(() => {
                         vm.adjust_table_width();
-                    }, 100);
+                    });
                 },
             },
         };
