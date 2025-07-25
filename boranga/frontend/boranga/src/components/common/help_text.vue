@@ -68,7 +68,7 @@ export default {
             errorText: null,
         };
     },
-    created: function () {
+    mounted: function () {
         this.fetchHelpText();
     },
     methods: {
@@ -85,13 +85,12 @@ export default {
                     }
                     vm.helpTextEntry = data;
                     this.$nextTick(() => {
-                        this.$nextTick(() => {
-                            if (vm.helpTextEntry.icon_with_popover) {
-                                var helpTextEntryElement =
-                                    document.getElementById(this.section_id);
-                                new bootstrap.Popover(helpTextEntryElement);
-                            }
-                        });
+                        if (vm.helpTextEntry.icon_with_popover) {
+                            var helpTextEntryElement = document.getElementById(
+                                this.section_id
+                            );
+                            new bootstrap.Popover(helpTextEntryElement);
+                        }
                     });
                 });
             }
