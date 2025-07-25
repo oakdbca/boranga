@@ -98,15 +98,18 @@
                         </div>
                         <button
                             v-if="
-                                profile &&
-                                profile.groups.includes(
+                                profile?.user &&
+                                profile.user.groups.includes(
                                     'Internal Contributors'
                                 ) &&
-                                occurrence_report.submitter.id != profile.id
+                                occurrence_report.submitter.id !=
+                                    profile?.user.id
                             "
                             class="btn btn-primary btn-sm float-end mt-2"
                             role="button"
-                            @click.prevent="reassignDraftToUser(profile.id)"
+                            @click.prevent="
+                                reassignDraftToUser(profile?.user.id)
+                            "
                         >
                             Reassign draft to me
                         </button>

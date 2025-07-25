@@ -225,10 +225,9 @@ export default {
                 },
                 initComplete: function () {
                     helpers.enablePopovers();
-                    // another option to fix the responsive table overflow css on tab switch
-                    setTimeout(function () {
+                    vm.$nextTick(() => {
                         vm.adjust_table_width();
-                    }, 100);
+                    });
                 },
             },
         };
