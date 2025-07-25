@@ -1,7 +1,10 @@
 <template id="bootstrap-modal">
     <div v-show="show" :transition="transition">
         <div class="modal" data-bs-keyboard="false" data-bs-backdrop="static">
-            <div class="modal-dialog" :class="modalClass">
+            <div
+                class="modal-dialog"
+                :class="[modalClass, { 'modal-dialog-scrollable': scrollable }]"
+            >
                 <div class="modal-content">
                     <!--Header-->
                     <slot name="header">
@@ -119,6 +122,10 @@ export default {
         dataLossWarningOnCancel: {
             type: Boolean,
             default: true,
+        },
+        scrollable: {
+            type: Boolean,
+            default: false,
         },
     },
     data() {
