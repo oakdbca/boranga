@@ -163,10 +163,6 @@
             </template>
         </FormSection>
         <FormSection
-            v-if="
-                species_community.taxonomy_id &&
-                !thisSplitSpeciesHasOriginalTaxonomyId
-            "
             :form-collapse="false"
             label="Distribution"
             :Index="distributionBody"
@@ -883,10 +879,7 @@
             </div>
         </FormSection>
         <FormSection
-            v-if="
-                species_community.taxonomy_id &&
-                !thisSplitSpeciesHasOriginalTaxonomyId
-            "
+            v-if="!thisSplitSpeciesHasOriginalTaxonomyId"
             :form-collapse="false"
             label="General"
             :Index="generalBody"
@@ -1064,7 +1057,10 @@
                     />
                 </div>
             </div>
-            <div class="row mb-3">
+            <div
+                v-if="species_original.conservation_plan_exists"
+                class="row mb-3"
+            >
                 <label
                     for="conservation_plan_reference"
                     class="col-sm-3 col-form-label"
@@ -1099,7 +1095,10 @@
                     />
                 </div>
             </div>
-            <div class="row mb-3">
+            <div
+                v-if="species_community.conservation_plan_exists"
+                class="row mb-3"
+            >
                 <label
                     for="conservation_plan_reference"
                     class="col-sm-3 col-form-label"
@@ -1110,6 +1109,7 @@
                         ref="conservation_plan_reference"
                         v-model="species_community.conservation_plan_reference"
                         type="text"
+                        :disabled="!species_community.conservation_plan_exists"
                         class="form-control"
                         name="conservation_plan_reference"
                     />
@@ -1265,11 +1265,12 @@ export default {
                 }
             });
 
+            // Disable if no regions are selected
             if (
                 !this.species_community.regions ||
                 this.species_community.regions.length === 0
             ) {
-                return false;
+                return true;
             }
             if (validDistrictIds.length === 0) {
                 return false;
@@ -1411,6 +1412,8 @@ export default {
     mounted: function () {
         let vm = this;
         vm.initialiseScientificNameLookup();
+        vm.initialiseRegionSelect();
+        vm.initialiseDistrictSelect();
     },
     methods: {
         checkDate: function () {
@@ -1589,28 +1592,12 @@ export default {
                                     vm.species_community.regions,
                                     'init'
                                 );
-                                vm.$nextTick(() => {
-                                    const modalEl = vm.$el.closest('.modal');
-                                    if (modalEl) {
-                                        bootstrap.Modal.getInstance(
-                                            modalEl
-                                        )?.handleUpdate();
-                                    }
-                                });
                             });
                         }
                     } else {
                         vm.$nextTick(() => {
                             vm.initialiseRegionSelect();
                             vm.initialiseDistrictSelect();
-                        });
-                        vm.$nextTick(() => {
-                            const modalEl = vm.$el.closest('.modal');
-                            if (modalEl) {
-                                bootstrap.Modal.getInstance(
-                                    modalEl
-                                )?.handleUpdate();
-                            }
                         });
                     }
                 })
@@ -1695,7 +1682,7 @@ export default {
                         this.species_community[bool_field] = this
                             .selected_species_community_copy
                             ? this.selected_species_community_copy[bool_field]
-                            : this.original_species[bool_field]
+                            : this.species_original[bool_field]
                               ? this.species_original[bool_field]
                               : false;
                     }
@@ -2022,6 +2009,13 @@ export default {
                     .trigger('change');
                 $(this.$refs[this.scientific_name_lookup]).select2('open');
                 this.resetTaxonomyDetails();
+                this.$nextTick(() => {
+                    this.initialiseRegionSelect();
+                    this.chainedSelectDistricts(
+                        this.species_community.regions,
+                        'init'
+                    );
+                });
             }
         },
         fetchSpeciesData: function () {
