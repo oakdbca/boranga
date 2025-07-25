@@ -77,8 +77,8 @@
         </CollapsibleFilters>
         <div
             v-if="
-                profile &&
-                profile.groups.includes(
+                profile?.user &&
+                profile.user.groups.includes(
                     constants.GROUPS.CONSERVATION_STATUS_APPROVERS
                 )
             "

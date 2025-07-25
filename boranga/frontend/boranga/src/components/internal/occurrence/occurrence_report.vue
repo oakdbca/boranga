@@ -98,8 +98,8 @@
                         </div>
                         <button
                             v-if="
-                                profile &&
-                                profile.groups.includes(
+                                profile?.user &&
+                                profile.user.groups.includes(
                                     'Internal Contributors'
                                 ) &&
                                 occurrence_report.submitter.id != profile.id
