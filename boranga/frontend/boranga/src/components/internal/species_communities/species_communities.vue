@@ -537,6 +537,7 @@
             ref="species_split"
             :species_community="species_community"
             :is_internal="true"
+            :scrollable="true"
             @refresh-from-response="refreshFromResponse"
         />
         <SpeciesCombine
