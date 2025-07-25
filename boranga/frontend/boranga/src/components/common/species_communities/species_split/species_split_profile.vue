@@ -273,7 +273,7 @@
                         :id="'districts_select_chk' + species_community.id"
                         class="form-check-input"
                         type="checkbox"
-                        v-model="districtsCheckboxChecked"
+                        v-model="useOriginalDistrictsCheckboxChecked"
                         :disabled="isOriginalDistrictCheckboxDisabled"
                         @change="
                             checkRegionDistrictInput(
@@ -366,7 +366,9 @@
                         @change="
                             checkDistributionInput(
                                 'no_of_occurrences' + species_community.id,
-                                'number_of_occurrences'
+                                'number_of_occurrences',
+                                species_original.distribution.noo_auto,
+                                'noo_auto'
                             )
                         "
                     />
@@ -494,7 +496,9 @@
                         @change="
                             checkDistributionInput(
                                 'eoo_manual' + species_original.id,
-                                'extent_of_occurrences'
+                                'extent_of_occurrences',
+                                species_original.distribution.eoo_auto,
+                                'eoo_auto'
                             )
                         "
                     />
@@ -513,6 +517,7 @@
                                 species_community.area_occurrence_convex_hull_km2
                             "
                             type="number"
+                            :disabled="species_community.distribution.eoo_auto"
                             class="form-control"
                             placeholder=""
                         />
@@ -699,7 +704,9 @@
                         @change="
                             checkDistributionInput(
                                 'aoo_actual_manual' + species_original.id,
-                                'area_of_occupancy_actual'
+                                'area_of_occupancy_actual',
+                                species_original.distribution.aoo_actual_auto,
+                                'aoo_actual_auto'
                             )
                         "
                     />
@@ -718,6 +725,9 @@
                             id="area_of_occupancy_actual"
                             v-model="species_community.area_of_occupancy_km2"
                             type="number"
+                            :disabled="
+                                species_community.distribution.aoo_actual_auto
+                            "
                             step="any"
                             class="form-control"
                             placeholder=""
@@ -902,7 +912,7 @@
                         class="form-check-input"
                         type="checkbox"
                         @change="
-                            checkDistributionInput(
+                            checkGeneralInput(
                                 'dept_file_chk' + species_community.id,
                                 'department_file_numbers'
                             )
@@ -950,7 +960,7 @@
                         class="form-check-input"
                         type="checkbox"
                         @change="
-                            checkDistributionInput(
+                            checkGeneralInput(
                                 'last_data_curation_date_chk' +
                                     species_community.id,
                                 'last_data_curation_date'
@@ -1007,7 +1017,6 @@
                         type="radio"
                         :value="true"
                         class="form-check-input"
-                        @change="focusConservationPlanReference"
                     />
                 </div>
                 <div class="col-sm-1">
@@ -1017,52 +1026,9 @@
                             species_community.id
                         "
                         class="form-check-input"
+                        v-model="useOriginalConservationPlanExists"
                         type="checkbox"
-                        @change="
-                            checkConservationInput(
-                                'conservation_plan_exists_chk' +
-                                    species_community.id,
-                                'conservation_plan_exists'
-                            )
-                        "
-                    />
-                </div>
-            </div>
-            <div
-                v-if="species_original.conservation_plan_exists"
-                class="row mb-3"
-            >
-                <label
-                    for="conservation_plan_reference"
-                    class="col-sm-3 col-form-label"
-                    >{{ species_original.species_number }} Conservation Plan
-                    Reference:
-                </label>
-                <div class="col-sm-8">
-                    <input
-                        ref="conservation_plan_reference"
-                        v-model="species_original.conservation_plan_reference"
-                        :disabled="true"
-                        type="text"
-                        class="form-control"
-                        name="conservation_plan_reference"
-                    />
-                </div>
-                <div class="col-sm-1">
-                    <input
-                        :id="
-                            'conservation_plan_reference_chk' +
-                            species_community.id
-                        "
-                        class="form-check-input"
-                        type="checkbox"
-                        @change="
-                            checkConservationInput(
-                                'conservation_plan_reference_chk' +
-                                    species_community.id,
-                                'conservation_plan_reference'
-                            )
-                        "
+                        @change="checkGeneralBooleanInput"
                     />
                 </div>
             </div>
@@ -1098,10 +1064,42 @@
                     />
                 </div>
             </div>
-            <div
-                v-if="species_community.conservation_plan_exists"
-                class="row mb-3"
-            >
+            <div class="row mb-3">
+                <label
+                    for="conservation_plan_reference"
+                    class="col-sm-3 col-form-label"
+                    >{{ species_original.species_number }} Conservation Plan
+                    Reference:
+                </label>
+                <div class="col-sm-8">
+                    <input
+                        ref="conservation_plan_reference"
+                        v-model="species_original.conservation_plan_reference"
+                        :disabled="true"
+                        type="text"
+                        class="form-control"
+                        name="conservation_plan_reference"
+                    />
+                </div>
+                <div class="col-sm-1">
+                    <input
+                        :id="
+                            'conservation_plan_reference_chk' +
+                            species_community.id
+                        "
+                        class="form-check-input"
+                        type="checkbox"
+                        @change="
+                            checkGeneralInput(
+                                'conservation_plan_reference_chk' +
+                                    species_community.id,
+                                'conservation_plan_reference'
+                            )
+                        "
+                    />
+                </div>
+            </div>
+            <div class="row mb-3">
                 <label
                     for="conservation_plan_reference"
                     class="col-sm-3 col-form-label"
@@ -1137,7 +1135,7 @@
                         class="form-check-input"
                         type="checkbox"
                         @change="
-                            checkCommentInput(
+                            checkGeneralInput(
                                 'comment_chk' + species_community.id,
                                 'comment'
                             )
@@ -1209,13 +1207,11 @@ export default {
 
             retainOriginalSpecies: false,
 
-            isFauna: vm.species_community.group_type === 'fauna',
-
             region_list: [],
             district_list: [],
             district_list_readonly: [],
-            filtered_district_list: [],
-            districtsCheckboxChecked: false,
+            useOriginalDistrictsCheckboxChecked: false,
+            useOriginalConservationPlanExists: false,
 
             // to display the species Taxonomy selected details
             species_display: '',
@@ -1279,7 +1275,7 @@ export default {
                 return false;
             }
 
-            if (!this.districtsCheckboxChecked) {
+            if (!this.useOriginalDistrictsCheckboxChecked) {
                 // If unchecked, enable only if original districts are valid
                 return !this.species_original.districts.every((d) =>
                     validDistrictIds.includes(d)
@@ -1360,7 +1356,7 @@ export default {
                     validDistrictIds.includes(d)
                 )
             ) {
-                this.districtsCheckboxChecked = false;
+                this.useOriginalDistrictsCheckboxChecked = false;
                 // Revert districts to previous value
                 const revertDistricts = this.selected_species_community_copy
                     ? this.selected_species_community_copy.districts
@@ -1374,6 +1370,17 @@ export default {
                             .trigger('change');
                     }
                 });
+            }
+        },
+        'species_community.conservation_plan_exists': function () {
+            // If the value of this field doesn't match that of the original species and the checkbox to
+            // copy the value from the original species is checked, reset the checkbox
+            if (
+                this.useOriginalConservationPlanExists &&
+                this.species_community.conservation_plan_exists !==
+                    this.species_original.conservation_plan_exists
+            ) {
+                this.useOriginalConservationPlanExists = false;
             }
         },
         species_id: function (newVal) {
@@ -1404,32 +1411,8 @@ export default {
     mounted: function () {
         let vm = this;
         vm.initialiseScientificNameLookup();
-        vm.loadTaxonomydetails();
-        vm.initialiseRegionSelect();
-        vm.initialiseDistrictSelect();
     },
     methods: {
-        filterDistrict: function (event) {
-            this.$nextTick(() => {
-                if (event) {
-                    this.species_community.district_id = null; //-----to remove the previous selection
-                }
-                this.filtered_district_list = [];
-                this.filtered_district_list = [
-                    {
-                        id: null,
-                        name: '',
-                        region_id: null,
-                    },
-                ];
-                //---filter districts as per region selected
-                for (let choice of this.district_list) {
-                    if (choice.region_id === this.species_community.region_id) {
-                        this.filtered_district_list.push(choice);
-                    }
-                }
-            });
-        },
         checkDate: function () {
             if (this.species_community.last_data_curation_date === '') {
                 this.species_community.last_data_curation_date = null;
@@ -1598,6 +1581,37 @@ export default {
                     vm.name_comments = e.params.data.name_comments;
                     if (!vm.retainOriginalSpecies) {
                         vm.species_id = e.params.data.species_id;
+                        // If this is a new species (no species_id), initialise selects
+                        if (!vm.species_id) {
+                            vm.$nextTick(() => {
+                                vm.initialiseRegionSelect();
+                                vm.chainedSelectDistricts(
+                                    vm.species_community.regions,
+                                    'init'
+                                );
+                                vm.$nextTick(() => {
+                                    const modalEl = vm.$el.closest('.modal');
+                                    if (modalEl) {
+                                        bootstrap.Modal.getInstance(
+                                            modalEl
+                                        )?.handleUpdate();
+                                    }
+                                });
+                            });
+                        }
+                    } else {
+                        vm.$nextTick(() => {
+                            vm.initialiseRegionSelect();
+                            vm.initialiseDistrictSelect();
+                        });
+                        vm.$nextTick(() => {
+                            const modalEl = vm.$el.closest('.modal');
+                            if (modalEl) {
+                                bootstrap.Modal.getInstance(
+                                    modalEl
+                                )?.handleUpdate();
+                            }
+                        });
                     }
                 })
                 .on('select2:unselect', function () {
@@ -1624,30 +1638,24 @@ export default {
                     searchField[0].focus();
                 });
         },
-        loadTaxonomydetails: function () {
-            let vm = this;
-            if (vm.species_community.taxonomy_details != null) {
-                vm.species_display =
-                    vm.species_community.taxonomy_details.scientific_name;
-                vm.common_name =
-                    vm.species_community.taxonomy_details.common_name;
-                vm.taxon_name_id =
-                    vm.species_community.taxonomy_details.taxon_name_id;
-                vm.taxon_previous_name =
-                    vm.species_community.taxonomy_details.taxon_previous_name;
-                vm.phylogenetic_group =
-                    vm.species_community.taxonomy_details.phylogenetic_group;
-                vm.family = vm.species_community.taxonomy_details.family_name;
-                vm.genus = vm.species_community.taxonomy_details.genera_name;
-                vm.name_authority =
-                    vm.species_community.taxonomy_details.name_authority;
-                vm.name_comments =
-                    vm.species_community.taxonomy_details.name_comments;
-            }
-        },
-        checkDistributionInput: function (chkbox, obj_field) {
+        checkDistributionInput: function (
+            chkbox,
+            obj_field,
+            auto = false,
+            auto_field = ''
+        ) {
             // if checkbox is checked copy value from original  species to new species
             if ($('#' + chkbox).is(':checked') == true) {
+                if (auto) {
+                    this.species_community.distribution[auto_field] =
+                        this.species_original.distribution[auto_field];
+                    return;
+                }
+                console.debug(
+                    'Copying value from original species to new species for field: ' +
+                        obj_field,
+                    this.species_original.distribution[obj_field]
+                );
                 this.species_community.distribution[obj_field] =
                     this.species_original.distribution[obj_field];
             } else {
@@ -1657,17 +1665,60 @@ export default {
                             obj_field
                         ];
                 } else {
-                    this.species_community.distribution[obj_field] = null;
+                    this.species_community.distribution[obj_field] =
+                        this.species_original.distribution[obj_field] || null;
                 }
+                this.species_community.distribution[auto_field] = this
+                    .selected_species_community_copy
+                    ? this.selected_species_community_copy.distribution[
+                          auto_field
+                      ]
+                    : false;
             }
         },
-        checkCommentInput: function (chkbox, obj_field) {
-            // if checkbox is checked copy value from original  species to new species
+        checkGeneralInput: function (chkbox, obj_field, bool_field = null) {
+            // if checkbox is checked copy value from original species to new species
             if ($('#' + chkbox).is(':checked') == true) {
                 this.species_community[obj_field] =
                     this.species_original[obj_field];
+                if (bool_field) {
+                    this.species_community[bool_field] =
+                        this.species_original[bool_field];
+                }
             } else {
-                this.species_community[obj_field] = null;
+                if (this.species_id && this.selected_species_community_copy) {
+                    this.species_community[obj_field] = this
+                        .selected_species_community_copy
+                        ? this.selected_species_community_copy[obj_field]
+                        : '';
+                    if (bool_field) {
+                        this.species_community[bool_field] = this
+                            .selected_species_community_copy
+                            ? this.selected_species_community_copy[bool_field]
+                            : this.original_species[bool_field]
+                              ? this.species_original[bool_field]
+                              : false;
+                    }
+                } else {
+                    this.species_community[obj_field] = null;
+                    if (bool_field) {
+                        this.species_community[bool_field] = false;
+                    }
+                }
+            }
+        },
+        checkGeneralBooleanInput: function (event) {
+            if (event.target.checked) {
+                this.species_community.conservation_plan_exists =
+                    event.target.checked;
+            } else {
+                if (this.species_id && this.selected_species_community_copy) {
+                    this.species_community.conservation_plan_exists =
+                        this.selected_species_community_copy.conservation_plan_exists;
+                } else {
+                    this.species_community.conservation_plan_exists =
+                        this.species_original.conservation_plan_exists;
+                }
             }
         },
         checkRegionDistrictInput: function (
@@ -1710,7 +1761,7 @@ export default {
                             validDistrictIds.includes(d)
                         )
                     ) {
-                        this.districtsCheckboxChecked = true;
+                        this.useOriginalDistrictsCheckboxChecked = true;
                         this.species_community.districts =
                             this.species_original.districts;
                         this.$nextTick(() => {
@@ -1736,7 +1787,7 @@ export default {
                     : [];
                 // Uncheck districts checkbox if regions are unchecked
                 if (obj_field === 'regions') {
-                    this.districtsCheckboxChecked = false;
+                    this.useOriginalDistrictsCheckboxChecked = false;
                 }
             }
         },
@@ -1809,7 +1860,7 @@ export default {
             }
             return [];
         },
-        chainedSelectDistricts: function (regions, action) {
+        chainedSelectDistricts: function (regions) {
             let vm = this;
             vm.district_list = [];
             if (regions) {
