@@ -55,13 +55,12 @@ export default {
     methods: {
         initEvents: function () {
             let vm = this;
-            // Clone options to avoid mutating the prop
-            var options = { ...vm.dtOptions };
+            let options = vm.dtOptions; // Use the original options
 
-            if (options.ajax) {
+            // Only override ajax for serverSide tables
+            if (options.serverSide && options.ajax) {
                 const originalAjax = options.ajax;
                 options.ajax = function (data, callback, settings) {
-                    // If ajax is a URL string, convert to object
                     let ajaxOptions =
                         typeof originalAjax === 'string'
                             ? { url: originalAjax, type: 'GET' }
@@ -71,17 +70,28 @@ export default {
                     if (options.data && typeof options.data === 'function') {
                         options.data.call(this, data);
                     } else if (
-                        originalAjax.data &&
-                        typeof originalAjax.data === 'function'
+                        ajaxOptions.data &&
+                        typeof ajaxOptions.data === 'function'
                     ) {
-                        originalAjax.data.call(this, data);
+                        ajaxOptions.data.call(this, data);
                     }
 
                     $.ajax({
                         ...ajaxOptions,
-                        data, // This now includes filter parameters!
+                        data,
                         success: function (json) {
-                            if (!json || typeof json !== 'object') {
+                            // Always wrap as DataTables expects for serverSide
+                            if (Array.isArray(json)) {
+                                json = {
+                                    data: json,
+                                    recordsTotal: json.length,
+                                    recordsFiltered: json.length,
+                                    draw:
+                                        settings && settings.draw
+                                            ? settings.draw
+                                            : 0,
+                                };
+                            } else if (!json || typeof json !== 'object') {
                                 json = {
                                     data: [],
                                     recordsTotal: 0,
@@ -93,6 +103,12 @@ export default {
                                 };
                             } else if (!('data' in json)) {
                                 json.data = [];
+                                json.recordsTotal = 0;
+                                json.recordsFiltered = 0;
+                                json.draw =
+                                    settings && settings.draw
+                                        ? settings.draw
+                                        : 0;
                             }
                             callback(json);
                         },
@@ -105,26 +121,16 @@ export default {
                                             window.location.pathname
                                         );
                                 }, 0);
-                                callback({
-                                    data: [],
-                                    recordsTotal: 0,
-                                    recordsFiltered: 0,
-                                    draw:
-                                        settings && settings.draw
-                                            ? settings.draw
-                                            : 0,
-                                });
-                            } else {
-                                callback({
-                                    data: [],
-                                    recordsTotal: 0,
-                                    recordsFiltered: 0,
-                                    draw:
-                                        settings && settings.draw
-                                            ? settings.draw
-                                            : 0,
-                                });
                             }
+                            callback({
+                                data: [],
+                                recordsTotal: 0,
+                                recordsFiltered: 0,
+                                draw:
+                                    settings && settings.draw
+                                        ? settings.draw
+                                        : 0,
+                            });
                         },
                     });
                 };
