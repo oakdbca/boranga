@@ -636,6 +636,9 @@ export default {
             return state;
         },
         allOccurrencesAssigned: function () {
+            if (!this.occurrences || this.occurrences.length === 0) {
+                return true;
+            }
             return (
                 this.occurrences.length > 0 &&
                 this.assignmentCheckedState &&
