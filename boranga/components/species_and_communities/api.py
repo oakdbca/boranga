@@ -1507,22 +1507,17 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                     f"Split Species {index+1} is missing a Taxonomy ID"
                 )
 
-            if not taxonomy_id.isdigit():
-                raise serializers.ValidationError(
-                    f"Split Species {index+1} Taxonomy ID must be an integer"
-                )
-
-            if instance.taxonomy_id == int(taxonomy_id):
+            if instance.taxonomy_id == taxonomy_id:
                 split_of_species_retains_original = True
+                # Add species number to the split species request data
+                # so it is available when looping through split species in the email template
+                split_species_request_data["species_number"] = Species.objects.get(
+                    taxonomy_id=taxonomy_id
+                ).species_number
                 split_species_list[index][
                     "action"
                 ] = Species.SPLIT_SPECIES_ACTION_RETAINED
                 continue
-
-            if not taxonomy_id:
-                raise serializers.ValidationError(
-                    f"Split Species {index+1} is missing a Taxonomy ID"
-                )
 
             # Check if a boranga profile exists for this taxonomy
             species_queryset = Species.objects.filter(taxonomy_id=taxonomy_id)
@@ -1560,6 +1555,12 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                     "action"
                 ] = Species.SPLIT_SPECIES_ACTION_CREATED
                 species_form_submit(split_species_instance, request, split=True)
+
+            # Add species number to the split species request data
+            # so it is available when looping through split species in the email template
+            split_species_request_data["species_number"] = (
+                split_species_instance.species_number
+            )
 
             process_split_species_general_data(
                 split_species_instance, split_species_request_data
