@@ -1707,7 +1707,11 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         # TODO: This email must make sense for the new split functionality
         # I.e. splitting to existing species and/or retaining original species
         ret1 = send_species_split_email_notification(
-            request, instance, split_species_list, split_of_species_retains_original
+            request,
+            instance,
+            split_species_list,
+            split_of_species_retains_original,
+            occurrence_assignments_dict,
         )
         if not (settings.WORKING_FROM_HOME and settings.DEBUG) and not ret1:
             raise serializers.ValidationError(
