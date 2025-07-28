@@ -211,7 +211,11 @@ class GetScientificName(views.APIView):
         group_type_id = request.GET.get("group_type_id", "")
         # identifies the request as for a species profile - we exclude those taxonomies already taken
         species_profile = request.GET.get("species_profile", "false").lower() == "true"
-        species_rename = request.GET.get("species_rename", "false").lower() == "true"
+        no_profile_draft_and_historical_only = (
+            request.GET.get("no_profile_draft_and_historical_only", "false").lower()
+            == "true"
+        )
+
         # identifies the request as for a species profile dependent record - we only include those taxonomies in use
         has_species = request.GET.get("has_species", False)
         active_only = request.GET.get("active_only", False)
@@ -236,7 +240,7 @@ class GetScientificName(views.APIView):
                 species__processing_status=Species.PROCESSING_STATUS_ACTIVE
             )
 
-        if species_rename:
+        if no_profile_draft_and_historical_only:
             taxonomies_with_no_profile = Q(species=None)
             draft_and_historical = Q(
                 species__processing_status__in=[
@@ -1479,11 +1483,17 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             # Check if a boranga profile exists for this taxonomy
             species_queryset = Species.objects.filter(taxonomy_id=taxonomy_id)
             species_exists = species_queryset.exists()
+            logger.debug(
+                f"Species with taxonomy_id {taxonomy_id} exists: {species_exists}"
+            )
             if species_exists:
                 SPLIT_TO_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_TO_EXISTING
 
                 # If it exists, we will use the existing species instance
                 split_species_instance = species_queryset.first()
+                logger.debug(
+                    f"Using existing species instance with ID {split_species_instance.processing_status}"
+                )
                 if (
                     split_species_instance.processing_status
                     == Species.PROCESSING_STATUS_DRAFT
@@ -1563,7 +1573,7 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 ),
                 request,
             )
-            instance.log_user_action(
+            split_species_instance.log_user_action(
                 SPLIT_FROM_ACTION.format(
                     split_species_instance.species_number,
                     instance.species_number,
