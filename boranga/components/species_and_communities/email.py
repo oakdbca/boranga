@@ -187,22 +187,16 @@ def send_species_split_email_notification(
         )
         all_ccs.extend(cs_notification_emails)
 
-    occurrences = []
+    occurrences = {}
     if len(occurrence_assignments_dict.keys()) > 0:
-        occurrences = Occurrence.objects.filter(
+        occurrence_qs = Occurrence.objects.filter(
             id__in=occurrence_assignments_dict.keys(),
         )
-        for occurrence in occurrences:
+        for occurrence in occurrence_qs:
             species_key = f"{occurrence.species.species_number} - {occurrence.species.taxonomy.scientific_name}"
             occ_dict = {
                 "occurrence_number": occurrence.occurrence_number,
                 "processing_status": occurrence.processing_status,
-                "occurrence_url": request.build_absolute_uri(
-                    reverse(
-                        "internal-occurrence-detail",
-                        kwargs={"occurrence_pk": occurrence.id},
-                    )
-                ),
             }
             if species_key not in occurrences:
                 occurrences[species_key] = []
@@ -220,6 +214,7 @@ def send_species_split_email_notification(
         "url": url,
         "conservation_status_url": conservation_status_url,
         "occurrences": occurrences,
+        "split_of_species_retains_original": split_of_species_retains_original,
     }
 
     all_ccs = list(set(all_ccs))
