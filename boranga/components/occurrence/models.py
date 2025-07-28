@@ -185,6 +185,7 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
 
     objects = OccurrenceReportManager()
 
+    MODEL_PREFIX = "ORF"
     BULK_IMPORT_ABBREVIATION = "ocr"
     BULK_IMPORT_EXCLUDE_FIELDS = ["occurrence_report_number", "import_hash"]
 
@@ -388,7 +389,7 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
         if self.occurrence_report_number == "":
             force_insert = kwargs.pop("force_insert", False)
             super().save(no_revision=True, force_insert=force_insert)
-            new_occurrence_report_id = f"OCR{str(self.pk)}"
+            new_occurrence_report_id = f"{self.MODEL_PREFIX}{str(self.pk)}"
             self.occurrence_report_number = new_occurrence_report_id
             self.save(*args, **kwargs)
         else:
@@ -2065,9 +2066,8 @@ class OCRLocation(BaseModel):
         app_label = "boranga"
 
     def __str__(self):
-        return (
-            f"OCR Location: {self.id} for Occurrence Report: {self.occurrence_report}"
-        )
+        prefix = OccurrenceReport.MODEL_PREFIX
+        return f"{prefix} Location: {self.id} for Occurrence Report: {self.occurrence_report}"
 
 
 class GeometryManager(models.Manager):
@@ -2673,7 +2673,8 @@ class OCRVegetationStructure(BaseModel):
         app_label = "boranga"
 
     def __str__(self):
-        return f"OCR Vegetation Structure: {self.id} for Occurrence Report: {self.occurrence_report}"
+        prefix = OccurrenceReport.MODEL_PREFIX
+        return f"{prefix} Vegetation Structure: {self.id} for Occurrence Report: {self.occurrence_report}"
 
 
 class Intensity(OrderedModel, ArchivableModel):
@@ -2731,7 +2732,8 @@ class OCRFireHistory(BaseModel):
         app_label = "boranga"
 
     def __str__(self):
-        return f"OCR Fire History: {self.id} for Occurrence Report: {self.occurrence_report}"
+        prefix = OccurrenceReport.MODEL_PREFIX
+        return f"{prefix} Fire History: {self.id} for Occurrence Report: {self.occurrence_report}"
 
 
 class SpeciesListRelatesTo(OrderedModel, ArchivableModel):
@@ -2857,7 +2859,8 @@ class OCRAssociatedSpecies(BaseModel):
         app_label = "boranga"
 
     def __str__(self):
-        return f"OCR Associated Species {self.id} for Occurrence Report {self.occurrence_report}"
+        prefix = OccurrenceReport.MODEL_PREFIX
+        return f"{prefix} Associated Species {self.id} for Occurrence Report {self.occurrence_report}"
 
 
 class ObservationMethod(OrderedModel, ArchivableModel):
@@ -2945,7 +2948,8 @@ class OCRObservationDetail(BaseModel):
         app_label = "boranga"
 
     def __str__(self):
-        return f"OCR Observation Detail: {self.id} for Occurrence Report: {self.occurrence_report}"
+        prefix = OccurrenceReport.MODEL_PREFIX
+        return f"{prefix} Observation Detail: {self.id} for Occurrence Report: {self.occurrence_report}"
 
 
 class PlantCountMethod(OrderedModel, ArchivableModel):
@@ -3178,7 +3182,8 @@ class OCRPlantCount(BaseModel):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"OCR Plant Count: {self.id} for Occurrence Report: {self.occurrence_report}"
+        prefix = OccurrenceReport.MODEL_PREFIX
+        return f"{prefix} Plant Count: {self.id} for Occurrence Report: {self.occurrence_report}"
 
 
 # used for Animal Observation(MultipleSelect)
@@ -3419,7 +3424,8 @@ class OCRAnimalObservation(BaseModel):
         app_label = "boranga"
 
     def __str__(self):
-        return f"OCR Animal Observation: {self.id} for Occurrence Report: {self.occurrence_report}"
+        prefix = OccurrenceReport.MODEL_PREFIX
+        return f"{prefix} Animal Observation: {self.id} for Occurrence Report: {self.occurrence_report}"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -3630,7 +3636,8 @@ class OCRIdentification(BaseModel):
         app_label = "boranga"
 
     def __str__(self):
-        return f"OCR Identification: {self.id} for Occurrence Report: {self.occurrence_report}"
+        prefix = OccurrenceReport.MODEL_PREFIX
+        return f"{prefix} Identification: {self.id} for Occurrence Report: {self.occurrence_report}"
 
 
 class OccurrenceReportDocument(Document):
@@ -3842,8 +3849,8 @@ class Occurrence(DirtyFieldsMixin, LockableModel, RevisionedMixin):
     OCCURRENCE_CHOICE_OCR = "ocr"
     OCCURRENCE_CHOICE_NON_OCR = "non-ocr"
     OCCURRENCE_SOURCE_CHOICES = (
-        (OCCURRENCE_CHOICE_OCR, "OCR"),
-        (OCCURRENCE_CHOICE_NON_OCR, "Non-OCR (describe in comments)"),
+        (OCCURRENCE_CHOICE_OCR, "ORF"),
+        (OCCURRENCE_CHOICE_NON_OCR, "Non-ORF (describe in comments)"),
     )
 
     objects = OccurrenceManager()
@@ -6185,7 +6192,9 @@ class OccurrenceReportBulkImportTask(ArchivableModel):
         return f"~{minutes} minutes"
 
     def count_rows(self):
-        logger.info(f"Beginning row count for OCR Bulk Import Task {self.id}")
+        logger.info(
+            f"Beginning row count for {OccurrenceReport.MODEL_PREFIX} Bulk Import Task {self.id}"
+        )
 
         try:
             workbook = openpyxl.load_workbook(self._file)
@@ -6204,7 +6213,10 @@ class OccurrenceReportBulkImportTask(ArchivableModel):
         # Remove the header row
         self.rows = all_rows - 1
 
-        logger.info(f"Found {self.rows} rows in OCR Bulk Import Task {self._file.name}")
+        prefix = OccurrenceReport.MODEL_PREFIX
+        logger.info(
+            f"Found {self.rows} rows in {prefix} Bulk Import Task {self._file.name}"
+        )
         self.save()
 
     @classmethod
@@ -6894,7 +6906,7 @@ class OccurrenceReportBulkImportSchema(BaseModel):
         ).exists():
             OccurrenceReportBulkImportSchemaColumn.objects.create(
                 schema=self,
-                xlsx_column_header_name="OCR Migrated From ID",
+                xlsx_column_header_name=f"{OccurrenceReport.MODEL_PREFIX} Migrated From ID",
                 django_import_content_type=content_type,
                 django_import_field_name="migrated_from_id",
             )
