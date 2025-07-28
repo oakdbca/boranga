@@ -2073,7 +2073,8 @@ export default {
                                 group_type_id:
                                     vm.species_community.group_type_id,
                                 species_profile: !vm.rename_species,
-                                species_rename: vm.rename_species,
+                                no_profile_draft_and_historical_only:
+                                    vm.rename_species,
                                 species_id: vm.species_community.id, // to filter species  current/non_current
                             };
                             return query;
