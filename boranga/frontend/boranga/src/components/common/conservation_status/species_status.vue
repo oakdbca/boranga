@@ -1714,7 +1714,11 @@ export default {
         isScientificNameReadOnly: function () {
             return (
                 this.isReadOnly ||
-                (!this.is_external && !this.conservation_status_obj.locked)
+                (!this.is_external &&
+                    constants.EFFECTIVE_TO_STATUSES.includes(
+                        this.conservation_status_obj.processing_status
+                    ) &&
+                    !this.conservation_status_obj.locked)
             );
         },
         conservation_list_proposed: function () {
