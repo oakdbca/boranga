@@ -1473,10 +1473,15 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 ] = Species.SPLIT_SPECIES_ACTION_RETAINED
                 continue
 
+            SPLIT_TO_ACTION = None
+            SPLIT_FROM_ACTION = None
+
             # Check if a boranga profile exists for this taxonomy
             species_queryset = Species.objects.filter(taxonomy_id=taxonomy_id)
             species_exists = species_queryset.exists()
             if species_exists:
+                SPLIT_TO_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_TO_EXISTING
+
                 # If it exists, we will use the existing species instance
                 split_species_instance = species_queryset.first()
                 if (
@@ -1486,6 +1491,9 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                     split_species_list[index][
                         "action"
                     ] = Species.SPLIT_SPECIES_ACTION_ACTIVATED
+                    SPLIT_FROM_ACTION = (
+                        SpeciesUserAction.ACTION_SPLIT_SPECIES_FROM_EXISTING_DRAFT
+                    )
                 elif (
                     split_species_instance.processing_status
                     == Species.PROCESSING_STATUS_HISTORICAL
@@ -1493,7 +1501,9 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                     split_species_list[index][
                         "action"
                     ] = Species.SPLIT_SPECIES_ACTION_REACTIVATED
-
+                    SPLIT_FROM_ACTION = (
+                        SpeciesUserAction.ACTION_SPLIT_SPECIES_FROM_EXISTING_HISTORICAL
+                    )
                 split_species_instance.processing_status = (
                     Species.PROCESSING_STATUS_ACTIVE
                 )
@@ -1508,6 +1518,8 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 split_species_list[index][
                     "action"
                 ] = Species.SPLIT_SPECIES_ACTION_CREATED
+                SPLIT_TO_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_TO_NEW
+                SPLIT_FROM_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_FROM_NEW
                 species_form_submit(split_species_instance, request, split=True)
 
             # Add species number to the split species request data
@@ -1535,12 +1547,6 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             )
 
             split_species_instance.parent_species.add(instance)
-
-            SPLIT_TO_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_TO_NEW
-            SPLIT_FROM_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_FROM_NEW
-            if species_exists:
-                SPLIT_TO_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_TO_EXISTING
-                SPLIT_FROM_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_FROM_EXISTING
 
             # Log the action
             instance.log_user_action(
@@ -1644,16 +1650,28 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             instance.processing_status = Species.PROCESSING_STATUS_HISTORICAL
             instance.save(version_user=request.user)
 
-            # Log action
             instance.log_user_action(
-                SpeciesUserAction.ACTION_MAKE_HISTORICAL.format(
+                SpeciesUserAction.ACTION_SPLIT_MAKE_ORIGINAL_HISTORICAL.format(
                     instance.species_number
                 ),
                 request,
             )
 
             request.user.log_user_action(
-                SpeciesUserAction.ACTION_MAKE_HISTORICAL.format(
+                SpeciesUserAction.ACTION_SPLIT_MAKE_ORIGINAL_HISTORICAL.format(
+                    instance.species_number
+                ),
+                request,
+            )
+        else:
+            instance.log_user_action(
+                SpeciesUserAction.ACTION_SPLIT_RETAIN_ORIGINAL.format(
+                    instance.species_number
+                ),
+                request,
+            )
+            request.user.log_user_action(
+                SpeciesUserAction.ACTION_SPLIT_RETAIN_ORIGINAL.format(
                     instance.species_number
                 ),
                 request,
