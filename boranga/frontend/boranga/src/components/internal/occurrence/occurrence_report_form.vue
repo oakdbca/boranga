@@ -4,10 +4,11 @@
         id="internal-occurence-report-detail"
         class="container"
     >
+        <!-- {{ occurrence_report }} -->
         <div class="row mb-2">
             <div class="col">
                 <h3 class="float-start">
-                    Occurrence Report:
+                    Occurrence Report Forms:
                     {{ occurrence_report.occurrence_report_number }} -
                     <span class="text-capitalize">{{
                         display_group_type
