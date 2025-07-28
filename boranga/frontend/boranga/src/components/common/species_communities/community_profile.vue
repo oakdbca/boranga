@@ -366,7 +366,7 @@
                                     :disabled="isEOOReadOnly"
                                     type="number"
                                     min="0.00"
-                                    step="0.01"
+                                    step="0.00001"
                                     max="9999999999.99"
                                     class="form-control"
                                     placeholder=""
