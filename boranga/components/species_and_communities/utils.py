@@ -315,3 +315,4 @@ def process_split_species_distribution_data(
     distribution_instance.distribution = distribution_request_data.get(
         "distribution", None
     )
+    distribution_instance.save()

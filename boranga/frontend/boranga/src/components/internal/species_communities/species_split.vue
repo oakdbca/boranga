@@ -577,10 +577,6 @@ export default {
                       this.species_community_original.species_number
                 : 'Split Species';
         },
-        species_split_form_url: function () {
-            var vm = this;
-            return `/api/species/${vm.species_community_original.id}/species_split_save.json`;
-        },
         split_species_taxonomy_ids: function () {
             return this.split_species_list
                 .filter(
@@ -690,54 +686,6 @@ export default {
             this.isModalOpen = false;
             this.split_species_list = [];
             this.errorString = '';
-        },
-        save_before_submit: async function (new_species) {
-            let vm = this;
-            vm.saveError = false;
-
-            let payload = new Object();
-            Object.assign(payload, new_species);
-            const result = await fetch(
-                `/api/species/${new_species.id}/species_split_save.json`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload),
-                }
-            ).then(
-                async (response) => {
-                    if (!response.ok) {
-                        const data = await response.json();
-                        swal.fire({
-                            title: 'Error',
-                            text: JSON.stringify(data),
-                            icon: 'error',
-                            customClass: {
-                                confirmButton: 'btn btn-primary',
-                            },
-                        });
-                        return;
-                    }
-                    return true;
-                },
-                (err) => {
-                    var errorText = helpers.apiVueResourceError(err);
-                    swal.fire({
-                        title: 'Submit Error',
-                        text: errorText,
-                        icon: 'error',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
-                    });
-                    vm.submitSpeciesSplit = false;
-                    vm.saveError = true;
-                    return false;
-                }
-            );
-            return result;
         },
         can_submit: function () {
             let vm = this;
