@@ -9,10 +9,10 @@
         <ul>
             {% for split_species in split_species_list %}
                 <li>
-                    {{ forloop.counter }}: {{ split_species.species_number }} - {{ split_species.taxonomy.scientific_name }}
+                    {{ forloop.counter }}: {{ split_species.species_number }} - {{ split_species.taxonomy_details.scientific_name }}
                     ({{ split_species.action }})
                 </li>
-            {% endif %}
+            {% endfor %}
         </ul>
 
         {% if occurrences %}
@@ -24,12 +24,12 @@
                         <ul>
                             {% for occurrence in occ_list %}
                                 <li>
-                                    <a href="{{ occurrence.occurrence_url }}">{{ occurrence.occurrence_number }}</a>
-                                    ({{ occurrence.processing_status }})
+                                    {{ occurrence.occurrence_number }} ({{ occurrence.processing_status }})
                                 </li>
                             {% endfor %}
                         </ul>
                     </li>
+                    <br />
                 {% endfor %}
             </ul>
         {% endif %}
