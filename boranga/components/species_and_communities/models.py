@@ -1240,7 +1240,7 @@ class SpeciesDistribution(BaseModel):
         null=True,
         blank=True,
         max_digits=12,
-        decimal_places=2,
+        decimal_places=5,
         validators=[MinValueValidator(Decimal("0.00"))],
     )
     eoo_auto = models.BooleanField(
@@ -2061,8 +2061,8 @@ class CommunityDistribution(BaseModel):
     extent_of_occurrences = models.DecimalField(
         null=True,
         blank=True,
-        max_digits=12,
-        decimal_places=2,
+        max_digits=15,
+        decimal_places=5,
         validators=[MinValueValidator(Decimal("0.00"))],
     )
     eoo_auto = models.BooleanField(
