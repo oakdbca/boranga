@@ -1495,8 +1495,12 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
 
         # Process each new species in the request data
         for index, split_species_request_data in enumerate(split_species_list):
-            # Check if a boranga profile exists for this taxonomy
             taxonomy_id = split_species_request_data.get("taxonomy_id", None)
+
+            # Add an action property to each of the split species request data items
+            # This will be unsed in the split species email to give the users a better idea
+            # of what happened to each species as part of this split operation
+            split_species_list[index]["action"] = ""
 
             if not taxonomy_id:
                 raise serializers.ValidationError(
@@ -1510,17 +1514,37 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
 
             if instance.taxonomy_id == int(taxonomy_id):
                 split_of_species_retains_original = True
+                split_species_list[index][
+                    "action"
+                ] = Species.SPLIT_SPECIES_ACTION_RETAINED
                 continue
 
             if not taxonomy_id:
                 raise serializers.ValidationError(
                     f"Split Species {index+1} is missing a Taxonomy ID"
                 )
+
+            # Check if a boranga profile exists for this taxonomy
             species_queryset = Species.objects.filter(taxonomy_id=taxonomy_id)
             species_exists = species_queryset.exists()
             if species_exists:
                 # If it exists, we will use the existing species instance
                 split_species_instance = species_queryset.first()
+                if (
+                    split_species_instance.processing_status
+                    == Species.PROCESSING_STATUS_DRAFT
+                ):
+                    split_species_list[index][
+                        "action"
+                    ] = Species.SPLIT_SPECIES_ACTION_ACTIVATED
+                elif (
+                    split_species_instance.processing_status
+                    == Species.PROCESSING_STATUS_HISTORICAL
+                ):
+                    split_species_list[index][
+                        "action"
+                    ] = Species.SPLIT_SPECIES_ACTION_REACTIVATED
+
                 split_species_instance.processing_status = (
                     Species.PROCESSING_STATUS_ACTIVE
                 )
@@ -1532,6 +1556,9 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                     processing_status=Species.PROCESSING_STATUS_ACTIVE,
                 )
                 split_species_instance.save(version_user=request.user)
+                split_species_list[index][
+                    "action"
+                ] = Species.SPLIT_SPECIES_ACTION_CREATED
                 species_form_submit(split_species_instance, request, split=True)
 
             process_split_species_general_data(
@@ -1594,10 +1621,10 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         original_taxonomy_occurrence_count = Occurrence.objects.filter(
             species__taxonomy_id=instance.taxonomy_id,
         ).count()
+
+        # Assign this variable outside the below null check so we can pass it to the email function
+        occurrence_assignments_dict = request.data.get("occurrence_assignments", None)
         if original_taxonomy_occurrence_count:
-            occurrence_assignments_dict = request.data.get(
-                "occurrence_assignments", None
-            )
             if not occurrence_assignments_dict:
                 raise serializers.ValidationError(
                     "No occurrence assignments provided in request data"
@@ -1679,7 +1706,13 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
 
         # TODO: This email must make sense for the new split functionality
         # I.e. splitting to existing species and/or retaining original species
-        ret1 = send_species_split_email_notification(request, instance)
+        ret1 = send_species_split_email_notification(
+            request,
+            instance,
+            split_species_list,
+            split_of_species_retains_original,
+            occurrence_assignments_dict,
+        )
         if not (settings.WORKING_FROM_HOME and settings.DEBUG) and not ret1:
             raise serializers.ValidationError(
                 "Email could not be sent. Please try again later"

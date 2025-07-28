@@ -1,25 +1,43 @@
 {%  extends 'boranga/emails/base_email.html' %}
 
 {%  block content %}
-        <p>Species {{ species_proposal.species_number }} has been split. You can review the historical and new Species Profiles at:</p>
+        <p>
+            The Boranga Species {{ original_species.species_number }} - {{ original_species.taxonomy.scientific_name }}
+            has been split into the following species:
+        </p>
 
         <ul>
-            <li>Historical: {{ species_proposal.species_number }} - {{ species_proposal.taxonomy.scientific_name }}</li>
-            {% for new_species in species_proposal.child_species %}
-                <li>New Species {{ forloop.counter }}: {{ new_species.species_number }} - {{ new_species.taxonomy.scientific_name }} </li>
-            {% endfor %}
+            {% for split_species in split_species_list %}
+                <li>
+                    {{ forloop.counter }}: {{ split_species.species_number }} - {{ split_species.taxonomy.scientific_name }}
+                    ({{ split_species.action }})
+                </li>
+            {% endif %}
         </ul>
-        <p>
-            {% if conservation_status_url %}
-                You can view the Conservation Status for the historical species <a href="{{conservation_status_url}}">here</a>
-            {% endif %}
-        </p>
-        <p>
-            {% if occurrences_url %}
-                To action related Occurrences:
-                {% for occ in occurrences_url %}
-                    <li><a href="{{occ.occurrence_url}}">{{ occ.occurrence_number }}</a></li>
+
+        {% if occurrences %}
+            <p>The occurrences from the original species were assigned as follows:</p>
+            <ul>
+                {% for species_key, occ_list in occurrences.items %}
+                    <li>
+                        <strong>{{ species_key }}</strong>
+                        <ul>
+                            {% for occurrence in occ_list %}
+                                <li>
+                                    <a href="{{ occurrence.occurrence_url }}">{{ occurrence.occurrence_number }}</a>
+                                    ({{ occurrence.processing_status }})
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
                 {% endfor %}
-            {% endif %}
-        </p>
+            </ul>
+        {% endif %}
+
+        {% if split_of_species_retains_original %}
+            <p>The original species was retained and is still active.</p>
+        {% else %}
+            <p>The original species has been made historical.</p>
+        {% endif %}
+
     {%  endblock %}

@@ -16,10 +16,7 @@
                         <select
                             :id="community_name_lookup"
                             :ref="community_name_lookup"
-                            :disabled="
-                                conservation_status_obj.readonly ||
-                                !conservation_status_obj.locked
-                            "
+                            :disabled="isCommunityNameReadOnly"
                             :name="community_name_lookup"
                             class="form-control"
                         />
@@ -1676,6 +1673,16 @@ export default {
             }
 
             return true;
+        },
+        isCommunityNameReadOnly: function () {
+            return (
+                this.isReadOnly ||
+                (!this.is_external &&
+                    constants.EFFECTIVE_TO_STATUSES.includes(
+                        this.conservation_status_obj.processing_status
+                    ) &&
+                    !this.conservation_status_obj.locked)
+            );
         },
         conservation_list_proposed: function () {
             return (

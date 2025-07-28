@@ -163,10 +163,6 @@
             </template>
         </FormSection>
         <FormSection
-            v-if="
-                species_community.taxonomy_id &&
-                !thisSplitSpeciesHasOriginalTaxonomyId
-            "
             :form-collapse="false"
             label="Distribution"
             :Index="distributionBody"
@@ -187,12 +183,12 @@
                 </div>
                 <div class="col-sm-1">
                     <input
-                        :id="'distribution' + species_community.id"
+                        :id="'distribution' + split_index"
                         class="form-check-input"
                         type="checkbox"
                         @change="
                             checkDistributionInput(
-                                'distribution' + species_community.id,
+                                'distribution' + split_index,
                                 'distribution'
                             )
                         "
@@ -224,12 +220,12 @@
                 </div>
                 <div class="col-sm-1">
                     <input
-                        :id="'regions_select_chk' + species_community.id"
+                        :id="'regions_select_chk' + split_index"
                         class="form-check-input"
                         type="checkbox"
                         @change="
                             checkRegionDistrictInput(
-                                'regions_select_chk' + species_community.id,
+                                'regions_select_chk' + split_index,
                                 'regions',
                                 'regions_select'
                             )
@@ -270,14 +266,14 @@
                 </div>
                 <div class="col-sm-1">
                     <input
-                        :id="'districts_select_chk' + species_community.id"
+                        :id="'districts_select_chk' + split_index"
                         class="form-check-input"
                         type="checkbox"
                         v-model="useOriginalDistrictsCheckboxChecked"
                         :disabled="isOriginalDistrictCheckboxDisabled"
                         @change="
                             checkRegionDistrictInput(
-                                'districts_select_chk' + species_community.id,
+                                'districts_select_chk' + split_index,
                                 'districts',
                                 'districts_select'
                             )
@@ -360,12 +356,12 @@
                 </div>
                 <div class="col-sm-1">
                     <input
-                        :id="'no_of_occurrences' + species_community.id"
+                        :id="'no_of_occurrences' + split_index"
                         class="form-check-input"
                         type="checkbox"
                         @change="
                             checkDistributionInput(
-                                'no_of_occurrences' + species_community.id,
+                                'no_of_occurrences' + split_index,
                                 'number_of_occurrences',
                                 species_original.distribution.noo_auto,
                                 'noo_auto'
@@ -801,12 +797,12 @@
                 <div class="col-sm-3"></div>
                 <div class="col-sm-1">
                     <input
-                        :id="'no_of_iucn_locations' + species_community.id"
+                        :id="'no_of_iucn_locations' + split_index"
                         class="form-check-input"
                         type="checkbox"
                         @change="
                             checkDistributionInput(
-                                'no_of_iucn_locations' + species_community.id,
+                                'no_of_iucn_locations' + split_index,
                                 'number_of_iucn_locations'
                             )
                         "
@@ -851,13 +847,12 @@
                 <div class="col-sm-3"></div>
                 <div class="col-sm-1">
                     <input
-                        :id="'no_of_iucn_subpopulations' + species_community.id"
+                        :id="'no_of_iucn_subpopulations' + split_index"
                         class="form-check-input"
                         type="checkbox"
                         @change="
                             checkDistributionInput(
-                                'no_of_iucn_subpopulations' +
-                                    species_community.id,
+                                'no_of_iucn_subpopulations' + split_index,
                                 'number_of_iucn_subpopulations'
                             )
                         "
@@ -883,10 +878,7 @@
             </div>
         </FormSection>
         <FormSection
-            v-if="
-                species_community.taxonomy_id &&
-                !thisSplitSpeciesHasOriginalTaxonomyId
-            "
+            v-if="!thisSplitSpeciesHasOriginalTaxonomyId"
             :form-collapse="false"
             label="General"
             :Index="generalBody"
@@ -908,12 +900,12 @@
                 </div>
                 <div class="col-sm-1">
                     <input
-                        :id="'dept_file_chk' + species_community.id"
+                        :id="'dept_file_chk' + split_index"
                         class="form-check-input"
                         type="checkbox"
                         @change="
                             checkGeneralInput(
-                                'dept_file_chk' + species_community.id,
+                                'dept_file_chk' + split_index,
                                 'department_file_numbers'
                             )
                         "
@@ -954,15 +946,12 @@
                 </div>
                 <div class="col-sm-1">
                     <input
-                        :id="
-                            'last_data_curation_date_chk' + species_community.id
-                        "
+                        :id="'last_data_curation_date_chk' + split_index"
                         class="form-check-input"
                         type="checkbox"
                         @change="
                             checkGeneralInput(
-                                'last_data_curation_date_chk' +
-                                    species_community.id,
+                                'last_data_curation_date_chk' + split_index,
                                 'last_data_curation_date'
                             )
                         "
@@ -1021,10 +1010,7 @@
                 </div>
                 <div class="col-sm-1">
                     <input
-                        :id="
-                            'conservation_plan_exists_chk' +
-                            species_community.id
-                        "
+                        :id="'conservation_plan_exists_chk' + split_index"
                         class="form-check-input"
                         v-model="useOriginalConservationPlanExists"
                         type="checkbox"
@@ -1064,7 +1050,10 @@
                     />
                 </div>
             </div>
-            <div class="row mb-3">
+            <div
+                v-if="species_original.conservation_plan_exists"
+                class="row mb-3"
+            >
                 <label
                     for="conservation_plan_reference"
                     class="col-sm-3 col-form-label"
@@ -1083,23 +1072,22 @@
                 </div>
                 <div class="col-sm-1">
                     <input
-                        :id="
-                            'conservation_plan_reference_chk' +
-                            species_community.id
-                        "
+                        :id="'conservation_plan_reference_chk' + split_index"
                         class="form-check-input"
                         type="checkbox"
                         @change="
                             checkGeneralInput(
-                                'conservation_plan_reference_chk' +
-                                    species_community.id,
+                                'conservation_plan_reference_chk' + split_index,
                                 'conservation_plan_reference'
                             )
                         "
                     />
                 </div>
             </div>
-            <div class="row mb-3">
+            <div
+                v-if="species_community.conservation_plan_exists"
+                class="row mb-3"
+            >
                 <label
                     for="conservation_plan_reference"
                     class="col-sm-3 col-form-label"
@@ -1110,6 +1098,7 @@
                         ref="conservation_plan_reference"
                         v-model="species_community.conservation_plan_reference"
                         type="text"
+                        :disabled="!species_community.conservation_plan_exists"
                         class="form-control"
                         name="conservation_plan_reference"
                     />
@@ -1131,12 +1120,12 @@
                 </div>
                 <div class="col-sm-1">
                     <input
-                        :id="'comment_chk' + species_community.id"
+                        :id="'comment_chk' + split_index"
                         class="form-check-input"
                         type="checkbox"
                         @change="
                             checkGeneralInput(
-                                'comment_chk' + species_community.id,
+                                'comment_chk' + split_index,
                                 'comment'
                             )
                         "
@@ -1183,6 +1172,10 @@ export default {
         },
         selectedTaxonomies: {
             type: Array,
+            required: true,
+        },
+        split_index: {
+            type: Number,
             required: true,
         },
     },
@@ -1265,11 +1258,12 @@ export default {
                 }
             });
 
+            // Disable if no regions are selected
             if (
                 !this.species_community.regions ||
                 this.species_community.regions.length === 0
             ) {
-                return false;
+                return true;
             }
             if (validDistrictIds.length === 0) {
                 return false;
@@ -1411,6 +1405,8 @@ export default {
     mounted: function () {
         let vm = this;
         vm.initialiseScientificNameLookup();
+        vm.initialiseRegionSelect();
+        vm.initialiseDistrictSelect();
     },
     methods: {
         checkDate: function () {
@@ -1589,28 +1585,12 @@ export default {
                                     vm.species_community.regions,
                                     'init'
                                 );
-                                vm.$nextTick(() => {
-                                    const modalEl = vm.$el.closest('.modal');
-                                    if (modalEl) {
-                                        bootstrap.Modal.getInstance(
-                                            modalEl
-                                        )?.handleUpdate();
-                                    }
-                                });
                             });
                         }
                     } else {
                         vm.$nextTick(() => {
                             vm.initialiseRegionSelect();
                             vm.initialiseDistrictSelect();
-                        });
-                        vm.$nextTick(() => {
-                            const modalEl = vm.$el.closest('.modal');
-                            if (modalEl) {
-                                bootstrap.Modal.getInstance(
-                                    modalEl
-                                )?.handleUpdate();
-                            }
                         });
                     }
                 })
@@ -1651,11 +1631,6 @@ export default {
                         this.species_original.distribution[auto_field];
                     return;
                 }
-                console.debug(
-                    'Copying value from original species to new species for field: ' +
-                        obj_field,
-                    this.species_original.distribution[obj_field]
-                );
                 this.species_community.distribution[obj_field] =
                     this.species_original.distribution[obj_field];
             } else {
@@ -1695,7 +1670,7 @@ export default {
                         this.species_community[bool_field] = this
                             .selected_species_community_copy
                             ? this.selected_species_community_copy[bool_field]
-                            : this.original_species[bool_field]
+                            : this.species_original[bool_field]
                               ? this.species_original[bool_field]
                               : false;
                     }
@@ -2022,6 +1997,13 @@ export default {
                     .trigger('change');
                 $(this.$refs[this.scientific_name_lookup]).select2('open');
                 this.resetTaxonomyDetails();
+                this.$nextTick(() => {
+                    this.initialiseRegionSelect();
+                    this.chainedSelectDistricts(
+                        this.species_community.regions,
+                        'init'
+                    );
+                });
             }
         },
         fetchSpeciesData: function () {

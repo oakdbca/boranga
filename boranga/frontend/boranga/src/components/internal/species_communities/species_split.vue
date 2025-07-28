@@ -168,6 +168,7 @@
                                             :selected-taxonomies="
                                                 split_species_taxonomy_ids
                                             "
+                                            :split_index="index"
                                         >
                                         </SpeciesSplitForm>
                                     </div>
@@ -636,6 +637,9 @@ export default {
             return state;
         },
         allOccurrencesAssigned: function () {
+            if (!this.occurrences || this.occurrences.length === 0) {
+                return true;
+            }
             return (
                 this.occurrences.length > 0 &&
                 this.assignmentCheckedState &&
@@ -1017,7 +1021,6 @@ export default {
                         'assigning occurrences'
                     )
                 ) {
-                    console.log('validateAtLeastTwoSplitSpecies failed');
                     return false;
                 }
                 if (
@@ -1026,7 +1029,6 @@ export default {
                         'assigning occurrences'
                     )
                 ) {
-                    console.log('validateAllSplitSpeciesHaveTaxonomy failed');
                     return false;
                 }
                 vm.occurrences = vm.fetchOccurrencesOfOriginalSpecies(

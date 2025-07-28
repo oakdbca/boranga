@@ -20,10 +20,7 @@
                         Profile
                     </a>
                 </li>
-                <li
-                    v-if="!thisSplitSpeciesHasOriginalTaxonomyId"
-                    class="nav-item"
-                >
+                <li class="nav-item">
                     <a
                         class="nav-link"
                         id="pills-documents-tab"
@@ -36,10 +33,7 @@
                         Documents
                     </a>
                 </li>
-                <li
-                    v-if="!thisSplitSpeciesHasOriginalTaxonomyId"
-                    class="nav-item"
-                >
+                <li class="nav-item">
                     <a
                         id="pills-threats-tab"
                         class="nav-link"
@@ -70,6 +64,7 @@
                             splitSpeciesListContainsOriginalTaxonomy
                         "
                         :selectedTaxonomies="selectedTaxonomies"
+                        :split_index="split_index"
                     >
                     </SpeciesProfile>
                 </div>
@@ -137,6 +132,10 @@ export default {
             type: Boolean,
             default: false,
         },
+        split_index: {
+            type: Number,
+            required: true,
+        },
         splitSpeciesListContainsOriginalTaxonomy: {
             type: Boolean,
             required: true,
@@ -167,12 +166,6 @@ export default {
         },
         related_items_filter_list_url: function () {
             return '/api/species/filter_list.json';
-        },
-        thisSplitSpeciesHasOriginalTaxonomyId: function () {
-            return (
-                this.species_community.taxonomy_id ===
-                this.species_original.taxonomy_id
-            );
         },
     },
     mounted: function () {
