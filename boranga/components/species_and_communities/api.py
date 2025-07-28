@@ -1414,52 +1414,6 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
 
     @detail_route(methods=["post"], detail=True)
     @renderer_classes((JSONRenderer,))
-    @transaction.atomic
-    def species_split_save(self, request, *args, **kwargs):
-        instance = self.get_object()
-        request_data = request.data
-        if request_data["submitter"]:
-            request.data["submitter"] = "{}".format(request_data["submitter"].get("id"))
-        if request_data.get("distribution"):
-            distribution_instance, created = SpeciesDistribution.objects.get_or_create(
-                species=instance
-            )
-            serializer = SpeciesDistributionSerializer(
-                distribution_instance, data=request_data.get("distribution")
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-        if request_data.get("conservation_attributes"):
-            conservation_attributes_instance, created = (
-                SpeciesConservationAttributes.objects.get_or_create(species=instance)
-            )
-            serializer = SaveSpeciesConservationAttributesSerializer(
-                conservation_attributes_instance,
-                data=request_data.get("conservation_attributes"),
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-        serializer = SaveSpeciesSerializer(instance, data=request_data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        if serializer.is_valid():
-            serializer.save(version_user=request.user)
-
-            instance.log_user_action(
-                SpeciesUserAction.ACTION_SAVE_SPECIES.format(instance.species_number),
-                request,
-            )
-
-            request.user.log_user_action(
-                SpeciesUserAction.ACTION_SAVE_SPECIES.format(instance.species_number),
-                request,
-            )
-
-        return Response()
-
-    @detail_route(methods=["post"], detail=True)
-    @renderer_classes((JSONRenderer,))
     def submit(self, request, *args, **kwargs):
         instance = self.get_object()
         # instance.submit(request,self)
@@ -1705,8 +1659,6 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 request,
             )
 
-        # TODO: This email must make sense for the new split functionality
-        # I.e. splitting to existing species and/or retaining original species
         ret1 = send_species_split_email_notification(
             request,
             instance,
@@ -1785,37 +1737,6 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
 
         serializer = self.get_serializer(instance)
 
-        return Response(serializer.data)
-
-    # Used to submit the original species after split data is submitted
-    @detail_route(methods=["post"], detail=True)
-    @renderer_classes((JSONRenderer,))
-    @transaction.atomic
-    def change_status_historical(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.processing_status = Species.PROCESSING_STATUS_HISTORICAL
-
-        ret1 = send_species_split_email_notification(request, instance)
-
-        if not (settings.WORKING_FROM_HOME and settings.DEBUG) and not ret1:
-            raise serializers.ValidationError(
-                "Email could not be sent. Please try again later"
-            )
-
-        instance.save(version_user=request.user)
-
-        # Log action
-        instance.log_user_action(
-            SpeciesUserAction.ACTION_MAKE_HISTORICAL.format(instance.species_number),
-            request,
-        )
-
-        request.user.log_user_action(
-            SpeciesUserAction.ACTION_MAKE_HISTORICAL.format(instance.species_number),
-            request,
-        )
-
-        serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
     # used to submit the new species created while combining

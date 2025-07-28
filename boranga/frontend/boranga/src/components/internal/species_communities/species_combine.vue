@@ -338,10 +338,6 @@ export default {
                 ? 'Combine Species '
                 : 'Combine Species';
         },
-        species_split_form_url: function () {
-            var vm = this;
-            return `/api/species/${vm.new_combine_species.id}/species_split_save.json`;
-        },
         combine_into_species_scientific_name: function () {
             return this.new_combine_species.scientific_name
                 ? this.new_combine_species.scientific_name
