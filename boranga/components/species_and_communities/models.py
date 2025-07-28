@@ -1187,12 +1187,12 @@ class SpeciesUserAction(UserAction):
     ACTION_SPLIT_SPECIES_TO_NEW = "Species {} split into new species {}"
     ACTION_SPLIT_SPECIES_TO_EXISTING = "Species {} split into existing species {}"
 
-    ACTION_SPLIT_SPECIES_FROM_NEW = "Species {} created from a split of species {}"
+    ACTION_SPLIT_SPECIES_FROM_NEW = "Species {} created by splitting species {}"
     ACTION_SPLIT_SPECIES_FROM_EXISTING_DRAFT = (
-        "Species {} activated by a split of species {}"
+        "Species {} activated by a splitting species {}"
     )
     ACTION_SPLIT_SPECIES_FROM_EXISTING_HISTORICAL = (
-        "Species {} reactivated by a split of species {}"
+        "Species {} reactivated by a splitting species {}"
     )
 
     ACTION_SPLIT_MAKE_ORIGINAL_HISTORICAL = (
