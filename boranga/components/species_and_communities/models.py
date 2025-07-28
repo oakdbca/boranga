@@ -1186,10 +1186,19 @@ class SpeciesUserAction(UserAction):
 
     ACTION_SPLIT_SPECIES_TO_NEW = "Species {} split into new species {}"
     ACTION_SPLIT_SPECIES_TO_EXISTING = "Species {} split into existing species {}"
+
     ACTION_SPLIT_SPECIES_FROM_NEW = "Species {} created from a split of species {}"
-    ACTION_SPLIT_SPECIES_FROM_EXISTING = (
+    ACTION_SPLIT_SPECIES_FROM_EXISTING_DRAFT = (
+        "Species {} activated by a split of species {}"
+    )
+    ACTION_SPLIT_SPECIES_FROM_EXISTING_HISTORICAL = (
         "Species {} reactivated by a split of species {}"
     )
+
+    ACTION_SPLIT_MAKE_ORIGINAL_HISTORICAL = (
+        "Species {} made historical as a result of being split"
+    )
+    ACTION_SPLIT_RETAIN_ORIGINAL = "Species {} retained as part of a split."
 
     ACTION_COMBINE_SPECIES_TO = "Species {} combined into new species {}"
     ACTION_COMBINE_SPECIES_FROM = "Species {} created from a combination of species {}"
@@ -1239,7 +1248,7 @@ class SpeciesDistribution(BaseModel):
     extent_of_occurrences = models.DecimalField(
         null=True,
         blank=True,
-        max_digits=12,
+        max_digits=15,
         decimal_places=5,
         validators=[MinValueValidator(Decimal("0.00"))],
     )
