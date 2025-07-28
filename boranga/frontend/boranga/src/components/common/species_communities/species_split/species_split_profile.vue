@@ -992,6 +992,7 @@
                         :disabled="true"
                         type="radio"
                         :value="false"
+                        name="original_conservation_plan_exists"
                         class="form-check-input me-2"
                     />
                     <label
@@ -1005,6 +1006,7 @@
                         :disabled="true"
                         type="radio"
                         :value="true"
+                        name="original_conservation_plan_exists"
                         class="form-check-input"
                     />
                 </div>
@@ -1014,7 +1016,6 @@
                         class="form-check-input"
                         v-model="useOriginalConservationPlanExists"
                         type="checkbox"
-                        @change="checkGeneralBooleanInput"
                     />
                 </div>
             </div>
@@ -1023,29 +1024,27 @@
                     >Conservation Plan Exists:
                 </label>
                 <div class="col-sm-9">
-                    <label
-                        for="original_conservation_plan_exists_no"
-                        class="me-2"
+                    <label for="conservation_plan_exists_no" class="me-2"
                         >No</label
                     >
                     <input
-                        id="original_conservation_plan_exists_no"
+                        id="conservation_plan_exists_no"
                         v-model="species_community.conservation_plan_exists"
                         type="radio"
                         :value="false"
+                        name="conservation_plan_exists"
                         class="form-check-input me-2"
                     />
-                    <label
-                        for="original_conservation_plan_exists_yes"
-                        class="me-2"
+                    <label for="conservation_plan_exists_yes" class="me-2"
                         >Yes</label
                     >
                     <input
-                        id="original_conservation_plan_exists_yes"
+                        id="conservation_plan_exists_yes"
                         v-model="species_community.conservation_plan_exists"
                         type="radio"
                         :value="true"
                         class="form-check-input"
+                        name="conservation_plan_exists"
                         @change="focusConservationPlanReference"
                     />
                 </div>
@@ -1375,6 +1374,19 @@ export default {
                     this.species_original.conservation_plan_exists
             ) {
                 this.useOriginalConservationPlanExists = false;
+            }
+        },
+        useOriginalConservationPlanExists(newVal) {
+            if (newVal) {
+                this.species_community.conservation_plan_exists =
+                    this.species_original.conservation_plan_exists;
+            } else {
+                if (this.species_id && this.selected_species_community_copy) {
+                    this.species_community.conservation_plan_exists =
+                        this.selected_species_community_copy.conservation_plan_exists;
+                } else {
+                    this.species_community.conservation_plan_exists = false;
+                }
             }
         },
         species_id: function (newVal) {
