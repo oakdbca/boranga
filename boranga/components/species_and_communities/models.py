@@ -449,7 +449,7 @@ class Species(RevisionedMixin):
     SPLIT_SPECIES_ACTION_RETAINED = "Retained"
     SPLIT_SPECIES_ACTION_CREATED = "Created"
     SPLIT_SPECIES_ACTION_ACTIVATED = "Activated"
-    SPLIT_SPECIES_ACTION_REACTIVATED = "reactivated"
+    SPLIT_SPECIES_ACTION_REACTIVATED = "Reactivated"
 
     species_number = models.CharField(max_length=9, blank=True, default="")
     group_type = models.ForeignKey(GroupType, on_delete=models.CASCADE)
