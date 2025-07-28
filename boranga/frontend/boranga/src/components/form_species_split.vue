@@ -64,6 +64,7 @@
                             splitSpeciesListContainsOriginalTaxonomy
                         "
                         :selectedTaxonomies="selectedTaxonomies"
+                        :split_index="split_index"
                     >
                     </SpeciesProfile>
                 </div>
@@ -130,6 +131,10 @@ export default {
         is_internal: {
             type: Boolean,
             default: false,
+        },
+        split_index: {
+            type: Number,
+            required: true,
         },
         splitSpeciesListContainsOriginalTaxonomy: {
             type: Boolean,
