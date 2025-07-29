@@ -4,7 +4,6 @@
         id="internal-occurence-report-detail"
         class="container"
     >
-        <!-- {{ occurrence_report }} -->
         <div class="row mb-2">
             <div class="col">
                 <h3 class="float-start">
