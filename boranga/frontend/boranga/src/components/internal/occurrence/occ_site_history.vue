@@ -270,7 +270,9 @@ export default {
                         let related_occurrence_reports = [];
                         full.data.occurrencesite.fields.related_occurrence_reports.forEach(
                             (report) => {
-                                related_occurrence_reports.push('OCR' + report);
+                                related_occurrence_reports.push(
+                                    `${constants.MODELS.OCCURRENCE_REPORT.MODEL_PREFIX} ${report}`
+                                );
                             }
                         );
                         let related_occurrence_reports_formatted =

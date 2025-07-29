@@ -76,7 +76,7 @@
                     :form-collapse="
                         getSectionCollapsed('occurrence-report-flora')
                     "
-                    label="Occurrence Report - Flora"
+                    label="Occurrence Report Forms - Flora"
                     Index="occurrence-report-flora"
                     @toggle="onSectionToggle($event, 'occurrence-report-flora')"
                     @opened="
@@ -100,7 +100,7 @@
                             'occurrence-report-flora-referred-to-me'
                         )
                     "
-                    label="Occurrence Report - Flora Referred to Me"
+                    label="Occurrence Report Forms - Flora Referred to Me"
                     Index="occurrence-report-flora-referred-to-me"
                     @toggle="
                         onSectionToggle(
@@ -164,7 +164,7 @@
                     :form-collapse="
                         getSectionCollapsed('occurrence-report-fauna')
                     "
-                    label="Occurrence Report - Fauna"
+                    label="Occurrence Report Forms - Fauna"
                     Index="fauna"
                     @toggle="onSectionToggle($event, 'occurrence-report-fauna')"
                     @opened="
@@ -188,7 +188,7 @@
                             'occurrence-report-fauna-referred-to-me'
                         )
                     "
-                    label="Occurrence Report - Fauna Referred to Me"
+                    label="Occurrence Report Forms - Fauna Referred to Me"
                     Index="occurrence-report-fauna-referred-to-me"
                     @toggle="
                         onSectionToggle(
@@ -252,7 +252,7 @@
                     :form-collapse="
                         getSectionCollapsed('occurrence-report-community')
                     "
-                    label="Occurrence Report - Community"
+                    label="Occurrence Report Forms - Community"
                     Index="community"
                     @toggle="
                         onSectionToggle($event, 'occurrence-report-community')
@@ -281,7 +281,7 @@
                             'occurrence-report-community-referred-to-me'
                         )
                     "
-                    label="Occurrence Report - Community Referred to Me"
+                    label="Occurrence Report Forms - Community Referred to Me"
                     Index="occurrence-report-community-referred-to-me"
                     @toggle="
                         onSectionToggle(

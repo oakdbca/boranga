@@ -2,7 +2,7 @@
     <div id="ocrConservationThreatHistory">
         <modal
             transition="modal fade"
-            :title="'OCR Conservation Threat T' + threatId + ' - History '"
+            :title="`${ocr_model_prefix} Conservation Threat T${threatId} - History`"
             :large="true"
             :full="true"
             :show-o-k="false"
@@ -77,6 +77,7 @@ export default {
             errorString: '',
             successString: '',
             success: false,
+            ocr_model_prefix: constants.MODELS.OCCURRENCE_REPORT.MODEL_PREFIX,
         };
     },
     computed: {
@@ -279,7 +280,7 @@ export default {
                 buttons: [
                     {
                         extend: 'excel',
-                        title: 'Boranga OCR Conservation Threat History Excel Export',
+                        title: `Boranga ${this.ocr_model_prefix} Conservation Threat History Excel Export`,
                         text: '<i class="fa-solid fa-download"></i> Excel',
                         className: 'btn btn-primary me-2 rounded',
                         exportOptions: {
@@ -288,7 +289,7 @@ export default {
                     },
                     {
                         extend: 'csv',
-                        title: 'Boranga OCR Conservation Threat History CSV Export',
+                        title: `${this.ocr_model_prefix} Conservation Threat History CSV Export`,
                         text: '<i class="fa-solid fa-download"></i> CSV',
                         className: 'btn btn-primary rounded',
                         exportOptions: {

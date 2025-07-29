@@ -306,7 +306,7 @@
                     <label
                         for="occurrence_report_is_for_occurrence_number"
                         class="col-sm-3 col-form-label"
-                        >OCR is for OCC Number:
+                        >ORF is for OCC Number:
                         <HelpText
                             section_id="occurrence_report_is_for_occurrence_number"
                         />
