@@ -8,7 +8,7 @@
         <div class="row mb-2">
             <div class="col">
                 <h3 class="float-start">
-                    Occurrence Report Forms:
+                    Occurrence Report Form:
                     {{ occurrence_report.occurrence_report_number }} -
                     <span class="text-capitalize">{{
                         display_group_type
@@ -1144,7 +1144,7 @@ export default {
                         async (response) => {
                             swal.fire({
                                 title: 'Unlocked',
-                                text: 'The approved occurrence report has been unlocked for editing',
+                                text: 'The approved occurrence report form has been unlocked for editing',
                                 icon: 'success',
                                 customClass: {
                                     confirmButton: 'btn btn-primary',
@@ -1186,7 +1186,7 @@ export default {
                         async (response) => {
                             swal.fire({
                                 title: 'Locked',
-                                text: 'The approved occurrence report has been locked from editing',
+                                text: 'The approved occurrence report form has been locked from editing',
                                 icon: 'success',
                                 customClass: {
                                     confirmButton: 'btn btn-primary',
@@ -1460,8 +1460,8 @@ export default {
 
             vm.submitOccurrenceReport = true;
             swal.fire({
-                title: 'Submit Occurrence Report',
-                text: 'Are you sure you want to submit this occurrence report?',
+                title: 'Submit Occurrence Report Form',
+                text: 'Are you sure you want to submit this occurrence report form?',
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: 'submit',
@@ -1518,11 +1518,11 @@ export default {
         },
         copyOccurrenceReport: function () {
             swal.fire({
-                title: 'Copy Occurrence Report',
-                text: `Are you sure you want to make a copy of occurrence report ${this.occurrence_report.occurrence_report_number}?`,
+                title: 'Copy Occurrence Report Form',
+                text: `Are you sure you want to make a copy of occurrence report form ${this.occurrence_report.occurrence_report_number}?`,
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonText: 'Copy Occurrence Report',
+                confirmButtonText: 'Copy Occurrence Report Form',
                 customClass: {
                     confirmButton: 'btn btn-primary',
                     cancelButton: 'btn btn-secondary me-2',
@@ -1547,7 +1547,7 @@ export default {
                                 const ocr_copy = await response.json();
                                 swal.fire({
                                     title: 'Copied',
-                                    text: `The occurrence report has been copied to ${ocr_copy.occurrence_report_number}. When you click OK, the new occurrence report will open in a new window.`,
+                                    text: `The occurrence report form has been copied to ${ocr_copy.occurrence_report_number}. When you click OK, the new occurrence report form will open in a new window.`,
                                     icon: 'success',
                                     customClass: {
                                         confirmButton: 'btn btn-primary',

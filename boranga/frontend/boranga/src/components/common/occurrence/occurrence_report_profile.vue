@@ -2,7 +2,7 @@
     <div id="speciesOccurrenceReport">
         <FormSection
             :form-collapse="false"
-            label="Occurrence Report"
+            label="Occurrence Report Form"
             Index="occurrence_report"
         >
             <fieldset

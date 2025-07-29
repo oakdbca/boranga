@@ -51,7 +51,7 @@ export default {
         label: {
             type: String,
             required: false,
-            default: 'Select Related Occurrence Report to Copy Data',
+            default: 'Select Related Occurrence Report Form to Copy Data',
         },
         section_type: {
             type: String,
