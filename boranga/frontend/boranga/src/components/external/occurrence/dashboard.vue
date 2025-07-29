@@ -3,7 +3,7 @@
         <FormSection
             :form-collapse="false"
             :profile="profile"
-            label="Occurrence Report"
+            label="Occurrence Report Forms"
             subtitle="- submit and view your reported occurrences"
             Index="applications"
         >
@@ -15,7 +15,7 @@
         <FormSection
             v-if="profile && profile.ocr_referral_count > 0"
             :form-collapse="false"
-            label="Occurrence Reports Referred to Me"
+            label="Occurrence Reports Forms Referred to Me"
             Index="ocr_referred_to_me"
         >
             <OccurrenceReportExternalReferralsDashboard

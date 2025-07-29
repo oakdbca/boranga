@@ -2,13 +2,7 @@
     <div id="occurrenceReportDocumentHistory">
         <modal
             transition="modal fade"
-            :title="
-                'Occurrence Report OCR' +
-                occurrenceReportId +
-                ' - Document D' +
-                documentId +
-                ' - History '
-            "
+            :title="`Occurrence Report ${ocr_model_prefix}${occurrenceReportId} - Document D${documentId} - History`"
             :large="true"
             :full="true"
             :show-o-k="false"
@@ -88,6 +82,7 @@ export default {
             errorString: '',
             successString: '',
             success: false,
+            ocr_model_prefix: constants.MODELS.OCCURRENCE_REPORT.MODEL_PREFIX,
         };
     },
     computed: {
@@ -355,7 +350,7 @@ export default {
                 buttons: [
                     {
                         extend: 'excel',
-                        title: 'Boranga OCR Document History Excel Export',
+                        title: `Boranga ${this.ocr_model_prefix} Document History Excel Export`,
                         text: '<i class="fa-solid fa-download"></i> Excel',
                         className: 'btn btn-primary me-2 rounded',
                         exportOptions: {
@@ -364,7 +359,7 @@ export default {
                     },
                     {
                         extend: 'csv',
-                        title: 'Boranga OCR Document History CSV Export',
+                        title: `Boranga ${this.ocr_model_prefix} Document History CSV Export`,
                         text: '<i class="fa-solid fa-download"></i> CSV',
                         className: 'btn btn-primary rounded',
                         exportOptions: {

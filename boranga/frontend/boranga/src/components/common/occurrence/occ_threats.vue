@@ -144,7 +144,8 @@
                             @click.prevent="existingThreat"
                         >
                             <i class="fa-solid fa-circle-plus"></i>
-                            Add Threat from OCR
+                            Add Threat from
+                            {{ ocr_model_prefix }}
                         </button>
                     </div>
                 </div>
@@ -482,6 +483,7 @@ export default {
                     }, 100);
                 },
             },
+            ocr_model_prefix: constants.MODELS.OCCURRENCE_REPORT.MODEL_PREFIX,
         };
     },
     computed: {

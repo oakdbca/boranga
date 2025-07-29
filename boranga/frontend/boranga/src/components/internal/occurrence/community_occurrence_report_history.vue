@@ -2,7 +2,7 @@
     <div id="communityOccurrenceReportHistory">
         <modal
             transition="modal fade"
-            :title="'Occurrence Report OCR' + occurrenceReportId + ' - History'"
+            :title="`Occurrence Report ${ocr_model_prefix}${occurrenceReportId} - History`"
             :large="true"
             :full="true"
             :show-o-k="false"
@@ -33,7 +33,8 @@
                                             ref="display_history"
                                             :key="historyId"
                                             :primary_model_number="
-                                                'OCR' + occurrenceReportId
+                                                ocr_model_prefix +
+                                                occurrenceReportId
                                             "
                                             :revision_id="historyId"
                                             :revision_sequence="historySequence"
@@ -82,6 +83,7 @@ export default {
             errorString: '',
             successString: '',
             success: false,
+            ocr_model_prefix: constants.MODELS.OCCURRENCE_REPORT.MODEL_PREFIX,
         };
     },
     computed: {
@@ -132,7 +134,7 @@ export default {
                         );
                     } else {
                         return (
-                            'OCR' +
+                            this.ocr_model_prefix +
                             full.data.occurrencereport.pk +
                             '-' +
                             full.revision_sequence
@@ -290,7 +292,7 @@ export default {
                 buttons: [
                     {
                         extend: 'excel',
-                        title: 'Boranga OCR Communities History Excel Export',
+                        title: `Boranga ${this.ocr_model_prefix} Communities History Excel Export`,
                         text: '<i class="fa-solid fa-download"></i> Excel',
                         className: 'btn btn-primary me-2 rounded',
                         exportOptions: {
@@ -299,7 +301,7 @@ export default {
                     },
                     {
                         extend: 'csv',
-                        title: 'Boranga OCR Communities History CSV Export',
+                        title: `Boranga ${this.ocr_model_prefix} Communities History CSV Export`,
                         text: '<i class="fa-solid fa-download"></i> CSV',
                         className: 'btn btn-primary rounded',
                         exportOptions: {

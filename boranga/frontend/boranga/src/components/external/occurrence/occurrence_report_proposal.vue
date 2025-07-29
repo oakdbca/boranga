@@ -75,7 +75,7 @@
                 class="col-lg-12"
             >
                 <h3>
-                    Occurrence Report - {{ display_group_type }}:
+                    Occurrence Report Form - {{ display_group_type }}:
                     {{ occurrence_report_obj.occurrence_report_number }}
                 </h3>
             </div>

@@ -2,7 +2,7 @@
     <div id="ocrObserverDetailHistory">
         <modal
             transition="modal fade"
-            :title="'OCR Observer Details - History'"
+            :title="`${ocr_model_prefix} Observer Details - History`"
             :large="true"
             :full="true"
             :show-o-k="false"
@@ -75,6 +75,7 @@ export default {
             errorString: '',
             successString: '',
             success: false,
+            ocr_model_prefix: constants.MODELS.OCCURRENCE_REPORT.MODEL_PREFIX,
         };
     },
     computed: {
@@ -304,7 +305,7 @@ export default {
                 buttons: [
                     {
                         extend: 'excel',
-                        title: 'Boranga OCR Observers History Excel Export',
+                        title: `Boranga ${this.ocr_model_prefix} Observers History Excel Export`,
                         text: '<i class="fa-solid fa-download"></i> Excel',
                         className: 'btn btn-primary me-2 rounded',
                         exportOptions: {
@@ -313,7 +314,7 @@ export default {
                     },
                     {
                         extend: 'csv',
-                        title: 'Boranga OCR Observers History CSV Export',
+                        title: `Boranga ${this.ocr_model_prefix} Observers History CSV Export`,
                         text: '<i class="fa-solid fa-download"></i> CSV',
                         className: 'btn btn-primary rounded',
                         exportOptions: {

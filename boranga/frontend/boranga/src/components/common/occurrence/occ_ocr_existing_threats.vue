@@ -2,7 +2,7 @@
     <div id="existingThreats">
         <modal
             transition="modal fade"
-            :title="'Add Threat from OCR'"
+            :title="`Add Threat from ${ocr_model_prefix}`"
             :large="true"
             :full="true"
             :show-o-k="false"
@@ -70,6 +70,7 @@ export default {
             success: false,
             occ_threat_url: api_endpoints.occ_threat,
             threat_obj: null,
+            ocr_model_prefix: constants.MODELS.OCCURRENCE_REPORT.MODEL_PREFIX,
         };
     },
     computed: {
@@ -111,9 +112,9 @@ export default {
                 searchable: true,
                 mRender: function (data, type, full) {
                     if (full.visible) {
-                        return 'OCR' + full.occurrence_report;
+                        return `${constants.MODELS.OCCURRENCE_REPORT.MODEL_PREFIX}${full.occurrence_report}`;
                     } else {
-                        return '<s>OCR' + full.occurrence_report + '</s>';
+                        return `<s>${constants.MODELS.OCCURRENCE_REPORT.MODEL_PREFIX}${full.occurrence_report}</s>`;
                     }
                 },
             };

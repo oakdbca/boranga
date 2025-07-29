@@ -2,7 +2,7 @@
     <div id="speciesOccurrenceReportHistory">
         <modal
             transition="modal fade"
-            :title="'Occurrence Report OCR' + occurrenceReportId + ' - History'"
+            :title="`Occurrence Report ${ocr_model_prefix}${occurrenceReportId} - History`"
             :large="true"
             :full="true"
             :show-o-k="false"
@@ -32,9 +32,7 @@
                                         <DisplayHistory
                                             ref="display_history"
                                             :key="historyId"
-                                            :primary_model_number="
-                                                'OCR' + occurrenceReportId
-                                            "
+                                            :primary_model_number="`${ocr_model_prefix}${occurrenceReportId}`"
                                             :revision_id="historyId"
                                             :revision_sequence="historySequence"
                                             :primary_model="'OccurrenceReport'"
@@ -82,6 +80,7 @@ export default {
             errorString: '',
             successString: '',
             success: false,
+            ocr_model_prefix: constants.MODELS.OCCURRENCE_REPORT.MODEL_PREFIX,
         };
     },
     computed: {
@@ -115,6 +114,7 @@ export default {
             };
         },
         column_sequence: function () {
+            const model_prefix = this.ocr_model_prefix;
             return {
                 data: 'revision_sequence',
                 orderable: true,
@@ -132,12 +132,7 @@ export default {
                             full.revision_sequence
                         );
                     } else {
-                        return (
-                            'OCR' +
-                            full.data.occurrencereport.pk +
-                            '-' +
-                            full.revision_sequence
-                        );
+                        return `${model_prefix}${full.data.occurrencereport.pk}-${full.revision_sequence}`;
                     }
                 },
                 name: 'revision_sequence',
@@ -384,7 +379,7 @@ export default {
                 buttons: [
                     {
                         extend: 'excel',
-                        title: 'Boranga OCR Species History Excel Export',
+                        title: `Boranga ${this.ocr_model_prefix} Species History Excel Export`,
                         text: '<i class="fa-solid fa-download"></i> Excel',
                         className: 'btn btn-primary me-2 rounded',
                         exportOptions: {
@@ -393,7 +388,7 @@ export default {
                     },
                     {
                         extend: 'csv',
-                        title: 'Boranga OCR Species History CSV Export',
+                        title: `Boranga ${this.ocr_model_prefix} Species History CSV Export`,
                         text: '<i class="fa-solid fa-download"></i> CSV',
                         className: 'btn btn-primary rounded',
                         exportOptions: {
