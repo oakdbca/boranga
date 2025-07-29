@@ -737,15 +737,23 @@ class BaseConservationStatusSerializer(BaseModelSerializer):
 
     def get_common_names(self, obj):
         if obj.species:
-            return [
-                vernacular.vernacular_name
-                for vernacular in obj.species_taxonomy.vernaculars.all()
-            ]
+            return (
+                [
+                    vernacular.vernacular_name
+                    for vernacular in obj.species_taxonomy.vernaculars.all()
+                ]
+                if obj.species_taxonomy
+                else []
+            )
         elif obj.community:
-            return [
-                vernacular.vernacular_name
-                for vernacular in obj.community.taxonomy.vernaculars.all()
-            ]
+            return (
+                [
+                    vernacular.vernacular_name
+                    for vernacular in obj.community.taxonomy.vernaculars.all()
+                ]
+                if obj.community.taxonomy
+                else []
+            )
         return []
 
 
