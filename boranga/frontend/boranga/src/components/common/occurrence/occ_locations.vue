@@ -709,7 +709,7 @@ export default {
             })
             .catch((error) => {
                 console.error(
-                    'Error fetching available ocr crs values list:',
+                    'Error fetching available orf crs values list:',
                     error
                 );
             });
@@ -1016,7 +1016,7 @@ export default {
                 let shownOrHidden = show_on_map ? 'shown' : 'hidden';
                 swal.fire({
                     title: `Geometries ${shownOrHidden}`,
-                    text: `Occurrence Report OCR${occurrenceReportId} geometries are now ${shownOrHidden}.`,
+                    text: `Occurrence Report ORF${occurrenceReportId} geometries are now ${shownOrHidden}.`,
                     icon: 'success',
                     timer: 1500,
                     showConfirmButton: false,

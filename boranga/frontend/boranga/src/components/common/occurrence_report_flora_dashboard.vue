@@ -569,7 +569,7 @@ export default {
             let buttons = [
                 {
                     extend: 'excel',
-                    title: 'Boranga OCR Flora Excel Export',
+                    title: `Boranga ${constants.MODELS.OCCURRENCE_REPORT.MODEL_PREFIX} Flora Excel Export`,
                     text: '<i class="fa-solid fa-download"></i> Excel',
                     className: 'btn btn-primary me-2 rounded',
                     exportOptions: {
@@ -579,7 +579,7 @@ export default {
                 },
                 {
                     extend: 'csv',
-                    title: 'Boranga OCR Flora CSV Export',
+                    title: `Boranga ${constants.MODELS.OCCURRENCE_REPORT.MODEL_PREFIX} Flora CSV Export`,
                     text: '<i class="fa-solid fa-download"></i> CSV',
                     className: 'btn btn-primary rounded',
                     exportOptions: {

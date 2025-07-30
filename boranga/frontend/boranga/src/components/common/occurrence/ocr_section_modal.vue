@@ -2,7 +2,9 @@
     <div id="section_details">
         <modal
             transition="modal fade"
-            :title="'OCR ' + ocrNumber + ' ' + sectionTypeDisplay"
+            :title="
+                `${ocr_model_prefix} ` + ocrNumber + ' ' + sectionTypeDisplay
+            "
             large
             :data-loss-warning-on-cancel="false"
             @ok="ok()"
@@ -82,7 +84,7 @@
 <script>
 import modal from '@vue-utils/bootstrap-modal.vue';
 import FormSection from '@/components/forms/section_toggle.vue';
-import { api_endpoints } from '@/utils/hooks';
+import { api_endpoints, constants } from '@/utils/hooks';
 export default {
     name: 'SectionModal',
     components: {
@@ -113,6 +115,7 @@ export default {
             isModalOpen: false,
             form: null,
             sectionObjExpanded: vm.sectionObj,
+            ocr_model_prefix: constants.MODELS.OCCURRENCE_REPORT.MODEL_PREFIX,
         };
     },
     mounted: function () {

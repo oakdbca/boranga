@@ -282,7 +282,8 @@ export default {
                         mRender: function (data, type, full) {
                             if (full.visible) {
                                 return (
-                                    'OCR' +
+                                    constants.MODELS.OCCURRENCE_REPORT
+                                        .MODEL_PREFIX +
                                     full.occurrence_report +
                                     ' - ' +
                                     full.threat_number
@@ -290,7 +291,8 @@ export default {
                             } else {
                                 return (
                                     '<s>' +
-                                    'OCR' +
+                                    constants.MODELS.OCCURRENCE_REPORT
+                                        .MODEL_PREFIX +
                                     full.occurrence_report +
                                     ' - ' +
                                     full.threat_number +

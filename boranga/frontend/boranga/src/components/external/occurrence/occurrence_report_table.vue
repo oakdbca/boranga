@@ -732,7 +732,7 @@ export default {
             let vm = this;
             swal.fire({
                 title: 'Copy Occurrence Report',
-                text: `Are you sure you want to make a copy of occurrence report OCR${occurrence_report_id}?`,
+                text: `Are you sure you want to make a copy of occurrence report ${constants.MODELS.OCCURRENCE_REPORT.MODEL_PREFIX}${occurrence_report_id}?`,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: 'Copy Occurrence Report',

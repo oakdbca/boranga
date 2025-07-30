@@ -10,7 +10,7 @@ import MeetingsDash from '../meetings/dashboard.vue';
 import Meeting from '../meetings/meeting.vue';
 import OccurrenceDash from '../occurrence/dashboard.vue';
 import Occurrence from '../occurrence/occurrence.vue';
-import OccurrenceReport from '../occurrence/occurrence_report.vue';
+import OccurrenceReport from '../occurrence/occurrence_report_form.vue';
 import OccurrenceReportReferral from '../occurrence/referral.vue';
 import BulkImport from '../occurrence/bulk_import.vue';
 import BulkImportSchemaList from '../occurrence/bulk_import_schema_list.vue';
