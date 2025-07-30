@@ -1490,8 +1490,6 @@ export default {
             }
         },
         splitSpecies: async function () {
-            this.$refs.species_split.species_community_original =
-                this.species_community;
             this.$refs.species_split.isModalOpen = true;
         },
         combineSpecies: async function () {

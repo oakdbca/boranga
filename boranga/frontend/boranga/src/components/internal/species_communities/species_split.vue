@@ -185,7 +185,10 @@
                                             "
                                         >
                                             <div
-                                                v-if="occurrences.length > 0"
+                                                v-if="
+                                                    occurrences &&
+                                                    occurrences.length > 0
+                                                "
                                                 class="border rounded p-1"
                                                 :class="
                                                     allOccurrencesAssigned
@@ -528,10 +531,12 @@ export default {
         return {
             originalBody: 'originalBody' + uuid(),
             species2Body: 'species2Body' + uuid(),
-            species_community_original: null,
+            species_community_original: JSON.parse(
+                JSON.stringify(this.species_community)
+            ),
             submitSpeciesSplit: false,
             assignmentCheckedState: {},
-            occurrences: [],
+            occurrences: null,
             isModalOpen: false,
             finalise_split_loading: false,
             split_species_list: [],
@@ -550,6 +555,10 @@ export default {
                     originalTab.show();
                     // Create two new species tabs if the original species is provided
                     this.addSpeciesTab();
+                    // We fetch occurrences here and also when the assign occurrences tab is shown
+                    // to ensure we have the latest occurrences when the modal is opened
+                    this.occurrences = this.fetchOccurrencesOfOriginalSpecies();
+
                     this.addSpeciesTab();
                     // Select the first split species tab
                     this.$nextTick(() => {
@@ -620,6 +629,10 @@ export default {
         },
         selectAllCheckedState() {
             const state = {};
+            if (this.occurrences === null) {
+                // Occurrence not yet fetched
+                return state;
+            }
             this.uniqueScientificNames.forEach((name, i) => {
                 const taxonomy_id = this.split_species_taxonomy_ids[i];
                 state[name.slug] =
@@ -633,7 +646,11 @@ export default {
             return state;
         },
         allOccurrencesAssigned: function () {
-            if (!this.occurrences || this.occurrences.length === 0) {
+            if (this.occurrences == null) {
+                // Occurrence not yet fetched
+                return false;
+            }
+            if (this.occurrences.length === 0) {
                 return true;
             }
             return (
@@ -951,7 +968,8 @@ export default {
                             let assignTabEl = document.querySelector(
                                 '#assign-occurrences'
                             );
-                            let tab = bootstrap.Tab.getInstance(assignTabEl);
+                            let tab =
+                                bootstrap.Tab.getOrCreateInstance(assignTabEl);
                             tab.show();
                         },
                     });
@@ -979,9 +997,7 @@ export default {
                 ) {
                     return false;
                 }
-                vm.occurrences = vm.fetchOccurrencesOfOriginalSpecies(
-                    vm.split_species_taxonomy_ids
-                );
+                vm.occurrences = vm.fetchOccurrencesOfOriginalSpecies();
             });
         },
         abbreviateUnique: function (scientificNames, minChars = 1) {

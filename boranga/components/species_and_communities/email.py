@@ -196,6 +196,7 @@ def send_species_split_email_notification(
             species_key = f"{occurrence.species.species_number} - {occurrence.species.taxonomy.scientific_name}"
             occ_dict = {
                 "occurrence_number": occurrence.occurrence_number,
+                "occurrence_name": occurrence.occurrence_name,
                 "processing_status": occurrence.processing_status,
             }
             if species_key not in occurrences:

@@ -13,7 +13,7 @@
             {% for species_key, occ_list in occurrences.items %}
                     {{ species_key }}
                     {% for occurrence in occ_list %}
-                        - {{ occurrence.occurrence_number }} ({{ occurrence.processing_status }})
+                        - {{ occurrence.occurrence_number }} - {{ occurrence.occurrence_name }} ({{ occurrence.processing_status }})
                     {% endfor %}
             {% endfor %}
         {% endif %}

@@ -211,7 +211,11 @@ class GetScientificName(views.APIView):
         group_type_id = request.GET.get("group_type_id", "")
         # identifies the request as for a species profile - we exclude those taxonomies already taken
         species_profile = request.GET.get("species_profile", "false").lower() == "true"
-        species_rename = request.GET.get("species_rename", "false").lower() == "true"
+        no_profile_draft_and_historical_only = (
+            request.GET.get("no_profile_draft_and_historical_only", "false").lower()
+            == "true"
+        )
+
         # identifies the request as for a species profile dependent record - we only include those taxonomies in use
         has_species = request.GET.get("has_species", False)
         active_only = request.GET.get("active_only", False)
@@ -236,7 +240,7 @@ class GetScientificName(views.APIView):
                 species__processing_status=Species.PROCESSING_STATUS_ACTIVE
             )
 
-        if species_rename:
+        if no_profile_draft_and_historical_only:
             taxonomies_with_no_profile = Q(species=None)
             draft_and_historical = Q(
                 species__processing_status__in=[
@@ -1461,54 +1465,63 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                     f"Split Species {index+1} is missing a Taxonomy ID"
                 )
 
-            if instance.taxonomy_id == taxonomy_id:
+            split_species_instance = None
+            SPLIT_TO_ACTION = None
+            SPLIT_FROM_ACTION = None
+            split_species_is_original = instance.taxonomy_id == taxonomy_id
+            if split_species_is_original:
                 split_of_species_retains_original = True
-                # Add species number to the split species request data
-                # so it is available when looping through split species in the email template
-                split_species_request_data["species_number"] = Species.objects.get(
-                    taxonomy_id=taxonomy_id
-                ).species_number
                 split_species_list[index][
                     "action"
                 ] = Species.SPLIT_SPECIES_ACTION_RETAINED
-                continue
 
-            # Check if a boranga profile exists for this taxonomy
-            species_queryset = Species.objects.filter(taxonomy_id=taxonomy_id)
-            species_exists = species_queryset.exists()
-            if species_exists:
-                # If it exists, we will use the existing species instance
-                split_species_instance = species_queryset.first()
-                if (
-                    split_species_instance.processing_status
-                    == Species.PROCESSING_STATUS_DRAFT
-                ):
-                    split_species_list[index][
-                        "action"
-                    ] = Species.SPLIT_SPECIES_ACTION_ACTIVATED
-                elif (
-                    split_species_instance.processing_status
-                    == Species.PROCESSING_STATUS_HISTORICAL
-                ):
-                    split_species_list[index][
-                        "action"
-                    ] = Species.SPLIT_SPECIES_ACTION_REACTIVATED
-
-                split_species_instance.processing_status = (
-                    Species.PROCESSING_STATUS_ACTIVE
-                )
-                split_species_instance.save(version_user=request.user)
+                split_species_instance = instance
             else:
-                split_species_instance = Species(
-                    taxonomy_id=taxonomy_id,
-                    group_type_id=instance.group_type_id,
-                    processing_status=Species.PROCESSING_STATUS_ACTIVE,
-                )
-                split_species_instance.save(version_user=request.user)
-                split_species_list[index][
-                    "action"
-                ] = Species.SPLIT_SPECIES_ACTION_CREATED
-                species_form_submit(split_species_instance, request, split=True)
+                # Check if a boranga profile exists for this taxonomy
+                species_queryset = Species.objects.filter(taxonomy_id=taxonomy_id)
+                species_exists = species_queryset.exists()
+                if species_exists:
+                    SPLIT_TO_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_TO_EXISTING
+
+                    # If it exists, we will use the existing species instance
+                    split_species_instance = species_queryset.first()
+                    if (
+                        split_species_instance.processing_status
+                        == Species.PROCESSING_STATUS_DRAFT
+                    ):
+                        split_species_list[index][
+                            "action"
+                        ] = Species.SPLIT_SPECIES_ACTION_ACTIVATED
+                        SPLIT_FROM_ACTION = (
+                            SpeciesUserAction.ACTION_SPLIT_SPECIES_FROM_EXISTING_DRAFT
+                        )
+                    elif (
+                        split_species_instance.processing_status
+                        == Species.PROCESSING_STATUS_HISTORICAL
+                    ):
+                        split_species_list[index][
+                            "action"
+                        ] = Species.SPLIT_SPECIES_ACTION_REACTIVATED
+                        SPLIT_FROM_ACTION = (
+                            SpeciesUserAction.ACTION_SPLIT_SPECIES_FROM_EXISTING_HISTORICAL
+                        )
+                    split_species_instance.processing_status = (
+                        Species.PROCESSING_STATUS_ACTIVE
+                    )
+                    split_species_instance.save(version_user=request.user)
+                else:
+                    split_species_instance = Species(
+                        taxonomy_id=taxonomy_id,
+                        group_type_id=instance.group_type_id,
+                        processing_status=Species.PROCESSING_STATUS_ACTIVE,
+                    )
+                    split_species_instance.save(version_user=request.user)
+                    split_species_list[index][
+                        "action"
+                    ] = Species.SPLIT_SPECIES_ACTION_CREATED
+                    SPLIT_TO_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_TO_NEW
+                    SPLIT_FROM_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_FROM_NEW
+                    species_form_submit(split_species_instance, request, split=True)
 
             # Add species number to the split species request data
             # so it is available when looping through split species in the email template
@@ -1520,7 +1533,8 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 split_species_instance, split_species_request_data
             )
             process_split_species_regions_and_districts(
-                split_species_instance, split_species_request_data
+                split_species_instance,
+                split_species_request_data,
             )
             process_split_species_distribution_data(
                 split_species_instance, split_species_request_data
@@ -1528,49 +1542,50 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             split_species_instance.save(version_user=request.user)
 
             split_species_instance.copy_documents(
-                instance, request, split_species_request_data
+                instance,
+                request,
+                split_species_request_data,
+                split_species_is_original,
             )
             split_species_instance.copy_threats(
-                instance, request, split_species_request_data
+                instance,
+                request,
+                split_species_request_data,
+                split_species_is_original,
             )
 
-            split_species_instance.parent_species.add(instance)
+            if not split_species_is_original:
+                split_species_instance.parent_species.add(instance)
 
-            SPLIT_TO_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_TO_NEW
-            SPLIT_FROM_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_FROM_NEW
-            if species_exists:
-                SPLIT_TO_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_TO_EXISTING
-                SPLIT_FROM_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_FROM_EXISTING
-
-            # Log the action
-            instance.log_user_action(
-                SPLIT_TO_ACTION.format(
-                    instance.species_number,
-                    split_species_instance.species_number,
-                ),
-                request,
-            )
-            request.user.log_user_action(
-                SPLIT_TO_ACTION.format(
-                    instance.species_number,
-                    split_species_instance.species_number,
-                ),
-                request,
-            )
-            instance.log_user_action(
-                SPLIT_FROM_ACTION.format(
-                    split_species_instance.species_number,
-                    instance.species_number,
-                ),
-                request,
-            )
-            request.user.log_user_action(
-                SPLIT_FROM_ACTION.format(
-                    split_species_instance.species_number,
-                    instance.species_number,
-                ),
-                request,
-            )
+                # Log the action
+                instance.log_user_action(
+                    SPLIT_TO_ACTION.format(
+                        instance.species_number,
+                        split_species_instance.species_number,
+                    ),
+                    request,
+                )
+                request.user.log_user_action(
+                    SPLIT_TO_ACTION.format(
+                        instance.species_number,
+                        split_species_instance.species_number,
+                    ),
+                    request,
+                )
+                split_species_instance.log_user_action(
+                    SPLIT_FROM_ACTION.format(
+                        split_species_instance.species_number,
+                        instance.species_number,
+                    ),
+                    request,
+                )
+                request.user.log_user_action(
+                    SPLIT_FROM_ACTION.format(
+                        split_species_instance.species_number,
+                        instance.species_number,
+                    ),
+                    request,
+                )
 
         # Process the OCC assignments
         original_taxonomy_occurrence_count = Occurrence.objects.filter(
@@ -1644,16 +1659,28 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             instance.processing_status = Species.PROCESSING_STATUS_HISTORICAL
             instance.save(version_user=request.user)
 
-            # Log action
             instance.log_user_action(
-                SpeciesUserAction.ACTION_MAKE_HISTORICAL.format(
+                SpeciesUserAction.ACTION_SPLIT_MAKE_ORIGINAL_HISTORICAL.format(
                     instance.species_number
                 ),
                 request,
             )
 
             request.user.log_user_action(
-                SpeciesUserAction.ACTION_MAKE_HISTORICAL.format(
+                SpeciesUserAction.ACTION_SPLIT_MAKE_ORIGINAL_HISTORICAL.format(
+                    instance.species_number
+                ),
+                request,
+            )
+        else:
+            instance.log_user_action(
+                SpeciesUserAction.ACTION_SPLIT_RETAIN_ORIGINAL.format(
+                    instance.species_number
+                ),
+                request,
+            )
+            request.user.log_user_action(
+                SpeciesUserAction.ACTION_SPLIT_RETAIN_ORIGINAL.format(
                     instance.species_number
                 ),
                 request,
@@ -1759,17 +1786,19 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             )
 
         rename_instance = None
+
+        # Make sure the action log is accurate in terms of describing what has happened
+        RENAME_TO_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_TO_NEW
+        RENAME_FROM_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_FROM_NEW
+
         # Check if the taxonomy is already in use
         species_queryset = Species.objects.filter(
             taxonomy_id=request.data["taxonomy_id"]
         )
         species_exists = species_queryset.exists()
-        logger.debug(f"Species exists: {species_exists}")
         if species_exists:
+            RENAME_TO_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_TO_EXISTING
             rename_instance = species_queryset.first()
-            logger.debug(
-                f"Renaming species {instance.species_number} to existing species {rename_instance.species_number}"
-            )
             if rename_instance.processing_status not in [
                 Species.PROCESSING_STATUS_DRAFT,
                 Species.PROCESSING_STATUS_HISTORICAL,
@@ -1777,6 +1806,22 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 raise serializers.ValidationError(
                     "Can only rename to a species that is in draft or historical state"
                 )
+
+            if rename_instance.processing_status == Species.PROCESSING_STATUS_DRAFT:
+                RENAME_FROM_ACTION = (
+                    SpeciesUserAction.ACTION_RENAME_SPECIES_FROM_EXISTING_DRAFT
+                )
+                # The record has to have a submitter so since this is being activated
+                # we set the submitter to the current request user
+                rename_instance.submitter = request.user.id
+            if (
+                rename_instance.processing_status
+                == Species.PROCESSING_STATUS_HISTORICAL
+            ):
+                RENAME_FROM_ACTION = (
+                    SpeciesUserAction.ACTION_RENAME_SPECIES_FROM_EXISTING_HISTORICAL
+                )
+
             rename_instance.processing_status = Species.PROCESSING_STATUS_ACTIVE
             rename_instance.save(version_user=request.user)
         else:
@@ -1797,28 +1842,7 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             occurrence.species = rename_instance
             occurrence.save(version_user=request.user)
 
-        # Make sure the action log is accurate in terms of describing what has happened
-        RENAME_FROM_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_FROM
-        RENAME_TO_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_TO_NEW
-        if species_exists:
-            RENAME_FROM_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_BY_REACTIVATING
-            RENAME_TO_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_TO_EXISTING
-
         # Log action
-        rename_instance.log_user_action(
-            RENAME_FROM_ACTION.format(
-                rename_instance.species_number,
-                instance,
-            ),
-            request,
-        )
-        request.user.log_user_action(
-            RENAME_FROM_ACTION.format(
-                rename_instance.species_number,
-                instance,
-            ),
-            request,
-        )
         instance.log_user_action(
             RENAME_TO_ACTION.format(
                 instance,
@@ -1830,6 +1854,20 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             RENAME_TO_ACTION.format(
                 instance,
                 rename_instance.species_number,
+            ),
+            request,
+        )
+        rename_instance.log_user_action(
+            RENAME_FROM_ACTION.format(
+                rename_instance.species_number,
+                instance,
+            ),
+            request,
+        )
+        request.user.log_user_action(
+            RENAME_FROM_ACTION.format(
+                rename_instance.species_number,
+                instance,
             ),
             request,
         )

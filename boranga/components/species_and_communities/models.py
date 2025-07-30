@@ -892,17 +892,44 @@ class Species(RevisionedMixin):
         copy_from: "Species",
         request: HttpRequest,
         split_species: object,
+        split_species_is_original=False,
     ) -> None:
+
         document_ids_queryset = copy_from.species_documents.all()
         if not split_species["copy_all_documents"]:
             document_ids_queryset = document_ids_queryset.filter(
                 id__in=split_species["document_ids_to_copy"]
             )
         document_ids_to_copy = document_ids_queryset.values_list("id", flat=True)
+        if split_species_is_original:
+            # If this is the original species, discard any documents that are not in the request data
+            documents_to_discard = self.species_documents.exclude(
+                id__in=document_ids_to_copy
+            )
+            for document in documents_to_discard:
+                document.active = False
+                document.save(version_user=request.user)
+                document.species.log_user_action(
+                    SpeciesUserAction.ACTION_DISCARD_DOCUMENT.format(
+                        document.document_number,
+                        document.species.species_number,
+                    ),
+                    request,
+                )
+                request.user.log_user_action(
+                    SpeciesUserAction.ACTION_DISCARD_DOCUMENT.format(
+                        document.document_number,
+                        document.species.species_number,
+                    ),
+                    request,
+                )
+            return
+
         for doc_id in document_ids_to_copy:
             new_species_doc = SpeciesDocument.objects.get(id=doc_id)
             new_species_doc.species = self
             new_species_doc.id = None
+            new_species_doc.active = True
             new_species_doc.document_number = ""
             new_species_doc.save(version_user=request.user)
             new_species_doc.species.log_user_action(
@@ -926,6 +953,7 @@ class Species(RevisionedMixin):
         copy_from: "Species",
         request: HttpRequest,
         split_species: object,
+        split_species_is_original=False,
     ) -> None:
         threat_ids_queryset = copy_from.species_threats.all()
         if not split_species["copy_all_documents"]:
@@ -933,10 +961,34 @@ class Species(RevisionedMixin):
                 id__in=split_species["threat_ids_to_copy"]
             )
         threat_ids_to_copy = threat_ids_queryset.values_list("id", flat=True)
+
+        if split_species_is_original:
+            # If this is the original species, discard any threats that are not in the request data
+            threats_to_discard = self.species_threats.exclude(id__in=threat_ids_to_copy)
+            for threat in threats_to_discard:
+                threat.visible = False
+                threat.save(version_user=request.user)
+                threat.species.log_user_action(
+                    SpeciesUserAction.ACTION_DISCARD_THREAT.format(
+                        threat.threat_number,
+                        threat.species.species_number,
+                    ),
+                    request,
+                )
+                request.user.log_user_action(
+                    SpeciesUserAction.ACTION_DISCARD_THREAT.format(
+                        threat.threat_number,
+                        threat.species.species_number,
+                    ),
+                    request,
+                )
+            return
+
         for threat_id in threat_ids_to_copy:
             new_species_threat = ConservationThreat.objects.get(id=threat_id)
             new_species_threat.species = self
             new_species_threat.id = None
+            new_species_threat.visible = True
             new_species_threat.threat_number = ""
             new_species_threat.save()
             new_species_threat.species.log_user_action(
@@ -1179,17 +1231,30 @@ class SpeciesUserAction(UserAction):
 
     ACTION_RENAME_SPECIES_TO_NEW = "Species {} renamed to new species {}"
     ACTION_RENAME_SPECIES_TO_EXISTING = "Species {} renamed to existing species {}"
-    ACTION_RENAME_SPECIES_FROM = "Species {} created by renaming species {}"
-    ACTION_RENAME_SPECIES_BY_REACTIVATING = (
+
+    ACTION_RENAME_SPECIES_FROM_NEW = "Species {} created by renaming species {}"
+    ACTION_RENAME_SPECIES_FROM_EXISTING_DRAFT = (
+        "Species {} activated by renaming species {}"
+    )
+    ACTION_RENAME_SPECIES_FROM_EXISTING_HISTORICAL = (
         "Species {} reactivated by renaming species {}"
     )
 
     ACTION_SPLIT_SPECIES_TO_NEW = "Species {} split into new species {}"
     ACTION_SPLIT_SPECIES_TO_EXISTING = "Species {} split into existing species {}"
-    ACTION_SPLIT_SPECIES_FROM_NEW = "Species {} created from a split of species {}"
-    ACTION_SPLIT_SPECIES_FROM_EXISTING = (
-        "Species {} reactivated by a split of species {}"
+
+    ACTION_SPLIT_SPECIES_FROM_NEW = "Species {} created by splitting species {}"
+    ACTION_SPLIT_SPECIES_FROM_EXISTING_DRAFT = (
+        "Species {} activated by splitting species {}"
     )
+    ACTION_SPLIT_SPECIES_FROM_EXISTING_HISTORICAL = (
+        "Species {} reactivated by splitting species {}"
+    )
+
+    ACTION_SPLIT_MAKE_ORIGINAL_HISTORICAL = (
+        "Species {} made historical as a result of being split"
+    )
+    ACTION_SPLIT_RETAIN_ORIGINAL = "Species {} retained as part of a split."
 
     ACTION_COMBINE_SPECIES_TO = "Species {} combined into new species {}"
     ACTION_COMBINE_SPECIES_FROM = "Species {} created from a combination of species {}"
@@ -1239,7 +1304,7 @@ class SpeciesDistribution(BaseModel):
     extent_of_occurrences = models.DecimalField(
         null=True,
         blank=True,
-        max_digits=12,
+        max_digits=15,
         decimal_places=5,
         validators=[MinValueValidator(Decimal("0.00"))],
     )
