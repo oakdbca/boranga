@@ -86,8 +86,9 @@
                         <template v-else>
                             <h5 class="d-inline">
                                 <span class="badge bg-secondary me-2"
-                                    ><i class="fa-solid fa-download"></i
+                                    ><i class="bi bi-ban"></i
                                 ></span>
+                                <span class="visually-hidden">N/A</span>
                             </h5>
                         </template>
                     </div>
