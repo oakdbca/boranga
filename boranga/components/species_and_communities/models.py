@@ -892,17 +892,47 @@ class Species(RevisionedMixin):
         copy_from: "Species",
         request: HttpRequest,
         split_species: object,
+        split_species_is_original=False,
     ) -> None:
+
         document_ids_queryset = copy_from.species_documents.all()
         if not split_species["copy_all_documents"]:
             document_ids_queryset = document_ids_queryset.filter(
                 id__in=split_species["document_ids_to_copy"]
             )
         document_ids_to_copy = document_ids_queryset.values_list("id", flat=True)
+        logger.debug(f"copy_documents: document_ids_to_copy: {document_ids_to_copy}, ")
+        if split_species_is_original:
+            logger.debug(f"split_species_is_original: {split_species_is_original}, ")
+            # If this is the original species, discard any documents that are not in the request data
+            documents_to_discard = self.species_documents.exclude(
+                id__in=document_ids_to_copy
+            )
+            logger.debug(f"documents_to_discard: {documents_to_discard}, ")
+            for document in documents_to_discard:
+                document.active = False
+                document.save(version_user=request.user)
+                document.species.log_user_action(
+                    SpeciesUserAction.ACTION_DISCARD_DOCUMENT.format(
+                        document.document_number,
+                        document.species.species_number,
+                    ),
+                    request,
+                )
+                request.user.log_user_action(
+                    SpeciesUserAction.ACTION_DISCARD_DOCUMENT.format(
+                        document.document_number,
+                        document.species.species_number,
+                    ),
+                    request,
+                )
+            return
+
         for doc_id in document_ids_to_copy:
             new_species_doc = SpeciesDocument.objects.get(id=doc_id)
             new_species_doc.species = self
             new_species_doc.id = None
+            new_species_doc.active = True
             new_species_doc.document_number = ""
             new_species_doc.save(version_user=request.user)
             new_species_doc.species.log_user_action(
@@ -926,6 +956,7 @@ class Species(RevisionedMixin):
         copy_from: "Species",
         request: HttpRequest,
         split_species: object,
+        split_species_is_original=False,
     ) -> None:
         threat_ids_queryset = copy_from.species_threats.all()
         if not split_species["copy_all_documents"]:
@@ -933,6 +964,29 @@ class Species(RevisionedMixin):
                 id__in=split_species["threat_ids_to_copy"]
             )
         threat_ids_to_copy = threat_ids_queryset.values_list("id", flat=True)
+
+        if split_species_is_original:
+            # If this is the original species, discard any threats that are not in the request data
+            threats_to_discard = self.species_threats.exclude(id__in=threat_ids_to_copy)
+            for threat in threats_to_discard:
+                threat.active = False
+                threat.save(version_user=request.user)
+                threat.species.log_user_action(
+                    SpeciesUserAction.ACTION_DISCARD_THREAT.format(
+                        threat.threat_number,
+                        threat.species.species_number,
+                    ),
+                    request,
+                )
+                request.user.log_user_action(
+                    SpeciesUserAction.ACTION_DISCARD_THREAT.format(
+                        threat.threat_number,
+                        threat.species.species_number,
+                    ),
+                    request,
+                )
+            return
+
         for threat_id in threat_ids_to_copy:
             new_species_threat = ConservationThreat.objects.get(id=threat_id)
             new_species_threat.species = self
