@@ -1231,8 +1231,12 @@ class SpeciesUserAction(UserAction):
 
     ACTION_RENAME_SPECIES_TO_NEW = "Species {} renamed to new species {}"
     ACTION_RENAME_SPECIES_TO_EXISTING = "Species {} renamed to existing species {}"
-    ACTION_RENAME_SPECIES_FROM = "Species {} created by renaming species {}"
-    ACTION_RENAME_SPECIES_BY_REACTIVATING = (
+
+    ACTION_RENAME_SPECIES_FROM_NEW = "Species {} created by renaming species {}"
+    ACTION_RENAME_SPECIES_FROM_EXISTING_DRAFT = (
+        "Species {} activated by renaming species {}"
+    )
+    ACTION_RENAME_SPECIES_FROM_EXISTING_HISTORICAL = (
         "Species {} reactivated by renaming species {}"
     )
 
