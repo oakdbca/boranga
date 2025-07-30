@@ -1466,6 +1466,8 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 )
 
             split_species_instance = None
+            SPLIT_TO_ACTION = None
+            SPLIT_FROM_ACTION = None
             split_species_is_original = instance.taxonomy_id == taxonomy_id
             if split_species_is_original:
                 split_of_species_retains_original = True
@@ -1475,9 +1477,6 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
 
                 split_species_instance = instance
             else:
-                SPLIT_TO_ACTION = None
-                SPLIT_FROM_ACTION = None
-
                 # Check if a boranga profile exists for this taxonomy
                 species_queryset = Species.objects.filter(taxonomy_id=taxonomy_id)
                 species_exists = species_queryset.exists()
