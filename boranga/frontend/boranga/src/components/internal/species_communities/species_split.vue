@@ -531,7 +531,9 @@ export default {
         return {
             originalBody: 'originalBody' + uuid(),
             species2Body: 'species2Body' + uuid(),
-            species_community_original: null,
+            species_community_original: JSON.parse(
+                JSON.stringify(this.species_community)
+            ),
             submitSpeciesSplit: false,
             assignmentCheckedState: {},
             occurrences: null,
