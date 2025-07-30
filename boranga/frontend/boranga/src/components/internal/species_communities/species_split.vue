@@ -951,7 +951,8 @@ export default {
                             let assignTabEl = document.querySelector(
                                 '#assign-occurrences'
                             );
-                            let tab = bootstrap.Tab.getInstance(assignTabEl);
+                            let tab =
+                                bootstrap.Tab.getOrCreateInstance(assignTabEl);
                             tab.show();
                         },
                     });
