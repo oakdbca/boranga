@@ -1481,17 +1481,11 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 # Check if a boranga profile exists for this taxonomy
                 species_queryset = Species.objects.filter(taxonomy_id=taxonomy_id)
                 species_exists = species_queryset.exists()
-                logger.debug(
-                    f"Species with taxonomy_id {taxonomy_id} exists: {species_exists}"
-                )
                 if species_exists:
                     SPLIT_TO_ACTION = SpeciesUserAction.ACTION_SPLIT_SPECIES_TO_EXISTING
 
                     # If it exists, we will use the existing species instance
                     split_species_instance = species_queryset.first()
-                    logger.debug(
-                        f"Using existing species instance with ID {split_species_instance.processing_status}"
-                    )
                     if (
                         split_species_instance.processing_status
                         == Species.PROCESSING_STATUS_DRAFT
@@ -1798,12 +1792,8 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             taxonomy_id=request.data["taxonomy_id"]
         )
         species_exists = species_queryset.exists()
-        logger.debug(f"Species exists: {species_exists}")
         if species_exists:
             rename_instance = species_queryset.first()
-            logger.debug(
-                f"Renaming species {instance.species_number} to existing species {rename_instance.species_number}"
-            )
             if rename_instance.processing_status not in [
                 Species.PROCESSING_STATUS_DRAFT,
                 Species.PROCESSING_STATUS_HISTORICAL,

@@ -901,14 +901,11 @@ class Species(RevisionedMixin):
                 id__in=split_species["document_ids_to_copy"]
             )
         document_ids_to_copy = document_ids_queryset.values_list("id", flat=True)
-        logger.debug(f"copy_documents: document_ids_to_copy: {document_ids_to_copy}, ")
         if split_species_is_original:
-            logger.debug(f"split_species_is_original: {split_species_is_original}, ")
             # If this is the original species, discard any documents that are not in the request data
             documents_to_discard = self.species_documents.exclude(
                 id__in=document_ids_to_copy
             )
-            logger.debug(f"documents_to_discard: {documents_to_discard}, ")
             for document in documents_to_discard:
                 document.active = False
                 document.save(version_user=request.user)
