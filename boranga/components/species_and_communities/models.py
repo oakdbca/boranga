@@ -969,7 +969,7 @@ class Species(RevisionedMixin):
             # If this is the original species, discard any threats that are not in the request data
             threats_to_discard = self.species_threats.exclude(id__in=threat_ids_to_copy)
             for threat in threats_to_discard:
-                threat.active = False
+                threat.visible = False
                 threat.save(version_user=request.user)
                 threat.species.log_user_action(
                     SpeciesUserAction.ACTION_DISCARD_THREAT.format(
@@ -991,6 +991,7 @@ class Species(RevisionedMixin):
             new_species_threat = ConservationThreat.objects.get(id=threat_id)
             new_species_threat.species = self
             new_species_threat.id = None
+            new_species_threat.visible = True
             new_species_threat.threat_number = ""
             new_species_threat.save()
             new_species_threat.species.log_user_action(
