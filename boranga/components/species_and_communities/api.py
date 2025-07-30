@@ -1786,12 +1786,18 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             )
 
         rename_instance = None
+
+        # Make sure the action log is accurate in terms of describing what has happened
+        RENAME_TO_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_TO_NEW
+        RENAME_FROM_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_FROM_NEW
+
         # Check if the taxonomy is already in use
         species_queryset = Species.objects.filter(
             taxonomy_id=request.data["taxonomy_id"]
         )
         species_exists = species_queryset.exists()
         if species_exists:
+            RENAME_TO_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_TO_EXISTING
             rename_instance = species_queryset.first()
             if rename_instance.processing_status not in [
                 Species.PROCESSING_STATUS_DRAFT,
@@ -1800,6 +1806,22 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 raise serializers.ValidationError(
                     "Can only rename to a species that is in draft or historical state"
                 )
+
+            if rename_instance.processing_status == Species.PROCESSING_STATUS_DRAFT:
+                RENAME_FROM_ACTION = (
+                    SpeciesUserAction.ACTION_RENAME_SPECIES_FROM_EXISTING_DRAFT
+                )
+                # The record has to have a submitter so since this is being activated
+                # we set the submitter to the current request user
+                rename_instance.submitter = request.user.id
+            if (
+                rename_instance.processing_status
+                == Species.PROCESSING_STATUS_HISTORICAL
+            ):
+                RENAME_FROM_ACTION = (
+                    SpeciesUserAction.ACTION_RENAME_SPECIES_FROM_EXISTING_HISTORICAL
+                )
+
             rename_instance.processing_status = Species.PROCESSING_STATUS_ACTIVE
             rename_instance.save(version_user=request.user)
         else:
@@ -1820,28 +1842,7 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             occurrence.species = rename_instance
             occurrence.save(version_user=request.user)
 
-        # Make sure the action log is accurate in terms of describing what has happened
-        RENAME_FROM_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_FROM
-        RENAME_TO_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_TO_NEW
-        if species_exists:
-            RENAME_FROM_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_BY_REACTIVATING
-            RENAME_TO_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_TO_EXISTING
-
         # Log action
-        rename_instance.log_user_action(
-            RENAME_FROM_ACTION.format(
-                rename_instance.species_number,
-                instance,
-            ),
-            request,
-        )
-        request.user.log_user_action(
-            RENAME_FROM_ACTION.format(
-                rename_instance.species_number,
-                instance,
-            ),
-            request,
-        )
         instance.log_user_action(
             RENAME_TO_ACTION.format(
                 instance,
@@ -1853,6 +1854,20 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             RENAME_TO_ACTION.format(
                 instance,
                 rename_instance.species_number,
+            ),
+            request,
+        )
+        rename_instance.log_user_action(
+            RENAME_FROM_ACTION.format(
+                rename_instance.species_number,
+                instance,
+            ),
+            request,
+        )
+        request.user.log_user_action(
+            RENAME_FROM_ACTION.format(
+                rename_instance.species_number,
+                instance,
             ),
             request,
         )
