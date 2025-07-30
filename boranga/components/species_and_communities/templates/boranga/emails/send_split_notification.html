@@ -24,7 +24,7 @@
                         <ul>
                             {% for occurrence in occ_list %}
                                 <li>
-                                    {{ occurrence.occurrence_number }} ({{ occurrence.processing_status }})
+                                    {{ occurrence.occurrence_number }} - {{ occurrence.occurrence_name }} ({{ occurrence.processing_status }})
                                 </li>
                             {% endfor %}
                         </ul>
