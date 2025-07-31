@@ -1896,9 +1896,13 @@ export default {
                     vm.$emit('saveConservationStatus');
                 })
                 .on('select2:unselect', function () {
+                    vm.conservation_status_obj.species_id = null;
                     vm.conservation_status_obj.species_taxonomy_id = null;
                     vm.species_display = '';
                     vm.taxon_previous_name = '';
+                    vm.$nextTick(() => {
+                        vm.initialiseCommonNameLookup();
+                    });
                 })
                 .on('select2:open', function () {
                     const searchField = $(
