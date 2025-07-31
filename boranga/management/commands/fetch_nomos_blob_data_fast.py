@@ -1,3 +1,4 @@
+# NOT FINISHED - DO NOT USE
 import logging
 
 import requests
@@ -20,13 +21,20 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = "Fetch Taxonomy data (Faster version)"
+    help = "Fetch Taxonomy data (Faster version) NOT FINISHED - DO NOT USE"
 
     def handle(self, *args, **options):
         """
         Fetches NOMOS blob data and updates the database using bulk operations.
         Ensures all referenced objects are saved before being used as FKs.
         """
+        if not settings.DEBUG:
+            logger.warning(
+                "This command is not currently intended for production use. "
+                "It is designed for local development only."
+            )
+            return
+
         logger.info(f"Running command {__name__}")
 
         errors = []
