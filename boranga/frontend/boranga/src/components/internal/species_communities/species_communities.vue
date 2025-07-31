@@ -1493,48 +1493,6 @@ export default {
             this.$refs.species_split.isModalOpen = true;
         },
         combineSpecies: async function () {
-            this.$refs.species_combine.original_species_combine_list.push(
-                this.species_community
-            ); //--push current original into the array
-            let newSpeciesId = null;
-            try {
-                const createUrl = api_endpoints.species + '/';
-                let payload = new Object();
-                payload.group_type_id = this.species_community.group_type_id;
-                let response = await fetch(createUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload),
-                });
-                const savedSpecies = await response.json();
-                if (savedSpecies) {
-                    newSpeciesId = savedSpecies.id;
-                    fetch(
-                        `/api/species/${newSpeciesId}/internal_species.json`
-                    ).then(
-                        async (response) => {
-                            const data = await response.json();
-                            let species_obj = data.species_obj;
-                            //--- to add empty documents array
-                            species_obj.documents = [];
-                            //---empty threats array added to store the selected threat ids in from the child component
-                            species_obj.threats = [];
-                            this.$refs.species_combine.new_combine_species =
-                                species_obj; //---assign the new created species to the modal obj
-                        },
-                        (err) => {
-                            console.log(err);
-                        }
-                    );
-                }
-            } catch (err) {
-                console.log(err);
-                if (this.is_internal) {
-                    return err;
-                }
-            }
             this.$refs.species_combine.isModalOpen = true;
         },
         renameSpecies: async function () {
