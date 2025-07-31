@@ -1468,6 +1468,92 @@ class CreateSpeciesSerializer(BaseSpeciesSerializer):
         return instance, data
 
 
+class EmptySpeciesSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False, read_only=True)
+    group_type = serializers.CharField(required=False, read_only=True)
+    group_type_id = serializers.IntegerField(required=False, read_only=True)
+    taxonomy_id = serializers.IntegerField(required=False, read_only=True)
+    taxonomy_details = TaxonomySerializer(read_only=True)
+    distribution = SpeciesDistributionSerializer(read_only=True)
+    regions = serializers.ListField(
+        child=serializers.IntegerField(),
+        required=False,
+        allow_empty=True,
+        read_only=True,
+    )
+    districts = serializers.ListField(
+        child=serializers.IntegerField(),
+        required=False,
+        allow_empty=True,
+        read_only=True,
+    )
+    department_file_numbers = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        read_only=True,
+    )
+    last_data_curation_date = serializers.DateTimeField(
+        required=False,
+        allow_null=True,
+        read_only=True,
+    )
+    conservation_plan_exists = serializers.BooleanField(
+        required=False,
+        allow_null=True,
+        read_only=True,
+    )
+    conservation_plan_reference = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        read_only=True,
+    )
+    comment = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        read_only=True,
+    )
+
+    def __init__(self, *args, **kwargs):
+        if not kwargs["taxonomy"] or not isinstance(kwargs["taxonomy"], Taxonomy):
+            raise ValueError(
+                "EmptySpeciesSerializer requires a Taxonomy instance as the 'taxonomy' keyword argument."
+            )
+
+        taxonomy = kwargs.pop("taxonomy")
+        super().__init__(*args, **kwargs)
+
+        self.fields["group_type_id"].initial = taxonomy.kingdom_fk.grouptype.id
+        self.fields["group_type"].initial = taxonomy.kingdom_fk.grouptype.name
+        self.fields["taxonomy_id"].initial = taxonomy.id
+        self.fields["taxonomy_details"].initial = TaxonomySerializer(
+            taxonomy, context=self.context, read_only=True
+        ).data
+        self.fields["distribution"].initial = SpeciesDistributionSerializer(
+            SpeciesDistribution(species=None), context=self.context, read_only=True
+        ).data
+
+    def to_representation(self, instance):
+        # If no instance, use initial values
+        if instance is None:
+            ret = {}
+            for field_name, field in self.fields.items():
+                if hasattr(field, "initial"):
+                    ret[field_name] = field.initial
+                else:
+                    ret[field_name] = None
+            return ret
+        # Otherwise, use normal representation
+        return super().to_representation(instance)
+
+    @property
+    def data(self):
+        # Always call to_representation(None) if no instance
+        return self.to_representation(None)
+
+
 class SaveCommunitySerializer(BaseCommunitySerializer):
 
     class Meta:
