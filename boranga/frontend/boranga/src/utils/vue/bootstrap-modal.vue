@@ -3,7 +3,13 @@
         <div class="modal" data-bs-keyboard="false" data-bs-backdrop="static">
             <div
                 class="modal-dialog"
-                :class="[modalClass, { 'modal-dialog-scrollable': scrollable }]"
+                :class="[
+                    modalClass,
+                    {
+                        'modal-dialog-scrollable': scrollable,
+                        'modal-dialog-stacked': stacked,
+                    },
+                ]"
             >
                 <div class="modal-content">
                     <!--Header-->
@@ -124,6 +130,10 @@ export default {
             default: true,
         },
         scrollable: {
+            type: Boolean,
+            default: false,
+        },
+        stacked: {
             type: Boolean,
             default: false,
         },
