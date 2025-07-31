@@ -87,6 +87,7 @@ from boranga.components.species_and_communities.serializers import (
     CreateCommunitySerializer,
     CreateSpeciesSerializer,
     DistrictSerializer,
+    EmptySpeciesSerializer,
     InternalCommunitySerializer,
     InternalSpeciesSerializer,
     ListCommunitiesSerializer,
@@ -1901,6 +1902,27 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             serializer.save()
 
             return Response(new_returned, status=status.HTTP_201_CREATED)
+
+    @detail_route(
+        methods=[
+            "GET",
+        ],
+        detail=False,
+    )
+    def get_empty_species_object(self, request, *args, **kwargs):
+        taxonomy_id = request.query_params.get("taxonomy_id", None)
+
+        if not taxonomy_id:
+            raise serializers.ValidationError("No taxonomy_id provided in query params")
+
+        if not taxonomy_id.isdigit():
+            raise serializers.ValidationError("taxonomy_id must be an integer")
+
+        taxonomy = Taxonomy.objects.filter(id=taxonomy_id).first()
+        empty_species_serializer = EmptySpeciesSerializer(
+            taxonomy=taxonomy, context={"request": request}
+        )
+        return Response(empty_species_serializer.data)
 
     @detail_route(
         methods=[
