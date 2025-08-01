@@ -340,7 +340,8 @@ class GetCommonNameOCRSelect(views.APIView):
     def get(self, request, format=None):
         search_term = request.GET.get("term", "")
         group_type_id = request.GET.get("group_type_id", "")
-        has_species = request.GET.get("has_species", False)
+        has_species = request.GET.get("has_species", "false").lower() == "true"
+
         only_active = request.GET.get("only_active", "true").lower() == "true"
 
         if not search_term:
@@ -1462,7 +1463,7 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
 
             if not taxonomy_id:
                 raise serializers.ValidationError(
-                    f"Split Species {index+1} is missing a Taxonomy ID"
+                    f"Split Species {index + 1} is missing a Taxonomy ID"
                 )
 
             split_species_instance = None
