@@ -1,7 +1,11 @@
 <template lang="html">
-    <div id="species_split_threats">
-        <FormSection :form-collapse="false" label="Threats" :Index="threatBody">
-            <form class="form-horizontal" action="index.html" method="post">
+    <div id="species-combine-threats">
+        <FormSection
+            :form-collapse="false"
+            label="Threats"
+            :Index="threatFormSectionIndex"
+        >
+            <form class="form-horizontal" method="post">
                 <div class="col-sm-12 form-check form-check-inline">
                     <input
                         :id="'threat_select_all' + species_original.id"
@@ -29,7 +33,7 @@
                 </div>
                 <div>
                     <datatable
-                        :id="panelBody"
+                        :id="threatsDatatableId"
                         ref="threats_datatable"
                         :dt-options="threats_options"
                         :dt-headers="threats_headers"
@@ -65,8 +69,8 @@ export default {
         let vm = this;
         return {
             uuid: 0,
-            threatBody: 'threatBody' + uuid(),
-            panelBody: 'species-combine-threats-' + uuid(),
+            threatFormSectionIndex: 'threat-form-section-index-' + uuid(),
+            threatsDatatableId: 'threats-datatable-id-' + uuid(),
             values: null,
             // to store all the documents of original on first load.
             original_species_threats: [],
@@ -351,18 +355,3 @@ export default {
     },
 };
 </script>
-
-<style lang="css" scoped>
-fieldset.scheduler-border {
-    border: 1px groove #ddd !important;
-    padding: 0 1.4em 1.4em 1.4em !important;
-    margin: 0 0 1.5em 0 !important;
-    -webkit-box-shadow: 0px 0px 0px 0px #000;
-    box-shadow: 0px 0px 0px 0px #000;
-}
-legend.scheduler-border {
-    width: inherit; /* Or auto */
-    padding: 0 10px; /* To give a bit of padding on the left and right */
-    border-bottom: none;
-}
-</style>
