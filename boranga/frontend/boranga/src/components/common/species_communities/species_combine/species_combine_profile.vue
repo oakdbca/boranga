@@ -13,7 +13,6 @@
                     <select
                         :id="scientific_name_lookup"
                         :ref="scientific_name_lookup"
-                        :disabled="isReadOnly"
                         :name="scientific_name_lookup"
                         class="form-control"
                     />
@@ -197,7 +196,6 @@
                     <textarea
                         id="distribution"
                         v-model="species_community.distribution.distribution"
-                        :disabled="isReadOnly"
                         class="form-control"
                         rows="1"
                         placeholder=""
@@ -242,7 +240,6 @@
                     <select
                         ref="regions_select"
                         v-model="species_community.regions"
-                        :disabled="isReadOnly"
                         style="width: 100%"
                         class="form-select input-sm"
                     >
@@ -297,7 +294,6 @@
                     <select
                         ref="districts_select"
                         v-model="species_community.districts"
-                        :disabled="isReadOnly"
                         class="form-select"
                     >
                         <option value="" selected disabled>
@@ -345,7 +341,6 @@
                         v-model="
                             species_community.distribution.number_of_occurrences
                         "
-                        :disabled="isReadOnly"
                         type="number"
                         class="form-control"
                         placeholder=""
@@ -355,7 +350,6 @@
                     <div class="form-check form-check-inline">
                         <input
                             v-model="species_community.distribution.noo_auto"
-                            :disabled="isReadOnly"
                             type="radio"
                             value="true"
                             class="noo_auto form-check-input"
@@ -366,7 +360,6 @@
                     <div class="form-check form-check-inline">
                         <input
                             v-model="species_community.distribution.noo_auto"
-                            :disabled="isReadOnly"
                             type="radio"
                             value="false"
                             class="noo_auto form-check-input"
@@ -408,7 +401,6 @@
                         v-model="
                             species_community.distribution.extent_of_occurrences
                         "
-                        :disabled="isReadOnly"
                         type="number"
                         class="form-control"
                         placeholder=""
@@ -418,7 +410,6 @@
                     <div class="form-check form-check-inline">
                         <input
                             v-model="species_community.distribution.eoo_auto"
-                            :disabled="isReadOnly"
                             type="radio"
                             value="true"
                             class="eoo_auto form-check-input"
@@ -429,7 +420,6 @@
                     <div class="form-check form-check-inline">
                         <input
                             v-model="species_community.distribution.eoo_auto"
-                            :disabled="isReadOnly"
                             type="radio"
                             value="false"
                             class="eoo_auto form-check-input"
@@ -474,7 +464,6 @@
                             species_community.distribution
                                 .area_of_occupancy_actual
                         "
-                        :disabled="isReadOnly"
                         type="number"
                         class="form-control"
                         placeholder=""
@@ -486,7 +475,6 @@
                             v-model="
                                 species_community.distribution.aoo_actual_auto
                             "
-                            :disabled="isReadOnly"
                             type="radio"
                             value="true"
                             class="aoo_actual_auto form-check-input"
@@ -499,7 +487,6 @@
                             v-model="
                                 species_community.distribution.aoo_actual_auto
                             "
-                            :disabled="isReadOnly"
                             type="radio"
                             value="false"
                             class="aoo_actual_auto form-check-input"
@@ -540,7 +527,6 @@
                         v-model="
                             species_community.distribution.area_of_occupancy
                         "
-                        :disabled="isReadOnly"
                         type="number"
                         class="form-control"
                         placeholder=""
@@ -582,7 +568,6 @@
                             species_community.distribution
                                 .number_of_iucn_locations
                         "
-                        :disabled="isReadOnly"
                         type="number"
                         class="form-control"
                         placeholder=""
@@ -642,7 +627,6 @@
                     <input
                         id="department_file_numbers"
                         v-model="species_community.department_file_numbers"
-                        :disabled="isReadOnly"
                         type="text"
                         class="form-control"
                         placeholder=""
@@ -658,7 +642,6 @@
                     <input
                         ref="last_data_curation_date"
                         v-model="species_community.last_data_curation_date"
-                        :disabled="isReadOnly"
                         type="date"
                         class="form-control"
                         name="last_data_curation_date"
@@ -712,7 +695,6 @@
                     <textarea
                         id="comment"
                         v-model="species_community.comment"
-                        :disabled="isReadOnly"
                         class="form-control"
                         rows="3"
                         placeholder=""
@@ -742,14 +724,11 @@ export default {
         },
     },
     data: function () {
-        let vm = this;
         return {
-            scientific_name_lookup:
-                'scientific_name_lookup' + vm.species_community.id,
-            select_scientific_name:
-                'select_scientific_name' + vm.species_community.id,
-            select_regions: 'select_regions' + vm.species_community.id,
-            select_districts: 'select_districts' + vm.species_community.id,
+            scientific_name_lookup: 'species-combine-scientific-name-lookup',
+            select_scientific_name: 'species-combine-select-scientific-name',
+            select_regions: 'species-combine-select-regions',
+            select_districts: 'species-combine-select-districts',
 
             region_list: [],
             district_list: [],
@@ -764,20 +743,6 @@ export default {
             name_authority: null,
             name_comments: null,
         };
-    },
-    computed: {
-        isReadOnly: function () {
-            let action = this.$route.query.action;
-            if (
-                action === 'edit' &&
-                this.species_community &&
-                this.species_community.user_edit_mode
-            ) {
-                return false;
-            } else {
-                return this.species_community.readonly;
-            }
-        },
     },
     watch: {
         'species_community.distribution.noo_auto': function (newVal) {
@@ -949,10 +914,25 @@ export default {
                     // move focus to select2 field
                     searchField[0].focus();
                 });
+            // Set the initial value if taxonomy_id is already set
+            if (vm.species_community.taxonomy_id) {
+                $(vm.$refs[vm.scientific_name_lookup])
+                    .val(vm.species_community.taxonomy_id)
+                    .trigger('change');
+            }
         },
         loadTaxonomydetails: function () {
             let vm = this;
             if (vm.species_community.taxonomy_details != null) {
+                var newOption = new Option(
+                    vm.species_community.taxonomy_details.scientific_name,
+                    vm.species_community.taxonomy_id,
+                    false,
+                    true
+                );
+                $('#' + vm.scientific_name_lookup).append(newOption);
+                vm.species_display =
+                    vm.species_community.taxonomy_details.scientific_name;
                 vm.species_display =
                     vm.species_community.taxonomy_details.scientific_name;
                 vm.common_name =
