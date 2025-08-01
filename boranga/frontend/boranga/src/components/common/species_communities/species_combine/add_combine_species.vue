@@ -1,16 +1,20 @@
 <template lang="html">
-    <div id="addCombineSpecies">
+    <div id="add-combine-species">
         <modal
-            id="myAddSpeciesToCombineModal"
+            id="add-species-to-combine-modal"
+            :style="{ '--bs-modal-margin': '4rem auto auto auto' }"
+            class="mt-3"
             transition="modal fade"
             :title="title"
             large
             @ok="ok()"
-            @cancel="cancel()"
+            @cancel="close()"
+            :data-loss-warning-on-cancel="false"
+            stacked
         >
             <div class="container-fluid">
                 <div class="row">
-                    <form class="form-horizontal" name="addSpeciesToCombine">
+                    <form class="form-horizontal" name="add-species-to-combine">
                         <alert v-if="errorString" type="danger"
                             ><strong>{{ errorString }}</strong></alert
                         >
@@ -20,14 +24,15 @@
                                     >Species:</label
                                 >
                                 <div
-                                    :id="select_scientific_name"
+                                    :id="selectScientificName"
                                     class="col-sm-9"
                                 >
                                     <select
-                                        :id="scientific_name_lookup"
-                                        :ref="scientific_name_lookup"
-                                        :name="scientific_name_lookup"
+                                        :id="scientificNameLookup"
+                                        :ref="scientificNameLookup"
+                                        :name="scientificNameLookup"
                                         class="form-control"
+                                        required
                                     />
                                 </div>
                             </div>
@@ -40,7 +45,7 @@
                     <button
                         type="button"
                         class="btn btn-secondary me-2"
-                        @click="cancel"
+                        @click="close()"
                     >
                         Cancel
                     </button>
@@ -66,115 +71,64 @@ export default {
     },
     data: function () {
         return {
+            scientificNameLookup: 'scientific-name-lookup' + uuid(),
+            selectScientificName: 'select-scientific-name' + uuid(),
             isModalOpen: false,
-            form: null,
             errorString: '',
-            species_list: [],
-            combineSpeciesId: null,
-            scientific_name_lookup: 'scientific_name_lookup' + uuid(),
-            select_scientific_name: 'select_scientific_name' + uuid(),
+            selectedSpeciesObject: null,
         };
     },
     computed: {
-        csrf_token: function () {
-            return helpers.getCookie('csrftoken');
-        },
         title: function () {
-            return 'Select Species To Combine';
+            return 'Select a Scientific Name To Add it to the Combine';
         },
     },
     mounted: function () {
         let vm = this;
-        vm.form = document.forms.addSpeciesToCombine;
-
         this.$nextTick(() => {
             vm.initialiseScientificNameLookup();
         });
     },
-    methods: {
-        ok: function () {
-            let vm = this;
-            vm.form = document.forms.addSpeciesToCombine;
-            if ($(vm.form).valid()) {
-                vm.addSpeciesToCombineList();
+    watch: {
+        isModalOpen: function (newValue) {
+            if (newValue) {
+                // open the select2 dropdown
+                this.$nextTick(() => {
+                    $(this.$refs[this.scientificNameLookup]).select2('open');
+                });
             }
         },
-        cancel: function () {
-            swal.fire({
-                title: 'Are you sure you want to close this modal?',
-                text: 'You will lose any unsaved changes.',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, close it',
-                cancelButtonText: 'Return to modal',
-                reverseButtons: true,
-                customClass: {
-                    confirmButton: 'btn btn-primary',
-                    cancelButton: 'btn btn-secondary',
-                },
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    this.close();
-                }
-            });
+    },
+    methods: {
+        ok: function () {
+            if ($(document.forms['add-species-to-combine']).valid()) {
+                this.addSpeciesToCombineList();
+            }
         },
         close: function () {
             this.isModalOpen = false;
             this.errorString = '';
         },
         addSpeciesToCombineList: function () {
-            let vm = this;
-            fetch(
-                `/api/species/${vm.combineSpeciesId}/internal_species.json`
-            ).then(async (response) => {
-                const data = await response.json();
-                if (!response.ok) {
-                    swal.fire({
-                        title: 'Please fix following errors',
-                        text: JSON.stringify(data),
-                        icon: 'error',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
-                    });
-                    return;
-                }
-                let species_obj = data.species_obj;
-                // user should not able select the same ID if already exists in the array to combine
-                let hasSpecies = false;
-                for (const species of vm.$parent
-                    .original_species_combine_list) {
-                    if (species.id === species_obj.id) {
-                        hasSpecies = true;
-                    }
-                }
-                if (hasSpecies == true) {
-                    swal.fire({
-                        title: 'Please fix following errors',
-                        text: 'Species To combine already exists',
-                        icon: 'error',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
-                    });
-                } else {
-                    vm.$parent.original_species_combine_list.push(species_obj); //--temp species_obj
-                    $(vm.$refs[vm.scientific_name_lookup])
-                        .val(null)
-                        .trigger('change');
-                }
+            this.$parent.speciesCombineList.push(this.selectedSpeciesObject);
+            this.$nextTick(() => {
+                this.$parent.showLastCombineSpeciesTab();
             });
+            $(this.$refs[this.scientificNameLookup])
+                .val(null)
+                .trigger('change');
             this.close();
         },
         initialiseScientificNameLookup: function () {
             let vm = this;
-            $(vm.$refs[vm.scientific_name_lookup])
+            $(vm.$refs[vm.scientificNameLookup])
                 .select2({
                     minimumInputLength: 2,
-                    dropdownParent: $('#' + vm.select_scientific_name),
+                    dropdownParent: $('#' + vm.selectScientificName),
                     theme: 'bootstrap-5',
                     allowClear: true,
-                    placeholder: 'Select Species',
+                    placeholder:
+                        'Search for the Scientific Name to add to the Combine',
                     ajax: {
                         url: api_endpoints.scientific_name_lookup,
                         dataType: 'json',
@@ -192,23 +146,67 @@ export default {
                     },
                 })
                 .on('select2:select', function (e) {
-                    // let data = e.params.data.id;
-                    let data = e.params.data.species_id;
-                    vm.combineSpeciesId = data;
+                    let speciesId = e.params.data.species_id;
+                    let taxonomyId = e.params.data.id;
+                    if (speciesId) {
+                        // A boranga profile already exists with this taxonomy ID
+                        vm.fetchSpeciesData(speciesId);
+                    } else {
+                        // No boranga profile exists, create an empty one with just the taxonomy data
+                        // populated
+                        vm.getEmptySpeciesObject(taxonomyId);
+                    }
                 })
                 .on('select2:unselect', function () {
-                    vm.combineSpeciesId = '';
+                    vm.selectedSpeciesObject = null;
                 })
                 .on('select2:open', function () {
                     const searchField = $(
                         '[aria-controls="select2-' +
-                            vm.scientific_name_lookup +
+                            vm.scientificNameLookup +
                             '-results"]'
                     );
-                    // move focus to select2 field
                     searchField[0].focus();
+                });
+        },
+        fetchSpeciesData: function (speciesId) {
+            fetch(helpers.add_endpoint_json(api_endpoints.species, speciesId))
+                .then((response) => response.json())
+                .then((data) => {
+                    this.selectedSpeciesObject = JSON.parse(
+                        JSON.stringify(data)
+                    );
+                })
+                .catch((error) => {
+                    console.error('Error fetching species data:', error);
+                });
+        },
+        getEmptySpeciesObject: function (taxonomyId) {
+            fetch(
+                helpers.add_endpoint_json(
+                    api_endpoints.get_empty_species_object,
+                    taxonomyId
+                )
+            )
+                .then((response) => response.json())
+                .then((data) => {
+                    this.selectedSpeciesObject = JSON.parse(
+                        JSON.stringify(data)
+                    );
+                })
+                .catch((error) => {
+                    console.error(
+                        'Error fetching empty species object data:',
+                        error
+                    );
                 });
         },
     },
 };
 </script>
+<style scoped>
+/* In your parent or global CSS */
+:deep(.modal-dialog-stacked) {
+    margin-top: 6rem !important;
+}
+</style>

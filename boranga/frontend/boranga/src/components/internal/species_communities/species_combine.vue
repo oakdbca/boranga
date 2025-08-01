@@ -1,51 +1,30 @@
 <template lang="html">
-    <div id="combineSpecies">
+    <div id="combine-species">
         <modal
             id="species-combine-modal"
             transition="modal fade"
             :title="title"
             extra-large
-            @ok="ok()"
             @cancel="cancel()"
         >
             <div class="container-fluid">
                 <div class="row">
-                    <form class="form-horizontal" name="combineSpeciesForm">
-                        <alert v-if="showError" type="danger"
+                    <form class="form-horizontal" name="combine-species-form">
+                        <alert v-if="errorString" type="danger"
                             ><strong>{{ errorString }}</strong></alert
                         >
                         <div>
                             <div class="col-md-12">
                                 <ul
-                                    v-if="is_internal"
                                     id="combine-pills-tab"
                                     class="nav nav-pills"
                                     role="tablist"
                                 >
-                                    <li class="nav-item">
-                                        <a
-                                            id="pills-new-species-tab"
-                                            class="nav-link"
-                                            data-bs-toggle="pill"
-                                            :data-bs-target="`#${newSpeciesBody}`"
-                                            :href="'#' + newSpeciesBody"
-                                            role="tab"
-                                            :aria-controls="newSpeciesBody"
-                                            aria-selected="true"
-                                        >
-                                            New Species
-                                            {{
-                                                new_combine_species
-                                                    ? new_combine_species.species_number
-                                                    : ''
-                                            }}
-                                        </a>
-                                    </li>
                                     <li
                                         v-for="(
                                             species, index
-                                        ) in original_species_combine_list"
-                                        :key="'li' + species.id"
+                                        ) in speciesCombineList"
+                                        :key="'li' + index"
                                         class="nav-item"
                                     >
                                         <a
@@ -54,7 +33,7 @@
                                                 index +
                                                 '-tab'
                                             "
-                                            class="nav-link"
+                                            class="nav-link small py-2"
                                             data-bs-toggle="pill"
                                             :data-bs-target="
                                                 '#species-body-' + index
@@ -66,7 +45,7 @@
                                             "
                                             aria-selected="false"
                                         >
-                                            {{ species.species_number
+                                            Combine {{ index + 1
                                             }}<span
                                                 v-if="index > 0"
                                                 :id="index"
@@ -83,22 +62,36 @@
                                             <!-- can delete the original species except the current original species , so check index>0 -->
                                         </a>
                                     </li>
-                                    <li class="nav-item">
+                                    <li class="nav-item me-2">
                                         <a
                                             id="combineSpeciesBtnAdd"
-                                            class="nav-link"
+                                            class="nav-link small py-2"
                                             href="#"
                                             @click.prevent="
                                                 addSpeciesToCombine()
                                             "
                                             ><i class="bi bi-window-plus"></i>
-                                            Add Another Species</a
+                                            Add</a
                                         >
+                                    </li>
+                                    <li class="nav-item me-2">
+                                        <a
+                                            id="pills-resulting-species-tab"
+                                            class="nav-link small py-2"
+                                            data-bs-toggle="pill"
+                                            data-bs-target="#resulting-species"
+                                            href="#resulting-species"
+                                            role="tab"
+                                            aria-controls="resulting-species"
+                                            aria-selected="true"
+                                        >
+                                            Resulting Species
+                                        </a>
                                     </li>
                                     <li class="nav-item">
                                         <a
                                             id="finalise-combine"
-                                            class="nav-link"
+                                            class="nav-link small py-2"
                                             data-bs-toggle="pill"
                                             data-bs-target="#finalise-combine-tab-pane"
                                             href="#finalise-combine-tab-pane"
@@ -115,62 +108,65 @@
                                     class="tab-content border p-3"
                                 >
                                     <div
-                                        :id="newSpeciesBody"
+                                        id="resulting-species"
                                         class="tab-pane"
                                         role="tabpanel"
-                                        aria-labelledby="pills-new-species-tab"
+                                        aria-labelledby="pills-resulting-species-tab"
                                     >
-                                        <SpeciesCombineForm
+                                        <FormSpeciesCombine
                                             v-if="
-                                                new_combine_species &&
-                                                new_combine_species.id
+                                                speciesCombineList &&
+                                                resultingSpecies &&
+                                                resultingSpecies.id
                                             "
-                                            id="new_combine_species"
-                                            ref="species_communities_new"
-                                            :key="speciesCombineFormKey"
-                                            :species_community="
-                                                new_combine_species
+                                            id="resulting-species"
+                                            :resulting-species="
+                                                resultingSpecies
                                             "
-                                            :original_species_combine_list="
-                                                original_species_combine_list
+                                            :existing-species-combine-list="
+                                                existingSpeciesCombineList
                                             "
                                             :is_internal="true"
+                                            @resulting-species-taxonomy-changed="
+                                                resultingSpeciesTaxonomyChanged
+                                            "
                                         >
-                                        </SpeciesCombineForm>
+                                        </FormSpeciesCombine>
                                     </div>
                                     <div
                                         v-for="(
                                             species, index
-                                        ) in original_species_combine_list"
+                                        ) in speciesCombineList"
                                         :id="'species-body-' + index"
-                                        :key="'div' + species.id"
+                                        :key="'div' + index"
                                         class="tab-pane fade"
                                         role="tabpanel"
                                         :aria-labelledby="
                                             'pills-species' + index + '-tab'
                                         "
                                     >
-                                        <SpeciesCommunitiesComponent
+                                        <FormSpeciesCommunities
+                                            v-if="species"
+                                            :key="'species-' + index"
                                             :id="'species-' + index"
                                             :ref="
                                                 'species_communities_species' +
                                                 index
                                             "
-                                            :species_community_original="
-                                                species
-                                            "
                                             :species_community="species"
+                                            :species_community_original="
+                                                species_community
+                                            "
                                             :is_internal="true"
                                             :is_readonly="true"
                                         >
-                                        </SpeciesCommunitiesComponent>
+                                        </FormSpeciesCommunities>
                                     </div>
                                     <div
                                         v-if="
-                                            new_combine_species &&
-                                            original_species_combine_list &&
-                                            original_species_combine_list.length >
-                                                0
+                                            resultingSpecies &&
+                                            speciesCombineList &&
+                                            speciesCombineList.length > 0
                                         "
                                         id="finalise-combine-tab-pane"
                                         class="tab-pane"
@@ -190,7 +186,7 @@
 
                                         <div class="mb-3">
                                             <li
-                                                v-for="species in original_species_combine_list"
+                                                v-for="species in speciesCombineList"
                                                 :key="species.id"
                                                 class="text-secondary mb-3"
                                             >
@@ -208,24 +204,35 @@
                                             </li>
                                         </div>
 
-                                        <p>Into the new species:</p>
+                                        <p>
+                                            Into the
+                                            <template v-if="resultingSpecies.id"
+                                                >existing</template
+                                            ><template v-else>new</template>
+                                            species:
+                                        </p>
 
                                         <div class="border-bottom mb-3 pb-3">
                                             <span
                                                 class="badge bg-light text-primary text-capitalize border p-2 fs-6"
-                                                >{{
-                                                    new_combine_species.species_number
-                                                }}
+                                                ><template
+                                                    v-if="
+                                                        resultingSpecies.species_number
+                                                    "
+                                                    >{{
+                                                        resultingSpecies.species_number
+                                                    }}</template
+                                                >
                                                 <template
                                                     v-if="
-                                                        new_combine_species.taxonomy_details &&
-                                                        new_combine_species
+                                                        resultingSpecies.taxonomy_details &&
+                                                        resultingSpecies
                                                             .taxonomy_details
                                                             .scientific_name
                                                     "
                                                     >-
                                                     {{
-                                                        new_combine_species
+                                                        resultingSpecies
                                                             .taxonomy_details
                                                             .scientific_name
                                                     }}</template
@@ -235,13 +242,13 @@
 
                                         <button
                                             class="button btn btn-primary"
-                                            :disabled="finalise_combine_loading"
-                                            @click.prevent="ok()"
+                                            :disabled="finaliseCombineLoading"
+                                            @click.prevent="validateForm()"
                                         >
                                             <i class="bi bi-check2-circle"></i>
                                             Finalise Combine
                                             <template
-                                                v-if="finalise_combine_loading"
+                                                v-if="finaliseCombineLoading"
                                                 ><span
                                                     class="spinner-border spinner-border-sm"
                                                     role="status"
@@ -278,11 +285,10 @@
 </template>
 
 <script>
-import { v4 as uuid } from 'uuid';
 import modal from '@vue-utils/bootstrap-modal.vue';
 import alert from '@vue-utils/alert.vue';
-import SpeciesCommunitiesComponent from '@/components/form_species_communities.vue';
-import SpeciesCombineForm from '@/components/form_species_combine.vue';
+import FormSpeciesCommunities from '@/components/form_species_communities.vue';
+import FormSpeciesCombine from '@/components/form_species_combine.vue';
 import AddCombineSpecies from '@/components/common/species_communities/species_combine/add_combine_species.vue';
 import HelpText from '@/components/common/help_text.vue';
 
@@ -293,8 +299,8 @@ export default {
     components: {
         modal,
         alert,
-        SpeciesCommunitiesComponent,
-        SpeciesCombineForm,
+        FormSpeciesCommunities,
+        FormSpeciesCombine,
         AddCombineSpecies,
         HelpText,
     },
@@ -303,45 +309,31 @@ export default {
             type: Object,
             required: true,
         },
-        is_internal: {
-            type: Boolean,
-            required: true,
-        },
     },
     data: function () {
         return {
-            newSpeciesBody: 'newSpeciesBody' + uuid(),
-            speciesBody: 'speciesBody' + uuid(),
-            speciesCombineFormKey: 0,
-            new_combine_species: null,
-            new_combine_species_display: '',
-            submitSpeciesCombine: false,
+            resultingSpecies: null,
+            submittingSpeciesCombine: false,
             isModalOpen: false,
-            original_species_combine_list: [],
-            finalise_combine_loading: false,
-            form: null,
-            errors: false,
+            speciesCombineList: [],
+            finaliseCombineLoading: false,
             errorString: '',
         };
     },
     computed: {
-        csrf_token: function () {
-            return helpers.getCookie('csrftoken');
-        },
-        showError: function () {
-            var vm = this;
-            return vm.errors;
-        },
         title: function () {
-            //return this.processing_status == 'With Approver' ? 'Approve Conservation Status' : 'Propose to approve Conservation Status';
-            return this.new_combine_species != null
-                ? 'Combine Species '
-                : 'Combine Species';
+            return `Combine Species - ${this.species_community.species_number} - ${this.species_community.taxonomy_details.scientific_name}`;
         },
-        combine_into_species_scientific_name: function () {
-            return this.new_combine_species.scientific_name
-                ? this.new_combine_species.scientific_name
-                : '';
+        existingSpeciesCombineList: function () {
+            return this.speciesCombineList.filter(
+                (species) => species.id !== null
+            );
+        },
+        combiningOnlyIntoSelf: function () {
+            return (
+                this.speciesCombineList.length === 1 &&
+                this.speciesCombineList[0].id === this.species_community.id
+            );
         },
     },
     watch: {
@@ -359,15 +351,22 @@ export default {
             }
         },
     },
+    created: function () {
+        this.speciesCombineList.push(this.species_community);
+        this.resultingSpecies = JSON.parse(
+            JSON.stringify(this.species_community)
+        );
+        this.resultingSpecies.documents = [];
+        this.resultingSpecies.threats = [];
+    },
     mounted: function () {
-        let vm = this;
-        vm.form = document.forms.combineSpeciesForm;
+        this.beforeShowResultingSpeciesTab();
+        this.beforeShowFinaliseTab();
     },
     methods: {
-        ok: function () {
-            let vm = this;
-            if ($(vm.form).valid()) {
-                vm.sendData();
+        validateForm: function () {
+            if ($(document.forms['combine-species-form']).valid()) {
+                this.combineSpecies();
             }
         },
         cancel: function () {
@@ -390,16 +389,9 @@ export default {
             });
         },
         close: function () {
-            let vm = this;
-            vm.removeSpecies(vm.new_combine_species.id);
-            vm.new_combine_species = null;
-            vm.original_species_combine_list = [];
-            $(this.$refs.occurrence_name_lookup_propose_approve)
-                .empty()
-                .trigger('change');
             this.isModalOpen = false;
-            vm.speciesCombineFormKey += 1;
-            this.errors = false;
+            this.speciesCombineList = [];
+            this.errorString = '';
         },
         save_before_submit: async function (new_species) {
             let vm = this;
@@ -416,69 +408,72 @@ export default {
                     },
                     body: JSON.stringify(payload),
                 }
-            ).then(
-                async (response) => {
-                    if (!response.ok) {
-                        const data = await response.json();
+            )
+                .then(
+                    async (response) => {
+                        if (!response.ok) {
+                            const data = await response.json();
+                            swal.fire({
+                                title: 'Error',
+                                text: JSON.stringify(data),
+                                icon: 'error',
+                                customClass: {
+                                    confirmButton: 'btn btn-primary',
+                                },
+                            });
+                            return;
+                        }
+                        return true;
+                    },
+                    (err) => {
+                        var errorText = helpers.apiVueResourceError(err);
                         swal.fire({
-                            title: 'Error',
-                            text: JSON.stringify(data),
+                            title: 'Submit Error',
+                            text: errorText,
                             icon: 'error',
                             customClass: {
                                 confirmButton: 'btn btn-primary',
                             },
                         });
-                        return;
+                        vm.saveError = true;
+                        return false;
                     }
-                    return true;
-                },
-                (err) => {
-                    var errorText = helpers.apiVueResourceError(err);
-                    swal.fire({
-                        title: 'Submit Error',
-                        text: errorText,
-                        icon: 'error',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        },
-                    });
-                    vm.submitSpeciesCombine = false;
-                    vm.saveError = true;
-                    return false;
-                }
-            );
+                )
+                .finally(() => {
+                    vm.submittingSpeciesCombine = false;
+                });
             return result;
         },
         can_submit: function () {
             let vm = this;
             let blank_fields = [];
             if (
-                vm.new_combine_species.taxonomy_id == null ||
-                vm.new_combine_species.taxonomy_id == ''
+                vm.resultingSpecies.taxonomy_id == null ||
+                vm.resultingSpecies.taxonomy_id == ''
             ) {
                 blank_fields.push(
                     ' Species ' +
-                        vm.new_combine_species.species_number +
+                        vm.resultingSpecies.species_number +
                         ' Scientific Name is missing'
                 );
             }
             if (
-                vm.new_combine_species.distribution.distribution == null ||
-                vm.new_combine_species.distribution.distribution == ''
+                vm.resultingSpecies.distribution.distribution == null ||
+                vm.resultingSpecies.distribution.distribution == ''
             ) {
                 blank_fields.push(' Distribution is missing');
             }
             if (
-                vm.new_combine_species.regions == null ||
-                vm.new_combine_species.regions == '' ||
-                vm.new_combine_species.regions.length == 0
+                vm.resultingSpecies.regions == null ||
+                vm.resultingSpecies.regions == '' ||
+                vm.resultingSpecies.regions.length == 0
             ) {
                 blank_fields.push(' Region is missing');
             }
             if (
-                vm.new_combine_species.districts == null ||
-                vm.new_combine_species.districts == '' ||
-                vm.new_combine_species.districts.length == 0
+                vm.resultingSpecies.districts == null ||
+                vm.resultingSpecies.districts == '' ||
+                vm.resultingSpecies.districts.length == 0
             ) {
                 blank_fields.push(' District is missing');
             }
@@ -488,7 +483,7 @@ export default {
                 return blank_fields;
             }
         },
-        sendData: async function () {
+        combineSpecies: async function () {
             let vm = this;
             var missing_data = vm.can_submit();
             if (missing_data != true) {
@@ -500,16 +495,17 @@ export default {
                         confirmButton: 'btn btn-primary',
                     },
                 });
-                // was added to set the first species Tab active but the updated() method overrides it
-                var firstTabEl = document.querySelector(
-                    '#combine-pills-tab li:nth-child(1) a'
+                // Show the resulting species tab
+                let resultingSpeciesTab = document.querySelector(
+                    '#pills-resulting-species-tab'
                 );
-                var firstTab = bootstrap.Tab.getOrCreateInstance(firstTabEl);
-                firstTab.show();
-                return false;
+                let resultingSpeciesTabInstance =
+                    bootstrap.Tab.getOrCreateInstance(resultingSpeciesTab);
+                resultingSpeciesTabInstance.show();
+                return;
             }
 
-            vm.submitSpeciesCombine = true;
+            vm.submittingSpeciesCombine = true;
             swal.fire({
                 title: 'Combine Species',
                 text: 'Are you sure you want to combine those species?',
@@ -525,22 +521,17 @@ export default {
                 .then(
                     async (swalresult) => {
                         if (swalresult.isConfirmed) {
-                            //---save and submit the new combine species
-                            let new_species = vm.new_combine_species;
-                            //-- save new species before submit
-                            await vm.save_before_submit(new_species);
+                            await vm.save_before_submit(vm.resultingSpecies);
                             if (!vm.saveError) {
-                                vm.finalise_combine_loading = true;
-
-                                // add the parent species array to the new species object
-                                new_species.parent_species =
-                                    vm.original_species_combine_list;
-                                let payload = new Object();
-                                Object.assign(payload, new_species);
+                                vm.finaliseCombineLoading = true;
+                                let payload = {
+                                    resulting_species: vm.resultingSpecies,
+                                    species_combine_list: vm.speciesCombineList,
+                                };
                                 let submit_url = helpers.add_endpoint_json(
                                     api_endpoints.species,
-                                    new_species.id +
-                                        '/combine_new_species_submit'
+                                    vm.speciesCombineList[0].id +
+                                        '/combine_species'
                                 );
                                 fetch(submit_url, {
                                     method: 'POST',
@@ -568,7 +559,6 @@ export default {
                                             },
                                         });
                                         vm.saveError = true;
-                                        vm.finalise_combine_loading = false;
                                     }
                                 );
                             }
@@ -579,30 +569,14 @@ export default {
                     }
                 )
                 .finally(() => {
-                    vm.finalise_combine_loading = false;
+                    vm.finaliseCombineLoading = false;
                 });
-        },
-        removeSpecies: function (species_id) {
-            try {
-                // In this case we are allowing a http DELETE call to remove the species
-                fetch(api_endpoints.remove_species_proposal(species_id), {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
-            } catch (err) {
-                console.log(err);
-                if (this.is_internal) {
-                    return err;
-                }
-            }
         },
         removeCombineSpecies: function (species) {
             let vm = this;
             swal.fire({
                 title: 'Remove Species',
-                text: `Are you sure you want to remove species ${species.species_number} from this combine?`,
+                text: `Are you sure you want to remove '${species.taxonomy_details.scientific_name}' from this combine?`,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: 'Remove Species',
@@ -613,23 +587,91 @@ export default {
                 reverseButtons: true,
             }).then(async (swalresult) => {
                 if (swalresult.isConfirmed) {
-                    let species_index =
-                        vm.original_species_combine_list.indexOf(species);
-                    vm.original_species_combine_list.splice(species_index, 1);
+                    console.debug(
+                        `Removing species ${species.species_number} from combine`
+                    );
+                    let species_index = vm.speciesCombineList.indexOf(species);
+                    vm.speciesCombineList.splice(species_index, 1);
                     this.$nextTick(() => {
-                        // was added to set the first species Tab active but the updated() method overrides it
-                        var firstTabEl = document.querySelector(
-                            '#combine-pills-tab li:nth-child(1) a'
-                        );
-                        var firstTab =
-                            bootstrap.Tab.getOrCreateInstance(firstTabEl);
-                        firstTab.show();
+                        vm.showLastCombineSpeciesTab();
                     });
                 }
             });
         },
         addSpeciesToCombine: function () {
             this.$refs.addCombineSpecies.isModalOpen = true;
+        },
+        showLastCombineSpeciesTab: function () {
+            this.$nextTick(() => {
+                let lastIndex = this.speciesCombineList.length - 1;
+                let lastTabEl = document.querySelector(
+                    `#combine-pills-tab li:nth-child(${lastIndex + 1}) a`
+                );
+                let lastTab = bootstrap.Tab.getOrCreateInstance(lastTabEl);
+                lastTab.show();
+            });
+        },
+        resultingSpeciesTaxonomyChanged: function (taxonomyId, speciesId) {
+            console.debug(
+                `resultingSpeciesTaxonomyChanged called with taxonomyId: ${taxonomyId}, speciesId: ${speciesId}`
+            );
+            if (speciesId) {
+                this.fetchSpeciesData(speciesId);
+            } else {
+                this.getEmptySpeciesObject(String(taxonomyId));
+            }
+        },
+        fetchSpeciesData: function (speciesId) {
+            fetch(helpers.add_endpoint_json(api_endpoints.species, speciesId))
+                .then((response) => response.json())
+                .then((data) => {
+                    this.resultingSpecies = JSON.parse(JSON.stringify(data));
+                })
+                .catch((error) => {
+                    console.error('Error fetching species data:', error);
+                });
+        },
+        getEmptySpeciesObject: function (taxonomyId) {
+            fetch(api_endpoints.get_empty_species_object(taxonomyId))
+                .then((response) => response.json())
+                .then((data) => {
+                    this.resultingSpecies = JSON.parse(JSON.stringify(data));
+                })
+                .catch((error) => {
+                    console.error(
+                        'Error fetching empty species object data:',
+                        error
+                    );
+                });
+        },
+        validateAtLeastTwoSpecies: function (event) {
+            if (this.combiningOnlyIntoSelf) {
+                event.preventDefault();
+                swal.fire({
+                    title: 'Cannot Combine with Self Only',
+                    html: '<p>There is no point in combining a species into itself only.</p><p class="mb-0">Either add another species to combine with or just edit the species record directly.</p>',
+                    icon: 'info',
+                    customClass: {
+                        confirmButton: 'btn btn-primary',
+                    },
+                });
+            }
+        },
+        beforeShowResultingSpeciesTab: function () {
+            let vm = this;
+            // Add a bootstrap event before the resulting species tab is shown
+            let tabEl = document.querySelector('#pills-resulting-species-tab');
+            tabEl.addEventListener('show.bs.tab', function (event) {
+                vm.validateAtLeastTwoSpecies(event);
+            });
+        },
+        beforeShowFinaliseTab: function () {
+            let vm = this;
+            // Add a bootstrap event before the finalise tab is shown
+            let tabEl = document.querySelector('#finalise-combine');
+            tabEl.addEventListener('show.bs.tab', function (event) {
+                vm.validateAtLeastTwoSpecies(event);
+            });
         },
     },
 };

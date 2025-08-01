@@ -103,12 +103,30 @@ def community_form_submit(community_instance, request):
 
 
 @transaction.atomic
-def combine_species_original_submit(species_instance, request):
+def combine_species_original_submit(
+    species_instance, resulting_species_instance, request
+):
     if species_instance.processing_status != Species.PROCESSING_STATUS_ACTIVE:
         raise ValidationError("You can't submit this species at this moment")
 
     species_instance.processing_status = Species.PROCESSING_STATUS_HISTORICAL
     species_instance.save(version_user=request.user)
+
+    # Log the action
+    species_instance.log_user_action(
+        SpeciesUserAction.ACTION_COMBINE_SPECIES_TO.format(
+            species_instance.species_number,
+            resulting_species_instance.species_number,
+        ),
+        request,
+    )
+    request.user.log_user_action(
+        SpeciesUserAction.ACTION_COMBINE_SPECIES_TO.format(
+            species_instance.species_number,
+            resulting_species_instance.species_number,
+        ),
+        request,
+    )
 
     return species_instance
 

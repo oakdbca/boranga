@@ -1706,38 +1706,68 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
     @detail_route(methods=["post"], detail=True)
     @renderer_classes((JSONRenderer,))
     @transaction.atomic
-    def combine_new_species_submit(self, request, *args, **kwargs):
+    def combine_species(self, request, *args, **kwargs):
+        # This is the original species that the combine action was initiated from
         instance = self.get_object()
-        # instance.submit(request,self)
-        species_form_submit(instance, request)
+
+        # This is the data for the resulting species which may already have
+        # a boranga profile or may be a new species being created
+        resulting_species = request.data.get("resulting_species", None)
+
+        if not resulting_species:
+            raise serializers.ValidationError(
+                "No resulting_species provided in request data"
+            )
+
+        species_combine_list = request.data.get("species_combine_list", None)
+        if not species_combine_list:
+            raise serializers.ValidationError(
+                "No species_combine_list provided in request data"
+            )
+
+        combine_of_species_retains_original = (
+            resulting_species.get("taxonomy_id") == instance.taxonomy_id
+        )
+
+        if len(species_combine_list) < 2 and combine_of_species_retains_original:
+            raise serializers.ValidationError(
+                "At least two different taxonomies must be selected for combining"
+            )
+
+        resulting_species_instance = None
+        if not resulting_species.get("id"):
+            serializer = CreateSpeciesSerializer(data=resulting_species)
+            serializer.is_valid(raise_exception=True)
+            resulting_species_instance, _ = serializer.save(version_user=request.user)
+            species_form_submit(resulting_species_instance, request)
+        else:
+            resulting_species_instance = Species.objects.filter(
+                id=resulting_species.get("id")
+            ).first()
 
         # copy/clone the original species document and create new for new split species
-        instance.clone_documents(request)
-        instance.clone_threats(request)
+        instance.copy_documents(request)
+        instance.copy_threats(request)
         instance.save(version_user=request.user)
 
-        # add parent ids to new species instance
-        parent_species_arr = request.data.get("parent_species")
-        for species in parent_species_arr:
-            parent_instance = Species.objects.get(id=species.get("id"))
-            instance.parent_species.add(parent_instance)
-            # set the original species from the combine list to historical and its conservation status to 'closed'
-            combine_species_original_submit(parent_instance, request)
+        for species_data in species_combine_list:
+            species_id = species_data.get("id", None)
+            if not species_id:
+                raise serializers.ValidationError(
+                    "Species ID is missing in the combine list"
+                )
+            try:
+                species_instance = Species.objects.filter(id=species_id).first()
+            except Species.DoesNotExist:
+                raise serializers.ValidationError(
+                    f"Species from combine list with ID {species_id} not found"
+                )
 
-            # Log the action
-            parent_instance.log_user_action(
-                SpeciesUserAction.ACTION_COMBINE_SPECIES_TO.format(
-                    parent_instance.species_number,
-                    instance.species_number,
-                ),
-                request,
-            )
-            request.user.log_user_action(
-                SpeciesUserAction.ACTION_COMBINE_SPECIES_TO.format(
-                    parent_instance.species_number,
-                    instance.species_number,
-                ),
-                request,
+            resulting_species_instance.parent_species.add(species_instance)
+
+            # set the original species from the combine list to historical and its conservation status to 'closed'
+            combine_species_original_submit(
+                species_instance, resulting_species_instance, request
             )
 
         parent_species_numbers = ", ".join(

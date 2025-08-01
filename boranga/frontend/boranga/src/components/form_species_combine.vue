@@ -1,20 +1,66 @@
 <template lang="html">
     <div>
-        <div class="col-md-12">
-            <ul
-                v-if="is_internal"
-                id="pills-tab"
-                class="nav nav-pills"
-                role="tablist"
-            >
+        <FormSection
+            :form-collapse="false"
+            label="Resulting Scientific Name"
+            Index="species-combine-taxon-form-section-index"
+        >
+            resultingSpecies {{ resultingSpecies }}
+            <div class="row mb-3">
+                <p>Select a species from this combine:</p>
+                <ul class="list-group ps-3">
+                    <li
+                        v-for="(species, index) in existingSpeciesCombineList"
+                        :key="species.id"
+                        class="list-group-item"
+                    >
+                        <input
+                            type="radio"
+                            class="form-check-input me-2"
+                            :id="
+                                'resulting-species-from-combined-' + species.id
+                            "
+                            :value="index"
+                            name="resulting-species-from-combined"
+                            v-model="selectedSpeciesIndex"
+                            @mousedown="
+                                beforeChangeSelectedSpecies($event, index)
+                            "
+                        />
+                        <span class="pe-2"
+                            >{{ species.species_number }} -
+                            {{ species.taxonomy_details.scientific_name }}
+                        </span>
+                        <span v-if="index == 0" class="badge bg-secondary"
+                            >Original</span
+                        >
+                    </li>
+                </ul>
+            </div>
+            <div class="row mb-3">
+                <p class="mb-0 pb-0">or select any other taxonomy:</p>
+            </div>
+            <div class="row mb-3">
+                <div :id="select_scientific_name">
+                    <select
+                        :id="scientific_name_lookup"
+                        :ref="scientific_name_lookup"
+                        :name="scientific_name_lookup"
+                        class="form-control"
+                    />
+                </div>
+            </div>
+        </FormSection>
+        <div v-if="resultingSpecies" class="col-md-12">
+            <ul id="pills-tab" class="nav nav-pills" role="tablist">
                 <li class="nav-item">
                     <a
                         id="pills-profile-tab"
                         class="nav-link active"
                         data-bs-toggle="pill"
-                        :href="'#' + profileBody"
+                        :href="'#' + profileTabId"
                         role="tab"
-                        :aria-controls="profileBody"
+                        :aria-controls="profileTabId"
                         aria-selected="true"
                     >
                         Profile
@@ -25,10 +71,10 @@
                         id="pills-documents-tab"
                         class="nav-link"
                         data-bs-toggle="pill"
-                        :href="'#' + documentBody"
+                        :href="'#' + documentTabId"
                         role="tab"
                         aria-controls="pills-documents"
-                        :aria-selected="documentBody"
+                        :aria-selected="documentTabId"
                         @click="tabClicked()"
                     >
                         Documents
@@ -39,9 +85,9 @@
                         id="pills-threats-tab"
                         class="nav-link"
                         data-bs-toggle="pill"
-                        :href="'#' + threatBody"
+                        :href="'#' + threatTabId"
                         role="tab"
-                        :aria-controls="threatBody"
+                        :aria-controls="threatTabId"
                         aria-selected="false"
                         @click="tabClicked()"
                     >
@@ -51,59 +97,54 @@
             </ul>
             <div id="pills-tabContent" class="tab-content">
                 <div
-                    :id="profileBody"
+                    :id="profileTabId"
                     class="tab-pane fade show active"
                     role="tabpanel"
                     aria-labelledby="pills-profile-tab"
                 >
                     <SpeciesProfile
+                        v-if="resultingSpecies"
                         id="speciesInformation"
                         ref="species_information"
-                        :is_internal="is_internal"
-                        :species_community="species_community"
-                        :original_species_combine_list="
-                            original_species_combine_list
-                        "
+                        :species_community="resultingSpecies"
+                        :species-being-combined="existingSpeciesCombineList"
+                        :species_combine="true"
                     >
                     </SpeciesProfile>
                 </div>
                 <div
-                    :id="documentBody"
+                    :id="documentTabId"
                     class="tab-pane fade"
                     role="tabpanel"
                     aria-labelledby="pills-documents-tab"
                 >
                     <div
-                        v-for="species in original_species_combine_list"
-                        :key="species.id"
+                        v-for="(species, index) in existingSpeciesCombineList"
+                        :key="index"
                     >
                         <SpeciesDocuments
                             id="speciesDocuments"
-                            :key="reloadcount"
                             ref="species_documents"
-                            :is_internal="is_internal"
-                            :species_community="species_community"
+                            :species_community="resultingSpecies"
                             :species_original="species"
                         >
                         </SpeciesDocuments>
                     </div>
                 </div>
                 <div
-                    :id="threatBody"
+                    :id="threatTabId"
                     class="tab-pane fade"
                     role="tabpanel"
                     aria-labelledby="pills-threats-tab"
                 >
                     <div
-                        v-for="species in original_species_combine_list"
-                        :key="species.id"
+                        v-for="(species, index) in existingSpeciesCombineList"
+                        :key="index"
                     >
                         <SpeciesThreats
-                            id="speciesThreats"
-                            :key="reloadcount"
-                            ref="species_threats"
-                            :is_internal="is_internal"
-                            :species_community="species_community"
+                            :id="'species-threats-' + index"
+                            ref="'species_threats_' + index"
+                            :species_community="resultingSpecies"
                             :species_original="species"
                         >
                         </SpeciesThreats>
@@ -116,114 +157,147 @@
 
 <script>
 import { v4 as uuid } from 'uuid';
+
+import { api_endpoints } from '@/utils/hooks';
+
+import FormSection from '@/components/forms/section_toggle.vue';
+
 import SpeciesProfile from '@/components/common/species_communities/species_combine/species_combine_profile.vue';
 import SpeciesDocuments from '@/components/common/species_communities/species_combine/species_combine_documents.vue';
 import SpeciesThreats from '@/components/common/species_communities/species_combine/species_combine_threats.vue';
 
 export default {
     components: {
+        FormSection,
         SpeciesProfile,
         SpeciesDocuments,
         SpeciesThreats,
     },
     props: {
-        original_species_combine_list: {
+        existingSpeciesCombineList: {
             type: Array,
             required: true,
         },
-        species_community: {
+        resultingSpecies: {
             type: Object,
-            required: true,
-        },
-        is_external: {
-            type: Boolean,
-            default: false,
-        },
-        is_internal: {
-            type: Boolean,
-            default: false,
+            default: null,
         },
     },
+    emits: ['resulting-species-changed', 'resulting-species-taxonomy-changed'],
     data: function () {
         return {
-            profileBody: 'profileBody' + uuid(),
-            documentBody: 'documentBody' + uuid(),
-            threatBody: 'threatBody' + uuid(),
-            values: null,
-            reloadcount: 0,
+            select_scientific_name: 'species-combine-select-scientific-name',
+            scientific_name_lookup: 'species-combine-scientific-name-lookup',
+            profileTabId: 'profile-tab-' + uuid(),
+            documentTabId: 'document-tab-' + uuid(),
+            threatTabId: 'threat-tab-' + uuid(),
+            originalSpecies: this.existingSpeciesCombineList?.[0] || null,
+            selectedSpeciesIndex: 0,
         };
     },
-    computed: {
-        related_items_ajax_url: function () {
-            return (
-                '/api/species/' +
-                this.species_community.id +
-                '/get_related_items/'
-            );
-        },
-        related_items_filter_list_url: function () {
-            return '/api/species/filter_list.json';
-        },
-    },
     mounted: function () {
-        let vm = this;
-        //vm.set_tabs();
-        vm.form = document.forms.new_species;
+        this.initialiseScientificNameLookup();
     },
     methods: {
-        //----function to resolve datatable exceeding beyond the div
-        tabClicked: function () {
-            this.reloadcount = this.reloadcount + 1;
+        initialiseScientificNameLookup: function () {
+            let vm = this;
+            $(vm.$refs[vm.scientific_name_lookup])
+                .select2({
+                    minimumInputLength: 2,
+                    dropdownParent: $('#' + vm.select_scientific_name),
+                    theme: 'bootstrap-5',
+                    allowClear: true,
+                    placeholder: 'Select Scientific Name',
+                    ajax: {
+                        url: api_endpoints.scientific_name_lookup,
+                        dataType: 'json',
+                        data: function (params) {
+                            var query = {
+                                term: params.term,
+                                type: 'public',
+                                group_type_id: vm.originalSpecies.group_type_id,
+                                species_profile: true, // This parameter makes sure the query only returns records that don't yet have a species profile
+                            };
+                            return query;
+                        },
+                    },
+                })
+                .on('select2:select', function (e) {
+                    swal.fire({
+                        title: 'Confirm Taxonomy Change?',
+                        text: 'Changing the resulting species taxonomy will result in any data you have entered below being overwritten.',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Confirm Taxonomy Change',
+                        reverseButtons: true,
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                            cancelButton: 'btn btn-secondary',
+                        },
+                    }).then((result) => {
+                        if (!result.isConfirmed) {
+                            $(vm.$refs[vm.scientific_name_lookup])
+                                .val(null)
+                                .trigger('change');
+                        } else {
+                            let speciesId = e.params.data.species_id;
+                            let taxonomyId = e.params.data.id;
+                            vm.selectedSpeciesIndex = null;
+                            vm.$emit(
+                                'resulting-species-taxonomy-changed',
+                                taxonomyId,
+                                speciesId
+                            );
+                        }
+                    });
+                })
+                .on('select2:unselect', function () {
+                    vm.selectedSpeciesIndex = 0;
+                    vm.$emit(
+                        'resulting-species-taxonomy-changed',
+                        vm.originalSpecies.taxonomy_id,
+                        vm.originalSpecies.id
+                    );
+                })
+                .on('select2:open', function () {
+                    const searchField = $(
+                        '[aria-controls="select2-' +
+                            vm.scientific_name_lookup +
+                            '-results"]'
+                    );
+                    searchField[0].focus();
+                });
+        },
+        beforeChangeSelectedSpecies: function (event, index) {
+            if (this.selectedSpeciesIndex !== index) {
+                swal.fire({
+                    title: 'Confirm Taxonomy Change?',
+                    text: 'Changing the resulting species taxonomy will result in any data you have entered below being overwritten.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Confirm Taxonomy Change',
+                    reverseButtons: true,
+                    customClass: {
+                        confirmButton: 'btn btn-primary',
+                        cancelButton: 'btn btn-secondary',
+                    },
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.selectedSpeciesIndex = index;
+                        $(this.$refs[this.scientific_name_lookup])
+                            .val(null)
+                            .trigger('change');
+                        this.$emit(
+                            'resulting-species-taxonomy-changed',
+                            this.existingSpeciesCombineList[index].taxonomy_id,
+                            this.existingSpeciesCombineList[index].id
+                        );
+                    } else {
+                        event.preventDefault();
+                    }
+                });
+            }
         },
     },
 };
 </script>
-
-<style lang="css" scoped>
-.section {
-    text-transform: capitalize;
-}
-.list-group {
-    margin-bottom: 0;
-}
-.fixed-top {
-    position: fixed;
-    top: 56px;
-}
-
-.nav-item {
-    margin-bottom: 2px;
-}
-
-.nav-item > li > a {
-    background-color: yellow !important;
-    color: #fff;
-}
-
-.nav-item > li.active > a,
-.nav-item > li.active > a:hover,
-.nav-item > li.active > a:focus {
-    color: white;
-    background-color: blue;
-    border: 1px solid #888888;
-}
-
-.admin > div {
-    display: inline-block;
-    vertical-align: top;
-    margin-right: 1em;
-}
-.nav-pills .nav-link {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-    border-top-left-radius: 0.5em;
-    border-top-right-radius: 0.5em;
-    margin-right: 0.25em;
-}
-.nav-pills .nav-link {
-    background: lightgray;
-}
-.nav-pills .nav-link.active {
-    background: gray;
-}
-</style>

@@ -6,19 +6,6 @@
             Index="species-combine-taxon-form-section-index"
         >
             <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label"
-                    >Scientific Name:</label
-                >
-                <div :id="select_scientific_name" class="col-sm-8">
-                    <select
-                        :id="scientific_name_lookup"
-                        :ref="scientific_name_lookup"
-                        :name="scientific_name_lookup"
-                        class="form-control"
-                    />
-                </div>
-            </div>
-            <div class="row mb-3">
                 <label for="" class="col-sm-3 control-label"></label>
                 <div class="col-sm-8">
                     <textarea
@@ -725,14 +712,13 @@ export default {
     },
     data: function () {
         return {
-            scientific_name_lookup: 'species-combine-scientific-name-lookup',
-            select_scientific_name: 'species-combine-select-scientific-name',
             select_regions: 'species-combine-select-regions',
             select_districts: 'species-combine-select-districts',
 
             region_list: [],
             district_list: [],
 
+            selectedSpecies: null,
             species_display: '',
             common_name: null,
             taxon_name_id: null,
@@ -797,7 +783,6 @@ export default {
     },
     mounted: function () {
         let vm = this;
-        vm.initialiseScientificNameLookup();
         vm.loadTaxonomydetails();
         vm.initialiseRegionSelect();
         vm.initialiseDistrictSelect();
@@ -853,72 +838,6 @@ export default {
                         confirmButton: 'btn btn-primary',
                     },
                 });
-            }
-        },
-        initialiseScientificNameLookup: function () {
-            let vm = this;
-            $(vm.$refs[vm.scientific_name_lookup])
-                .select2({
-                    minimumInputLength: 2,
-                    dropdownParent: $('#' + vm.select_scientific_name),
-                    theme: 'bootstrap-5',
-                    allowClear: true,
-                    placeholder: 'Select Scientific Name',
-                    ajax: {
-                        url: api_endpoints.scientific_name_lookup,
-                        dataType: 'json',
-                        data: function (params) {
-                            var query = {
-                                term: params.term,
-                                type: 'public',
-                                group_type_id:
-                                    vm.species_community.group_type_id,
-                                species_profile: true, // This parameter makes sure the query only returns records that don't yet have a species profile
-                            };
-                            return query;
-                        },
-                    },
-                })
-                .on('select2:select', function (e) {
-                    let data = e.params.data.id;
-                    vm.species_community.taxonomy_id = data;
-                    vm.species_community.taxonomy_details = e.params.data;
-                    vm.species_display = e.params.data.scientific_name;
-                    vm.common_name = e.params.data.common_name;
-                    vm.taxon_name_id = e.params.data.taxon_name_id;
-                    vm.taxon_previous_name = e.params.data.taxon_previous_name;
-                    vm.phylogenetic_group = e.params.data.phylogenetic_group;
-                    vm.family = e.params.data.family_name;
-                    vm.genus = e.params.data.genera_name;
-                    vm.name_authority = e.params.data.name_authority;
-                    vm.name_comments = e.params.data.name_comments;
-                })
-                .on('select2:unselect', function () {
-                    vm.species_community.taxonomy_id = '';
-                    vm.species_display = '';
-                    vm.common_name = '';
-                    vm.taxon_name_id = '';
-                    vm.taxon_previous_name = '';
-                    vm.phylogenetic_group = '';
-                    vm.family = '';
-                    vm.genus = '';
-                    vm.name_authority = '';
-                    vm.name_comments = '';
-                })
-                .on('select2:open', function () {
-                    const searchField = $(
-                        '[aria-controls="select2-' +
-                            vm.scientific_name_lookup +
-                            '-results"]'
-                    );
-                    // move focus to select2 field
-                    searchField[0].focus();
-                });
-            // Set the initial value if taxonomy_id is already set
-            if (vm.species_community.taxonomy_id) {
-                $(vm.$refs[vm.scientific_name_lookup])
-                    .val(vm.species_community.taxonomy_id)
-                    .trigger('change');
             }
         },
         loadTaxonomydetails: function () {

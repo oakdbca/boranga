@@ -1453,6 +1453,10 @@ export default {
             type: Boolean,
             default: false,
         },
+        combine_species: {
+            type: Boolean,
+            default: false,
+        },
         is_internal: {
             type: Boolean,
             default: false,
@@ -1579,7 +1583,8 @@ export default {
             return (
                 (this.isReadOnly ||
                     this.species_community.processing_status === 'Active') &&
-                !this.rename_species
+                !this.rename_species &&
+                !this.combine_species
             );
         },
         isActive: function () {
@@ -1638,6 +1643,16 @@ export default {
             } else {
                 return [];
             }
+        },
+        scientific_lookup_ref_name: function () {
+            let vm = this;
+            let refName = 'scientific_name_lookup';
+            if (vm.rename_species) {
+                refName = 'scientific_name_lookup_rename';
+            } else if (vm.combine_species) {
+                refName = 'scientific_name_lookup_combine';
+            }
+            return refName;
         },
     },
     watch: {
@@ -2050,13 +2065,14 @@ export default {
         },
         initialiseScientificNameLookup: function () {
             let vm = this;
-            $(
-                vm.$refs[
-                    vm.rename_species
-                        ? 'scientific_name_lookup_rename'
-                        : vm.scientific_name_lookup
-                ]
-            )
+            let refName = 'scientific_name_lookup';
+            if (!vm.rename_species) {
+                refName = 'scientific_name_lookup_rename';
+            }
+            if (!vm.combine_species) {
+                refName = 'scientific_name_lookup_combine';
+            }
+            $(vm.$refs[refName])
                 .select2({
                     minimumInputLength: 2,
                     dropdownParent: $('#' + vm.select_scientific_name),
