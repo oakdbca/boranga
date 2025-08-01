@@ -1929,9 +1929,10 @@ export default {
                     allowClear: true,
                     placeholder: 'Select Common Name',
                     ajax: {
-                        // url: api_endpoints.common_name_lookup,
+                        // This api endpoint seems to do the trick for cs as well, even though it says "ocr"
                         url: api_endpoints.common_name_lookup_ocr_select,
                         dataType: 'json',
+                        contentType: 'application/json; charset=utf-8',
                         data: function (params) {
                             var query = {
                                 term: params.term,
