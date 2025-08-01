@@ -1,3 +1,5 @@
+import html
+
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
@@ -24,7 +26,9 @@ class TileLayerSerializer(BaseModelSerializer):
         fields = "__all__"
 
     def get_geoserver_url(self, obj):
-        return obj.geoserver_url.url
+        geoserver_url = GeoserverUrlSerializer(obj.geoserver_url).data.get("url", None)
+
+        return html.unescape(geoserver_url or "")
 
 
 class ProxySerializer(BaseModelSerializer):
