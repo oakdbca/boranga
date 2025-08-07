@@ -762,6 +762,9 @@ export default {
                     null;
             }
         },
+        'species_community.taxonomy_id': function () {
+            this.loadTaxonomydetails();
+        },
     },
     created: async function () {
         let vm = this;
