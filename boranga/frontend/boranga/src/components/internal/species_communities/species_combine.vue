@@ -116,8 +116,7 @@
                                         <FormSpeciesCombine
                                             v-if="
                                                 speciesCombineList &&
-                                                resultingSpecies &&
-                                                resultingSpecies.id
+                                                resultingSpecies
                                             "
                                             id="resulting-species"
                                             :resulting-species="
