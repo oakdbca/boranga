@@ -2,10 +2,9 @@
     <div>
         <FormSection
             :form-collapse="false"
-            label="Resulting Scientific Name"
+            label="Select the Resulting Species or Taxonomy"
             Index="species-combine-taxon-form-section-index"
         >
-            resultingSpecies {{ resultingSpecies }}
             <div class="row mb-3">
                 <p>Select a species from this combine:</p>
                 <ul class="list-group ps-3">
@@ -38,7 +37,7 @@
                 </ul>
             </div>
             <div class="row mb-3">
-                <p class="mb-0 pb-0">or select any other taxonomy:</p>
+                <p class="mb-0 pb-0">or search for any other taxonomy:</p>
             </div>
             <div class="row mb-3">
                 <div :id="select_scientific_name">
@@ -68,28 +67,26 @@
                 </li>
                 <li class="nav-item">
                     <a
-                        id="pills-documents-tab"
+                        id="pills-combine-documents-tab"
                         class="nav-link"
                         data-bs-toggle="pill"
                         :href="'#' + documentTabId"
                         role="tab"
-                        aria-controls="pills-documents"
+                        aria-controls="pills-combine-documents"
                         :aria-selected="documentTabId"
-                        @click="tabClicked()"
                     >
                         Documents
                     </a>
                 </li>
                 <li class="nav-item">
                     <a
-                        id="pills-threats-tab"
+                        id="pills-combine-threats-tab"
                         class="nav-link"
                         data-bs-toggle="pill"
                         :href="'#' + threatTabId"
                         role="tab"
                         :aria-controls="threatTabId"
                         aria-selected="false"
-                        @click="tabClicked()"
                     >
                         Threats
                     </a>
@@ -116,15 +113,15 @@
                     :id="documentTabId"
                     class="tab-pane fade"
                     role="tabpanel"
-                    aria-labelledby="pills-documents-tab"
+                    aria-labelledby="pills-combine-documents-tab"
                 >
                     <div
                         v-for="(species, index) in existingSpeciesCombineList"
                         :key="index"
                     >
                         <SpeciesDocuments
-                            id="speciesDocuments"
-                            ref="species_documents"
+                            :id="'species-combine-documents-' + index"
+                            ref="species_combine_documents"
                             :species_community="resultingSpecies"
                             :species_original="species"
                         >
@@ -135,15 +132,15 @@
                     :id="threatTabId"
                     class="tab-pane fade"
                     role="tabpanel"
-                    aria-labelledby="pills-threats-tab"
+                    aria-labelledby="pills-combine-threats-tab"
                 >
                     <div
                         v-for="(species, index) in existingSpeciesCombineList"
                         :key="index"
                     >
                         <SpeciesThreats
-                            :id="'species-threats-' + index"
-                            ref="'species_threats_' + index"
+                            :id="'species-combine-threats-' + index"
+                            ref="species_combine_threats"
                             :species_community="resultingSpecies"
                             :species_original="species"
                         >
@@ -197,6 +194,7 @@ export default {
     },
     mounted: function () {
         this.initialiseScientificNameLookup();
+        this.addTabShownEvents();
     },
     methods: {
         initialiseScientificNameLookup: function () {
@@ -297,6 +295,23 @@ export default {
                     }
                 });
             }
+        },
+        addTabShownEvents: function () {
+            document
+                .querySelectorAll('a[data-bs-toggle="pill"]')
+                .forEach((el) => {
+                    el.addEventListener('shown.bs.tab', () => {
+                        if (el.id == 'pills-combine-threats-tab') {
+                            this.$refs.species_combine_threats.forEach(
+                                (component) => component.adjust_table_width()
+                            );
+                        } else if (el.id == 'pills-combine-documents-tab') {
+                            this.$refs.species_combine_documents.forEach(
+                                (component) => component.adjust_table_width()
+                            );
+                        }
+                    });
+                });
         },
     },
 };
