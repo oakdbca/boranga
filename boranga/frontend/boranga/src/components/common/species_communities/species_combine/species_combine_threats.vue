@@ -346,11 +346,13 @@ export default {
             );
         },
         adjust_table_width: function () {
-            if (this.$refs.threats_datatable !== undefined) {
-                this.$refs.threats_datatable.vmDataTable.columns
-                    .adjust()
-                    .responsive.recalc();
-            }
+            this.$nextTick(() => {
+                if (this.$refs.threats_datatable !== undefined) {
+                    this.$refs.threats_datatable.vmDataTable.columns
+                        .adjust()
+                        .responsive.recalc();
+                }
+            });
         },
     },
 };
