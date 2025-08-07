@@ -214,7 +214,6 @@ export default {
                                 term: params.term,
                                 type: 'public',
                                 group_type_id: vm.originalSpecies.group_type_id,
-                                species_profile: true, // This parameter makes sure the query only returns records that don't yet have a species profile
                             };
                             return query;
                         },
