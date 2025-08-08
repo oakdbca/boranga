@@ -951,14 +951,19 @@
                     <div class="col-sm-1">
                         <div class="form-check form-check-inline">
                             <input
-                                :id="'dept_file_chk' + species.id"
+                                :id="
+                                    'combine-department-file-numbers-checkbox-' +
+                                    species.id
+                                "
                                 class="form-check-input"
                                 type="checkbox"
-                                name="dept_file_chk"
+                                name="combine-department-file-numbers-checkbox"
                                 @change="
-                                    checkDistributionInput(
-                                        'dept_file_chk',
-                                        'dept_file_chk' + species.id,
+                                    concatenateOrRemoveValue(
+                                        'combine-department-file-numbers-checkbox-' +
+                                            species.id,
+                                        'combine-department-file-numbers-checkbox-' +
+                                            species.id,
                                         'department_file_numbers',
                                         species.department_file_numbers
                                     )
@@ -1014,13 +1019,13 @@
                             "
                             class="form-check-input"
                             type="checkbox"
+                            name="combine-last-data-curation-date-checkbox"
                             @change="
-                                checkDistributionInput(
-                                    'combine-last-data-curation-date-form-check',
-                                    'combine-last-data-curation-date-form-check-' +
-                                        species.id,
+                                setOrClearValue(
                                     'last_data_curation_date',
-                                    species.last_data_curation_date
+                                    species.last_data_curation_date,
+                                    $event.target.checked,
+                                    $event
                                 )
                             "
                         />
@@ -1182,19 +1187,20 @@
                         <div class="form-check form-check-inline">
                             <input
                                 :id="
-                                    'combine-conservation-plan-exists-checkbox-' +
+                                    'combine-conservation-plan-reference-checkbox-' +
                                     species.id
                                 "
                                 class="form-check-input"
                                 type="checkbox"
                                 name="combine-conservation-plan-reference-checkbox"
                                 @change="
-                                    setOrClearValue(
+                                    concatenateOrRemoveValue(
+                                        'combine-conservation-plan-reference-checkbox-' +
+                                            species.id,
                                         'combine-conservation-plan-reference-' +
                                             species.id,
-                                        species.conservation_plan_reference,
-                                        $event.target.checked,
-                                        $event
+                                        'conservation_plan_reference',
+                                        species.conservation_plan_reference
                                     )
                                 "
                             />
@@ -1762,12 +1768,21 @@ export default {
                         fieldName
                     )
                 ) {
-                    // Use the original value, even if it's false or 0
+                    // Restore the value
                     this.species_community[fieldName] =
                         this.species_community_copy[fieldName];
                 } else {
                     this.species_community[fieldName] = '';
                 }
+                // If it's a radio group, also restore the radio value
+                // Example: conservation_plan_exists
+                const radio = document.querySelectorAll(
+                    `input[type="radio"][name="${fieldName}"]`
+                );
+                radio.forEach((r) => {
+                    r.checked =
+                        r.value == String(this.species_community[fieldName]);
+                });
             }
         },
         setOrClearDistributionValue({
