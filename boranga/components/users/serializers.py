@@ -14,7 +14,10 @@ from boranga.components.main.models import (
     UserSystemSettings,
 )
 from boranga.components.main.serializers import BaseModelSerializer, BaseSerializer
-from boranga.components.occurrence.models import OccurrenceReportReferral
+from boranga.components.occurrence.models import (
+    OccurrenceReport,
+    OccurrenceReportReferral,
+)
 from boranga.components.users.models import (
     EmailUserAction,
     EmailUserLogEntry,
@@ -312,7 +315,7 @@ class OutstandingReferralSerializer(BaseSerializer):
             for choice in ConservationStatusReferral.PROCESSING_STATUS_CHOICES:
                 if choice[0] == obj["processing_status"]:
                     return choice[1]
-        elif "OCR" in obj["number"]:
+        elif OccurrenceReport.MODEL_PREFIX in obj["number"]:
             for choice in OccurrenceReportReferral.PROCESSING_STATUS_CHOICES:
                 if choice[0] == obj["processing_status"]:
                     return choice[1]
@@ -339,7 +342,7 @@ class OutstandingReferralSerializer(BaseSerializer):
                         "referral_pk": obj["id"],
                     },
                 )
-            elif "OCR" in obj["number"]:
+            elif OccurrenceReport.MODEL_PREFIX in obj["number"]:
                 link = reverse(
                     "internal-occurrence-report-referral-detail",
                     kwargs={
@@ -356,7 +359,7 @@ class OutstandingReferralSerializer(BaseSerializer):
                         "referral_pk": obj["id"],
                     },
                 )
-            elif "OCR" in obj["number"]:
+            elif OccurrenceReport.MODEL_PREFIX in obj["number"]:
                 link = reverse(
                     "external-occurrence-report-referral-detail",
                     kwargs={
