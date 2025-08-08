@@ -6,12 +6,14 @@
             Index="species-combine-taxon-form-section-index"
         >
             <div class="row mb-3">
-                <label for="" class="col-sm-3 col-form-label"
+                <label
+                    for="combine-species-display"
+                    class="col-sm-3 col-form-label"
                     >Scientific Name:</label
                 >
                 <div class="col-sm-8">
                     <textarea
-                        id="species_display"
+                        id="combine-species-display"
                         v-model="species_display"
                         disabled
                         class="form-control"
@@ -20,12 +22,12 @@
                 </div>
             </div>
             <div class="row mb-3">
-                <label for="" class="col-sm-3 col-form-label"
+                <label for="combine-common-name" class="col-sm-3 col-form-label"
                     >Common Name:</label
                 >
                 <div class="col-sm-8">
                     <textarea
-                        id="common_name"
+                        id="combine-common-name"
                         v-model="common_name"
                         :disabled="true"
                         class="form-control"
@@ -35,12 +37,14 @@
                 </div>
             </div>
             <div class="row mb-3">
-                <label for="" class="col-sm-3 col-form-label"
+                <label
+                    for="combine-taxon-name-id"
+                    class="col-sm-3 col-form-label"
                     >Taxon Name ID:</label
                 >
                 <div class="col-sm-8">
                     <input
-                        id="species_combine_taxon_name_id"
+                        id="combine-taxon-name-id"
                         v-model="taxon_name_id"
                         :disabled="true"
                         type="text"
@@ -50,12 +54,14 @@
                 </div>
             </div>
             <div class="row mb-3">
-                <label for="" class="col-sm-3 col-form-label"
+                <label
+                    for="combine-previous-name"
+                    class="col-sm-3 col-form-label"
                     >Previous Name:</label
                 >
                 <div class="col-sm-8">
                     <input
-                        id="previous_name"
+                        id="combine-previous-name"
                         v-model="taxon_previous_name"
                         :disabled="true"
                         type="text"
@@ -65,12 +71,14 @@
                 </div>
             </div>
             <div class="row mb-3">
-                <label for="" class="col-sm-3 col-form-label"
+                <label
+                    for="combine-phylogenetic-group"
+                    class="col-sm-3 col-form-label"
                     >Phylogenetic Group:</label
                 >
                 <div class="col-sm-8">
                     <textarea
-                        id="phylogenetic_group"
+                        id="combine-phylogenetic-group"
                         v-model="phylogenetic_group"
                         :disabled="true"
                         class="form-control"
@@ -80,10 +88,12 @@
                 </div>
             </div>
             <div class="row mb-3">
-                <label for="" class="col-sm-3 col-form-label">Family:</label>
+                <label for="combine-family" class="col-sm-3 col-form-label"
+                    >Family:</label
+                >
                 <div class="col-sm-8">
                     <textarea
-                        id="family"
+                        id="combine-family"
                         v-model="family"
                         :disabled="true"
                         rows="1"
@@ -93,10 +103,12 @@
                 </div>
             </div>
             <div class="row mb-3">
-                <label for="" class="col-sm-3 col-form-label">Genus:</label>
+                <label for="combine-genus" class="col-sm-3 col-form-label"
+                    >Genus:</label
+                >
                 <div class="col-sm-8">
                     <textarea
-                        id="genus"
+                        id="combine-genus"
                         v-model="genus"
                         :disabled="true"
                         rows="1"
@@ -106,12 +118,14 @@
                 </div>
             </div>
             <div class="row mb-3">
-                <label for="" class="col-sm-3 col-form-label"
+                <label
+                    for="combine-name-authority"
+                    class="col-sm-3 col-form-label"
                     >Name Authority:</label
                 >
                 <div class="col-sm-8">
                     <textarea
-                        id="name_authority"
+                        id="combine-name-authority"
                         v-model="name_authority"
                         :disabled="true"
                         rows="1"
@@ -121,12 +135,14 @@
                 </div>
             </div>
             <div class="row mb-3">
-                <label for="" class="col-sm-3 col-form-label"
+                <label
+                    for="combine-name-comments"
+                    class="col-sm-3 col-form-label"
                     >Nomos names comments:</label
                 >
                 <div class="col-sm-8">
                     <textarea
-                        id="comment"
+                        id="combine-name-comments"
                         v-model="name_comments"
                         :disabled="true"
                         class="form-control"
@@ -153,7 +169,7 @@
                 >
                 <div class="col-sm-8">
                     <textarea
-                        :id="'combine-distribution' + species.id"
+                        :id="'combine-distribution-' + species.id"
                         v-model="species.distribution.distribution"
                         :disabled="true"
                         type="text"
@@ -162,20 +178,23 @@
                     />
                 </div>
                 <div class="col-sm-1">
-                    <input
-                        :id="'combine-distribution-checkbox-' + species.id"
-                        class="form-check-input"
-                        type="checkbox"
-                        :name="'distribution-checkbox-' + species.id"
-                        @change="
-                            concatenateOrRemoveValue(
-                                'combine-distribution-checkbox-' + species.id,
-                                'combine-distribution' + species.id,
-                                'distribution.distribution',
-                                species.distribution.distribution
-                            )
-                        "
-                    />
+                    <div class="form-check form-check-inline">
+                        <input
+                            :id="'combine-distribution-checkbox-' + species.id"
+                            class="form-check-input"
+                            type="checkbox"
+                            :name="'distribution-checkbox-' + species.id"
+                            @change="
+                                concatenateOrRemoveValue(
+                                    'combine-distribution-checkbox-' +
+                                        species.id,
+                                    'combine-distribution-' + species.id,
+                                    'distribution.distribution',
+                                    species.distribution.distribution
+                                )
+                            "
+                        />
+                    </div>
                 </div>
             </div>
             <div class="row mb-3 pb-3 border-bottom pt-3 custom-border-top">
@@ -199,34 +218,41 @@
                 :key="species.id"
                 class="row mb-3"
             >
-                <label for="" class="col-sm-3 col-form-label text-secondary"
+                <label
+                    :for="'combine-regions-select-' + species.id"
+                    class="col-sm-3 col-form-label text-secondary"
                     >{{ species.species_number }} Region:</label
                 >
                 <div class="col-sm-8">
-                    <label for="" class="control-label">{{
-                        getselectedRegionNames(species)
-                    }}</label>
+                    <span>{{ getselectedRegionNames(species) }}</span>
                 </div>
                 <div class="col-sm-1">
-                    <input
-                        :id="'regions_select_chk' + species.id"
-                        class="form-check-input"
-                        type="checkbox"
-                        @change="
-                            checkRegionDistrictInput(
-                                'regions_select_chk' + species.id,
-                                'regions',
-                                species,
-                                'regions_select'
-                            )
-                        "
-                    />
+                    <div class="form-check form-check-inline">
+                        <input
+                            :id="'combine-regions-select-' + species.id"
+                            class="form-check-input"
+                            type="checkbox"
+                            @change="
+                                checkRegionDistrictInput(
+                                    'combine-regions-select-' + species.id,
+                                    'regions',
+                                    species,
+                                    'regions_select'
+                                )
+                            "
+                        />
+                    </div>
                 </div>
             </div>
             <div class="row mb-3 pb-3 border-bottom pt-3 custom-border-top">
-                <label for="" class="col-sm-3 col-form-label">Region:</label>
+                <label
+                    for="combine-regions-select"
+                    class="col-sm-3 col-form-label"
+                    >Region:</label
+                >
                 <div :id="select_regions" class="col-sm-8">
                     <select
+                        id="combine-regions-select"
                         ref="regions_select"
                         v-model="species_community.regions"
                         style="width: 100%"
@@ -250,34 +276,46 @@
                 :key="species.id"
                 class="row mb-3"
             >
-                <label for="" class="col-sm-3 col-form-label text-secondary"
+                <label
+                    :for="'combine-districts-select-' + species.id"
+                    class="col-sm-3 col-form-label text-secondary"
                     >{{ species.species_number }} District:</label
                 >
                 <div class="col-sm-8">
-                    <label for="" class="control-label">{{
-                        getselectedDistrictNames(species)
-                    }}</label>
+                    <label
+                        :for="'combine-districts-select-' + species.id"
+                        class="control-label"
+                        >{{ getselectedDistrictNames(species) }}</label
+                    >
                 </div>
                 <div class="col-sm-1">
-                    <input
-                        :id="'districts_select_chk' + species.id"
-                        class="form-check-input"
-                        type="checkbox"
-                        @change="
-                            checkRegionDistrictInput(
-                                'districts_select_chk' + species.id,
-                                'districts',
-                                species,
-                                'districts_select'
-                            )
-                        "
-                    />
+                    <div class="form-check form-check-inline">
+                        <input
+                            :id="'combine-districts-select-' + species.id"
+                            class="form-check-input"
+                            type="checkbox"
+                            :disabled="isDistrictCheckboxDisabled(species)"
+                            @change="
+                                checkRegionDistrictInput(
+                                    'combine-districts-select-' + species.id,
+                                    'districts',
+                                    species,
+                                    'districts_select'
+                                )
+                            "
+                        />
+                    </div>
                 </div>
             </div>
             <div class="row mb-3 pb-3 border-bottom pt-3 custom-border-top">
-                <label for="" class="col-sm-3 col-form-label">District:</label>
+                <label
+                    for="combine-districts-select"
+                    class="col-sm-3 col-form-label"
+                    >District:</label
+                >
                 <div :id="select_districts" class="col-sm-8">
                     <select
+                        id="combine-districts-select"
                         ref="districts_select"
                         v-model="species_community.districts"
                         class="form-select"
@@ -340,38 +378,54 @@
                     </div>
                 </div>
                 <div class="col-sm-1">
-                    <input
-                        :id="
-                            'combine-number-of-occurrences-checkbox-' +
-                            species.id
-                        "
-                        class="form-check-input"
-                        type="checkbox"
-                        name="combine-number-of-occurrences-checkbox"
-                        @change="
-                            setOrClearValue(
+                    <div class="form-check form-check-inline">
+                        <input
+                            :id="
                                 'combine-number-of-occurrences-checkbox-' +
-                                    species.id,
-                                'combine-number-of-occurrences-' + species.id,
-                                'distribution.number_of_occurrences',
-                                species.distribution.number_of_occurrences
-                            )
-                        "
-                    />
+                                species.id
+                            "
+                            class="form-check-input"
+                            type="checkbox"
+                            name="combine-number-of-occurrences-checkbox"
+                            @change="
+                                setOrClearDistributionValue({
+                                    fieldPath:
+                                        'distribution.number_of_occurrences',
+                                    speciesDistribution: species.distribution,
+                                    autoField: 'noo_auto',
+                                    manualField: 'number_of_occurrences',
+                                    event: $event,
+                                })
+                            "
+                        />
+                    </div>
                 </div>
             </div>
             <div class="row mb-3 pb-3 border-bottom pt-3 custom-border-top">
-                <label for="" class="col-sm-4 col-form-label"
+                <label
+                    for="combine-number-of-occurrences"
+                    class="col-sm-4 col-form-label"
                     >Number of Occurrences:</label
                 >
                 <div class="col-sm-4">
                     <input
-                        id="no_of_occurrences"
+                        v-if="species_community.distribution.noo_auto"
+                        id="combine-number-of-occurrences"
+                        ref="number_of_occurrences"
+                        v-model="species_community.occurrence_count"
+                        :disabled="species_community.distribution.noo_auto"
+                        type="number"
+                        class="form-control"
+                        placeholder=""
+                    />
+                    <input
+                        v-else
+                        id="combine-number-of-occurrences"
+                        ref="number_of_occurrences"
                         v-model="
                             species_community.distribution.number_of_occurrences
                         "
                         type="number"
-                        :disabled="species_community.distribution.noo_auto"
                         class="form-control"
                         placeholder=""
                     />
@@ -405,7 +459,9 @@
                     :key="species.id"
                     class="row mb-3"
                 >
-                    <label for="" class="col-sm-4 col-form-label text-secondary"
+                    <label
+                        :for="'combine-extent-of-occurrences-' + species.id"
+                        class="col-sm-4 col-form-label text-secondary"
                         >{{ species.species_number }} Extent of
                         Occurrences:</label
                     >
@@ -459,45 +515,66 @@
                         </div>
                     </div>
                     <div class="col-sm-1">
-                        <input
-                            :id="
-                                'combine-extent-of-occurrences-checkbox-' +
-                                species.id
-                            "
-                            class="form-check-input"
-                            type="checkbox"
-                            name="combine-extent-of-occurrences-checkbox"
-                            @change="
-                                setOrClearValue(
+                        <div class="form-check form-check-inline">
+                            <input
+                                :id="
                                     'combine-extent-of-occurrences-checkbox-' +
-                                        species.id,
-                                    'combine-extent-of-occurrences-' +
-                                        species.id,
-                                    'distribution.extent_of_occurrences',
-                                    species.distribution.extent_of_occurrences
-                                )
-                            "
-                        />
+                                    species.id
+                                "
+                                class="form-check-input"
+                                type="checkbox"
+                                name="combine-extent-of-occurrences-checkbox"
+                                @change="
+                                    setOrClearDistributionValue({
+                                        fieldPath:
+                                            'distribution.extent_of_occurrences',
+                                        speciesDistribution:
+                                            species.distribution,
+                                        autoField: 'eoo_auto',
+                                        manualField: 'extent_of_occurrences',
+                                        event: $event,
+                                    })
+                                "
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="row mb-3 pb-3 border-bottom pt-3 custom-border-top">
-                <label for="" class="col-sm-4 col-form-label"
+                <label
+                    for="combine-extent-of-occurrences"
+                    class="col-sm-4 col-form-label"
                     >Extent of Occurrences:</label
                 >
                 <div class="col-sm-4">
                     <div class="input-group">
                         <input
+                            v-if="species_community.distribution.eoo_auto"
                             id="combine-extent-of-occurrences"
+                            v-model="
+                                species_community.area_occurrence_convex_hull_km2
+                            "
+                            :disabled="species_community.distribution.eoo_auto"
+                            type="number"
+                            class="form-control"
+                            placeholder=""
+                        />
+                        <input
+                            v-else
+                            id="combine-extent-of-occurrences"
+                            ref="extent_of_occurrences"
                             v-model="
                                 species_community.distribution
                                     .extent_of_occurrences
                             "
                             type="number"
-                            :disabled="species_community.distribution.eoo_auto"
+                            min="0.00"
+                            step="0.00001"
+                            max="9999999999.99"
                             class="form-control"
                             placeholder=""
-                        /><span
+                        />
+                        <span
                             id="combine-extent-of-occurrences-km2-addon"
                             class="input-group-text"
                             >km&#xb2;</span
@@ -533,56 +610,87 @@
                     :key="species.id"
                     class="row mb-3"
                 >
-                    <label for="" class="col-sm-4 col-form-label text-secondary"
-                        >{{ species.species_number }} Area of Occupancy:</label
-                    >
+                    <label
+                        :for="'combine-area-of-occupancy-' + species.id"
+                        class="col-sm-4 col-form-label text-secondary"
+                        >{{ species.species_number }} Area of Occupancy:
+                    </label>
                     <div class="col-sm-4 d-flex align-items-center">
-                        <input
-                            :id="'combine-area-of-occupancy-' + species.id"
-                            v-model="species.distribution.area_of_occupancy"
-                            :disabled="true"
-                            type="number"
-                            class="form-control"
-                            placeholder=""
-                        />
+                        <div class="input-group">
+                            <input
+                                :id="'combine-area-of-occupancy-' + species.id"
+                                v-model="species.distribution.area_of_occupancy"
+                                :disabled="true"
+                                type="number"
+                                class="form-control"
+                                placeholder=""
+                            /><span
+                                :id="
+                                    'combine-area-of-occupancy-km2-addon' +
+                                    species.id
+                                "
+                                class="input-group-text"
+                                >km&#xb2;</span
+                            >
+                        </div>
                     </div>
                     <div class="col-sm-3"></div>
                     <div class="col-sm-1">
-                        <input
-                            :id="
-                                'combine-area-of-occupancy-checkbox-' +
-                                species.id
-                            "
-                            class="form-check-input"
-                            type="checkbox"
-                            name="combine-area-of-occupancy-checkbox"
-                            @change="
-                                setOrClearValue(
+                        <div class="form-check form-check-inline">
+                            <input
+                                :id="
                                     'combine-area-of-occupancy-checkbox-' +
-                                        species.id,
-                                    'combine-area-of-occupancy-' + species.id,
-                                    'distribution.area_of_occupancy',
-                                    species.distribution.area_of_occupancy
-                                )
-                            "
-                        />
+                                    species.id
+                                "
+                                class="form-check-input"
+                                type="checkbox"
+                                name="combine-area-of-occupancy-checkbox"
+                                @change="
+                                    setOrClearDistributionValue({
+                                        fieldPath:
+                                            'distribution.area_of_occupancy',
+                                        speciesDistribution:
+                                            species.distribution,
+                                        autoField: null,
+                                        manualField: 'area_of_occupancy',
+                                        event: $event,
+                                    })
+                                "
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="row mb-3 pb-3 border-bottom pt-3 custom-border-top">
-                <label for="" class="col-sm-4 col-form-label"
-                    >Area of Occupancy:</label
+                <label
+                    for="combine-area-of-occupancy"
+                    class="col-sm-4 col-form-label"
+                    >Area of Occupancy:
+                    <div
+                        id="combine-area-of-occupancy-help-text"
+                        class="form-text"
+                    >
+                        Based on IUCN 2km x 2km grid method
+                    </div></label
                 >
                 <div class="col-sm-4">
-                    <input
-                        id="combine-area-of-occupancy"
-                        v-model="
-                            species_community.distribution.area_of_occupancy
-                        "
-                        type="number"
-                        class="form-control"
-                        placeholder=""
-                    />
+                    <div class="input-group">
+                        <input
+                            id="combine-area-of-occupancy"
+                            ref="area_of_occupancy"
+                            v-model="
+                                species_community.distribution.area_of_occupancy
+                            "
+                            type="number"
+                            class="form-control"
+                            placeholder=""
+                        />
+                        <span
+                            id="combine-area-of-occupancy-km2-addon"
+                            class="input-group-text"
+                            >km&#xb2;</span
+                        >
+                    </div>
                 </div>
             </div>
             <div>
@@ -591,7 +699,9 @@
                     :key="species.id"
                     class="row mb-3"
                 >
-                    <label for="" class="col-sm-4 col-form-label text-secondary"
+                    <label
+                        :for="'combine-actual-area-of-occupancy-' + species.id"
+                        class="col-sm-4 col-form-label text-secondary"
                         >{{ species.species_number }} Actual Area of
                         Occupancy:</label
                     >
@@ -645,47 +755,69 @@
                         </div>
                     </div>
                     <div class="col-sm-1">
-                        <input
-                            :id="
-                                'combine-area-of-occupancy-actual-checkbox-' +
-                                species.id
-                            "
-                            class="form-check-input"
-                            type="checkbox"
-                            name="combine-area-of-occupancy-actual-checkbox"
-                            @change="
-                                setOrClearValue(
+                        <div class="form-check form-check-inline">
+                            <input
+                                :id="
                                     'combine-area-of-occupancy-actual-checkbox-' +
-                                        species.id,
-                                    'area_of_occupancy_actual_orig',
-                                    'distribution.area_of_occupancy_actual',
-                                    species.distribution
-                                        .area_of_occupancy_actual
-                                )
-                            "
-                        />
+                                    species.id
+                                "
+                                class="form-check-input"
+                                type="checkbox"
+                                name="combine-area-of-occupancy-actual-checkbox"
+                                @change="
+                                    setOrClearDistributionValue({
+                                        fieldPath:
+                                            'distribution.area_of_occupancy_actual',
+                                        speciesDistribution:
+                                            species.distribution,
+                                        autoField: 'aoo_actual_auto',
+                                        manualField: 'area_of_occupancy_actual',
+                                        event: $event,
+                                    })
+                                "
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="row mb-3 pb-3 border-bottom pt-3 custom-border-top">
-                <label for="" class="col-sm-4 col-form-label"
+                <label
+                    for="combine-actual-area-of-occupancy"
+                    class="col-sm-4 col-form-label"
                     >Actual Area of Occupancy:</label
                 >
                 <div class="col-sm-4">
                     <div class="input-group">
                         <input
-                            id="area_of_occupancy_actual"
-                            v-model="
-                                species_community.distribution
-                                    .area_of_occupancy_actual
+                            v-if="
+                                species_community.distribution.aoo_actual_auto
                             "
+                            id="area_of_occupancy_actual"
+                            ref="area_of_occupancy_actual"
+                            v-model="species_community.area_of_occupancy_km2"
                             :disabled="
                                 species_community.distribution.aoo_actual_auto
                             "
                             type="number"
+                            step="any"
                             class="form-control"
                             placeholder=""
-                        /><span
+                            area-describedby=""
+                        />
+                        <input
+                            v-else
+                            id="area_of_occupancy_actual"
+                            ref="area_of_occupancy_actual"
+                            v-model="
+                                species_community.distribution
+                                    .area_of_occupancy_actual
+                            "
+                            type="number"
+                            step="any"
+                            class="form-control"
+                            placeholder=""
+                        />
+                        <span
                             id="area_of_occupancy_km2-addon"
                             class="input-group-text"
                             >km&#xb2;</span
@@ -725,13 +857,17 @@
                     :key="species.id"
                     class="row mb-3"
                 >
-                    <label for="" class="col-sm-4 col-form-label text-secondary"
+                    <label
+                        for="'combine-number-of-iucn-locations-' + species.id"
+                        class="col-sm-4 col-form-label text-secondary"
                         >{{ species.species_number }} Number of IUCN
                         Locations:</label
                     >
                     <div class="col-sm-4">
                         <input
-                            id="no_of_iucn_locations"
+                            :id="
+                                'combine-number-of-iucn-locations-' + species.id
+                            "
                             v-model="
                                 species.distribution.number_of_iucn_locations
                             "
@@ -743,31 +879,37 @@
                     </div>
                     <div class="col-sm-3"></div>
                     <div class="col-sm-1">
-                        <input
-                            id="no_of_iucn_locations_checkbox"
-                            class="form-check-input"
-                            type="checkbox"
-                            name="no_of_iucn_locations_checkbox"
-                            @change="
-                                setOrClearValue(
-                                    'no_of_iucn_locations_checkbox',
-                                    'no_of_iucn_locations',
-                                    'distribution.number_of_iucn_locations',
-                                    species_community.distribution
-                                        .number_of_iucn_locations
-                                )
-                            "
-                        />
+                        <div class="form-check form-check-inline">
+                            <input
+                                id="no_of_iucn_locations_checkbox"
+                                class="form-check-input"
+                                type="checkbox"
+                                name="no_of_iucn_locations_checkbox"
+                                @change="
+                                    setOrClearDistributionValue({
+                                        fieldPath:
+                                            'distribution.number_of_iucn_locations',
+                                        speciesDistribution:
+                                            species.distribution,
+                                        autoField: null,
+                                        manualField: 'number_of_iucn_locations',
+                                        event: $event,
+                                    })
+                                "
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="row mb-1 pt-3 custom-border-top">
-                <label for="" class="col-sm-4 col-form-label"
+                <label
+                    for="combine-number-of-iucn-locations"
+                    class="col-sm-4 col-form-label"
                     >Number of IUCN Locations:</label
                 >
                 <div class="col-sm-4">
                     <input
-                        id="no_of_iucn_locations"
+                        id="combine-number-of-iucn-locations"
                         v-model="
                             species_community.distribution
                                 .number_of_iucn_locations
@@ -790,13 +932,15 @@
                     :key="species.id"
                     class="row mb-3"
                 >
-                    <label for="" class="col-sm-3 col-form-label text-secondary"
+                    <label
+                        for="combine-department-file-numbers"
+                        class="col-sm-3 col-form-label text-secondary"
                         >{{ species.species_number }} Department File
                         Numbers:</label
                     >
                     <div class="col-sm-8">
                         <input
-                            id="department_file_numbers"
+                            id="combine-department-file-numbers"
                             v-model="species.department_file_numbers"
                             :disabled="true"
                             type="text"
@@ -805,29 +949,34 @@
                         />
                     </div>
                     <div class="col-sm-1">
-                        <input
-                            :id="'dept_file_chk' + species.id"
-                            class="form-check-input"
-                            type="checkbox"
-                            name="dept_file_chk"
-                            @change="
-                                checkDistributionInput(
-                                    'dept_file_chk',
-                                    'dept_file_chk' + species.id,
-                                    'department_file_numbers',
-                                    species.department_file_numbers
-                                )
-                            "
-                        />
+                        <div class="form-check form-check-inline">
+                            <input
+                                :id="'dept_file_chk' + species.id"
+                                class="form-check-input"
+                                type="checkbox"
+                                name="dept_file_chk"
+                                @change="
+                                    checkDistributionInput(
+                                        'dept_file_chk',
+                                        'dept_file_chk' + species.id,
+                                        'department_file_numbers',
+                                        species.department_file_numbers
+                                    )
+                                "
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="row mb-3 pb-3 border-bottom pt-3 custom-border-top">
-                <label for="" class="col-sm-3 col-form-label"
+                <label
+                    for="combine-department-file-numbers"
+                    class="col-sm-3 col-form-label"
                     >Department File Numbers:
                 </label>
                 <div class="col-sm-8">
                     <input
+                        id="combine-department-file-numbers"
                         ref="combine_department_file_numbers"
                         v-model="species_community.department_file_numbers"
                         type="text"
@@ -840,7 +989,9 @@
                 :key="species.id"
                 class="row mb-3"
             >
-                <label for="" class="col-sm-3 col-form-label text-secondary"
+                <label
+                    :for="'combine-last-data-curation-date' + species.id"
+                    class="col-sm-3 col-form-label text-secondary"
                     >{{ species.species_number }} Last data curation
                     date:</label
                 >
@@ -855,31 +1006,36 @@
                     />
                 </div>
                 <div class="col-sm-1">
-                    <input
-                        :id="
-                            'combine-last-data-curation-date-form-check' +
-                            species.id
-                        "
-                        class="form-check-input"
-                        type="checkbox"
-                        @change="
-                            checkDistributionInput(
-                                'combine-last-data-curation-date-form-check',
-                                'combine-last-data-curation-date-form-check-' +
-                                    species.id,
-                                'last_data_curation_date',
-                                species.last_data_curation_date
-                            )
-                        "
-                    />
+                    <div class="form-check form-check-inline">
+                        <input
+                            :id="
+                                'combine-last-data-curation-date-form-check' +
+                                species.id
+                            "
+                            class="form-check-input"
+                            type="checkbox"
+                            @change="
+                                checkDistributionInput(
+                                    'combine-last-data-curation-date-form-check',
+                                    'combine-last-data-curation-date-form-check-' +
+                                        species.id,
+                                    'last_data_curation_date',
+                                    species.last_data_curation_date
+                                )
+                            "
+                        />
+                    </div>
                 </div>
             </div>
             <div class="row mb-3 pb-3 border-bottom">
-                <label for="" class="col-sm-3 col-form-label"
+                <label
+                    for="combine-last-data-curation-date"
+                    class="col-sm-3 col-form-label"
                     >Last data curation date:
                 </label>
                 <div class="col-sm-8">
                     <input
+                        id="combine-last-data-curation-date"
                         ref="last_data_curation_date"
                         v-model="species_community.last_data_curation_date"
                         type="date"
@@ -896,7 +1052,9 @@
                 :key="species.id"
                 class="row mb-3"
             >
-                <label for="" class="col-sm-3 col-form-label text-secondary"
+                <label
+                    :for="'combine-conservation-plan-exists-no-' + species.id"
+                    class="col-sm-3 col-form-label text-secondary"
                     >{{ species.species_number }} Conservation Plan
                     Exists:</label
                 >
@@ -939,23 +1097,25 @@
                     />
                 </div>
                 <div class="col-sm-1">
-                    <input
-                        :id="
-                            'combine-conservation-plan-exists-checkbox-' +
-                            species.id
-                        "
-                        class="form-check-input"
-                        type="checkbox"
-                        name="combine-conservation-plan-exists-checkbox"
-                        @change="
-                            setOrClearValue(
-                                'conservation_plan_exists',
-                                species.conservation_plan_exists,
-                                $event.target.checked,
-                                $event
-                            )
-                        "
-                    />
+                    <div class="form-check form-check-inline">
+                        <input
+                            :id="
+                                'combine-conservation-plan-exists-checkbox-' +
+                                species.id
+                            "
+                            class="form-check-input"
+                            type="checkbox"
+                            name="combine-conservation-plan-exists-checkbox"
+                            @change="
+                                setOrClearValue(
+                                    'conservation_plan_exists',
+                                    species.conservation_plan_exists,
+                                    $event.target.checked,
+                                    $event
+                                )
+                            "
+                        />
+                    </div>
                 </div>
             </div>
             <div class="row mb-3 pb-3 border-bottom pt-3 custom-border-top">
@@ -997,7 +1157,11 @@
                     :key="species.id"
                     class="row mb-3"
                 >
-                    <label for="" class="col-sm-3 col-form-label text-secondary"
+                    <label
+                        :for="
+                            'combine-conservation-plan-reference-' + species.id
+                        "
+                        class="col-sm-3 col-form-label text-secondary"
                         >{{ species.species_number }} Conservation Plan
                         Reference:</label
                     >
@@ -1015,32 +1179,37 @@
                         />
                     </div>
                     <div class="col-sm-1">
-                        <input
-                            :id="
-                                'combine-conservation-plan-exists-checkbox-' +
-                                species.id
-                            "
-                            class="form-check-input"
-                            type="checkbox"
-                            name="combine-conservation-plan-reference-checkbox"
-                            @change="
-                                setOrClearValue(
-                                    'combine-conservation-plan-reference-' +
-                                        species.id,
-                                    species.conservation_plan_reference,
-                                    $event.target.checked,
-                                    $event
-                                )
-                            "
-                        />
+                        <div class="form-check form-check-inline">
+                            <input
+                                :id="
+                                    'combine-conservation-plan-exists-checkbox-' +
+                                    species.id
+                                "
+                                class="form-check-input"
+                                type="checkbox"
+                                name="combine-conservation-plan-reference-checkbox"
+                                @change="
+                                    setOrClearValue(
+                                        'combine-conservation-plan-reference-' +
+                                            species.id,
+                                        species.conservation_plan_reference,
+                                        $event.target.checked,
+                                        $event
+                                    )
+                                "
+                            />
+                        </div>
                     </div>
                 </div>
                 <div class="row mb-3 pb-3 border-bottom">
-                    <label for="" class="col-sm-3 col-form-label"
+                    <label
+                        for="combine-conservation-plan-reference"
+                        class="col-sm-3 col-form-label"
                         >Conservation Plan Reference:</label
                     >
                     <div class="col-sm-8">
                         <input
+                            id="combine-conservation-plan-reference"
                             ref="conservation_plan_reference"
                             v-model="
                                 species_community.conservation_plan_reference
@@ -1058,7 +1227,9 @@
                     :key="species.id"
                     class="row mb-3"
                 >
-                    <label for="" class="col-sm-3 col-form-label text-secondary"
+                    <label
+                        :for="'combine-comment-' + species.id"
+                        class="col-sm-3 col-form-label text-secondary"
                         >{{ species.species_number }} Comment:</label
                     >
                     <div class="col-sm-8">
@@ -1071,28 +1242,32 @@
                         />
                     </div>
                     <div class="col-sm-1">
-                        <input
-                            :id="'combine-comment-chk-' + species.id"
-                            class="form-check-input"
-                            type="checkbox"
-                            :name="'combine-comment-chk-' + species.id"
-                            @change="
-                                concatenateOrRemoveValue(
-                                    'combine-comment-chk-' + species.id,
-                                    'combine-comment-' + species.id,
-                                    'comment',
-                                    species.comment
-                                )
-                            "
-                        />
+                        <div class="form-check form-check-inline">
+                            <input
+                                :id="'combine-comment-chk-' + species.id"
+                                class="form-check-input"
+                                type="checkbox"
+                                :name="'combine-comment-chk-' + species.id"
+                                @change="
+                                    concatenateOrRemoveValue(
+                                        'combine-comment-chk-' + species.id,
+                                        'combine-comment-' + species.id,
+                                        'comment',
+                                        species.comment
+                                    )
+                                "
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="row mb-1 pt-3 custom-border-top">
-                <label for="" class="col-sm-3 col-form-label">Comment:</label>
+                <label for="combine-comment" class="col-sm-3 col-form-label"
+                    >Comment:</label
+                >
                 <div class="col-sm-8">
                     <textarea
-                        id="comment"
+                        id="combine-comment"
                         v-model="species_community.comment"
                         class="form-control"
                         rows="3"
@@ -1148,33 +1323,35 @@ export default {
     watch: {
         'species_community.distribution.noo_auto': function (newVal) {
             let vm = this;
-            var selectedValue = newVal;
-            if (selectedValue === 'true') {
+            if (newVal === true || newVal === 'true') {
                 vm.species_community.distribution.number_of_occurrences =
-                    vm.species_community.distribution.cal_number_of_occurrences;
+                    vm.species_community.occurrence_count;
             } else {
-                vm.species_community.distribution.number_of_occurrences = null;
+                vm.$nextTick(() => {
+                    vm.$refs.number_of_occurrences.focus();
+                });
             }
         },
         'species_community.distribution.eoo_auto': function (newVal) {
             let vm = this;
-            var selectedValue = newVal;
-            if (selectedValue === 'true') {
+            if (newVal === true || newVal === 'true') {
                 vm.species_community.distribution.extent_of_occurrences =
-                    vm.species_community.distribution.cal_extent_of_occurrences;
+                    vm.species_community.area_occurrence_convex_hull_km2;
             } else {
-                vm.species_community.distribution.extent_of_occurrences = null;
+                vm.$nextTick(() => {
+                    vm.$refs.extent_of_occurrences.focus();
+                });
             }
         },
         'species_community.distribution.aoo_actual_auto': function (newVal) {
             let vm = this;
-            var selectedValue = newVal;
-            if (selectedValue === 'true') {
+            if (newVal === true || newVal === 'true') {
                 vm.species_community.distribution.area_of_occupancy_actual =
-                    vm.species_community.distribution.cal_area_of_occupancy_actual;
+                    vm.species_community.area_of_occupancy_km2;
             } else {
-                vm.species_community.distribution.area_of_occupancy_actual =
-                    null;
+                vm.$nextTick(() => {
+                    vm.$refs.area_of_occupancy_actual.focus();
+                });
             }
         },
         'species_community.taxonomy_id': function () {
@@ -1184,22 +1361,25 @@ export default {
             );
         },
     },
+    computed: {
+        validDistrictIds() {
+            // Get all valid district IDs for the selected regions
+            let ids = [];
+            this.region_list.forEach((region) => {
+                if (
+                    this.species_community.regions &&
+                    this.species_community.regions.includes(region.value)
+                ) {
+                    region.districts.forEach((district) => {
+                        ids.push(district.id);
+                    });
+                }
+            });
+            return ids;
+        },
+    },
     created: async function () {
         let vm = this;
-        //----set the distribution field values if auto onload
-        if (vm.species_community.distribution.noo_auto == true) {
-            vm.species_community.distribution.number_of_occurrences =
-                vm.species_community.distribution.cal_number_of_occurrences;
-        }
-        if (vm.species_community.distribution.eoo_auto == true) {
-            vm.species_community.distribution.extent_of_occurrences =
-                vm.species_community.distribution.cal_extent_of_occurrences;
-        }
-        if (vm.species_community.distribution.aoo_actual_auto == true) {
-            vm.species_community.distribution.area_of_occupancy_actual =
-                vm.species_community.distribution.cal_area_of_occupancy_actual;
-        }
-
         vm.fetchRegions();
         vm.species_community_copy = JSON.parse(
             JSON.stringify(vm.species_community)
@@ -1324,28 +1504,91 @@ export default {
             species,
             select2_ref = ''
         ) {
-            // if checkbox is checked copy value from original  species to new species
-            if ($('#' + chkbox).is(':checked') == true) {
-                this.species_community[obj_field] = species[obj_field];
-                if (select2_ref != '') {
-                    $(this.$refs[select2_ref])
-                        .val(this.species_community[obj_field])
-                        .trigger('change');
-                    this.chainedSelectDistricts(
-                        this.species_community.regions,
-                        'select'
-                    );
-                    this.species_community[obj_field] = species[obj_field];
-                }
+            // Get the value to add/remove (array for regions/districts)
+            const value = species[obj_field];
+            // Get the current array from the combined object
+            let current = Array.isArray(this.species_community[obj_field])
+                ? [...this.species_community[obj_field]]
+                : [];
+
+            if ($('#' + chkbox).is(':checked')) {
+                // Add values not already present (robust to type)
+                value.forEach((v) => {
+                    if (!current.map(String).includes(String(v)))
+                        current.push(v);
+                });
             } else {
-                if (select2_ref != '') {
-                    $(this.$refs[select2_ref]).val('').trigger('change');
-                    this.chainedSelectDistricts(
-                        this.species_community.regions,
-                        'deselect'
+                // Remove values, robust to type (string/number) mismatches
+                const valueStr = value.map(String);
+                current = current.filter((v) => !valueStr.includes(String(v)));
+            }
+
+            // Set the updated array
+            this.species_community[obj_field] = current;
+
+            // If using select2, update the UI
+            if (select2_ref && this.$refs[select2_ref]) {
+                $(this.$refs[select2_ref]).val(current).trigger('change');
+                if (obj_field === 'regions') {
+                    this.chainedSelectDistricts(current, 'select');
+                }
+            }
+
+            if (obj_field === 'regions') {
+                // Get all valid district IDs for the selected regions
+                let validDistrictIds = [];
+                this.region_list.forEach((region) => {
+                    if (current.map(String).includes(String(region.value))) {
+                        region.districts.forEach((district) => {
+                            validDistrictIds.push(district.id);
+                        });
+                    }
+                });
+
+                // Start with current districts or empty array
+                let districtsCurrent = Array.isArray(
+                    this.species_community.districts
+                )
+                    ? [...this.species_community.districts]
+                    : [];
+
+                if (
+                    $('#' + chkbox).is(':checked') &&
+                    Array.isArray(species.districts)
+                ) {
+                    // Concatenate valid districts from this species
+                    species.districts.forEach((d) => {
+                        if (
+                            validDistrictIds.map(String).includes(String(d)) &&
+                            !districtsCurrent.map(String).includes(String(d))
+                        ) {
+                            districtsCurrent.push(d);
+                        }
+                    });
+                } else if (Array.isArray(species.districts)) {
+                    // Remove only the districts from this species, robust to type
+                    const speciesDistrictsStr = species.districts.map(String);
+                    districtsCurrent = districtsCurrent.filter(
+                        (d) => !speciesDistrictsStr.includes(String(d))
                     );
                 }
-                this.species_community[obj_field] = [];
+
+                // Only keep districts that are valid for the selected regions (robust to type)
+                const validDistrictIdsStr = validDistrictIds.map(String);
+                districtsCurrent = districtsCurrent.filter((d) =>
+                    validDistrictIdsStr.includes(String(d))
+                );
+
+                this.species_community.districts = districtsCurrent;
+
+                // Update select2 for districts
+                this.$nextTick(() => {
+                    if (this.$refs.districts_select) {
+                        $(this.$refs.districts_select)
+                            .val(this.species_community.districts)
+                            .trigger('change');
+                    }
+                });
             }
         },
         fetchRegions: function () {
@@ -1382,11 +1625,8 @@ export default {
             }
             return { districts: [] };
         },
-        chainedSelectDistricts: function (regions, action) {
+        chainedSelectDistricts: function (regions) {
             let vm = this;
-            if (action != 'fetch') {
-                vm.species_community.districts = []; //-----to remove the previous selection
-            }
             vm.district_list = [];
             if (regions) {
                 for (let r of regions) {
@@ -1415,22 +1655,30 @@ export default {
                     dropdownParent: $('#' + vm.select_regions),
                     placeholder: 'Select Region',
                 })
-                .on('select2:select', function (e) {
-                    var selected = $(e.currentTarget);
-                    vm.species_community.regions = selected.val();
+                .on('change', function (e) {
+                    // Always assign a new array reference!
+                    vm.species_community.regions = [
+                        ...($(e.currentTarget).val() || []).map(Number),
+                    ];
                     vm.chainedSelectDistricts(
                         vm.species_community.regions,
                         'select'
                     );
-                })
-                .on('select2:unselect', function (e) {
-                    var selected = $(e.currentTarget);
-                    vm.species_community.regions = selected.val();
-                    vm.chainedSelectDistricts(
-                        vm.species_community.regions,
-                        'deselect'
-                    );
+                    vm.$forceUpdate(); // Ensure Vue reactivity
                 });
+        },
+        isDistrictCheckboxDisabled(species) {
+            // Disable if no regions are selected
+            if (
+                !this.species_community.regions ||
+                this.species_community.regions.length === 0
+            ) {
+                return true;
+            }
+            // Use the computed property so Vue tracks reactivity!
+            const validDistrictIds = this.validDistrictIds;
+            // Enable if at least one district in this species is valid for the selected regions
+            return !species.districts.some((d) => validDistrictIds.includes(d));
         },
         initialiseDistrictSelect: function () {
             let vm = this;
@@ -1519,6 +1767,74 @@ export default {
                         this.species_community_copy[fieldName];
                 } else {
                     this.species_community[fieldName] = '';
+                }
+            }
+        },
+        setOrClearDistributionValue({
+            fieldPath, // e.g. 'distribution.number_of_occurrences'
+            speciesDistribution, // e.g. species.distribution
+            autoField, // e.g. 'noo_auto'
+            manualField, // e.g. 'number_of_occurrences'
+            event,
+        }) {
+            const checked = event.target.checked;
+            let vm = this;
+
+            if (checked) {
+                // Uncheck all other checkboxes with the same name
+                const name = event.target.name;
+                const checkboxes = document.querySelectorAll(
+                    `input[type="checkbox"][name="${name}"]`
+                );
+                checkboxes.forEach((cb) => {
+                    if (cb !== event.target) {
+                        cb.checked = false;
+                    }
+                });
+
+                // 1. Detect the auto/manual state of the source species
+                let sourceIsAuto = false;
+                if (
+                    autoField &&
+                    speciesDistribution &&
+                    autoField in speciesDistribution
+                ) {
+                    sourceIsAuto =
+                        speciesDistribution[autoField] === true ||
+                        speciesDistribution[autoField] === 'true';
+                }
+
+                // 2. Set the combined profile's auto/manual flag to match the source species
+                if (autoField) {
+                    vm.species_community.distribution[autoField] = sourceIsAuto;
+                }
+
+                // 3. Copy the correct value based on the new combined profile state
+                let valueToCopy;
+                if (manualField) {
+                    valueToCopy = speciesDistribution[manualField];
+                } else {
+                    valueToCopy = speciesDistribution;
+                }
+                h.setNested(vm.species_community, fieldPath, valueToCopy);
+            } else {
+                // Restore from backup or clear
+                let backup = this.species_community_copy;
+                let restored = h.getNested(backup, fieldPath);
+                h.setNested(
+                    vm.species_community,
+                    fieldPath,
+                    restored !== undefined ? restored : ''
+                );
+                // Restore the auto/manual flag as well
+                if (
+                    autoField &&
+                    backup &&
+                    backup.distribution &&
+                    autoField in backup.distribution
+                ) {
+                    vm.species_community.distribution[autoField] =
+                        backup.distribution[autoField];
                 }
             }
         },
