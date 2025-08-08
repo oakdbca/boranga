@@ -1070,7 +1070,6 @@ class Species(RevisionedMixin):
             species=self,
             processing_status__in=[
                 Occurrence.PROCESSING_STATUS_ACTIVE,
-                Occurrence.PROCESSING_STATUS_LOCKED,
             ],
         ).count()
 
@@ -1086,7 +1085,6 @@ class Species(RevisionedMixin):
             occurrence__species=self,
             occurrence__processing_status__in=[
                 Occurrence.PROCESSING_STATUS_ACTIVE,
-                Occurrence.PROCESSING_STATUS_LOCKED,
             ],
         ).aggregate(sum=Sum("area"))["sum"]
         if self.group_type.name == GroupType.GROUP_TYPE_FAUNA:
@@ -1094,7 +1092,6 @@ class Species(RevisionedMixin):
                 buffered_from_geometry__occurrence__species=self,
                 buffered_from_geometry__occurrence__processing_status__in=[
                     Occurrence.PROCESSING_STATUS_ACTIVE,
-                    Occurrence.PROCESSING_STATUS_LOCKED,
                 ],
             ).aggregate(sum=Sum("area"))["sum"]
 
@@ -1123,7 +1120,6 @@ class Species(RevisionedMixin):
                 occurrence__species=self,
                 occurrence__processing_status__in=[
                     Occurrence.PROCESSING_STATUS_ACTIVE,
-                    Occurrence.PROCESSING_STATUS_LOCKED,
                 ],
             )
             .annotate(geom=Cast("geometry", gis_models.GeometryField(geography=True)))
@@ -1135,7 +1131,6 @@ class Species(RevisionedMixin):
                     buffered_from_geometry__occurrence__species=self,
                     buffered_from_geometry__occurrence__processing_status__in=[
                         Occurrence.PROCESSING_STATUS_ACTIVE,
-                        Occurrence.PROCESSING_STATUS_LOCKED,
                     ],
                 )
                 .annotate(
@@ -1806,7 +1801,6 @@ class Community(RevisionedMixin):
             community=self,
             processing_status__in=[
                 Occurrence.PROCESSING_STATUS_ACTIVE,
-                Occurrence.PROCESSING_STATUS_LOCKED,
             ],
         ).count()
 
@@ -1822,7 +1816,6 @@ class Community(RevisionedMixin):
             occurrence__community=self,
             occurrence__processing_status__in=[
                 Occurrence.PROCESSING_STATUS_ACTIVE,
-                Occurrence.PROCESSING_STATUS_LOCKED,
             ],
         ).aggregate(sum=Sum("area"))["sum"]
         if self.group_type.name == GroupType.GROUP_TYPE_FAUNA:
@@ -1830,7 +1823,6 @@ class Community(RevisionedMixin):
                 buffered_from_geometry__occurrence__community=self,
                 buffered_from_geometry__occurrence__processing_status__in=[
                     Occurrence.PROCESSING_STATUS_ACTIVE,
-                    Occurrence.PROCESSING_STATUS_LOCKED,
                 ],
             ).aggregate(sum=Sum("area"))["sum"]
 
@@ -1859,7 +1851,6 @@ class Community(RevisionedMixin):
                 occurrence__community=self,
                 occurrence__processing_status__in=[
                     Occurrence.PROCESSING_STATUS_ACTIVE,
-                    Occurrence.PROCESSING_STATUS_LOCKED,
                 ],
             )
             .annotate(geom=Cast("geometry", gis_models.GeometryField(geography=True)))
@@ -1871,7 +1862,6 @@ class Community(RevisionedMixin):
                     buffered_from_geometry__occurrence__community=self,
                     buffered_from_geometry__occurrence__processing_status__in=[
                         Occurrence.PROCESSING_STATUS_ACTIVE,
-                        Occurrence.PROCESSING_STATUS_LOCKED,
                     ],
                 )
                 .annotate(
