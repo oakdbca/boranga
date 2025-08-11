@@ -9,7 +9,7 @@
                 <p>Select a species from this combine:</p>
                 <ul class="list-group ps-3">
                     <li
-                        v-for="(species, index) in existingSpeciesCombineList"
+                        v-for="(species, index) in speciesCombineList"
                         :key="species.id"
                         class="list-group-item"
                     >
@@ -21,16 +21,14 @@
                             "
                             :value="index"
                             name="resulting-species-from-combined"
-                            v-model="selectedSpeciesIndex"
-                            @mousedown="
-                                beforeChangeSelectedSpecies($event, index)
-                            "
+                            :checked="selectedSpeciesIndex === index"
+                            @change="onSelectedSpeciesChange($event, index)"
                         />
                         <span class="pe-2"
                             >{{ species.species_number }} -
                             {{ species.taxonomy_details.scientific_name }}
                         </span>
-                        <span v-if="index == 0" class="badge bg-secondary"
+                        <span v-if="index === 0" class="badge bg-secondary"
                             >Original</span
                         >
                     </li>
@@ -57,7 +55,7 @@
                         id="pills-profile-tab"
                         class="nav-link active"
                         data-bs-toggle="pill"
-                        :href="'#' + profileTabId"
+                        :data-bs-target="'#' + profileTabId"
                         role="tab"
                         :aria-controls="profileTabId"
                         aria-selected="true"
@@ -70,10 +68,10 @@
                         id="pills-combine-documents-tab"
                         class="nav-link"
                         data-bs-toggle="pill"
-                        :href="'#' + documentTabId"
+                        :data-bs-target="'#' + documentTabId"
                         role="tab"
-                        aria-controls="pills-combine-documents"
-                        :aria-selected="documentTabId"
+                        :aria-controls="documentTabId"
+                        aria-selected="false"
                     >
                         Documents
                     </a>
@@ -83,7 +81,7 @@
                         id="pills-combine-threats-tab"
                         class="nav-link"
                         data-bs-toggle="pill"
-                        :href="'#' + threatTabId"
+                        :data-bs-target="'#' + threatTabId"
                         role="tab"
                         :aria-controls="threatTabId"
                         aria-selected="false"
@@ -104,7 +102,7 @@
                         id="speciesInformation"
                         ref="species_information"
                         :species_community="resultingSpecies"
-                        :species-being-combined="existingSpeciesCombineList"
+                        :species-being-combined="speciesCombineList"
                         :species_combine="true"
                     >
                     </SpeciesProfile>
@@ -116,11 +114,11 @@
                     aria-labelledby="pills-combine-documents-tab"
                 >
                     <div
-                        v-for="(species, index) in existingSpeciesCombineList"
-                        :key="index"
+                        v-for="species in speciesCombineList"
+                        :key="species.id"
                     >
                         <SpeciesDocuments
-                            :id="'species-combine-documents-' + index"
+                            :id="'species-combine-documents-' + species.id"
                             ref="species_combine_documents"
                             :resulting_species_community="resultingSpecies"
                             :combine_species="species"
@@ -135,11 +133,11 @@
                     aria-labelledby="pills-combine-threats-tab"
                 >
                     <div
-                        v-for="(species, index) in existingSpeciesCombineList"
-                        :key="index"
+                        v-for="species in speciesCombineList"
+                        :key="species.id"
                     >
                         <SpeciesThreats
-                            :id="'species-combine-threats-' + index"
+                            :id="'species-combine-threats-' + species.id"
                             ref="species_combine_threats"
                             :resulting_species_community="resultingSpecies"
                             :combine_species="species"
@@ -171,7 +169,7 @@ export default {
         SpeciesThreats,
     },
     props: {
-        existingSpeciesCombineList: {
+        speciesCombineList: {
             type: Array,
             required: true,
         },
@@ -188,17 +186,122 @@ export default {
             profileTabId: 'profile-tab-' + uuid(),
             documentTabId: 'document-tab-' + uuid(),
             threatTabId: 'threat-tab-' + uuid(),
-            originalSpecies: this.existingSpeciesCombineList?.[0] || null,
             selectedSpeciesIndex: 0,
+            tabShownHandler: null,
         };
+    },
+    computed: {
+        originalSpecies() {
+            return this.speciesCombineList && this.speciesCombineList.length
+                ? this.speciesCombineList[0]
+                : null;
+        },
+    },
+    watch: {
+        speciesCombineList(list, old) {
+            if (!list || !list.length) {
+                this.selectedSpeciesIndex = null;
+                return;
+            }
+            // If current selection is out of range, reset & emit
+            if (
+                this.selectedSpeciesIndex == null ||
+                this.selectedSpeciesIndex >= list.length
+            ) {
+                this.selectedSpeciesIndex = 0;
+                // Ensure parent knows taxonomy reverted
+                this.$emit(
+                    'resulting-species-taxonomy-changed',
+                    list[0].taxonomy_id,
+                    list[0].id
+                );
+            }
+        },
     },
     mounted: function () {
         this.initialiseScientificNameLookup();
         this.addTabShownEvents();
     },
+    beforeUnmount() {
+        if (this.tabShownHandler) {
+            document
+                .querySelectorAll('a[data-bs-toggle="pill"]')
+                .forEach((el) =>
+                    el.removeEventListener('shown.bs.tab', this.tabShownHandler)
+                );
+        }
+        // Destroy select2 to prevent leaks
+        const el = this.$refs[this.scientific_name_lookup];
+        if (el && $(el).data('select2')) {
+            $(el).off().select2('destroy');
+        }
+    },
     methods: {
-        initialiseScientificNameLookup: function () {
-            let vm = this;
+        confirmTaxonomyDialog() {
+            return swal.fire({
+                title: 'Confirm Taxonomy Change?',
+                text: 'Changing the resulting species taxonomy will overwrite existing entered data.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Confirm Taxonomy Change',
+                reverseButtons: true,
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-secondary',
+                },
+            });
+        },
+        onSelectedSpeciesChange(event, newIndex) {
+            if (!this.speciesCombineList.length) return;
+            const oldIndex = this.selectedSpeciesIndex;
+            if (oldIndex === newIndex) return;
+            event.target.checked = false;
+            this.confirmTaxonomyDialog().then((result) => {
+                if (result.isConfirmed) {
+                    this.selectedSpeciesIndex = newIndex;
+                    $(this.$refs[this.scientific_name_lookup])
+                        .val(null)
+                        .trigger('change');
+                    this.$emit(
+                        'resulting-species-taxonomy-changed',
+                        this.speciesCombineList[newIndex].taxonomy_id,
+                        this.speciesCombineList[newIndex].id
+                    );
+                } else if (
+                    oldIndex != null &&
+                    this.speciesCombineList[oldIndex]
+                ) {
+                    const oldRadio = document.getElementById(
+                        'resulting-species-from-combined-' +
+                            this.speciesCombineList[oldIndex].id
+                    );
+                    if (oldRadio) oldRadio.checked = true;
+                }
+            });
+        },
+        addTabShownEvents() {
+            const normalize = (ref) =>
+                Array.isArray(ref) ? ref : ref ? [ref] : [];
+            this.tabShownHandler = (elEvent) => {
+                const id = elEvent.target.id;
+                if (id === 'pills-combine-documents-tab') {
+                    normalize(this.$refs.species_combine_documents).forEach(
+                        (c) => c.adjust_table_width()
+                    );
+                } else if (id === 'pills-combine-threats-tab') {
+                    normalize(this.$refs.species_combine_threats).forEach((c) =>
+                        c.adjust_table_width()
+                    );
+                }
+            };
+            document
+                .querySelectorAll('a[data-bs-toggle="pill"]')
+                .forEach((el) =>
+                    el.addEventListener('shown.bs.tab', this.tabShownHandler)
+                );
+        },
+        initialiseScientificNameLookup() {
+            const vm = this;
             $(vm.$refs[vm.scientific_name_lookup])
                 .select2({
                     minimumInputLength: 2,
@@ -209,36 +312,26 @@ export default {
                     ajax: {
                         url: api_endpoints.scientific_name_lookup,
                         dataType: 'json',
-                        data: function (params) {
-                            var query = {
+                        data(params) {
+                            return {
                                 term: params.term,
                                 type: 'public',
-                                group_type_id: vm.originalSpecies.group_type_id,
+                                group_type_id: vm.originalSpecies
+                                    ? vm.originalSpecies.group_type_id
+                                    : null,
                             };
-                            return query;
                         },
                     },
                 })
                 .on('select2:select', function (e) {
-                    swal.fire({
-                        title: 'Confirm Taxonomy Change?',
-                        text: 'Changing the resulting species taxonomy will result in any data you have entered below being overwritten.',
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonText: 'Confirm Taxonomy Change',
-                        reverseButtons: true,
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                            cancelButton: 'btn btn-secondary',
-                        },
-                    }).then((result) => {
+                    vm.confirmTaxonomyDialog().then((result) => {
                         if (!result.isConfirmed) {
                             $(vm.$refs[vm.scientific_name_lookup])
                                 .val(null)
                                 .trigger('change');
                         } else {
-                            let speciesId = e.params.data.species_id;
-                            let taxonomyId = e.params.data.id;
+                            const speciesId = e.params.data.species_id;
+                            const taxonomyId = e.params.data.id;
                             vm.selectedSpeciesIndex = null;
                             vm.$emit(
                                 'resulting-species-taxonomy-changed',
@@ -250,11 +343,13 @@ export default {
                 })
                 .on('select2:unselect', function () {
                     vm.selectedSpeciesIndex = 0;
-                    vm.$emit(
-                        'resulting-species-taxonomy-changed',
-                        vm.originalSpecies.taxonomy_id,
-                        vm.originalSpecies.id
-                    );
+                    if (vm.originalSpecies) {
+                        vm.$emit(
+                            'resulting-species-taxonomy-changed',
+                            vm.originalSpecies.taxonomy_id,
+                            vm.originalSpecies.id
+                        );
+                    }
                 })
                 .on('select2:open', function () {
                     const searchField = $(
@@ -262,54 +357,7 @@ export default {
                             vm.scientific_name_lookup +
                             '-results"]'
                     );
-                    searchField[0].focus();
-                });
-        },
-        beforeChangeSelectedSpecies: function (event, index) {
-            if (this.selectedSpeciesIndex !== index) {
-                swal.fire({
-                    title: 'Confirm Taxonomy Change?',
-                    text: 'Changing the resulting species taxonomy will result in any data you have entered below being overwritten.',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Confirm Taxonomy Change',
-                    reverseButtons: true,
-                    customClass: {
-                        confirmButton: 'btn btn-primary',
-                        cancelButton: 'btn btn-secondary',
-                    },
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        this.selectedSpeciesIndex = index;
-                        $(this.$refs[this.scientific_name_lookup])
-                            .val(null)
-                            .trigger('change');
-                        this.$emit(
-                            'resulting-species-taxonomy-changed',
-                            this.existingSpeciesCombineList[index].taxonomy_id,
-                            this.existingSpeciesCombineList[index].id
-                        );
-                    } else {
-                        event.preventDefault();
-                    }
-                });
-            }
-        },
-        addTabShownEvents: function () {
-            document
-                .querySelectorAll('a[data-bs-toggle="pill"]')
-                .forEach((el) => {
-                    el.addEventListener('shown.bs.tab', () => {
-                        if (el.id == 'pills-combine-threats-tab') {
-                            this.$refs.species_combine_threats.forEach(
-                                (component) => component.adjust_table_width()
-                            );
-                        } else if (el.id == 'pills-combine-documents-tab') {
-                            this.$refs.species_combine_documents.forEach(
-                                (component) => component.adjust_table_width()
-                            );
-                        }
-                    });
+                    searchField[0]?.focus();
                 });
         },
     },
