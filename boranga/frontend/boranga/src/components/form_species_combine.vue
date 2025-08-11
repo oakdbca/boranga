@@ -28,7 +28,10 @@
                             >{{ species.species_number }} -
                             {{ species.taxonomy_details.scientific_name }}
                         </span>
-                        <span v-if="index === 0" class="badge bg-secondary"
+                        <span class="badge bg-secondary me-2">{{
+                            species.processing_status
+                        }}</span
+                        ><span v-if="index === 0" class="badge bg-primary"
                             >Original</span
                         >
                     </li>
