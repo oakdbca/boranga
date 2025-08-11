@@ -110,7 +110,9 @@ export default {
             this.errorString = '';
         },
         addSpeciesToCombineList: function () {
-            this.$parent.speciesCombineList.push(this.selectedSpeciesObject);
+            this.$parent.addSpeciesObjectToCombineList(
+                this.selectedSpeciesObject
+            );
             this.$nextTick(() => {
                 this.$parent.showLastCombineSpeciesTab();
             });
