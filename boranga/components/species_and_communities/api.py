@@ -1376,19 +1376,6 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response(serializer.data)
 
-    @detail_route(methods=["DELETE"], detail=True)
-    def remove(self, request, *args, **kwargs):
-        # In the case of split species, when the action button is pressed a new species is created
-        # and saved to the database then if the user presses the cancel button on the modal, the
-        # new species is deleted. As such I belive using the delete method is justifiable for now
-        # However if we have time we can change the split action to only create the new species
-        # on submit. NOTE: PHASE2 Consider reworking split, combine and rename actions so they
-        # don't create records up front but rather only when the user submits the form. That way
-        # we won't need to have DELETE endpoints.
-        instance = self.get_object()
-        instance.remove(request)
-        return Response(status.HTTP_204_NO_CONTENT)
-
     @detail_route(methods=["post"], detail=True)
     @renderer_classes((JSONRenderer,))
     @transaction.atomic
