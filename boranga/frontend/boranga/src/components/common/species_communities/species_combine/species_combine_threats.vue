@@ -206,15 +206,12 @@ export default {
                     {
                         data: 'id',
                         mRender(data, type, full) {
-                            const isSelectAll =
-                                vm.isThreatSelectAll ||
-                                vm.resulting_species_community
-                                    .copy_all_threats === true;
-                            const ids =
-                                vm.resulting_species_community
-                                    .threat_ids_to_copy || [];
+                            const entry = vm.getThreatSelectionEntry();
+                            const isSelectAll = entry.mode === 'all';
                             const isChecked =
-                                isSelectAll || ids.includes(full.id);
+                                isSelectAll ||
+                                (entry.mode === 'individual' &&
+                                    entry.ids.includes(full.id));
                             const isDisabled = isSelectAll;
                             return `<input class='form-check-input' type="checkbox" data-add-threat="${full.id}"${
                                 isChecked ? ' checked' : ''
@@ -232,27 +229,13 @@ export default {
                     if (json && this.combine_species_threat_ids.length === 0) {
                         this.combine_species_threat_ids = json.map((d) => d.id);
                     }
-                    if (!this.resulting_species_community.threat_ids_to_copy) {
-                        this.resulting_species_community.threat_ids_to_copy =
-                            [];
-                    }
-                    if (this.isThreatSelectAll) {
-                        this.unionThreats(this.combine_species_threat_ids);
-                        this.resulting_species_community.copy_all_threats = true;
-                    }
                 },
             },
         };
     },
     mounted() {
-        // Default to selectAll per-species (stop using a shared parent threat_selection)
-        if (
-            !this.combine_species.threat_selection &&
-            !this.resulting_species_community.copy_all_threats
-        ) {
-            this.combine_species.threat_selection = 'selectAll';
-            this.resulting_species_community.copy_all_threats = true;
-        }
+        const entry = this.getThreatSelectionEntry();
+        if (!entry.mode) entry.mode = 'all';
         this.addEventListeners();
     },
     beforeUnmount() {
@@ -265,46 +248,56 @@ export default {
         }
     },
     computed: {
+        selectionEntry() {
+            return this.getThreatSelectionEntry();
+        },
         currentThreatSelection() {
-            if (this.combine_species.threat_selection) {
-                return this.combine_species.threat_selection;
-            }
-            return this.resulting_species_community.copy_all_threats
-                ? 'selectAll'
-                : 'individual';
+            return this.selectionEntry.mode === 'individual'
+                ? 'individual'
+                : 'selectAll';
         },
         isThreatSelectAll() {
             return this.currentThreatSelection === 'selectAll';
         },
     },
     methods: {
+        getThreatSelectionEntry() {
+            const map =
+                (this.resulting_species_community.selection &&
+                    this.resulting_species_community.selection.threats) ||
+                (this.resulting_species_community.selection = {
+                    documents: {},
+                    threats: {},
+                }).threats;
+            if (!map[this.combine_species.id]) {
+                map[this.combine_species.id] = { mode: 'all', ids: [] };
+            }
+            return map[this.combine_species.id];
+        },
         selectThreatOption(e) {
             const selected = e.target.value;
-            if (this.currentThreatSelection === selected) return;
-
-            // Update only this species (removed parent shared mutation)
-            this.combine_species.threat_selection = selected;
-
-            if (selected === 'selectAll') {
-                this.unionThreats(this.combine_species_threat_ids);
-                this.resulting_species_community.copy_all_threats = true;
-            } else {
-                this.resulting_species_community.copy_all_threats = false;
+            const entry = this.getThreatSelectionEntry();
+            if (selected === 'selectAll' && entry.mode !== 'all') {
+                entry.mode = 'all';
+                entry.ids = [];
+            } else if (
+                selected === 'individual' &&
+                entry.mode !== 'individual'
+            ) {
+                entry.mode = 'individual';
+                if (
+                    entry.ids.length === 0 &&
+                    this.combine_species_threat_ids.length
+                ) {
+                    entry.ids = this.combine_species_threat_ids.slice();
+                }
             }
-
             this.$nextTick(() =>
                 this.$refs.threats_datatable.vmDataTable.ajax.reload(
                     null,
                     false
                 )
             );
-        },
-        unionThreats(ids) {
-            const global =
-                this.resulting_species_community.threat_ids_to_copy || [];
-            const set = new Set(global);
-            ids.forEach((id) => set.add(id));
-            this.resulting_species_community.threat_ids_to_copy = [...set];
         },
         addEventListeners() {
             const dt =
@@ -317,16 +310,13 @@ export default {
                     evt.currentTarget.getAttribute('data-add-threat')
                 );
                 if (Number.isNaN(id)) return;
-                const list =
-                    this.resulting_species_community.threat_ids_to_copy;
+                const entry = this.getThreatSelectionEntry();
+                const list = entry.ids;
                 const idx = list.indexOf(id);
                 if (evt.currentTarget.checked) {
                     if (idx === -1) list.push(id);
-                } else if (idx > -1) {
-                    list.splice(idx, 1);
-                }
-                this.resulting_species_community.threat_ids_to_copy =
-                    list.slice();
+                } else if (idx > -1) list.splice(idx, 1);
+                entry.ids = list.slice();
             });
             dt.on('childRow.dt', () => helpers.enablePopovers());
         },

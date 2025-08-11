@@ -357,6 +357,10 @@ export default {
         );
         this.resultingSpecies.documents = [];
         this.resultingSpecies.threats = [];
+        this.resultingSpecies.documentsThreatsSelection = {
+            documents: {},
+            threats: {},
+        };
     },
     mounted: function () {
         this.beforeShowResultingSpeciesTab();
@@ -390,57 +394,6 @@ export default {
         close: function () {
             this.isModalOpen = false;
             this.errorString = '';
-        },
-        save_before_submit: async function (new_species) {
-            let vm = this;
-            vm.saveError = false;
-
-            let payload = new Object();
-            Object.assign(payload, new_species);
-            const result = await fetch(
-                `/api/species/${new_species.id}/species_split_save.json`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload),
-                }
-            )
-                .then(
-                    async (response) => {
-                        if (!response.ok) {
-                            const data = await response.json();
-                            swal.fire({
-                                title: 'Error',
-                                text: JSON.stringify(data),
-                                icon: 'error',
-                                customClass: {
-                                    confirmButton: 'btn btn-primary',
-                                },
-                            });
-                            return;
-                        }
-                        return true;
-                    },
-                    (err) => {
-                        var errorText = helpers.apiVueResourceError(err);
-                        swal.fire({
-                            title: 'Submit Error',
-                            text: errorText,
-                            icon: 'error',
-                            customClass: {
-                                confirmButton: 'btn btn-primary',
-                            },
-                        });
-                        vm.saveError = true;
-                        return false;
-                    }
-                )
-                .finally(() => {
-                    vm.submittingSpeciesCombine = false;
-                });
-            return result;
         },
         can_submit: function () {
             let vm = this;
@@ -519,47 +472,42 @@ export default {
                 .then(
                     async (swalresult) => {
                         if (swalresult.isConfirmed) {
-                            await vm.save_before_submit(vm.resultingSpecies);
-                            if (!vm.saveError) {
-                                vm.finaliseCombineLoading = true;
-                                let payload = {
-                                    resulting_species: vm.resultingSpecies,
-                                    species_combine_list: vm.speciesCombineList,
-                                };
-                                let submit_url = helpers.add_endpoint_json(
-                                    api_endpoints.species,
-                                    vm.speciesCombineList[0].id +
-                                        '/combine_species'
-                                );
-                                fetch(submit_url, {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify(payload),
-                                }).then(
-                                    async (response) => {
-                                        vm.new_species = await response.json();
-                                        vm.$router.push({
-                                            name: 'internal-species-communities-dash',
-                                        });
-                                    },
-                                    (err) => {
-                                        swal.fire({
-                                            title: 'Submit Error',
-                                            text: helpers.apiVueResourceError(
-                                                err
-                                            ),
-                                            icon: 'error',
-                                            customClass: {
-                                                confirmButton:
-                                                    'btn btn-primary',
-                                            },
-                                        });
-                                        vm.saveError = true;
-                                    }
-                                );
-                            }
+                            vm.finaliseCombineLoading = true;
+                            let payload = {
+                                resulting_species: vm.resultingSpecies,
+                                species_combine_list: vm.speciesCombineList,
+                                documents_threats_selection:
+                                    vm.resultingSpecies
+                                        .documentsThreatsSelection,
+                            };
+                            let submit_url = helpers.add_endpoint_json(
+                                api_endpoints.species,
+                                vm.speciesCombineList[0].id + '/combine_species'
+                            );
+                            fetch(submit_url, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(payload),
+                            }).then(
+                                async (response) => {
+                                    vm.new_species = await response.json();
+                                    vm.$router.push({
+                                        name: 'internal-species-communities-dash',
+                                    });
+                                },
+                                (err) => {
+                                    swal.fire({
+                                        title: 'Submit Error',
+                                        text: helpers.apiVueResourceError(err),
+                                        icon: 'error',
+                                        customClass: {
+                                            confirmButton: 'btn btn-primary',
+                                        },
+                                    });
+                                }
+                            );
                         }
                     },
                     (error) => {
@@ -598,8 +546,6 @@ export default {
         },
         addSpeciesObjectToCombineList: function (speciesObject) {
             // Also called from AddCombineSpecies child component
-            speciesObject.copy_all_documents = true;
-            speciesObject.copy_all_threats = true;
             speciesObject.threat_ids_to_copy = [];
             speciesObject.document_ids_to_copy = [];
             this.speciesCombineList.push(speciesObject);

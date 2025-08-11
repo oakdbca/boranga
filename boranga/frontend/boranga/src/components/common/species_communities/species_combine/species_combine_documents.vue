@@ -210,15 +210,12 @@ export default {
                     {
                         data: 'id',
                         mRender(data, type, full) {
-                            const isSelectAll =
-                                vm.isSelectAll ||
-                                vm.resulting_species_community
-                                    .copy_all_documents === true;
-                            const ids =
-                                vm.resulting_species_community
-                                    .document_ids_to_copy || [];
+                            const entry = vm.getDocSelectionEntry();
+                            const isSelectAll = entry.mode === 'all';
                             const isChecked =
-                                isSelectAll || ids.includes(full.id);
+                                isSelectAll ||
+                                (entry.mode === 'individual' &&
+                                    entry.ids.includes(full.id));
                             const isDisabled = isSelectAll;
                             return `<input class='form-check-input' type="checkbox" data-add-document="${full.id}"${
                                 isChecked ? ' checked' : ''
@@ -241,32 +238,13 @@ export default {
                             (d) => d.id
                         );
                     }
-                    if (
-                        !Array.isArray(
-                            this.resulting_species_community
-                                .document_ids_to_copy
-                        )
-                    ) {
-                        this.resulting_species_community.document_ids_to_copy =
-                            [];
-                    }
-                    if (this.isSelectAll) {
-                        this.unionDocuments(this.combine_species_document_ids);
-                        this.resulting_species_community.copy_all_documents = true;
-                    }
                 },
             },
         };
     },
     mounted() {
-        // Default this species to selectAll and set global flag if unset
-        if (
-            !this.combine_species.document_selection &&
-            !this.resulting_species_community.copy_all_documents
-        ) {
-            this.combine_species.document_selection = 'selectAll';
-            this.resulting_species_community.copy_all_documents = true;
-        }
+        const entry = this.getDocSelectionEntry();
+        if (!entry.mode) entry.mode = 'all';
         this.addEventListeners();
     },
     beforeUnmount() {
@@ -279,46 +257,57 @@ export default {
         }
     },
     computed: {
+        selectionEntry() {
+            return this.getDocSelectionEntry();
+        },
         currentSelection() {
-            if (this.combine_species.document_selection) {
-                return this.combine_species.document_selection;
-            }
-            return this.resulting_species_community.copy_all_documents
-                ? 'selectAll'
-                : 'individual';
+            return this.selectionEntry.mode === 'individual'
+                ? 'individual'
+                : 'selectAll';
         },
         isSelectAll() {
             return this.currentSelection === 'selectAll';
         },
     },
     methods: {
-        selectDocumentOption(e) {
-            const selected = e.target.value;
-            if (this.currentSelection === selected) return;
-
-            // Only mutate this species + global flag
-            this.combine_species.document_selection = selected;
-
-            if (selected === 'selectAll') {
-                this.unionDocuments(this.combine_species_document_ids);
-                this.resulting_species_community.copy_all_documents = true;
-            } else {
-                this.resulting_species_community.copy_all_documents = false;
+        getDocSelectionEntry() {
+            const map =
+                (this.resulting_species_community.selection &&
+                    this.resulting_species_community.selection.documents) ||
+                (this.resulting_species_community.selection = {
+                    documents: {},
+                    threats: {},
+                }).documents;
+            if (!map[this.combine_species.id]) {
+                map[this.combine_species.id] = { mode: 'all', ids: [] };
             }
-
+            return map[this.combine_species.id];
+        },
+        selectDocumentOption(e) {
+            const selected = e.target.value; // 'selectAll' or 'individual'
+            const entry = this.getDocSelectionEntry();
+            if (selected === 'selectAll' && entry.mode !== 'all') {
+                entry.mode = 'all';
+                entry.ids = []; // not needed when all
+            } else if (
+                selected === 'individual' &&
+                entry.mode !== 'individual'
+            ) {
+                // seed with all current ids so user can uncheck (or leave empty if you prefer)
+                entry.mode = 'individual';
+                if (
+                    entry.ids.length === 0 &&
+                    this.combine_species_document_ids.length
+                ) {
+                    entry.ids = this.combine_species_document_ids.slice();
+                }
+            }
             this.$nextTick(() =>
                 this.$refs.documents_datatable.vmDataTable.ajax.reload(
                     null,
                     false
                 )
             );
-        },
-        unionDocuments(ids) {
-            const global =
-                this.resulting_species_community.document_ids_to_copy || [];
-            const set = new Set(global);
-            ids.forEach((id) => set.add(id));
-            this.resulting_species_community.document_ids_to_copy = [...set];
         },
         addEventListeners() {
             const dt =
@@ -331,16 +320,15 @@ export default {
                     evt.currentTarget.getAttribute('data-add-document')
                 );
                 if (Number.isNaN(id)) return;
-                const list =
-                    this.resulting_species_community.document_ids_to_copy;
+                const entry = this.getDocSelectionEntry();
+                const list = entry.ids;
                 const idx = list.indexOf(id);
                 if (evt.currentTarget.checked) {
                     if (idx === -1) list.push(id);
                 } else if (idx > -1) {
                     list.splice(idx, 1);
                 }
-                this.resulting_species_community.document_ids_to_copy =
-                    list.slice();
+                entry.ids = list.slice();
             });
             dt.on('childRow.dt', () => helpers.enablePopovers());
         },
