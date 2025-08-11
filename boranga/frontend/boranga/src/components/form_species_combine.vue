@@ -122,8 +122,8 @@
                         <SpeciesDocuments
                             :id="'species-combine-documents-' + index"
                             ref="species_combine_documents"
-                            :species_community="resultingSpecies"
-                            :species_original="species"
+                            :resulting_species_community="resultingSpecies"
+                            :combine_species="species"
                         >
                         </SpeciesDocuments>
                     </div>
@@ -141,8 +141,8 @@
                         <SpeciesThreats
                             :id="'species-combine-threats-' + index"
                             ref="species_combine_threats"
-                            :species_community="resultingSpecies"
-                            :species_original="species"
+                            :resulting_species_community="resultingSpecies"
+                            :combine_species="species"
                         >
                         </SpeciesThreats>
                     </div>
