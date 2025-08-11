@@ -50,7 +50,6 @@ import { v4 as uuid } from 'uuid';
 import datatable from '@vue-utils/datatable.vue';
 import FormSection from '@/components/forms/section_toggle.vue';
 import { constants, api_endpoints, helpers } from '@/utils/hooks';
-import moment from 'moment';
 
 export default {
     name: 'SpeciesCombineThreats',
@@ -251,13 +250,11 @@ export default {
         selectionEntry() {
             return this.getThreatSelectionEntry();
         },
-        currentThreatSelection() {
-            return this.selectionEntry.mode === 'individual'
-                ? 'individual'
-                : 'selectAll';
-        },
         isThreatSelectAll() {
-            return this.currentThreatSelection === 'selectAll';
+            return this.selectionEntry.mode === 'all';
+        },
+        currentThreatSelection() {
+            return this.isThreatSelectAll ? 'selectAll' : 'individual';
         },
     },
     methods: {
