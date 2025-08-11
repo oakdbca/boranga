@@ -50,12 +50,12 @@
                 >
                     <img
                         id="basemap_sat"
-                        src="../../assets/satellite_icon.jpg"
+                        src="../../satellite_icon.jpg"
                         @click="setBaseLayer('sat')"
                     />
                     <img
                         id="basemap_osm"
-                        src="../../assets/map_icon.png"
+                        src="../../map_icon.png"
                         @click="setBaseLayer('street')"
                     />
                 </div>
@@ -73,7 +73,7 @@
                                 :class="isEditingALayer ? 'btn-danger' : ''"
                                 @mouseover="hover = true"
                             >
-                                <img src="../../assets/layers.svg" />
+                                <SvgIcon name="layers" />
                             </div>
                         </div>
                         <transition>
@@ -292,9 +292,9 @@
                                                 )
                                             "
                                         >
-                                            <img
-                                                class="svg-icon"
-                                                src="../../assets/hidden.svg"
+                                            <SvgIcon
+                                                class="svg-object"
+                                                name="hidden"
                                             />
                                         </button>
                                         <!-- Zoom to-button and geometry type-icon -->
@@ -319,12 +319,12 @@
                                                 centerOnFeature(feature, 17)
                                             "
                                         >
-                                            <img
+                                            <SvgIcon
                                                 v-if="
                                                     isMultiPointFeature(feature)
                                                 "
-                                                class="svg-icon"
-                                                src="../../assets/draw-points.svg"
+                                                class="svg-object"
+                                                name="draw-points"
                                             />
                                             <svg
                                                 v-else-if="
@@ -429,9 +429,10 @@
                                                     stroke-width="2"
                                                 />
                                             </svg>
-                                            <img
-                                                class="svg-icon hidden"
-                                                src="../../assets/map-zoom.svg"
+                                            <SvgIcon
+                                                class="svg-object"
+                                                name="map-zoom"
+                                                :hidden="true"
                                                 style="
                                                     filter: url('data:image/svg+xml,<svg xmlns=`http://www.w3.org/2000/svg`><filter id=`white`><feColorMatrix type=`matrix` values=`0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0`/></filter></svg>#white');
                                                 "
@@ -749,7 +750,7 @@
                                 )
                             "
                         >
-                            <img src="../../assets/geo-location.svg" />
+                            <SvgIcon name="geo-location" />
                         </div>
                     </div>
                     <!-- </div> -->
@@ -769,10 +770,7 @@
                             ]"
                             @click="callSetMode('measure')"
                         >
-                            <img
-                                class="svg-icon"
-                                src="../../assets/ruler.svg"
-                            />
+                            <SvgIcon class="svg-object" name="ruler" />
                         </div>
                     </div>
 
@@ -806,9 +804,9 @@
                                     ]"
                                     @click="callSetMode('draw', 'Polygon')"
                                 >
-                                    <img
-                                        class="svg-icon"
-                                        src="../../assets/draw-polygon.svg"
+                                    <SvgIcon
+                                        class="svg-object"
+                                        name="draw-polygon"
                                     />
                                 </div>
                             </div>
@@ -837,9 +835,9 @@
                                     ]"
                                     @click="callSetMode('draw', 'Point')"
                                 >
-                                    <img
-                                        class="svg-icon"
-                                        src="../../assets/draw-points.svg"
+                                    <SvgIcon
+                                        class="svg-object"
+                                        name="draw-points"
                                     />
                                 </div>
                             </div>
@@ -867,10 +865,7 @@
                                       )
                             "
                         >
-                            <img
-                                class="svg-icon"
-                                src="../../assets/pen-icon.svg"
-                            />
+                            <SvgIcon class="svg-object" name="pen-icon" />
                         </div>
                     </div>
                     <div
@@ -899,9 +894,9 @@
                             ]"
                             @click="callSetMode('transform')"
                         >
-                            <img
-                                class="svg-icon"
-                                src="../../assets/transform-polygon.svg"
+                            <SvgIcon
+                                class="svg-object"
+                                name="transform-polygon"
                             />
                         </div>
                     </div>
@@ -915,10 +910,7 @@
                             :class="featureCount ? '' : 'disabled'"
                             @click="displayAllFeatures()"
                         >
-                            <img
-                                class="svg-icon"
-                                src="../../assets/map-zoom.svg"
-                            />
+                            <SvgIcon name="map-zoom-to-layer" />
                         </div>
                     </div>
                     <div
@@ -931,10 +923,7 @@
                             :title="`Download selected features as GeoJSON`"
                             @click="geoJsonButtonClicked"
                         >
-                            <img
-                                class="svg-icon"
-                                src="../../assets/download.svg"
-                            />
+                            <SvgIcon name="download" />
                             <span
                                 v-if="selectedFeatureIds.length"
                                 id="selectedFeatureCountWarning"
@@ -1121,14 +1110,14 @@
                                                     )
                                                 "
                                             >
-                                                <img
-                                                    :src="`../../static/boranga_vue/src/assets/${
+                                                <SvgIcon
+                                                    :name="
                                                         spatialOperationsAvailable.find(
                                                             (op) =>
                                                                 op.id ==
                                                                 selectedSpatialOperation
                                                         ).icon
-                                                    }.svg`"
+                                                    "
                                                 />
                                             </div>
                                         </div>
@@ -1161,10 +1150,7 @@
                                 )
                             "
                         >
-                            <img
-                                class="svg-icon"
-                                src="../../assets/spatial-processing.svg"
-                            />
+                            <SvgIcon name="spatial-processing" />
                             <span
                                 v-if="selectedFeatureIds.length"
                                 id="selectedFeatureCountWarning"
@@ -1199,10 +1185,7 @@
                             }`"
                             @click="removeModelFeatures()"
                         >
-                            <img
-                                class="svg-icon"
-                                src="../../assets/trash-bin.svg"
-                            />
+                            <SvgIcon name="trash-bin" />
                             <span
                                 v-if="selectedFeatureIds.length"
                                 id="selectedFeatureCountDanger"
@@ -1233,10 +1216,7 @@
                             "
                             @click="undo()"
                         >
-                            <img
-                                class="svg-icon"
-                                src="../../assets/map-undo.svg"
-                            />
+                            <SvgIcon name="map-undo" />
                         </div>
                     </div>
                     <div
@@ -1261,10 +1241,7 @@
                             "
                             @click="redo()"
                         >
-                            <img
-                                class="svg-icon"
-                                src="../../assets/map-redo.svg"
-                            />
+                            <SvgIcon name="map-redo" />
                         </div>
                     </div>
                     <div
@@ -1285,10 +1262,7 @@
                             ]"
                             @click="callSetMode('info')"
                         >
-                            <img
-                                class="svg-icon"
-                                src="../../assets/info-query.svg"
-                            />
+                            <SvgIcon name="info-query" />
                         </div>
                     </div>
                 </div>
@@ -1650,6 +1624,8 @@ import {
 } from '@/components/common/map_functions.js';
 import shp, { combine, parseShp, parseDbf } from 'shpjs';
 import SelectFilter from '@/components/common/SelectFilter.vue';
+import assets from '@/utils/assets.js';
+import SvgIcon from '@/utils/vue/svg-icon.vue';
 
 export default {
     name: 'MapComponent',
@@ -1657,6 +1633,7 @@ export default {
         FileField,
         alert,
         SelectFilter,
+        SvgIcon,
     },
     props: {
         level: {
@@ -2069,7 +2046,8 @@ export default {
             editableLayersArray: [],
             activeEditLayer: null,
             optionalLayersActive: false,
-            mapMarker: '../../static/boranga_vue/src/assets/map-marker.svg',
+            mapMarkerPath: assets.pathToSvg('map-marker'), // The map marker icon path
+            mapMarker: null,
             geojsonSnapshot: null, // A snapshot of the geojson feature collection
             isDirty: false, // Whether the map has unsaved changes
         };
@@ -2474,6 +2452,11 @@ export default {
     mounted: function () {
         let vm = this;
         vm.setLoadingMap(true);
+
+        // Import the map-marker svg
+        assets.asset(this.mapMarkerPath, 'url').then((result) => {
+            vm.mapMarker = result.default;
+        });
 
         this.$nextTick(() => {
             var toastEl = document.getElementById('featureToast');
@@ -3318,13 +3301,18 @@ export default {
 
                     const img = $('<img>');
                     img.addClass('svg-object');
-                    img.attr(
-                        'src',
-                        '../../static/boranga_vue/src/assets/pen-icon.svg?raw'
-                    );
 
-                    divDraw.append(img);
-                    divWrapper.append(divDraw);
+                    // Import the pen-icon svg
+                    assets
+                        .asset(assets.pathToSvg('pen-icon'), 'url')
+                        .then((result) => {
+                            return result.default;
+                        })
+                        .then((svg) => {
+                            img.attr('src', svg);
+                            divDraw.append(img);
+                            divWrapper.append(divDraw);
+                        });
 
                     if (layer.get('can_edit')) {
                         divWrapper.click((e) => {
