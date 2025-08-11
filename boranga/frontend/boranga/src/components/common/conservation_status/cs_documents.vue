@@ -263,7 +263,6 @@ export default {
                         mRender: function (data, type, full) {
                             let links = '';
                             links += `<a href='#' data-view-document='${full.id}'>View</a><br>`;
-                            // TOMORROW: make can_action apply to referral mode
                             if (full.can_action && vm.show_document_actions) {
                                 if (full.active) {
                                     links += `<a href='#${full.id}' data-edit-document='${full.id}'>Edit</a><br/>`;
