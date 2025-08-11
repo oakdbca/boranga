@@ -1747,7 +1747,6 @@ export default {
         if (vm.species_community.group_type === 'fauna') {
             const response = await fetch('/api/fauna_group_dict');
             const data = await response.json();
-            console.debug('Fauna group list fetched successfully', data);
             vm.fauna_groups = data.fauna_group_list;
             vm.fauna_sub_groups = data.fauna_sub_group_list;
         }
