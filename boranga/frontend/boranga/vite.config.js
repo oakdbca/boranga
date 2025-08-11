@@ -37,7 +37,11 @@ export default defineConfig({
             // Had to do this to get the relative paths to work
             // Probably a better way but I couldn't figure it out
             targets: [
-                { src: 'src/assets', dest: 'src' },
+                // Copy the non-svgs to src but leave the svgs in assets
+                { src: 'src/assets/parks-bg-banner.gif', dest: 'src' },
+                { src: 'src/assets/satellite_icon.jpg', dest: 'src' },
+                { src: 'src/assets/map_icon.png', dest: 'src' },
+                { src: 'src/assets/logo.png', dest: 'src' },
                 {
                     src: 'node_modules/@fortawesome/fontawesome-free/webfonts',
                     dest: 'node_modules/@fortawesome/fontawesome-free/',
@@ -50,6 +54,7 @@ export default defineConfig({
             '@': path.resolve(__dirname, './src'),
             '@vue-utils': path.resolve(__dirname, 'src/utils/vue'),
             '@common-utils': path.resolve(__dirname, 'src/components/common/'),
+            '@assets': path.resolve(__dirname, 'src/assets'),
         },
     },
     esbuild: {
