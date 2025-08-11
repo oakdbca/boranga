@@ -108,31 +108,6 @@
                                     class="tab-content border p-3"
                                 >
                                     <div
-                                        id="resulting-species"
-                                        class="tab-pane"
-                                        role="tabpanel"
-                                        aria-labelledby="pills-resulting-species-tab"
-                                    >
-                                        <FormSpeciesCombine
-                                            v-if="
-                                                speciesCombineList &&
-                                                resultingSpecies
-                                            "
-                                            id="resulting-species"
-                                            :resulting-species="
-                                                resultingSpecies
-                                            "
-                                            :existing-species-combine-list="
-                                                existingSpeciesCombineList
-                                            "
-                                            :is_internal="true"
-                                            @resulting-species-taxonomy-changed="
-                                                resultingSpeciesTaxonomyChanged
-                                            "
-                                        >
-                                        </FormSpeciesCombine>
-                                    </div>
-                                    <div
                                         v-for="(
                                             species, index
                                         ) in speciesCombineList"
@@ -160,6 +135,31 @@
                                             :is_readonly="true"
                                         >
                                         </FormSpeciesCommunities>
+                                    </div>
+                                    <div
+                                        id="resulting-species"
+                                        class="tab-pane"
+                                        role="tabpanel"
+                                        aria-labelledby="pills-resulting-species-tab"
+                                    >
+                                        <FormSpeciesCombine
+                                            v-if="
+                                                speciesCombineList &&
+                                                resultingSpecies
+                                            "
+                                            id="resulting-species"
+                                            :resulting-species="
+                                                resultingSpecies
+                                            "
+                                            :existing-species-combine-list="
+                                                existingSpeciesCombineList
+                                            "
+                                            :is_internal="true"
+                                            @resulting-species-taxonomy-changed="
+                                                resultingSpeciesTaxonomyChanged
+                                            "
+                                        >
+                                        </FormSpeciesCombine>
                                     </div>
                                     <div
                                         v-if="
@@ -351,7 +351,7 @@ export default {
         },
     },
     created: function () {
-        this.speciesCombineList.push(this.species_community);
+        this.addSpeciesObjectToCombineList(this.species_community);
         this.resultingSpecies = JSON.parse(
             JSON.stringify(this.species_community)
         );
@@ -585,9 +585,6 @@ export default {
                 reverseButtons: true,
             }).then(async (swalresult) => {
                 if (swalresult.isConfirmed) {
-                    console.debug(
-                        `Removing species ${species.species_number} from combine`
-                    );
                     let species_index = vm.speciesCombineList.indexOf(species);
                     vm.speciesCombineList.splice(species_index, 1);
                     this.$nextTick(() => {
@@ -598,6 +595,14 @@ export default {
         },
         addSpeciesToCombine: function () {
             this.$refs.addCombineSpecies.isModalOpen = true;
+        },
+        addSpeciesObjectToCombineList: function (speciesObject) {
+            // Also called from AddCombineSpecies child component
+            speciesObject.copy_all_documents = true;
+            speciesObject.copy_all_threats = true;
+            speciesObject.threat_ids_to_copy = [];
+            speciesObject.document_ids_to_copy = [];
+            this.speciesCombineList.push(speciesObject);
         },
         showLastCombineSpeciesTab: function () {
             this.$nextTick(() => {
@@ -610,9 +615,6 @@ export default {
             });
         },
         resultingSpeciesTaxonomyChanged: function (taxonomyId, speciesId) {
-            console.debug(
-                `resultingSpeciesTaxonomyChanged called with taxonomyId: ${taxonomyId}, speciesId: ${speciesId}`
-            );
             if (speciesId) {
                 this.fetchSpeciesData(speciesId);
             } else {
