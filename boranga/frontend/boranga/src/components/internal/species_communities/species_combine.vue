@@ -389,7 +389,6 @@ export default {
         },
         close: function () {
             this.isModalOpen = false;
-            this.speciesCombineList = [];
             this.errorString = '';
         },
         save_before_submit: async function (new_species) {
