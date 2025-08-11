@@ -220,6 +220,9 @@ class GetScientificName(views.APIView):
         # identifies the request as for a species profile dependent record - we only include those taxonomies in use
         has_species = request.GET.get("has_species", False)
         active_only = request.GET.get("active_only", False)
+        active_draft_and_historical_only = request.GET.get(
+            "active_draft_and_historical_only", False
+        )
         exclude_taxonomy_ids = request.GET.getlist("exclude_taxonomy_ids[]", [])
 
         if not search_term:
@@ -239,6 +242,15 @@ class GetScientificName(views.APIView):
         if active_only:
             taxonomies = taxonomies.filter(
                 species__processing_status=Species.PROCESSING_STATUS_ACTIVE
+            )
+
+        if active_draft_and_historical_only:
+            taxonomies = taxonomies.filter(
+                species__processing_status__in=[
+                    Species.PROCESSING_STATUS_ACTIVE,
+                    Species.PROCESSING_STATUS_DRAFT,
+                    Species.PROCESSING_STATUS_HISTORICAL,
+                ]
             )
 
         if no_profile_draft_and_historical_only:

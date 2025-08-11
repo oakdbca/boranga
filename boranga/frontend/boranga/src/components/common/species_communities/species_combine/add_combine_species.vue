@@ -141,7 +141,7 @@ export default {
                                 group_type_id:
                                     vm.$parent.species_community.group_type_id,
                                 has_species: true,
-                                active_only: true,
+                                active_draft_and_historical_only: true,
                             };
                             return query;
                         },
