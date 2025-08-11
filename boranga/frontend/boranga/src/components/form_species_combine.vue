@@ -201,7 +201,7 @@ export default {
         },
     },
     watch: {
-        speciesCombineList(list, old) {
+        speciesCombineList(list) {
             if (!list || !list.length) {
                 this.selectedSpeciesIndex = null;
                 return;
