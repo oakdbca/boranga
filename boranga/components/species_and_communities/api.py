@@ -1529,13 +1529,13 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             )
             split_species_instance.save(version_user=request.user)
 
-            split_species_instance.copy_documents(
+            split_species_instance.copy_split_documents(
                 instance,
                 request,
                 split_species_request_data,
                 split_species_is_original,
             )
-            split_species_instance.copy_threats(
+            split_species_instance.copy_split_threats(
                 instance,
                 request,
                 split_species_request_data,

@@ -887,7 +887,7 @@ class Species(RevisionedMixin):
         self.save()
 
     @transaction.atomic
-    def copy_documents(
+    def copy_split_documents(
         self: "Species",
         copy_from: "Species",
         request: HttpRequest,
@@ -948,7 +948,7 @@ class Species(RevisionedMixin):
             )
 
     @transaction.atomic
-    def copy_threats(
+    def copy_split_threats(
         self: "Species",
         copy_from: "Species",
         request: HttpRequest,
