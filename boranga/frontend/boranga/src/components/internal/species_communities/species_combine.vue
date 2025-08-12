@@ -225,8 +225,9 @@
                                                     "
                                                     >{{
                                                         resultingSpecies.species_number
-                                                    }}</template
-                                                >
+                                                    }}
+                                                    -
+                                                </template>
                                                 <template
                                                     v-if="
                                                         resultingSpecies.taxonomy_details &&
@@ -234,7 +235,7 @@
                                                             .taxonomy_details
                                                             .scientific_name
                                                     "
-                                                    >-
+                                                >
                                                     {{
                                                         resultingSpecies
                                                             .taxonomy_details
