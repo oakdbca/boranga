@@ -69,7 +69,6 @@ export default defineConfig({
             __dirname,
             `../../static/${applicationNameShort}_vue`
         ),
-        publicPath: `/static/${applicationNameShort}_vue/`,
         sourcemap: false,
         rollupOptions: {
             input: {

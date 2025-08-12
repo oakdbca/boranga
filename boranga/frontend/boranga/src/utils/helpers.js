@@ -251,4 +251,13 @@ export default {
         //that is acceptable for this use case, however
         return JSON.stringify(before) === JSON.stringify(after);
     },
+    getNested(obj, path) {
+        return path.split('.').reduce((o, p) => (o ? o[p] : undefined), obj);
+    },
+    setNested(obj, path, value) {
+        const parts = path.split('.');
+        const last = parts.pop();
+        const target = parts.reduce((o, p) => (o ? o[p] : undefined), obj);
+        if (target && last) target[last] = value;
+    },
 };

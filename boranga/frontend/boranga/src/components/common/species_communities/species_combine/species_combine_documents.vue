@@ -5,29 +5,31 @@
             label="Documents"
             :Index="documentBody"
         >
-            <form class="form-horizontal" action="index.html" method="post">
+            <form class="form-horizontal" method="post">
                 <div class="col-sm-12 form-check form-check-inline">
                     <input
-                        :id="'doc_select_all' + species_original.id"
+                        :id="'doc_select_all' + combine_species.id"
                         class="form-check-input"
                         type="radio"
-                        name="documentSelect"
+                        :name="'documentSelect-' + combine_species.id"
                         value="selectAll"
-                        @click="selectDocumentOption($event)"
+                        :checked="currentSelection === 'selectAll'"
+                        @change="selectDocumentOption"
                     />
-                    <label class="form-check-label"
-                        >Copy all documents from Species
-                        {{ species_original.species_number }}</label
-                    >
+                    <label class="form-check-label">
+                        Copy all documents from Species
+                        {{ combine_species.species_number }}
+                    </label>
                 </div>
                 <div class="col-sm-12 form-check form-check-inline mb-3">
                     <input
-                        :id="'doc_select_individual' + species_original.id"
+                        :id="'doc_select_individual' + combine_species.id"
                         class="form-check-input"
                         type="radio"
-                        name="documentSelect"
+                        :name="'documentSelect-' + combine_species.id"
                         value="individual"
-                        @click="selectDocumentOption($event)"
+                        :checked="currentSelection === 'individual'"
+                        @change="selectDocumentOption"
                     />
                     <label class="form-check-label">Decide per document</label>
                 </div>
@@ -43,6 +45,7 @@
         </FormSection>
     </div>
 </template>
+
 <script>
 import { v4 as uuid } from 'uuid';
 import datatable from '@vue-utils/datatable.vue';
@@ -51,30 +54,18 @@ import { constants, api_endpoints, helpers } from '@/utils/hooks';
 
 export default {
     name: 'SpeciesCombineDocuments',
-    components: {
-        FormSection,
-        datatable,
-    },
+    components: { FormSection, datatable },
     props: {
-        species_community: {
-            type: Object,
-            required: true,
-        },
-        species_original: {
-            type: Object,
-            required: true,
-        },
+        resulting_species_community: { type: Object, required: true },
+        combine_species: { type: Object, required: true },
     },
-    data: function () {
-        let vm = this;
+    data() {
+        const vm = this;
         return {
-            uuid: 0,
             documentBody: 'documentBody' + uuid(),
             panelBody: 'species-combine-documents-' + uuid(),
-            values: null,
-            // to store all the documents of original on first load.
-            original_species_documents: [],
-            species_document_url: api_endpoints.species_documents,
+            // All doc ids for this species (fetched once)
+            combine_species_document_ids: [],
             documents_headers: [
                 'Number',
                 'Category',
@@ -86,12 +77,9 @@ export default {
             ],
             documents_options: {
                 autowidth: true,
-                language: {
-                    processing: constants.DATATABLE_PROCESSING_HTML,
-                },
+                language: { processing: constants.DATATABLE_PROCESSING_HTML },
                 responsive: true,
                 searching: true,
-                //  to show the "workflow Status","Action" columns always in the last position
                 columnDefs: [
                     { responsivePriority: 1, targets: 0 },
                     { responsivePriority: 2, targets: -1 },
@@ -99,7 +87,7 @@ export default {
                 ajax: {
                     url: helpers.add_endpoint_json(
                         api_endpoints.species,
-                        vm.species_original.id + '/documents'
+                        vm.combine_species.id + '/documents'
                     ),
                     dataSrc: '',
                 },
@@ -114,18 +102,14 @@ export default {
                         title: 'Boranga Species Combine Documents Excel Export',
                         text: '<i class="fa-solid fa-download"></i> Excel',
                         className: 'btn btn-primary me-2 rounded',
-                        exportOptions: {
-                            orthogonal: 'export',
-                        },
+                        exportOptions: { orthogonal: 'export' },
                     },
                     {
                         extend: 'csv',
                         title: 'Boranga Species Combine Documents CSV Export',
                         text: '<i class="fa-solid fa-download"></i> CSV',
                         className: 'btn btn-primary rounded',
-                        exportOptions: {
-                            orthogonal: 'export',
-                        },
+                        exportOptions: { orthogonal: 'export' },
                     },
                 ],
                 columns: [
@@ -133,248 +117,227 @@ export default {
                         data: 'document_number',
                         orderable: true,
                         searchable: true,
-                        mRender: function (data, type, full) {
-                            if (full.active) {
-                                return full.document_number;
-                            } else {
-                                return '<s>' + full.document_number + '</s>';
-                            }
+                        mRender(data, type, full) {
+                            return full.active
+                                ? full.document_number
+                                : '<s>' + full.document_number + '</s>';
                         },
                     },
                     {
                         data: 'document_category_name',
                         orderable: true,
                         searchable: true,
-                        mRender: function (data, type, full) {
-                            if (full.active) {
-                                return full.document_category_name;
-                            } else {
-                                return (
-                                    '<s>' + full.document_category_name + '</s>'
-                                );
-                            }
+                        mRender(data, type, full) {
+                            return full.active
+                                ? full.document_category_name
+                                : '<s>' + full.document_category_name + '</s>';
                         },
                     },
                     {
                         data: 'document_sub_category_name',
                         orderable: true,
                         searchable: true,
-                        mRender: function (data, type, full) {
-                            if (full.active) {
-                                return full.document_sub_category_name;
-                            } else {
-                                return (
-                                    '<s>' +
-                                    full.document_sub_category_name +
-                                    '</s>'
-                                );
-                            }
+                        mRender(data, type, full) {
+                            return full.active
+                                ? full.document_sub_category_name
+                                : '<s>' +
+                                      full.document_sub_category_name +
+                                      '</s>';
                         },
                     },
                     {
                         data: 'name',
                         orderable: true,
                         searchable: true,
-                        mRender: function (data, type, full) {
-                            let links = '';
+                        mRender(data, type, full) {
+                            const value = full.name;
                             if (full.active) {
-                                let value = full.name;
-                                let result = helpers.dtPopoverSplit(
+                                const result = helpers.dtPopoverSplit(
                                     value,
                                     30,
                                     'hover'
                                 );
-                                links +=
+                                return (
                                     '<span><a href="' +
                                     full._file +
                                     '" target="_blank">' +
                                     result.text +
                                     '</a> ' +
                                     result.link +
-                                    '</span>';
-                            } else {
-                                let value = full.name;
-                                let result = helpers.dtPopover(
-                                    value,
-                                    30,
-                                    'hover'
+                                    '</span>'
                                 );
-                                links +=
-                                    type == 'export'
-                                        ? value
-                                        : '<s>' + result + '</s>';
                             }
-                            return links;
+                            const result = helpers.dtPopover(
+                                value,
+                                30,
+                                'hover'
+                            );
+                            return type === 'export'
+                                ? value
+                                : '<s>' + result + '</s>';
                         },
                     },
                     {
                         data: 'description',
                         orderable: true,
                         searchable: true,
-                        render: function (value, type, full) {
-                            let result = helpers.dtPopover(value, 30, 'hover');
+                        render(value, type, full) {
+                            const result = helpers.dtPopover(
+                                value,
+                                30,
+                                'hover'
+                            );
                             if (full.active) {
-                                return type == 'export' ? value : result;
-                            } else {
-                                return type == 'export'
-                                    ? value
-                                    : '<s>' + result + '</s>';
+                                return type === 'export' ? value : result;
                             }
+                            return type === 'export'
+                                ? value
+                                : '<s>' + result + '</s>';
                         },
                     },
                     {
                         data: 'uploaded_date',
-                        mRender: function (data, type, full) {
-                            if (full.active) {
-                                return data != '' && data != null
-                                    ? moment(data).format('DD/MM/YYYY HH:mm')
-                                    : '';
-                            } else {
-                                return data != '' && data != null
-                                    ? '<s>' +
-                                          moment(data).format(
-                                              'DD/MM/YYYY HH:mm'
-                                          ) +
-                                          '</s>'
-                                    : '';
-                            }
+                        mRender(data, type, full) {
+                            if (!data) return '';
+                            const formatted =
+                                moment(data).format('DD/MM/YYYY HH:mm');
+                            return full.active
+                                ? formatted
+                                : '<s>' + formatted + '</s>';
                         },
                     },
                     {
                         data: 'id',
-                        mRender: function (data, type, full) {
-                            // to store the original species documents for the use of radio btn options on first load so that no need to call api to get the documents ids
-                            if (
-                                !vm.original_species_documents.includes(full.id)
-                            ) {
-                                vm.original_species_documents.push(full.id);
-                            }
-
-                            if (
-                                vm.species_community.documents.includes(full.id)
-                            ) {
-                                return `<input class='form-check-input' type="checkbox" id="document_chkbox-${vm.species_community.id}-${full.id}" data-add-document="${full.id}"  checked>`;
-                            } else {
-                                return `<input class='form-check-input' type="checkbox" id="document_chkbox-${vm.species_community.id}-${full.id}" data-add-document="${full.id}">`;
-                            }
+                        mRender(data, type, full) {
+                            const entry = vm.getDocSelectionEntry();
+                            const isSelectAll = entry.mode === 'all';
+                            const isChecked =
+                                isSelectAll ||
+                                (entry.mode === 'individual' &&
+                                    entry.ids.includes(full.id));
+                            const isDisabled = isSelectAll;
+                            return `<input class='form-check-input' type="checkbox" data-add-document="${full.id}"${
+                                isChecked ? ' checked' : ''
+                            }${isDisabled ? ' disabled' : ''}>`;
                         },
                     },
                 ],
                 processing: true,
-                drawCallback: function () {
+                drawCallback() {
                     helpers.enablePopovers();
                 },
-                initComplete: function () {
+                initComplete: (settings, json) => {
                     helpers.enablePopovers();
-                    // another option to fix the responsive table overflow css on tab switch
-                    setTimeout(function () {
-                        vm.adjust_table_width();
-                    }, 100);
+                    setTimeout(() => this.adjust_table_width(), 100);
+                    if (
+                        json &&
+                        this.combine_species_document_ids.length === 0
+                    ) {
+                        this.combine_species_document_ids = json.map(
+                            (d) => d.id
+                        );
+                    }
                 },
             },
         };
     },
-    computed: {},
-    mounted: function () {
-        let vm = this;
-        this.$nextTick(() => {
-            if (
-                vm.species_original.document_selection !== undefined &&
-                vm.species_original.document_selection !== null
-            ) {
-                if (vm.species_original.document_selection === 'selectAll') {
-                    document.getElementById(
-                        'doc_select_all' + vm.species_original.id
-                    ).checked = true;
-                } else {
-                    document.getElementById(
-                        'doc_select_individual' + vm.species_original.id
-                    ).checked = true;
-                }
-            }
-            vm.addEventListeners();
-        });
+    mounted() {
+        const entry = this.getDocSelectionEntry();
+        if (!entry.mode) entry.mode = 'all';
+        this.addEventListeners();
+    },
+    beforeUnmount() {
+        const dt =
+            this.$refs.documents_datatable &&
+            this.$refs.documents_datatable.vmDataTable;
+        if (dt) {
+            dt.off('change', 'input[data-add-document]');
+            dt.off('childRow.dt');
+        }
+    },
+    computed: {
+        selectionEntry() {
+            return this.getDocSelectionEntry();
+        },
+        isSelectAll() {
+            return this.selectionEntry.mode === 'all';
+        },
+        currentSelection() {
+            return this.isSelectAll ? 'selectAll' : 'individual';
+        },
     },
     methods: {
+        getDocSelectionEntry() {
+            const map =
+                (this.resulting_species_community.selection &&
+                    this.resulting_species_community.selection.documents) ||
+                (this.resulting_species_community.selection = {
+                    documents: {},
+                    threats: {},
+                }).documents;
+            if (!map[this.combine_species.id]) {
+                map[this.combine_species.id] = { mode: 'all', ids: [] };
+            }
+            return map[this.combine_species.id];
+        },
         selectDocumentOption(e) {
-            let vm = this;
-            //--fetch the value of selected radio btn
-            let selected_option = e.target.value;
-            //----set the selected value to the original species object so as to get the data when tab is reloaded/refreshed
-            vm.species_original.document_selection = selected_option;
-
-            if (selected_option == 'selectAll') {
-                //---first need to delete the original_species_documents from the new_arr if added from the "Decide individual" option to avoid duplication
-                vm.species_community.documents =
-                    vm.species_community.documents.filter(
-                        (x) => vm.original_species_documents.indexOf(x) == -1
-                    ); //--"filter" used to delete one array from another
-                //-- copy all original species documents to new species documents array
-                //---use '...' spread operator to add one arr elemnents to other
-                vm.species_community.documents.push(
-                    ...vm.original_species_documents
+            const selected = e.target.value; // 'selectAll' or 'individual'
+            const entry = this.getDocSelectionEntry();
+            if (selected === 'selectAll' && entry.mode !== 'all') {
+                entry.mode = 'all';
+                entry.ids = []; // not needed when all
+            } else if (
+                selected === 'individual' &&
+                entry.mode !== 'individual'
+            ) {
+                // seed with all current ids so user can uncheck (or leave empty if you prefer)
+                entry.mode = 'individual';
+                if (
+                    entry.ids.length === 0 &&
+                    this.combine_species_document_ids.length
+                ) {
+                    entry.ids = this.combine_species_document_ids.slice();
+                }
+            }
+            this.$nextTick(() =>
+                this.$refs.documents_datatable.vmDataTable.ajax.reload(
+                    null,
+                    false
+                )
+            );
+        },
+        addEventListeners() {
+            const dt =
+                this.$refs.documents_datatable &&
+                this.$refs.documents_datatable.vmDataTable;
+            if (!dt) return;
+            dt.on('change', 'input[data-add-document]', (evt) => {
+                if (this.isSelectAll) return;
+                const id = parseInt(
+                    evt.currentTarget.getAttribute('data-add-document')
                 );
-                this.$refs.documents_datatable.vmDataTable.ajax.reload();
-            } else if (selected_option == 'individual') {
-                //----empty only the current original species array from the new species array as will contain other original combine species document_id's as well
-                vm.species_community.documents =
-                    vm.species_community.documents.filter(
-                        (x) => vm.original_species_documents.indexOf(x) == -1
-                    ); //--"filter" used to delete one array from another
-                // vm.species_community.documents=[];
-                this.$refs.documents_datatable.vmDataTable.ajax.reload();
-            }
-        },
-        addEventListeners: function () {
-            let vm = this;
-            vm.$refs.documents_datatable.vmDataTable.on(
-                'click',
-                'input[data-add-document]',
-                function () {
-                    //e.preventDefault();
-                    let id = $(this).attr('data-add-document');
-                    let chkbox = $(this).attr('id');
-                    if ($('#' + chkbox).is(':checked') == true) {
-                        if (!vm.species_community.documents.includes(id)) {
-                            vm.species_community.documents.push(parseInt(id));
-                        }
-                    } else {
-                        let doc_arr = vm.species_community.documents;
-                        //---remove document id from array (for this arr.splice is used)
-                        var index = doc_arr.indexOf(id);
-                        vm.species_community.documents.splice(index, 1);
-                    }
+                if (Number.isNaN(id)) return;
+                const entry = this.getDocSelectionEntry();
+                const list = entry.ids;
+                const idx = list.indexOf(id);
+                if (evt.currentTarget.checked) {
+                    if (idx === -1) list.push(id);
+                } else if (idx > -1) {
+                    list.splice(idx, 1);
                 }
-            );
-            vm.$refs.documents_datatable.vmDataTable.on(
-                'childRow.dt',
-                function () {
-                    helpers.enablePopovers();
-                }
-            );
+                entry.ids = list.slice();
+            });
+            dt.on('childRow.dt', () => helpers.enablePopovers());
         },
-        adjust_table_width: function () {
-            if (this.$refs.documents_datatable !== undefined) {
-                this.$refs.documents_datatable.vmDataTable.columns
-                    .adjust()
-                    .responsive.recalc();
-            }
+        adjust_table_width() {
+            this.$nextTick(() => {
+                if (this.$refs.documents_datatable) {
+                    this.$refs.documents_datatable.vmDataTable.columns
+                        .adjust()
+                        .responsive.recalc();
+                }
+            });
         },
     },
 };
 </script>
-
-<style lang="css" scoped>
-fieldset.scheduler-border {
-    border: 1px groove #ddd !important;
-    padding: 0 1.4em 1.4em 1.4em !important;
-    margin: 0 0 1.5em 0 !important;
-    -webkit-box-shadow: 0px 0px 0px 0px #000;
-    box-shadow: 0px 0px 0px 0px #000;
-}
-legend.scheduler-border {
-    width: inherit; /* Or auto */
-    padding: 0 10px; /* To give a bit of padding on the left and right */
-    border-bottom: none;
-}
-</style>

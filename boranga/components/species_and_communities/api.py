@@ -31,7 +31,11 @@ from boranga.components.main.permissions import CommsLogPermission
 from boranga.components.main.related_item import RelatedItemsSerializer
 from boranga.components.main.utils import validate_threat_request
 from boranga.components.occurrence.api import OCCConservationThreatFilterBackend
-from boranga.components.occurrence.models import OCCConservationThreat, Occurrence
+from boranga.components.occurrence.models import (
+    OCCConservationThreat,
+    Occurrence,
+    OccurrenceUserAction,
+)
 from boranga.components.occurrence.serializers import OCCConservationThreatSerializer
 from boranga.components.species_and_communities.email import (
     send_community_rename_email_notification,
@@ -87,6 +91,7 @@ from boranga.components.species_and_communities.serializers import (
     CreateCommunitySerializer,
     CreateSpeciesSerializer,
     DistrictSerializer,
+    EmptySpeciesSerializer,
     InternalCommunitySerializer,
     InternalSpeciesSerializer,
     ListCommunitiesSerializer,
@@ -113,11 +118,11 @@ from boranga.components.species_and_communities.serializers import (
     TaxonomySerializer,
 )
 from boranga.components.species_and_communities.utils import (
-    combine_species_original_submit,
     community_form_submit,
-    process_split_species_distribution_data,
-    process_split_species_general_data,
-    process_split_species_regions_and_districts,
+    process_species_distribution_data,
+    process_species_from_combine_list,
+    process_species_general_data,
+    process_species_regions_and_districts,
     rename_deep_copy,
     rename_species_original_submit,
     species_form_submit,
@@ -219,6 +224,9 @@ class GetScientificName(views.APIView):
         # identifies the request as for a species profile dependent record - we only include those taxonomies in use
         has_species = request.GET.get("has_species", False)
         active_only = request.GET.get("active_only", False)
+        active_draft_and_historical_only = request.GET.get(
+            "active_draft_and_historical_only", False
+        )
         exclude_taxonomy_ids = request.GET.getlist("exclude_taxonomy_ids[]", [])
 
         if not search_term:
@@ -238,6 +246,15 @@ class GetScientificName(views.APIView):
         if active_only:
             taxonomies = taxonomies.filter(
                 species__processing_status=Species.PROCESSING_STATUS_ACTIVE
+            )
+
+        if active_draft_and_historical_only:
+            taxonomies = taxonomies.filter(
+                species__processing_status__in=[
+                    Species.PROCESSING_STATUS_ACTIVE,
+                    Species.PROCESSING_STATUS_DRAFT,
+                    Species.PROCESSING_STATUS_HISTORICAL,
+                ]
             )
 
         if no_profile_draft_and_historical_only:
@@ -1376,19 +1393,6 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response(serializer.data)
 
-    @detail_route(methods=["DELETE"], detail=True)
-    def remove(self, request, *args, **kwargs):
-        # In the case of split species, when the action button is pressed a new species is created
-        # and saved to the database then if the user presses the cancel button on the modal, the
-        # new species is deleted. As such I belive using the delete method is justifiable for now
-        # However if we have time we can change the split action to only create the new species
-        # on submit. NOTE: PHASE2 Consider reworking split, combine and rename actions so they
-        # don't create records up front but rather only when the user submits the form. That way
-        # we won't need to have DELETE endpoints.
-        instance = self.get_object()
-        instance.remove(request)
-        return Response(status.HTTP_204_NO_CONTENT)
-
     @detail_route(methods=["post"], detail=True)
     @renderer_classes((JSONRenderer,))
     @transaction.atomic
@@ -1530,25 +1534,25 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 split_species_instance.species_number
             )
 
-            process_split_species_general_data(
+            process_species_general_data(
                 split_species_instance, split_species_request_data
             )
-            process_split_species_regions_and_districts(
+            process_species_regions_and_districts(
                 split_species_instance,
                 split_species_request_data,
             )
-            process_split_species_distribution_data(
+            process_species_distribution_data(
                 split_species_instance, split_species_request_data
             )
             split_species_instance.save(version_user=request.user)
 
-            split_species_instance.copy_documents(
+            split_species_instance.copy_split_documents(
                 instance,
                 request,
                 split_species_request_data,
                 split_species_is_original,
             )
-            split_species_instance.copy_threats(
+            split_species_instance.copy_split_threats(
                 instance,
                 request,
                 split_species_request_data,
@@ -1648,12 +1652,30 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                     raise serializers.ValidationError(
                         f"Species with taxonomy ID {taxonomy_id} does not exist"
                     )
-
+                current_scientific_name = occurrence.species.taxonomy.scientific_name
                 # Assign the occurrence to the new species
                 occurrence.species = species
                 # When the occurrence is saved, the custom save method will
                 # reassign all OCRs to also point to the new species as well
                 occurrence.save(version_user=request.user)
+
+                # Log the action
+                occurrence.log_user_action(
+                    OccurrenceUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_SPLIT.format(
+                        occurrence.occurrence_number,
+                        current_scientific_name,
+                        species.taxonomy.scientific_name,
+                    ),
+                    request,
+                )
+                request.user.log_user_action(
+                    OccurrenceUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_SPLIT.format(
+                        occurrence.occurrence_number,
+                        current_scientific_name,
+                        species.taxonomy.scientific_name,
+                    ),
+                    request,
+                )
 
         if not split_of_species_retains_original:
             # Set the original species from the split to historical and its conservation status to 'closed'
@@ -1706,62 +1728,237 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
     @detail_route(methods=["post"], detail=True)
     @renderer_classes((JSONRenderer,))
     @transaction.atomic
-    def combine_new_species_submit(self, request, *args, **kwargs):
+    def combine_species(self, request, *args, **kwargs):
+        # This is the original species that the combine action was initiated from
         instance = self.get_object()
-        # instance.submit(request,self)
-        species_form_submit(instance, request)
 
-        # copy/clone the original species document and create new for new split species
-        instance.clone_documents(request)
-        instance.clone_threats(request)
-        instance.save(version_user=request.user)
+        # This is the data for the resulting species which may already have
+        # a boranga profile or may be a new species being created
+        resulting_species = request.data.get("resulting_species", None)
 
-        # add parent ids to new species instance
-        parent_species_arr = request.data.get("parent_species")
-        for species in parent_species_arr:
-            parent_instance = Species.objects.get(id=species.get("id"))
-            instance.parent_species.add(parent_instance)
-            # set the original species from the combine list to historical and its conservation status to 'closed'
-            combine_species_original_submit(parent_instance, request)
+        if not resulting_species:
+            raise serializers.ValidationError(
+                "No resulting_species provided in request data"
+            )
 
-            # Log the action
-            parent_instance.log_user_action(
-                SpeciesUserAction.ACTION_COMBINE_SPECIES_TO.format(
-                    parent_instance.species_number,
-                    instance.species_number,
+        # These are the species that are being combined into the resulting species
+        species_combine_list = request.data.get("species_combine_list", None)
+
+        if not species_combine_list:
+            raise serializers.ValidationError(
+                "No species_combine_list provided in request data"
+            )
+
+        combine_of_species_retains_original = (
+            resulting_species.get("taxonomy_id") == instance.taxonomy_id
+        )
+
+        if len(species_combine_list) < 2 and combine_of_species_retains_original:
+            raise serializers.ValidationError(
+                "At least two different taxonomies must be selected for combining"
+            )
+
+        # This is the selection of document and threat ids to copy to the resulting species
+        selection = request.data.get("selection", None)
+
+        if not selection:
+            raise serializers.ValidationError(
+                "No document and threat selection provided in request data"
+            )
+
+        combine_species_numbers = ", ".join(
+            [
+                species_data.get("species_number", None)
+                for species_data in species_combine_list
+            ]
+        )
+
+        # Dict to store what action was taken for each of the combine species
+        # I.e. discarded, made historical, retained etc.
+        actions = {}
+
+        resulting_species_instance = None
+        resulting_species_exists = True if resulting_species.get("id", None) else False
+
+        if not resulting_species_exists:
+            serializer = CreateSpeciesSerializer(data=resulting_species)
+            serializer.is_valid(raise_exception=True)
+            resulting_species_instance, created = serializer.save(
+                version_user=request.user
+            )
+            resulting_species_instance.taxonomy_id = resulting_species.get(
+                "taxonomy_id"
+            )
+            species_form_submit(resulting_species_instance, request)
+            resulting_species_instance.save()
+
+            resulting_species_instance.log_user_action(
+                SpeciesUserAction.ACTION_COMBINE_SPECIES_FROM_NEW.format(
+                    resulting_species_instance.species_number,
+                    combine_species_numbers,
                 ),
                 request,
             )
             request.user.log_user_action(
-                SpeciesUserAction.ACTION_COMBINE_SPECIES_TO.format(
-                    parent_instance.species_number,
-                    instance.species_number,
+                SpeciesUserAction.ACTION_COMBINE_SPECIES_FROM_NEW.format(
+                    resulting_species_instance.species_number,
+                    combine_species_numbers,
+                ),
+                request,
+            )
+            actions[resulting_species_instance.id] = (
+                Species.COMBINE_SPECIES_ACTION_CREATED
+            )
+        else:
+            try:
+                resulting_species_instance = Species.objects.get(
+                    id=resulting_species.get("id")
+                )
+            except Species.DoesNotExist:
+                raise serializers.ValidationError(
+                    "Resulting species with id {} does not exist".format(
+                        resulting_species.get("id")
+                    )
+                )
+            if (
+                resulting_species_instance.processing_status
+                == Species.PROCESSING_STATUS_ACTIVE
+            ):
+                resulting_species_instance.log_user_action(
+                    SpeciesUserAction.ACTION_COMBINE_SPECIES_FROM_EXISTING_ACTIVE.format(
+                        resulting_species_instance.species_number,
+                        combine_species_numbers,
+                    ),
+                    request,
+                )
+                request.user.log_user_action(
+                    SpeciesUserAction.ACTION_COMBINE_SPECIES_FROM_EXISTING_ACTIVE.format(
+                        resulting_species_instance.species_number,
+                        combine_species_numbers,
+                    ),
+                    request,
+                )
+                actions[resulting_species_instance.id] = (
+                    Species.COMBINE_SPECIES_ACTION_RETAINED
+                )
+
+            if (
+                resulting_species_instance.processing_status
+                == Species.PROCESSING_STATUS_DRAFT
+            ):
+                resulting_species_instance.processing_status = (
+                    Species.PROCESSING_STATUS_ACTIVE
+                )
+                resulting_species_instance.log_user_action(
+                    SpeciesUserAction.ACTION_COMBINE_SPECIES_FROM_EXISTING_DRAFT.format(
+                        resulting_species_instance.species_number,
+                        combine_species_numbers,
+                    ),
+                    request,
+                )
+                request.user.log_user_action(
+                    SpeciesUserAction.ACTION_COMBINE_SPECIES_FROM_EXISTING_DRAFT.format(
+                        resulting_species_instance.species_number,
+                        combine_species_numbers,
+                    ),
+                    request,
+                )
+                actions[resulting_species_instance.id] = (
+                    Species.COMBINE_SPECIES_ACTION_ACTIVATED
+                )
+
+            elif (
+                resulting_species_instance.processing_status
+                == Species.PROCESSING_STATUS_HISTORICAL
+            ):
+                resulting_species_instance.processing_status = (
+                    Species.PROCESSING_STATUS_ACTIVE
+                )
+                resulting_species_instance.log_user_action(
+                    SpeciesUserAction.ACTION_COMBINE_SPECIES_FROM_EXISTING_HISTORICAL.format(
+                        resulting_species_instance.species_number,
+                        combine_species_numbers,
+                    ),
+                    request,
+                )
+                request.user.log_user_action(
+                    SpeciesUserAction.ACTION_COMBINE_SPECIES_FROM_EXISTING_HISTORICAL.format(
+                        resulting_species_instance.species_number,
+                        combine_species_numbers,
+                    ),
+                    request,
+                )
+                actions[resulting_species_instance.id] = (
+                    Species.COMBINE_SPECIES_ACTION_REACTIVATED
+                )
+
+        # Copy all the required data from the request
+        process_species_distribution_data(resulting_species_instance, resulting_species)
+        process_species_general_data(resulting_species_instance, resulting_species)
+        process_species_regions_and_districts(
+            resulting_species_instance, resulting_species
+        )
+
+        # Copy all the selected documents and threats to the resulting species instance
+        resulting_species_instance.copy_combine_documents_and_threats(
+            selection, request
+        )
+        resulting_species_instance.save(version_user=request.user)
+
+        combine_species_ids = [
+            species_data.get("id", None) for species_data in species_combine_list
+        ]
+
+        combine_species_qs = Species.objects.filter(id__in=combine_species_ids)
+        combine_species_without_resulting = combine_species_qs.exclude(
+            id=resulting_species_instance.id
+        )
+        # Set the parent species (m2m) for the resulting species instance
+        resulting_species_instance.parent_species.set(combine_species_without_resulting)
+
+        for combine_species_instance in combine_species_without_resulting:
+            # set the original species from the combine list to historical
+            process_species_from_combine_list(
+                combine_species_instance,
+                resulting_species_instance,
+                resulting_species_exists,
+                actions,
+                request,
+            )
+
+        # Reassign all occurrences for all the species being combined to the resulting species
+        occurrences = Occurrence.objects.filter(species__in=combine_species_qs)
+
+        # Deliberately using a loop with .save here instead of a single .update
+        # so that custom code runs that reassigns all related OCRs to also point to the new species
+        for occurrence in occurrences:
+            current_scientific_name = occurrence.species.taxonomy.scientific_name
+            new_scientific_name = resulting_species_instance.taxonomy.scientific_name
+            occurrence.species = resulting_species_instance
+            occurrence.save(version_user=request.user)
+
+            # Log the action
+            occurrence.log_user_action(
+                OccurrenceUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_COMBINE.format(
+                    occurrence.occurrence_number,
+                    current_scientific_name,
+                    new_scientific_name,
+                ),
+                request,
+            )
+            request.user.log_user_action(
+                OccurrenceUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_COMBINE.format(
+                    occurrence.occurrence_number,
+                    current_scientific_name,
+                    new_scientific_name,
                 ),
                 request,
             )
 
-        parent_species_numbers = ", ".join(
-            [parent.species_number for parent in instance.parent_species.all()]
-        )
-
-        # Log user action
-        instance.log_user_action(
-            SpeciesUserAction.ACTION_COMBINE_SPECIES_FROM.format(
-                instance.species_number,
-                parent_species_numbers,
-            ),
-            request,
-        )
-        request.user.log_user_action(
-            SpeciesUserAction.ACTION_COMBINE_SPECIES_FROM.format(
-                instance.species_number,
-                parent_species_numbers,
-            ),
-            request,
-        )
-
         #  send the combine species email notification
-        send_species_combine_email_notification(request, instance)
+        send_species_combine_email_notification(
+            request, combine_species_qs, resulting_species_instance, actions
+        )
 
         serializer = self.get_serializer(instance)
 
@@ -1902,6 +2099,27 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             serializer.save()
 
             return Response(new_returned, status=status.HTTP_201_CREATED)
+
+    @detail_route(
+        methods=[
+            "GET",
+        ],
+        detail=False,
+    )
+    def get_empty_species_object(self, request, *args, **kwargs):
+        taxonomy_id = request.query_params.get("taxonomy_id", None)
+
+        if not taxonomy_id:
+            raise serializers.ValidationError("No taxonomy_id provided in query params")
+
+        if not taxonomy_id.isdigit():
+            raise serializers.ValidationError("taxonomy_id must be an integer")
+
+        taxonomy = Taxonomy.objects.filter(id=taxonomy_id).first()
+        empty_species_serializer = EmptySpeciesSerializer(
+            taxonomy=taxonomy, context={"request": request}
+        )
+        return Response(empty_species_serializer.data)
 
     @detail_route(
         methods=[

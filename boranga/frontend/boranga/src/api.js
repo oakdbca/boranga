@@ -220,6 +220,9 @@ export default {
     discard_meeting: function (id) {
         return `/api/meeting/${id}/discard/`;
     },
+    get_empty_species_object: function (taxonomy_id) {
+        return `/api/species/get_empty_species_object/?taxonomy_id=${taxonomy_id}`;
+    },
     reinstate_meeting: function (id) {
         return `/api/meeting/${id}/reinstate/`;
     },

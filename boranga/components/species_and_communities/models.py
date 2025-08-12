@@ -451,6 +451,14 @@ class Species(RevisionedMixin):
     SPLIT_SPECIES_ACTION_ACTIVATED = "Activated"
     SPLIT_SPECIES_ACTION_REACTIVATED = "Reactivated"
 
+    COMBINE_SPECIES_ACTION_RETAINED = "Retained"
+    COMBINE_SPECIES_ACTION_CREATED = "Created"
+    COMBINE_SPECIES_ACTION_ACTIVATED = "Activated"
+    COMBINE_SPECIES_ACTION_REACTIVATED = "Reactivated"
+    COMBINE_SPECIES_ACTION_MADE_HISTORICAL = "Made Historical"
+    COMBINE_SPECIES_ACTION_DISCARDED = "Discarded"
+    COMBINE_SPECIES_ACTION_LEFT_AS_HISTORICAL = "Left as Historical"
+
     species_number = models.CharField(max_length=9, blank=True, default="")
     group_type = models.ForeignKey(GroupType, on_delete=models.CASCADE)
 
@@ -887,7 +895,7 @@ class Species(RevisionedMixin):
         self.save()
 
     @transaction.atomic
-    def copy_documents(
+    def copy_split_documents(
         self: "Species",
         copy_from: "Species",
         request: HttpRequest,
@@ -948,7 +956,7 @@ class Species(RevisionedMixin):
             )
 
     @transaction.atomic
-    def copy_threats(
+    def copy_split_threats(
         self: "Species",
         copy_from: "Species",
         request: HttpRequest,
@@ -1005,6 +1013,92 @@ class Species(RevisionedMixin):
                 ),
                 request,
             )
+
+    @transaction.atomic
+    def copy_combine_documents_and_threats(
+        self, selection: dict, request: HttpRequest
+    ) -> None:
+        if not selection:
+            return
+
+        documents_map = selection.get("documents") or {}
+        threats_map = selection.get("threats") or {}
+
+        def _int(v):
+            try:
+                return int(v)
+            except (TypeError, ValueError):
+                return None
+
+        for source_key, cfg in documents_map.items():
+            source_id = _int(source_key)
+            if not source_id or source_id == self.id:
+                continue
+            mode = (cfg or {}).get("mode")
+            ids = (cfg or {}).get("ids") or []
+
+            qs = SpeciesDocument.objects.filter(species_id=source_id)
+
+            if mode == "individual":
+                if not ids:
+                    continue
+                qs = qs.filter(id__in=ids)
+
+            for doc in qs:
+                doc.pk = None
+                doc.id = None
+                doc.species = self
+                doc.document_number = ""
+                doc.save(version_user=request.user)
+                self.log_user_action(
+                    SpeciesUserAction.ACTION_ADD_DOCUMENT.format(
+                        doc.document_number,
+                        self.species_number,
+                    ),
+                    request,
+                )
+                request.user.log_user_action(
+                    SpeciesUserAction.ACTION_ADD_DOCUMENT.format(
+                        doc.document_number,
+                        self.species_number,
+                    ),
+                    request,
+                )
+
+        for source_key, cfg in threats_map.items():
+            source_id = _int(source_key)
+            if not source_id or source_id == self.id:
+                continue
+            mode = (cfg or {}).get("mode")
+            ids = (cfg or {}).get("ids") or []
+
+            qs = ConservationThreat.objects.filter(species_id=source_id, visible=True)
+            if mode == "individual":
+                if not ids:
+                    continue
+                qs = qs.filter(id__in=ids)
+
+            for threat in qs:
+                threat.pk = None
+                threat.id = None
+                threat.species = self
+                threat.threat_number = ""
+                threat.visible = True
+                threat.save(version_user=request.user)
+                self.log_user_action(
+                    SpeciesUserAction.ACTION_ADD_THREAT.format(
+                        threat.threat_number,
+                        self.species_number,
+                    ),
+                    request,
+                )
+                request.user.log_user_action(
+                    SpeciesUserAction.ACTION_ADD_THREAT.format(
+                        threat.threat_number,
+                        self.species_number,
+                    ),
+                    request,
+                )
 
     @transaction.atomic
     def discard(self, request):
@@ -1070,7 +1164,6 @@ class Species(RevisionedMixin):
             species=self,
             processing_status__in=[
                 Occurrence.PROCESSING_STATUS_ACTIVE,
-                Occurrence.PROCESSING_STATUS_LOCKED,
             ],
         ).count()
 
@@ -1086,7 +1179,6 @@ class Species(RevisionedMixin):
             occurrence__species=self,
             occurrence__processing_status__in=[
                 Occurrence.PROCESSING_STATUS_ACTIVE,
-                Occurrence.PROCESSING_STATUS_LOCKED,
             ],
         ).aggregate(sum=Sum("area"))["sum"]
         if self.group_type.name == GroupType.GROUP_TYPE_FAUNA:
@@ -1094,7 +1186,6 @@ class Species(RevisionedMixin):
                 buffered_from_geometry__occurrence__species=self,
                 buffered_from_geometry__occurrence__processing_status__in=[
                     Occurrence.PROCESSING_STATUS_ACTIVE,
-                    Occurrence.PROCESSING_STATUS_LOCKED,
                 ],
             ).aggregate(sum=Sum("area"))["sum"]
 
@@ -1123,7 +1214,6 @@ class Species(RevisionedMixin):
                 occurrence__species=self,
                 occurrence__processing_status__in=[
                     Occurrence.PROCESSING_STATUS_ACTIVE,
-                    Occurrence.PROCESSING_STATUS_LOCKED,
                 ],
             )
             .annotate(geom=Cast("geometry", gis_models.GeometryField(geography=True)))
@@ -1135,7 +1225,6 @@ class Species(RevisionedMixin):
                     buffered_from_geometry__occurrence__species=self,
                     buffered_from_geometry__occurrence__processing_status__in=[
                         Occurrence.PROCESSING_STATUS_ACTIVE,
-                        Occurrence.PROCESSING_STATUS_LOCKED,
                     ],
                 )
                 .annotate(
@@ -1256,8 +1345,43 @@ class SpeciesUserAction(UserAction):
     )
     ACTION_SPLIT_RETAIN_ORIGINAL = "Species {} retained as part of a split."
 
-    ACTION_COMBINE_SPECIES_TO = "Species {} combined into new species {}"
-    ACTION_COMBINE_SPECIES_FROM = "Species {} created from a combination of species {}"
+    ACTION_COMBINE_ACTIVE_SPECIES_TO_NEW = (
+        "Active species {} made historical as a "
+        "result of being combined into new species {}"
+    )
+    ACTION_COMBINE_ACTIVE_SPECIES_TO_EXISTING = (
+        "Active species {} made historical as a "
+        "result of being combined into existing species {}"
+    )
+    ACTION_COMBINE_DRAFT_SPECIES_TO_EXISTING = (
+        "Draft species {} discarded as a result of "
+        "being combined into existing species {}"
+    )
+    ACTION_COMBINE_DRAFT_SPECIES_TO_NEW = (
+        "Draft species {} discarded as a result of "
+        "being combined into new species {}"
+    )
+    ACTION_COMBINE_HISTORICAL_SPECIES_TO_NEW = (
+        "Historical species {} was combined into "
+        "new species {} and remains historical"
+    )
+    ACTION_COMBINE_HISTORICAL_SPECIES_TO_EXISTING = (
+        "Historical species {} was combined into "
+        "existing species {} and remains historical"
+    )
+
+    ACTION_COMBINE_SPECIES_FROM_NEW = (
+        "Species {} created from a combination of species {}"
+    )
+    ACTION_COMBINE_SPECIES_FROM_EXISTING_ACTIVE = (
+        "Species {} retained from a combination of species {}"
+    )
+    ACTION_COMBINE_SPECIES_FROM_EXISTING_DRAFT = (
+        "Species {} activated from a combination of species {}"
+    )
+    ACTION_COMBINE_SPECIES_FROM_EXISTING_HISTORICAL = (
+        "Species {} reactivated from a combination of species {}"
+    )
 
     # Document
     ACTION_ADD_DOCUMENT = "Document {} added for Species {}"
@@ -1806,7 +1930,6 @@ class Community(RevisionedMixin):
             community=self,
             processing_status__in=[
                 Occurrence.PROCESSING_STATUS_ACTIVE,
-                Occurrence.PROCESSING_STATUS_LOCKED,
             ],
         ).count()
 
@@ -1822,7 +1945,6 @@ class Community(RevisionedMixin):
             occurrence__community=self,
             occurrence__processing_status__in=[
                 Occurrence.PROCESSING_STATUS_ACTIVE,
-                Occurrence.PROCESSING_STATUS_LOCKED,
             ],
         ).aggregate(sum=Sum("area"))["sum"]
         if self.group_type.name == GroupType.GROUP_TYPE_FAUNA:
@@ -1830,7 +1952,6 @@ class Community(RevisionedMixin):
                 buffered_from_geometry__occurrence__community=self,
                 buffered_from_geometry__occurrence__processing_status__in=[
                     Occurrence.PROCESSING_STATUS_ACTIVE,
-                    Occurrence.PROCESSING_STATUS_LOCKED,
                 ],
             ).aggregate(sum=Sum("area"))["sum"]
 
@@ -1859,7 +1980,6 @@ class Community(RevisionedMixin):
                 occurrence__community=self,
                 occurrence__processing_status__in=[
                     Occurrence.PROCESSING_STATUS_ACTIVE,
-                    Occurrence.PROCESSING_STATUS_LOCKED,
                 ],
             )
             .annotate(geom=Cast("geometry", gis_models.GeometryField(geography=True)))
@@ -1871,7 +1991,6 @@ class Community(RevisionedMixin):
                     buffered_from_geometry__occurrence__community=self,
                     buffered_from_geometry__occurrence__processing_status__in=[
                         Occurrence.PROCESSING_STATUS_ACTIVE,
-                        Occurrence.PROCESSING_STATUS_LOCKED,
                     ],
                 )
                 .annotate(

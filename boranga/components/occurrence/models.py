@@ -4749,6 +4749,12 @@ class OccurrenceUserAction(UserAction):
     ACTION_UNLOCK_OCCURRENCE = "Unlock occurrence {}"
     ACTION_DEACTIVATE_OCCURRENCE = "Deactivate occurrence {}"
     ACTION_REOPEN_OCCURRENCE = "Reopen occurrence {}"
+    ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_SPLIT = (
+        "Change occurrence {} species from {} to {} due to split"
+    )
+    ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_COMBINE = (
+        "Change occurrence {} species from {} to {} due to combine"
+    )
 
     # Document
     ACTION_ADD_DOCUMENT = "Document {} added for occurrence {}"

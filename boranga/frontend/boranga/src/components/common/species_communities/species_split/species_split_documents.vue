@@ -71,11 +71,8 @@ export default {
     data: function () {
         let vm = this;
         return {
-            uuid: 0,
             documentBody: 'documentBody' + uuid(),
             panelBody: 'species-split-documents-' + uuid(),
-            values: null,
-            // to store all the documents of original on first load.
             original_document_ids: [],
             species_document_url: api_endpoints.species_documents,
             documents_headers: [
@@ -347,9 +344,6 @@ export default {
                 function () {
                     let id = parseInt($(this).attr('data-add-document'));
                     if (this.checked) {
-                        console.debug(
-                            'Checkbox checked for document id: ' + id
-                        );
                         if (
                             !vm.species_community.document_ids_to_copy.includes(
                                 id

@@ -1,35 +1,41 @@
 <template lang="html">
-    <div id="species_split_threats">
-        <FormSection :form-collapse="false" label="Threats" :Index="threatBody">
-            <form class="form-horizontal" action="index.html" method="post">
+    <div id="species-combine-threats">
+        <FormSection
+            :form-collapse="false"
+            label="Threats"
+            :Index="threatFormSectionIndex"
+        >
+            <form class="form-horizontal" method="post">
                 <div class="col-sm-12 form-check form-check-inline">
                     <input
-                        :id="'threat_select_all' + species_original.id"
+                        :id="'threat_select_all' + combine_species.id"
                         class="form-check-input"
                         type="radio"
-                        name="threatSelect"
+                        :name="'threatSelect-' + combine_species.id"
                         value="selectAll"
-                        @click="selectThreatOption($event)"
+                        :checked="currentThreatSelection === 'selectAll'"
+                        @change="selectThreatOption"
                     />
-                    <label class="form-check-label"
-                        >Copy all threats from Species
-                        {{ species_original.species_number }}</label
-                    >
+                    <label class="form-check-label">
+                        Copy all threats from Species
+                        {{ combine_species.species_number }}
+                    </label>
                 </div>
                 <div class="col-sm-12 form-check form-check-inline mb-3">
                     <input
-                        :id="'threat_select_individual' + species_original.id"
+                        :id="'threat_select_individual' + combine_species.id"
                         class="form-check-input"
                         type="radio"
-                        name="threatSelect"
+                        :name="'threatSelect-' + combine_species.id"
                         value="individual"
-                        @click="selectThreatOption($event)"
+                        :checked="currentThreatSelection === 'individual'"
+                        @change="selectThreatOption"
                     />
                     <label class="form-check-label">Decide per threat</label>
                 </div>
                 <div>
                     <datatable
-                        :id="panelBody"
+                        :id="threatsDatatableId"
                         ref="threats_datatable"
                         :dt-options="threats_options"
                         :dt-headers="threats_headers"
@@ -47,30 +53,18 @@ import { constants, api_endpoints, helpers } from '@/utils/hooks';
 
 export default {
     name: 'SpeciesCombineThreats',
-    components: {
-        FormSection,
-        datatable,
-    },
+    components: { FormSection, datatable },
     props: {
-        species_community: {
-            type: Object,
-            required: true,
-        },
-        species_original: {
-            type: Object,
-            required: true,
-        },
+        resulting_species_community: { type: Object, required: true },
+        combine_species: { type: Object, required: true },
     },
-    data: function () {
-        let vm = this;
+    data() {
+        const vm = this;
         return {
-            uuid: 0,
-            threatBody: 'threatBody' + uuid(),
-            panelBody: 'species-combine-threats-' + uuid(),
-            values: null,
-            // to store all the documents of original on first load.
-            original_species_threats: [],
-            threat_url: api_endpoints.threat,
+            threatFormSectionIndex: 'threat-form-section-index-' + uuid(),
+            threatsDatatableId: 'threats-datatable-id-' + uuid(),
+            // All threat ids for this species (fetched once)
+            combine_species_threat_ids: [],
             threats_headers: [
                 'Number',
                 'Category',
@@ -84,12 +78,9 @@ export default {
             ],
             threats_options: {
                 autowidth: false,
-                language: {
-                    processing: constants.DATATABLE_PROCESSING_HTML,
-                },
+                language: { processing: constants.DATATABLE_PROCESSING_HTML },
                 responsive: true,
                 searching: true,
-                //  to show the "workflow Status","Action" columns always in the last position
                 columnDefs: [
                     { responsivePriority: 1, targets: 0 },
                     { responsivePriority: 2, targets: -1 },
@@ -97,7 +88,7 @@ export default {
                 ajax: {
                     url: helpers.add_endpoint_json(
                         api_endpoints.species,
-                        vm.species_original.id + '/threats'
+                        vm.combine_species.id + '/threats'
                     ),
                     dataSrc: '',
                 },
@@ -112,18 +103,14 @@ export default {
                         title: 'Boranga Species Combine Threats Excel Export',
                         text: '<i class="fa-solid fa-download"></i> Excel',
                         className: 'btn btn-primary me-2 rounded',
-                        exportOptions: {
-                            orthogonal: 'export',
-                        },
+                        exportOptions: { orthogonal: 'export' },
                     },
                     {
                         extend: 'csv',
                         title: 'Boranga Species Combine Threats CSV Export',
                         text: '<i class="fa-solid fa-download"></i> CSV',
                         className: 'btn btn-primary rounded',
-                        exportOptions: {
-                            orthogonal: 'export',
-                        },
+                        exportOptions: { orthogonal: 'export' },
                     },
                 ],
                 columns: [
@@ -131,238 +118,214 @@ export default {
                         data: 'threat_number',
                         orderable: true,
                         searchable: true,
-                        mRender: function (data, type, full) {
-                            if (full.visible) {
-                                return full.threat_number;
-                            } else {
-                                return '<s>' + full.threat_number + '</s>';
-                            }
+                        mRender(data, type, full) {
+                            return full.visible
+                                ? full.threat_number
+                                : '<s>' + full.threat_number + '</s>';
                         },
                     },
                     {
                         data: 'threat_category',
                         orderable: true,
                         searchable: true,
-                        mRender: function (data, type, full) {
-                            if (full.visible) {
-                                return full.threat_category;
-                            } else {
-                                return '<s>' + full.threat_category + '</s>';
-                            }
+                        mRender(data, type, full) {
+                            return full.visible
+                                ? full.threat_category
+                                : '<s>' + full.threat_category + '</s>';
                         },
                     },
                     {
                         data: 'source',
                         orderable: true,
                         searchable: true,
-                        mRender: function (data, type, full) {
-                            if (full.visible) {
-                                return full.source;
-                            } else {
-                                return '<s>' + full.source + '</s>';
-                            }
+                        mRender(data, type, full) {
+                            return full.visible
+                                ? full.source
+                                : '<s>' + full.source + '</s>';
                         },
                     },
                     {
                         data: 'date_observed',
-                        mRender: function (data, type, full) {
-                            if (full.visible) {
-                                return data != '' && data != null
-                                    ? moment(data).format('DD/MM/YYYY')
-                                    : '';
-                            } else {
-                                return data != '' && data != null
-                                    ? '<s>' + moment(data).format('DD/MM/YYYY')
-                                    : '' + '</s>';
-                            }
+                        mRender(data, type, full) {
+                            if (!data) return '';
+                            const formatted = moment(data).format('DD/MM/YYYY');
+                            return full.visible
+                                ? formatted
+                                : '<s>' + formatted + '</s>';
                         },
                     },
                     {
                         data: 'threat_agent',
                         orderable: true,
                         searchable: true,
-                        mRender: function (data, type, full) {
-                            if (full.visible) {
-                                return full.threat_agent;
-                            } else {
-                                return '<s>' + full.threat_agent + '</s>';
-                            }
+                        mRender(data, type, full) {
+                            return full.visible
+                                ? full.threat_agent
+                                : '<s>' + full.threat_agent + '</s>';
                         },
                     },
                     {
                         data: 'comment',
                         orderable: true,
                         searchable: true,
-                        render: function (value, type, full) {
-                            let result = helpers.dtPopover(value, 30, 'hover');
+                        render(value, type, full) {
+                            const result = helpers.dtPopover(
+                                value,
+                                30,
+                                'hover'
+                            );
                             if (full.visible) {
-                                return type == 'export' ? value : result;
-                            } else {
-                                return type == 'export'
-                                    ? '<s>' + value + '</s>'
-                                    : '<s>' + result + '</s>';
+                                return type === 'export' ? value : result;
                             }
+                            return type === 'export'
+                                ? value
+                                : '<s>' + result + '</s>';
                         },
                     },
                     {
                         data: 'current_impact_name',
                         orderable: true,
                         searchable: true,
-                        mRender: function (data, type, full) {
-                            if (full.visible) {
-                                return full.current_impact_name;
-                            } else {
-                                return (
-                                    '<s>' + full.current_impact_name + '</s>'
-                                );
-                            }
+                        mRender(data, type, full) {
+                            return full.visible
+                                ? full.current_impact_name
+                                : '<s>' + full.current_impact_name + '</s>';
                         },
                     },
                     {
                         data: 'potential_impact_name',
                         orderable: true,
                         searchable: true,
-                        mRender: function (data, type, full) {
-                            if (full.visible) {
-                                return full.potential_impact_name;
-                            } else {
-                                return (
-                                    '<s>' + full.potential_impact_name + '</s>'
-                                );
-                            }
+                        mRender(data, type, full) {
+                            return full.visible
+                                ? full.potential_impact_name
+                                : '<s>' + full.potential_impact_name + '</s>';
                         },
                     },
                     {
                         data: 'id',
-                        mRender: function (data, type, full) {
-                            // to store the original species documents for the use of radio btn options on first load so that no need to call api to get the documents ids
-                            if (
-                                !vm.original_species_threats.includes(full.id)
-                            ) {
-                                vm.original_species_threats.push(full.id);
-                            }
-
-                            if (
-                                vm.species_community.threats.includes(full.id)
-                            ) {
-                                return `<input class='form-check-input' type="checkbox" id="threat_chkbox-${vm.species_community.id}-${full.id}" data-add-threat="${full.id}"  checked>`;
-                            } else {
-                                return `<input class='form-check-input' type="checkbox" id="threat_chkbox-${vm.species_community.id}-${full.id}" data-add-threat="${full.id}">`;
-                            }
+                        mRender(data, type, full) {
+                            const entry = vm.getThreatSelectionEntry();
+                            const isSelectAll = entry.mode === 'all';
+                            const isChecked =
+                                isSelectAll ||
+                                (entry.mode === 'individual' &&
+                                    entry.ids.includes(full.id));
+                            const isDisabled = isSelectAll;
+                            return `<input class='form-check-input' type="checkbox" data-add-threat="${full.id}"${
+                                isChecked ? ' checked' : ''
+                            }${isDisabled ? ' disabled' : ''}>`;
                         },
                     },
                 ],
                 processing: true,
-                drawCallback: function () {
+                drawCallback() {
                     helpers.enablePopovers();
                 },
-                initComplete: function () {
+                initComplete: (settings, json) => {
                     helpers.enablePopovers();
-                    // another option to fix the responsive table overflow css on tab switch
-                    setTimeout(function () {
-                        vm.adjust_table_width();
-                    }, 100);
+                    setTimeout(() => this.adjust_table_width(), 100);
+                    if (json && this.combine_species_threat_ids.length === 0) {
+                        this.combine_species_threat_ids = json.map((d) => d.id);
+                    }
                 },
             },
         };
     },
-    computed: {},
-    mounted: function () {
-        let vm = this;
-        this.$nextTick(() => {
-            if (vm.species_original.threat_selection != null) {
-                if (vm.species_original.threat_selection === 'selectAll') {
-                    document.getElementById(
-                        'threat_select_all' + vm.species_original.id
-                    ).checked = true;
-                } else {
-                    document.getElementById(
-                        'threat_select_individual' + vm.species_original.id
-                    ).checked = true;
-                }
-            }
-            vm.addEventListeners();
-        });
+    mounted() {
+        const entry = this.getThreatSelectionEntry();
+        if (!entry.mode) entry.mode = 'all';
+        this.addEventListeners();
+    },
+    beforeUnmount() {
+        const dt =
+            this.$refs.threats_datatable &&
+            this.$refs.threats_datatable.vmDataTable;
+        if (dt) {
+            dt.off('change', 'input[data-add-threat]');
+            dt.off('childRow.dt');
+        }
+    },
+    computed: {
+        selectionEntry() {
+            return this.getThreatSelectionEntry();
+        },
+        isThreatSelectAll() {
+            return this.selectionEntry.mode === 'all';
+        },
+        currentThreatSelection() {
+            return this.isThreatSelectAll ? 'selectAll' : 'individual';
+        },
     },
     methods: {
+        getThreatSelectionEntry() {
+            const map =
+                (this.resulting_species_community.selection &&
+                    this.resulting_species_community.selection.threats) ||
+                (this.resulting_species_community.selection = {
+                    documents: {},
+                    threats: {},
+                }).threats;
+            if (!map[this.combine_species.id]) {
+                map[this.combine_species.id] = { mode: 'all', ids: [] };
+            }
+            return map[this.combine_species.id];
+        },
         selectThreatOption(e) {
-            let vm = this;
-            //--fetch the value of selected radio btn
-            let selected_option = e.target.value;
-            //----set the selected value to the original species object so as to get the data when tab is reloaded/refreshed
-            vm.species_original.threat_selection = selected_option;
-
-            if (selected_option == 'selectAll') {
-                //---first need to delete the original_species_threats from the new_arr if added from the "Decide individual" option to avoid duplication
-                vm.species_community.threats =
-                    vm.species_community.threats.filter(
-                        (x) => vm.original_species_threats.indexOf(x) == -1
-                    ); //--"filter" used to delete one array from another
-                //-- copy all original species threats to new species threats array
-                //---use '...' spread operator to add one arr elemnents to other
-                vm.species_community.threats.push(
-                    ...vm.original_species_threats
+            const selected = e.target.value;
+            const entry = this.getThreatSelectionEntry();
+            if (selected === 'selectAll' && entry.mode !== 'all') {
+                entry.mode = 'all';
+                entry.ids = [];
+            } else if (
+                selected === 'individual' &&
+                entry.mode !== 'individual'
+            ) {
+                entry.mode = 'individual';
+                if (
+                    entry.ids.length === 0 &&
+                    this.combine_species_threat_ids.length
+                ) {
+                    entry.ids = this.combine_species_threat_ids.slice();
+                }
+            }
+            this.$nextTick(() =>
+                this.$refs.threats_datatable.vmDataTable.ajax.reload(
+                    null,
+                    false
+                )
+            );
+        },
+        addEventListeners() {
+            const dt =
+                this.$refs.threats_datatable &&
+                this.$refs.threats_datatable.vmDataTable;
+            if (!dt) return;
+            dt.on('change', 'input[data-add-threat]', (evt) => {
+                if (this.isThreatSelectAll) return;
+                const id = parseInt(
+                    evt.currentTarget.getAttribute('data-add-threat')
                 );
-                this.$refs.threats_datatable.vmDataTable.ajax.reload();
-            } else if (selected_option == 'individual') {
-                //----empty only the current original species array from the new species array as will contain other original combine species threat_id's as well
-                vm.species_community.threats =
-                    vm.species_community.threats.filter(
-                        (x) => vm.original_species_threats.indexOf(x) == -1
-                    ); //--"filter" used to delete one array from another
-                this.$refs.threats_datatable.vmDataTable.ajax.reload();
-            }
+                if (Number.isNaN(id)) return;
+                const entry = this.getThreatSelectionEntry();
+                const list = entry.ids;
+                const idx = list.indexOf(id);
+                if (evt.currentTarget.checked) {
+                    if (idx === -1) list.push(id);
+                } else if (idx > -1) list.splice(idx, 1);
+                entry.ids = list.slice();
+            });
+            dt.on('childRow.dt', () => helpers.enablePopovers());
         },
-        addEventListeners: function () {
-            let vm = this;
-            vm.$refs.threats_datatable.vmDataTable.on(
-                'click',
-                'input[data-add-threat]',
-                function () {
-                    //e.preventDefault();
-                    let id = $(this).attr('data-add-threat');
-                    let chkbox = $(this).attr('id');
-                    if ($('#' + chkbox).is(':checked') == true) {
-                        if (!vm.species_community.threats.includes(id)) {
-                            vm.species_community.threats.push(parseInt(id));
-                        }
-                    } else {
-                        let threat_arr = vm.species_community.threats;
-                        //---remove document id from array (for this arr.splice is used)
-                        var index = threat_arr.indexOf(id);
-                        vm.species_community.threats.splice(index, 1);
-                    }
+        adjust_table_width() {
+            this.$nextTick(() => {
+                if (this.$refs.threats_datatable) {
+                    this.$refs.threats_datatable.vmDataTable.columns
+                        .adjust()
+                        .responsive.recalc();
                 }
-            );
-            vm.$refs.threats_datatable.vmDataTable.on(
-                'childRow.dt',
-                function () {
-                    helpers.enablePopovers();
-                }
-            );
-        },
-        adjust_table_width: function () {
-            if (this.$refs.threats_datatable !== undefined) {
-                this.$refs.threats_datatable.vmDataTable.columns
-                    .adjust()
-                    .responsive.recalc();
-            }
+            });
         },
     },
 };
 </script>
-
-<style lang="css" scoped>
-fieldset.scheduler-border {
-    border: 1px groove #ddd !important;
-    padding: 0 1.4em 1.4em 1.4em !important;
-    margin: 0 0 1.5em 0 !important;
-    -webkit-box-shadow: 0px 0px 0px 0px #000;
-    box-shadow: 0px 0px 0px 0px #000;
-}
-legend.scheduler-border {
-    width: inherit; /* Or auto */
-    padding: 0 10px; /* To give a bit of padding on the left and right */
-    border-bottom: none;
-}
-</style>

@@ -75,8 +75,8 @@
                     aria-labelledby="pills-documents-tab"
                 >
                     <SpeciesDocuments
-                        id="speciesDocuments"
-                        ref="species_documents"
+                        id="species-split-documents"
+                        ref="species_split_documents"
                         :is_internal="is_internal"
                         :species_community="species_community"
                         :species_original="species_original"
@@ -90,8 +90,8 @@
                     aria-labelledby="pills-threats-tab"
                 >
                     <SpeciesThreats
-                        id="speciesThreats"
-                        ref="species_threats"
+                        id="species-split-threats"
+                        ref="species_split_threats"
                         :is_internal="is_internal"
                         :species_community="species_community"
                         :species_original="species_original"
