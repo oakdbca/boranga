@@ -316,7 +316,10 @@
                                                 toggleHidden($event.target)
                                             "
                                             @click="
-                                                centerOnFeature(feature, 17)
+                                                centerOnFeature(
+                                                    feature,
+                                                    mapDefaultZoom
+                                                )
                                             "
                                         >
                                             <SvgIcon
@@ -433,9 +436,6 @@
                                                 class="svg-object"
                                                 name="map-zoom"
                                                 :hidden="true"
-                                                style="
-                                                    filter: url('data:image/svg+xml,<svg xmlns=`http://www.w3.org/2000/svg`><filter id=`white`><feColorMatrix type=`matrix` values=`0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0`/></filter></svg>#white');
-                                                "
                                             />
                                         </button>
                                         <!-- Latitude -->
@@ -1972,6 +1972,7 @@ export default {
             elem_id: uuid(),
             map_container_id: uuid(),
             map: null,
+            mapDefaultZoom: 13.335, // ~1:5e4
             gisExtentArray: null,
             tileLayerMapbox: null,
             tileLayerSat: null,
@@ -2635,6 +2636,12 @@ export default {
                 Math.max(...N),
             ];
         },
+        /**
+         * Centers the map based on its size on a feature's geometry extent.
+         * The map size is pixel dimensions of the box to fit the extent into.
+         * @param {Feature} feature The feature to center on
+         * @param {number=} maxZoom The maximum zoom level to fit the feature and that the map zooms to, defaults to no limit
+         */
         centerOnFeature: function (feature, maxZoom) {
             let ext = feature.getGeometry().getExtent();
             if (!maxZoom) {
