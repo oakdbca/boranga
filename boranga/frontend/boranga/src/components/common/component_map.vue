@@ -54,7 +54,7 @@
                         @click="setBaseLayer('sat')"
                     />
                     <SvgIcon
-                        id="basemap_osm"
+                        id="basemap_street"
                         name="basemap_street"
                         @click="setBaseLayer('street')"
                     />
@@ -2677,12 +2677,12 @@ export default {
                 vm.tileLayerSat.setVisible(true);
                 vm.selectedBaseLayer = vm.tileLayerSat;
                 $('#basemap_sat').hide();
-                $('#basemap_osm').show();
+                $('#basemap_street').show();
             } else {
                 vm.tileLayerMapbox.setVisible(true);
                 vm.tileLayerSat.setVisible(false);
                 vm.selectedBaseLayer = vm.tileLayerMapbox;
-                $('#basemap_osm').hide();
+                $('#basemap_street').hide();
                 $('#basemap_sat').show();
             }
         },
