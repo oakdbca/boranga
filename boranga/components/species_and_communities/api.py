@@ -1927,6 +1927,7 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         # so that custom code runs that reassigns all related OCRs to also point to the new species
         for occurrence in occurrences:
             current_scientific_name = occurrence.species.taxonomy.scientific_name
+            new_scientific_name = resulting_species_instance.taxonomy.scientific_name
             occurrence.species = resulting_species_instance
             occurrence.save(version_user=request.user)
 
@@ -1935,7 +1936,7 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 OccurrenceUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_COMBINE.format(
                     occurrence.occurrence_number,
                     current_scientific_name,
-                    resulting_species_instance.scientific_name,
+                    new_scientific_name,
                 ),
                 request,
             )
@@ -1943,7 +1944,7 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 OccurrenceUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_COMBINE.format(
                     occurrence.occurrence_number,
                     current_scientific_name,
-                    resulting_species_instance.scientific_name,
+                    new_scientific_name,
                 ),
                 request,
             )
