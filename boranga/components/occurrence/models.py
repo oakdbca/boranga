@@ -5772,7 +5772,7 @@ class OccurrenceTenure(RevisionedMixin):
     owner_count = models.IntegerField(blank=True, null=True)
 
     datetime_created = models.DateTimeField(auto_now_add=True)
-    datetime_updated = models.DateTimeField(default=datetime.now)
+    datetime_updated = models.DateTimeField(default=timezone.now)
 
     purpose = models.ForeignKey(
         OccurrenceTenurePurpose,
@@ -5801,7 +5801,7 @@ class OccurrenceTenure(RevisionedMixin):
         else:
             override_datetime_updated = kwargs.pop("override_datetime_updated", False)
             if not override_datetime_updated:
-                self.datetime_updated = datetime.now()
+                self.datetime_updated = timezone.now()
             super().save(*args, **kwargs)
 
     class Meta:
