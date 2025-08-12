@@ -1846,6 +1846,9 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 resulting_species_instance.processing_status
                 == Species.PROCESSING_STATUS_DRAFT
             ):
+                resulting_species_instance.processing_status = (
+                    Species.PROCESSING_STATUS_ACTIVE
+                )
                 resulting_species_instance.log_user_action(
                     SpeciesUserAction.ACTION_COMBINE_SPECIES_FROM_EXISTING_DRAFT.format(
                         resulting_species_instance.species_number,
@@ -1868,6 +1871,9 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 resulting_species_instance.processing_status
                 == Species.PROCESSING_STATUS_HISTORICAL
             ):
+                resulting_species_instance.processing_status = (
+                    Species.PROCESSING_STATUS_ACTIVE
+                )
                 resulting_species_instance.log_user_action(
                     SpeciesUserAction.ACTION_COMBINE_SPECIES_FROM_EXISTING_HISTORICAL.format(
                         resulting_species_instance.species_number,
