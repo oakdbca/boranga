@@ -48,14 +48,14 @@
                     class="basemap-button"
                     title="Toggle background map"
                 >
-                    <img
+                    <SvgIcon
                         id="basemap_sat"
-                        src="../../satellite_icon.jpg"
+                        name="basemap_sat"
                         @click="setBaseLayer('sat')"
                     />
-                    <img
+                    <SvgIcon
                         id="basemap_osm"
-                        src="../../map_icon.png"
+                        name="basemap_street"
                         @click="setBaseLayer('street')"
                     />
                 </div>
