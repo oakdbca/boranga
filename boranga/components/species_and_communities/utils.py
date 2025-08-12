@@ -116,10 +116,6 @@ def process_species_from_combine_list(
         # And it's action logs are done in the api endpoint
         return
 
-    logger.debug(
-        f"Species instance processing status: {species_instance.processing_status}, "
-    )
-
     if species_instance.processing_status not in [
         Species.PROCESSING_STATUS_ACTIVE,
         Species.PROCESSING_STATUS_DRAFT,
@@ -346,54 +342,48 @@ def rename_deep_copy(instance: Species, request: HttpRequest) -> Species:
     return new_rename_instance
 
 
-def process_split_species_general_data(
-    split_species_instance, split_species_request_data
-):
-    split_species_instance.department_file_numbers = split_species_request_data.get(
+def process_species_general_data(species_instance, species_request_data):
+    species_instance.department_file_numbers = species_request_data.get(
         "department_file_numbers", None
     )
-    split_species_instance.last_data_curation_date = split_species_request_data.get(
+    species_instance.last_data_curation_date = species_request_data.get(
         "last_data_curation_date", None
     )
-    split_species_instance.conservation_plan_exists = (
-        split_species_request_data.get("conservation_plan_exists", False) == "true"
+    species_instance.conservation_plan_exists = (
+        species_request_data.get("conservation_plan_exists", False) == "true"
     )
-    split_species_instance.comment = split_species_request_data.get("comment", None)
+    species_instance.comment = species_request_data.get("comment", None)
 
 
-def process_split_species_regions_and_districts(
-    split_species_instance, split_species_request_data
-):
-    regions_ids = split_species_request_data.get("regions", [])
-    districts_ids = split_species_request_data.get("districts", [])
+def process_species_regions_and_districts(species_instance, species_request_data):
+    regions_ids = species_request_data.get("regions", [])
+    districts_ids = species_request_data.get("districts", [])
 
     if not regions_ids and not districts_ids:
         raise ValidationError(
             "At least one region or district must be provided for split species with taxonomy id: {}.".format(
-                split_species_instance.taxonomy_id
+                species_instance.taxonomy_id
             )
         )
 
     regions = Region.objects.filter(id__in=regions_ids)
     districts = District.objects.filter(id__in=districts_ids)
 
-    split_species_instance.regions.set(regions)
-    split_species_instance.districts.set(districts)
+    species_instance.regions.set(regions)
+    species_instance.districts.set(districts)
 
 
-def process_split_species_distribution_data(
-    split_species_instance, split_species_request_data
-):
-    distribution_request_data = split_species_request_data.get("distribution", None)
+def process_species_distribution_data(species_instance, species_request_data):
+    distribution_request_data = species_request_data.get("distribution", None)
     if not distribution_request_data:
         raise ValidationError(
             "Distribution data is required for split species with taxonomy id: {}.".format(
-                split_species_instance.taxonomy_id
+                species_instance.taxonomy_id
             )
         )
 
     distribution_instance, created = SpeciesDistribution.objects.get_or_create(
-        species=split_species_instance
+        species=species_instance
     )
 
     distribution_instance.number_of_occurrences = distribution_request_data.get(
