@@ -451,6 +451,14 @@ class Species(RevisionedMixin):
     SPLIT_SPECIES_ACTION_ACTIVATED = "Activated"
     SPLIT_SPECIES_ACTION_REACTIVATED = "Reactivated"
 
+    COMBINE_SPECIES_ACTION_RETAINED = "Retained"
+    COMBINE_SPECIES_ACTION_CREATED = "Created"
+    COMBINE_SPECIES_ACTION_ACTIVATED = "Activated"
+    COMBINE_SPECIES_ACTION_REACTIVATED = "Reactivated"
+    COMBINE_SPECIES_ACTION_MADE_HISTORICAL = "Made Historical"
+    COMBINE_SPECIES_ACTION_DISCARDED = "Discarded"
+    COMBINE_SPECIES_ACTION_LEFT_AS_HISTORICAL = "Left as Historical"
+
     species_number = models.CharField(max_length=9, blank=True, default="")
     group_type = models.ForeignKey(GroupType, on_delete=models.CASCADE)
 
@@ -1337,11 +1345,32 @@ class SpeciesUserAction(UserAction):
     )
     ACTION_SPLIT_RETAIN_ORIGINAL = "Species {} retained as part of a split."
 
-    ACTION_COMBINE_SPECIES_TO_NEW = "Species {} combined into new species {}"
-    ACTION_COMBINE_SPECIES_TO_EXISTING = "Species {} combined into existing species {}"
+    ACTION_COMBINE_ACTIVE_SPECIES_TO_NEW = (
+        "Active species {} made historical as a "
+        "result of being combined into new species {}"
+    )
+    ACTION_COMBINE_ACTIVE_SPECIES_TO_EXISTING = (
+        "Active species {} made historical as a "
+        "result of being combined into existing species {}"
+    )
+    ACTION_COMBINE_DRAFT_SPECIES_TO_EXISTING = (
+        "Draft species {} discarded as a result of "
+        "being combined into existing species {}"
+    )
+    ACTION_COMBINE_HISTORICAL_SPECIES_TO_NEW = (
+        "Historical species {} was combined into "
+        "new species {} and remains historical"
+    )
+    ACTION_COMBINE_HISTORICAL_SPECIES_TO_EXISTING = (
+        "Historical species {} was combined into "
+        "existing species {} and remains historical"
+    )
 
     ACTION_COMBINE_SPECIES_FROM_NEW = (
         "Species {} created from a combination of species {}"
+    )
+    ACTION_COMBINE_SPECIES_FROM_EXISTING_ACTIVE = (
+        "Species {} retained from a combination of species {}"
     )
     ACTION_COMBINE_SPECIES_FROM_EXISTING_DRAFT = (
         "Species {} activated from a combination of species {}"
@@ -1349,11 +1378,6 @@ class SpeciesUserAction(UserAction):
     ACTION_COMBINE_SPECIES_FROM_EXISTING_HISTORICAL = (
         "Species {} reactivated from a combination of species {}"
     )
-
-    ACTION_COMBINE_MAKE_SPECIES_HISTORICAL = (
-        "Species {} made historical as a result of being combined into species {}"
-    )
-    ACTION_COMBINE_RETAIN_ORIGINAL = "Species {} retained as a result of a combination."
 
     # Document
     ACTION_ADD_DOCUMENT = "Document {} added for Species {}"
