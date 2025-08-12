@@ -38,7 +38,7 @@
     -webkit-filter: brightness(0.8);
     filter: brightness(0.8);
 }
-#basemap_sat, #basemap_osm {
+#basemap_sat, #basemap_street {
     max-width: 81px;
     max-height: 81px;
 }
