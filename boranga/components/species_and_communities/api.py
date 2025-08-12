@@ -31,7 +31,11 @@ from boranga.components.main.permissions import CommsLogPermission
 from boranga.components.main.related_item import RelatedItemsSerializer
 from boranga.components.main.utils import validate_threat_request
 from boranga.components.occurrence.api import OCCConservationThreatFilterBackend
-from boranga.components.occurrence.models import OCCConservationThreat, Occurrence
+from boranga.components.occurrence.models import (
+    OCCConservationThreat,
+    Occurrence,
+    OccurrenceUserAction,
+)
 from boranga.components.occurrence.serializers import OCCConservationThreatSerializer
 from boranga.components.species_and_communities.email import (
     send_community_rename_email_notification,
@@ -1648,7 +1652,7 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                     raise serializers.ValidationError(
                         f"Species with taxonomy ID {taxonomy_id} does not exist"
                     )
-                current_scientific_name = occurrence.species.scientific_name
+                current_scientific_name = occurrence.species.taxonomy.scientific_name
                 # Assign the occurrence to the new species
                 occurrence.species = species
                 # When the occurrence is saved, the custom save method will
@@ -1657,18 +1661,18 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
 
                 # Log the action
                 occurrence.log_user_action(
-                    SpeciesUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_SPLIT.format(
+                    OccurrenceUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_SPLIT.format(
                         occurrence.occurrence_number,
                         current_scientific_name,
-                        species.scientific_name,
+                        species.taxonomy.scientific_name,
                     ),
                     request,
                 )
                 request.user.log_user_action(
-                    SpeciesUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_SPLIT.format(
+                    OccurrenceUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_SPLIT.format(
                         occurrence.occurrence_number,
                         current_scientific_name,
-                        species.scientific_name,
+                        species.taxonomy.scientific_name,
                     ),
                     request,
                 )
@@ -1922,13 +1926,13 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         # Deliberately using a loop with .save here instead of a single .update
         # so that custom code runs that reassigns all related OCRs to also point to the new species
         for occurrence in occurrences:
-            current_scientific_name = occurrence.species.scientific_name
+            current_scientific_name = occurrence.species.taxonomy.scientific_name
             occurrence.species = resulting_species_instance
             occurrence.save(version_user=request.user)
 
             # Log the action
             occurrence.log_user_action(
-                SpeciesUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_COMBINE.format(
+                OccurrenceUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_COMBINE.format(
                     occurrence.occurrence_number,
                     current_scientific_name,
                     resulting_species_instance.scientific_name,
@@ -1936,7 +1940,7 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 request,
             )
             request.user.log_user_action(
-                SpeciesUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_COMBINE.format(
+                OccurrenceUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_COMBINE.format(
                     occurrence.occurrence_number,
                     current_scientific_name,
                     resulting_species_instance.scientific_name,
