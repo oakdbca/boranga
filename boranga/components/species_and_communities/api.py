@@ -1763,6 +1763,9 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             resulting_species_instance, created = serializer.save(
                 version_user=request.user
             )
+            resulting_species_instance.taxonomy_id = resulting_species.get(
+                "taxonomy_id"
+            )
             species_form_submit(resulting_species_instance, request)
             resulting_species_instance.save()
 
