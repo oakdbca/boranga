@@ -1357,7 +1357,10 @@ class SpeciesUserAction(UserAction):
         "Draft species {} discarded as a result of "
         "being combined into existing species {}"
     )
-    ACTION_COMBINE_DRAFT_SPECIES_TO_NEW = ()
+    ACTION_COMBINE_DRAFT_SPECIES_TO_NEW = (
+        "Draft species {} discarded as a result of "
+        "being combined into new species {}"
+    )
     ACTION_COMBINE_HISTORICAL_SPECIES_TO_NEW = (
         "Historical species {} was combined into "
         "new species {} and remains historical"
