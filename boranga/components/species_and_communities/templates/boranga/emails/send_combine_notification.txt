@@ -1,5 +1,7 @@
 {%  extends 'boranga/emails/base_email.txt' %}
 
+{% load utils %}
+
 {%  block content %}
     The following species have been combined:
 
