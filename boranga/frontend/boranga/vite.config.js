@@ -38,10 +38,9 @@ export default defineConfig({
             // Probably a better way but I couldn't figure it out
             targets: [
                 // Copy the non-svgs to src but leave the svgs in assets
-                { src: 'src/assets/parks-bg-banner.gif', dest: 'src' },
-                { src: 'src/assets/satellite_icon.jpg', dest: 'src' },
-                { src: 'src/assets/map_icon.png', dest: 'src' },
-                { src: 'src/assets/logo.png', dest: 'src' },
+                { src: 'src/assets/*.gif', dest: 'src' },
+                { src: 'src/assets/*.jpg', dest: 'src' },
+                { src: 'src/assets/*.json', dest: 'src' },
                 {
                     src: 'node_modules/@fortawesome/fontawesome-free/webfonts',
                     dest: 'node_modules/@fortawesome/fontawesome-free/',
