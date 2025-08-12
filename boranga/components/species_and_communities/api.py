@@ -115,10 +115,10 @@ from boranga.components.species_and_communities.serializers import (
 )
 from boranga.components.species_and_communities.utils import (
     community_form_submit,
+    process_species_distribution_data,
     process_species_from_combine_list,
-    process_split_species_distribution_data,
-    process_split_species_general_data,
-    process_split_species_regions_and_districts,
+    process_species_general_data,
+    process_species_regions_and_districts,
     rename_deep_copy,
     rename_species_original_submit,
     species_form_submit,
@@ -1529,14 +1529,14 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 split_species_instance.species_number
             )
 
-            process_split_species_general_data(
+            process_species_general_data(
                 split_species_instance, split_species_request_data
             )
-            process_split_species_regions_and_districts(
+            process_species_regions_and_districts(
                 split_species_instance,
                 split_species_request_data,
             )
-            process_split_species_distribution_data(
+            process_species_distribution_data(
                 split_species_instance, split_species_request_data
             )
             split_species_instance.save(version_user=request.user)
@@ -1760,8 +1760,11 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         if not resulting_species_exists:
             serializer = CreateSpeciesSerializer(data=resulting_species)
             serializer.is_valid(raise_exception=True)
-            resulting_species_instance = serializer.save(version_user=request.user)
+            resulting_species_instance, created = serializer.save(
+                version_user=request.user
+            )
             species_form_submit(resulting_species_instance, request)
+            resulting_species_instance.save()
 
             resulting_species_instance.log_user_action(
                 SpeciesUserAction.ACTION_COMBINE_SPECIES_FROM_NEW.format(
@@ -1856,6 +1859,13 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 actions[resulting_species_instance.id] = (
                     Species.COMBINE_SPECIES_ACTION_REACTIVATED
                 )
+
+        # Copy all the required data from the request
+        process_species_distribution_data(resulting_species_instance, resulting_species)
+        process_species_general_data(resulting_species_instance, resulting_species)
+        process_species_regions_and_districts(
+            resulting_species_instance, resulting_species
+        )
 
         # Copy all the selected documents and threats to the resulting species instance
         resulting_species_instance.copy_combine_documents_and_threats(
