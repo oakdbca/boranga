@@ -1473,11 +1473,14 @@
             </div>
         </div>
         <!-- If no context provided, e.g. no proposal or cp, don't allow for shapefile upload -->
-        <div v-if="context && !fileUploadDisabled" class="row shapefile-row">
+        <div v-if="context" class="row shapefile-row">
             <div class="col-sm-6 border p-2">
                 <div class="row mb-2">
                     <div class="col">
-                        <label for="shapefile_document" class="fw-bold"
+                        <label v-if="fileUploadDisabled" class="text-muted"
+                            >Files added to this record:</label
+                        >
+                        <label v-else for="shapefile_document" class="fw-bold"
                             >Upload Shapefile or archive(s) containing
                             shapefiles
                             <span>({{ archiveTypesAllowed.join(', ') }})</span>
@@ -1487,7 +1490,7 @@
                         <FileField
                             id="shapefile_document_document"
                             ref="shapefile_document"
-                            :readonly="false"
+                            :readonly="fileUploadDisabled"
                             name="shapefile_document"
                             :multiple="true"
                             :is-repeatable="true"
@@ -1553,6 +1556,9 @@
                             v-else
                             type="button"
                             class="btn btn-primary"
+                            :disabled="
+                                !uploadedFilesComplete || fileUploadDisabled
+                            "
                             :class="uploadedFilesComplete ? '' : 'disabled'"
                             @click="validate_map_docs"
                         >

@@ -32,6 +32,7 @@
                     :polygon-features-supported="isFauna == false"
                     :drawable="!isReadOnly"
                     :editable="!isReadOnly"
+                    :file-upload-disabled="isReadOnly"
                     level="external"
                     style-by="assessor"
                     :map-info-text="
