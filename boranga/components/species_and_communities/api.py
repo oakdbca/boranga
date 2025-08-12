@@ -1647,12 +1647,30 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                     raise serializers.ValidationError(
                         f"Species with taxonomy ID {taxonomy_id} does not exist"
                     )
-
+                current_scientific_name = occurrence.species.scientific_name
                 # Assign the occurrence to the new species
                 occurrence.species = species
                 # When the occurrence is saved, the custom save method will
                 # reassign all OCRs to also point to the new species as well
                 occurrence.save(version_user=request.user)
+
+                # Log the action
+                occurrence.log_user_action(
+                    SpeciesUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_SPLIT.format(
+                        occurrence.occurrence_number,
+                        current_scientific_name,
+                        species.scientific_name,
+                    ),
+                    request,
+                )
+                request.user.log_user_action(
+                    SpeciesUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_SPLIT.format(
+                        occurrence.occurrence_number,
+                        current_scientific_name,
+                        species.scientific_name,
+                    ),
+                    request,
+                )
 
         if not split_of_species_retains_original:
             # Set the original species from the split to historical and its conservation status to 'closed'
@@ -1903,8 +1921,27 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         # Deliberately using a loop with .save here instead of a single .update
         # so that custom code runs that reassigns all related OCRs to also point to the new species
         for occurrence in occurrences:
+            current_scientific_name = occurrence.species.scientific_name
             occurrence.species = resulting_species_instance
             occurrence.save(version_user=request.user)
+
+            # Log the action
+            occurrence.log_user_action(
+                SpeciesUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_COMBINE.format(
+                    occurrence.occurrence_number,
+                    current_scientific_name,
+                    resulting_species_instance.scientific_name,
+                ),
+                request,
+            )
+            request.user.log_user_action(
+                SpeciesUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_COMBINE.format(
+                    occurrence.occurrence_number,
+                    current_scientific_name,
+                    resulting_species_instance.scientific_name,
+                ),
+                request,
+            )
 
         #  send the combine species email notification
         send_species_combine_email_notification(
