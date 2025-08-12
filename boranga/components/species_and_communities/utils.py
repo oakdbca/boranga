@@ -6,6 +6,7 @@ from django.db import transaction
 from django.http import HttpRequest
 from django.utils import timezone
 
+from boranga.components.conservation_status.models import ConservationStatus
 from boranga.components.species_and_communities.email import (
     send_community_create_email_notification,
     send_species_create_email_notification,
@@ -103,30 +104,121 @@ def community_form_submit(community_instance, request):
 
 
 @transaction.atomic
-def combine_species_original_submit(
-    species_instance, resulting_species_instance, request
+def process_species_from_combine_list(
+    species_instance,
+    resulting_species_instance,
+    resulting_species_exists,
+    actions,
+    request,
 ):
-    if species_instance.processing_status != Species.PROCESSING_STATUS_ACTIVE:
-        raise ValidationError("You can't submit this species at this moment")
+    if species_instance == resulting_species_instance:
+        # The resulting species doesn't have it's processing status changed
+        # And it's action logs are done in the api endpoint
+        return
 
-    species_instance.processing_status = Species.PROCESSING_STATUS_HISTORICAL
-    species_instance.save(version_user=request.user)
+    logger.debug(
+        f"Species instance processing status: {species_instance.processing_status}, "
+    )
 
-    # Log the action
-    species_instance.log_user_action(
-        SpeciesUserAction.ACTION_COMBINE_SPECIES_TO.format(
-            species_instance.species_number,
-            resulting_species_instance.species_number,
-        ),
-        request,
-    )
-    request.user.log_user_action(
-        SpeciesUserAction.ACTION_COMBINE_SPECIES_TO.format(
-            species_instance.species_number,
-            resulting_species_instance.species_number,
-        ),
-        request,
-    )
+    if species_instance.processing_status not in [
+        Species.PROCESSING_STATUS_ACTIVE,
+        Species.PROCESSING_STATUS_DRAFT,
+        Species.PROCESSING_STATUS_HISTORICAL,
+    ]:
+        raise ValidationError(
+            "Species {} has a processing status of {} so can not be part "
+            "of a combine action (must be one of {})".format(
+                species_instance.species_number,
+                species_instance.processing_status,
+                [
+                    Species.PROCESSING_STATUS_ACTIVE,
+                    Species.PROCESSING_STATUS_DRAFT,
+                    Species.PROCESSING_STATUS_HISTORICAL,
+                ],
+            )
+        )
+
+    if species_instance.processing_status == Species.PROCESSING_STATUS_ACTIVE:
+        species_instance.processing_status = Species.PROCESSING_STATUS_HISTORICAL
+        species_instance.save(version_user=request.user)
+
+        # If there is an approved conservation status for this species, close it
+        active_conservation_status = ConservationStatus.objects.filter(
+            species=species_instance,
+            processing_status=ConservationStatus.PROCESSING_STATUS_APPROVED,
+        ).first()
+        if active_conservation_status:
+            active_conservation_status.customer_status = (
+                ConservationStatus.CUSTOMER_STATUS_CLOSED
+            )
+            active_conservation_status.processing_status = (
+                ConservationStatus.PROCESSING_STATUS_CLOSED
+            )
+            active_conservation_status.save(version_user=request.user)
+
+        ACTION = SpeciesUserAction.ACTION_COMBINE_ACTIVE_SPECIES_TO_NEW
+        if resulting_species_exists:
+            ACTION = SpeciesUserAction.ACTION_COMBINE_ACTIVE_SPECIES_TO_EXISTING
+
+        species_instance.log_user_action(
+            ACTION.format(
+                species_instance.species_number,
+                resulting_species_instance.species_number,
+            ),
+            request,
+        )
+        request.user.log_user_action(
+            ACTION.format(
+                species_instance.species_number,
+                resulting_species_instance.species_number,
+            ),
+            request,
+        )
+        actions[species_instance.id] = Species.COMBINE_SPECIES_ACTION_MADE_HISTORICAL
+    elif species_instance.processing_status == Species.PROCESSING_STATUS_DRAFT:
+        species_instance.processing_status = Species.PROCESSING_STATUS_DISCARDED
+        species_instance.save(version_user=request.user)
+
+        ACTION = SpeciesUserAction.ACTION_COMBINE_DRAFT_SPECIES_TO_NEW
+        if resulting_species_exists:
+            ACTION = SpeciesUserAction.ACTION_COMBINE_DRAFT_SPECIES_TO_EXISTING
+
+        species_instance.log_user_action(
+            ACTION.format(
+                species_instance.species_number,
+                resulting_species_instance.species_number,
+            ),
+            request,
+        )
+        request.user.log_user_action(
+            ACTION.format(
+                species_instance.species_number,
+                resulting_species_instance.species_number,
+            ),
+            request,
+        )
+        actions[species_instance.id] = Species.COMBINE_SPECIES_ACTION_DISCARDED
+
+    elif species_instance.processing_status == Species.PROCESSING_STATUS_HISTORICAL:
+        ACTION = SpeciesUserAction.ACTION_COMBINE_HISTORICAL_SPECIES_TO_NEW
+        if resulting_species_exists:
+            ACTION = SpeciesUserAction.ACTION_COMBINE_HISTORICAL_SPECIES_TO_EXISTING
+
+        species_instance.log_user_action(
+            ACTION.format(
+                species_instance.species_number,
+                resulting_species_instance.species_number,
+            ),
+            request,
+        )
+        request.user.log_user_action(
+            ACTION.format(
+                species_instance.species_number,
+                resulting_species_instance.species_number,
+            ),
+            request,
+        )
+        actions[species_instance.id] = Species.COMBINE_SPECIES_ACTION_LEFT_AS_HISTORICAL
 
     return species_instance
 
