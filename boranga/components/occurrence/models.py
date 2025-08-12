@@ -4753,7 +4753,7 @@ class OccurrenceUserAction(UserAction):
         "Change occurrence {} species from {} to {} due to split"
     )
     ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_COMBINE = (
-        "Change occurrence {} species FROM {} to {} due to combine"
+        "Change occurrence {} species from {} to {} due to combine"
     )
 
     # Document
