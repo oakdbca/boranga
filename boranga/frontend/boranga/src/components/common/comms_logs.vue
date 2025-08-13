@@ -39,7 +39,7 @@
 
 <script>
 import AddCommLog from './add_comm_log.vue';
-import { constants } from '@/utils/hooks';
+import { constants, helpers } from '@/utils/hooks';
 import { v4 as uuid } from 'uuid';
 export default {
     name: 'CommsLogSection',
@@ -146,59 +146,53 @@ export default {
                     {
                         title: 'To',
                         data: 'to',
-                        render: function (value) {
-                            var ellipsis = '...',
-                                truncated = _.truncate(value, {
-                                    length: 25,
-                                    omission: ellipsis,
-                                    separator: ' ',
-                                }),
-                                result = '<span>' + truncated + '</span>',
-                                popTemplate = _.template(
-                                    '<a href="javascript://" ' +
-                                        'role="button" ' +
-                                        'data-bs-toggle="popover" ' +
-                                        'data-trigger="click" ' +
-                                        'data-placement="top auto"' +
-                                        'data-html="true" ' +
-                                        'data-bs-content="<%= text %>" ' +
-                                        '>more</a>'
-                                );
-                            if (_.endsWith(truncated, ellipsis)) {
-                                result += popTemplate({
-                                    text: value,
-                                });
+                        render(value) {
+                            const raw = value == null ? '' : String(value);
+                            const ellipsis = '...';
+                            const truncated = helpers.truncate(raw, {
+                                length: 25,
+                                omission: ellipsis,
+                                separator: ' ',
+                            });
+                            let html = '<span>' + truncated + '</span>';
+                            if (raw.length > truncated.length) {
+                                html += `<a href="javascript:void(0)"
+                                    class="ms-1"
+                                    role="button"
+                                    data-bs-toggle="popover"
+                                    data-bs-trigger="click"
+                                    data-bs-placement="auto"
+                                    data-bs-html="true"
+                                    data-bs-content="${helpers.escapeAttr(raw)}"
+                                >more</a>`;
                             }
-                            return result;
+                            return html;
                         },
                     },
                     {
                         title: 'CC',
                         data: 'cc',
-                        render: function (value) {
-                            var ellipsis = '...',
-                                truncated = _.truncate(value, {
-                                    length: 25,
-                                    omission: ellipsis,
-                                    separator: ' ',
-                                }),
-                                result = '<span>' + truncated + '</span>',
-                                popTemplate = _.template(
-                                    '<a href="javascript://" ' +
-                                        'role="button" ' +
-                                        'data-bs-toggle="popover" ' +
-                                        'data-trigger="click" ' +
-                                        'data-placement="top auto"' +
-                                        'data-html="true" ' +
-                                        'data-bs-content="<%= text %>" ' +
-                                        '>more</a>'
-                                );
-                            if (_.endsWith(truncated, ellipsis)) {
-                                result += popTemplate({
-                                    text: value,
-                                });
+                        render(value) {
+                            const raw = value == null ? '' : String(value);
+                            const ellipsis = '...';
+                            const truncated = helpers.truncate(raw, {
+                                length: 25,
+                                omission: ellipsis,
+                                separator: ' ',
+                            });
+                            let html = '<span>' + truncated + '</span>';
+                            if (raw.length > truncated.length) {
+                                html += `<a href="javascript:void(0)"
+                                    class="ms-1"
+                                    role="button"
+                                    data-bs-toggle="popover"
+                                    data-bs-trigger="click"
+                                    data-bs-placement="auto"
+                                    data-bs-html="true"
+                                    data-bs-content="${helpers.escapeAttr(raw)}"
+                                >more</a>`;
                             }
-                            return result;
+                            return html;
                         },
                     },
                     {
@@ -209,91 +203,79 @@ export default {
                     {
                         title: 'Subject/Desc.',
                         data: 'subject',
-                        render: function (value) {
-                            var ellipsis = '...',
-                                truncated = _.truncate(value, {
-                                    length: 25,
-                                    omission: ellipsis,
-                                    separator: ' ',
-                                }),
-                                result = '<span>' + truncated + '</span>',
-                                popTemplate = _.template(
-                                    '<a href="javascript://" ' +
-                                        'role="button" ' +
-                                        'data-bs-toggle="popover" ' +
-                                        'data-trigger="click" ' +
-                                        'data-placement="top auto"' +
-                                        'data-html="true" ' +
-                                        'data-bs-content="<%= text %>" ' +
-                                        '>more</a>'
-                                );
-                            if (_.endsWith(truncated, ellipsis)) {
-                                result += popTemplate({
-                                    text: value,
-                                });
+                        render(value) {
+                            const raw = value == null ? '' : String(value);
+                            const ellipsis = '...';
+                            const truncated = helpers.truncate(raw, {
+                                length: 25,
+                                omission: ellipsis,
+                                separator: ' ',
+                            });
+                            let html = '<span>' + truncated + '</span>';
+                            if (raw.length > truncated.length) {
+                                html += `<a href="javascript:void(0)"
+                                    class="ms-1"
+                                    role="button"
+                                    data-bs-toggle="popover"
+                                    data-bs-trigger="click"
+                                    data-bs-placement="auto"
+                                    data-bs-html="true"
+                                    data-bs-content="${helpers.escapeAttr(raw)}"
+                                >more</a>`;
                             }
-                            return result;
+                            return html;
                         },
                     },
                     {
                         title: 'Text',
                         data: 'text',
-                        render: function (value) {
-                            var ellipsis = '...',
-                                truncated = _.truncate(value, {
-                                    length: 100,
-                                    omission: ellipsis,
-                                    separator: ' ',
-                                }),
-                                result = '<span>' + truncated + '</span>',
-                                popTemplate = _.template(
-                                    '<a href="javascript://" ' +
-                                        'role="button" ' +
-                                        'data-bs-toggle="popover" ' +
-                                        'data-trigger="click" ' +
-                                        'data-placement="top auto"' +
-                                        'data-html="true" ' +
-                                        'data-bs-content="<%= text %>" ' +
-                                        '>more</a>'
-                                );
-                            if (_.endsWith(truncated, ellipsis)) {
-                                result += popTemplate({
-                                    text: value,
-                                });
+                        render(value) {
+                            const raw = value == null ? '' : String(value);
+                            const ellipsis = '...';
+                            const truncated = helpers.truncate(raw, {
+                                length: 100,
+                                omission: ellipsis,
+                                separator: ' ',
+                            });
+                            let html = '<span>' + truncated + '</span>';
+                            if (raw.length > truncated.length) {
+                                html += `<a href="javascript:void(0)"
+                                    class="ms-1"
+                                    role="button"
+                                    data-bs-toggle="popover"
+                                    data-bs-trigger="click"
+                                    data-bs-placement="auto"
+                                    data-bs-html="true"
+                                    data-bs-content="${helpers.escapeAttr(raw)}"
+                                >more</a>`;
                             }
-                            return result;
+                            return html;
                         },
                     },
                     {
                         title: 'Documents',
                         data: 'documents',
-                        render: function (values) {
-                            var result = '';
-                            _.forEach(values, function (value) {
-                                // We expect an array [docName, url]
-                                // if it's a string it is the url
-                                var docName = '',
-                                    url = '';
-                                if (_.isArray(value) && value.length > 1) {
-                                    docName = value[0];
-                                    url = value[1];
-                                }
-                                if (typeof s === 'string') {
-                                    url = value;
-                                    // display the first  chars of the filename
-                                    docName = _.last(value.split('/'));
-                                    docName = _.truncate(docName, {
+                        render(values) {
+                            let result = '';
+                            (values || []).forEach((val) => {
+                                let docName = '';
+                                let url = '';
+                                if (Array.isArray(val) && val.length > 1) {
+                                    docName = String(val[0]);
+                                    url = String(val[1]);
+                                } else if (typeof val === 'string') {
+                                    url = val;
+                                    const parts = val.split('/');
+                                    docName = parts[parts.length - 1];
+                                    docName = helpers.truncate(docName, {
                                         length: 18,
                                         omission: '...',
                                         separator: ' ',
                                     });
                                 }
-                                result +=
-                                    '<a href="' +
-                                    url +
-                                    '" target="_blank"><p>' +
-                                    docName +
-                                    '</p></a><br>';
+                                if (url) {
+                                    result += `<a href="${helpers.escapeAttr(url)}" target="_blank"><p>${helpers.escapeAttr(docName)}</p></a><br>`;
+                                }
                             });
                             return result;
                         },
@@ -346,31 +328,21 @@ export default {
                 vm.commsTable = $('#' + commsLogId).DataTable(
                     vm.commsDtOptions
                 );
-                vm.commsTable.on('draw', function () {
-                    // Draw event - fired once the table has completed a draw.
-                    var popoverTriggerList = [].slice.call(
-                        document.querySelectorAll(
-                            '#' + commsLogId + ' [data-bs-toggle="popover"]'
-                        )
-                    );
-                    popoverTriggerList.map(function (popoverTriggerEl) {
-                        return new bootstrap.Popover(popoverTriggerEl);
+                vm.commsTable.on('draw', () => {
+                    const selector = `#${commsLogId} [data-bs-toggle="popover"]`;
+                    document.querySelectorAll(selector).forEach((el) => {
+                        if (el._bsPopover) return; // already initialised
+                        new bootstrap.Popover(el, {
+                            container: 'body',
+                            trigger:
+                                el.getAttribute('data-bs-trigger') || 'click',
+                            html:
+                                (
+                                    el.getAttribute('data-bs-html') || ''
+                                ).toLowerCase() === 'true',
+                        });
                     });
                 });
-            });
-            popover_elem.addEventListener('shown.bs.popover', () => {
-                // when the popover has been made visible to the user
-                // The following code currently doesn't do anything
-                // let el = vm.$refs.showCommsBtn;
-                // var popover_bounding_top = parseInt(
-                //     $('.' + popover_name)[0].getBoundingClientRect().top
-                // );
-                // var el_bounding_top = parseInt(
-                //     $(el)[0].getBoundingClientRect().top
-                // );
-                // var diff = el_bounding_top - popover_bounding_top;
-                // var x = diff + 5;
-                // $('.' + popover_name).children('.arrow').css('top', x + 'px');
             });
         },
         initialiseActionLogs: function () {
@@ -403,14 +375,19 @@ export default {
                 vm.actionsTable = $('#' + actionLogId).DataTable(
                     this.actionsDtOptions
                 );
-                vm.actionsTable.on('draw', function () {
-                    var popoverTriggerList = [].slice.call(
-                        document.querySelectorAll(
-                            '#' + actionLogId + ' [data-bs-toggle="popover"]'
-                        )
-                    );
-                    popoverTriggerList.map(function (popoverTriggerEl) {
-                        return new bootstrap.Popover(popoverTriggerEl);
+                vm.actionsTable.on('draw', () => {
+                    const selector = `#${actionLogId} [data-bs-toggle="popover"]`;
+                    document.querySelectorAll(selector).forEach((el) => {
+                        if (el._bsPopover) return;
+                        new bootstrap.Popover(el, {
+                            container: 'body',
+                            trigger:
+                                el.getAttribute('data-bs-trigger') || 'click',
+                            html:
+                                (
+                                    el.getAttribute('data-bs-html') || ''
+                                ).toLowerCase() === 'true',
+                        });
                     });
                 });
             });

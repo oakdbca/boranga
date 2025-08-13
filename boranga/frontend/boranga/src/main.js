@@ -7,8 +7,6 @@ import helpers from '@/utils/helpers';
 import { extendMoment } from 'moment-range';
 import VueSelect from 'vue-select';
 
-import _ from 'lodash';
-window._ = _;
 import $ from 'jquery';
 import select2 from 'select2';
 window.$ = $;

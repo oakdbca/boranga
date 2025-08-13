@@ -95,32 +95,28 @@ export default {
                     {
                         title: 'Referral Comments',
                         data: 'referral_comment',
-
                         render: function (value) {
-                            var ellipsis = '...',
-                                truncated = _.truncate(value, {
-                                    length: 20,
-                                    omission: ellipsis,
-                                    separator: ' ',
-                                }),
-                                result = '<span>' + truncated + '</span>',
-                                popTemplate = _.template(
-                                    '<a href="#" ' +
-                                        'role="button" ' +
-                                        'data-bs-toggle="popover" ' +
-                                        'data-bs-trigger="click" ' +
-                                        'data-bs-placement="top auto"' +
-                                        'data-bs-html="true" ' +
-                                        'data-bs-content="<%= text %>" ' +
-                                        '>more</a>'
-                                );
-                            if (_.endsWith(truncated, ellipsis)) {
-                                result += popTemplate({
-                                    text: value,
-                                });
+                            const raw = value == null ? '' : String(value);
+                            const truncLen = 30;
+                            const ellipsis = '...';
+                            const truncated = helpers.truncate(raw, {
+                                length: truncLen,
+                                omission: ellipsis,
+                                separator: ' ',
+                            });
+                            let html = '<span>' + truncated + '</span>';
+                            if (raw.length > truncated.length) {
+                                html += `<a href="javascript:void(0)"
+                                    class="ms-1"
+                                    role="button"
+                                    data-bs-toggle="popover"
+                                    data-bs-trigger="hover"
+                                    data-bs-placement="top auto"
+                                    data-bs-html="true"
+                                    data-bs-content="${helpers.escapeAttr(raw)}"
+                                >more</a>`;
                             }
-
-                            return result;
+                            return html;
                         },
                     },
                 ],
