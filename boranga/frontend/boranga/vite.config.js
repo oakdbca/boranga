@@ -62,7 +62,6 @@ export default defineConfig({
     },
     build: {
         manifest: 'manifest.json',
-        filenameHashing: false,
         commonjsOptions: { transformMixedEsModules: true },
         root: path.resolve(__dirname, './src'),
         outDir: path.resolve(
@@ -73,11 +72,6 @@ export default defineConfig({
         rollupOptions: {
             input: {
                 main: path.resolve(__dirname, 'src/main.js'),
-            },
-            output: {
-                entryFileNames: 'js/[name].js',
-                chunkFileNames: 'js/[name].js',
-                assetFileNames: '[ext]/[name].[ext]',
             },
         },
         emptyOutDir: true,
