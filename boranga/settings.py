@@ -350,6 +350,9 @@ STATIC_URL_PREFIX = "/static/boranga_vue/" if USE_VITE_DEV_SERVER else "boranga_
 DJANGO_VITE = {
     "default": {
         "dev_mode": USE_VITE_DEV_SERVER,
+        "manifest_path": os.path.join(
+            BASE_DIR, "boranga", "static", "boranga_vue", "manifest.json"
+        ),
         "dev_server_host": "localhost",  # Default host for vite (can change if needed)
         "dev_server_port": 5173,  # Default port for vite (can change if needed)
         "static_url_prefix": STATIC_URL_PREFIX,
