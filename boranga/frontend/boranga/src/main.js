@@ -4,14 +4,11 @@ import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
 import helpers from '@/utils/helpers';
-import { extendMoment } from 'moment-range';
 import VueSelect from 'vue-select';
 
 import $ from 'jquery';
 import select2 from 'select2';
 window.$ = $;
-import moment from 'moment';
-window.moment = moment;
 import swal from 'sweetalert2';
 window.swal = swal;
 select2();
@@ -32,8 +29,6 @@ import 'select2-bootstrap-5-theme/dist/select2-bootstrap-5-theme.min.css';
 import '@/../node_modules/datatables.net-bs5/css/dataTables.bootstrap5.min.css';
 import '@/../node_modules/datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css';
 import '@/../node_modules/@fortawesome/fontawesome-free/css/all.min.css';
-
-extendMoment(moment);
 
 const app = createApp(App);
 
