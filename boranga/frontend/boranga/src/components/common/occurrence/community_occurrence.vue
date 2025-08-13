@@ -219,8 +219,6 @@ export default {
                                 type: 'public',
                                 group_type_id: vm.occurrence_obj.group_type_id,
                                 cs_community: true,
-                                cs_community_status:
-                                    vm.occurrence_obj.processing_status,
                             };
                             return query;
                         },
