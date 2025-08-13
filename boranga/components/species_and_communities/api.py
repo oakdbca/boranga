@@ -936,7 +936,10 @@ class SpeciesPaginatedViewSet(viewsets.ReadOnlyModelViewSet):
     )
     def species_external(self, request, *args, **kwargs):
         qs = self.get_queryset().filter(
-            processing_status=Species.PROCESSING_STATUS_ACTIVE,
+            processing_status__in=[
+                Community.PROCESSING_STATUS_ACTIVE,
+                Community.PROCESSING_STATUS_HISTORICAL,
+            ],
             species_publishing_status__species_public=True,
         )
         qs = self.filter_queryset(qs)
@@ -1103,7 +1106,10 @@ class CommunitiesPaginatedViewSet(viewsets.ReadOnlyModelViewSet):
     )
     def communities_external(self, request, *args, **kwargs):
         qs = self.get_queryset().filter(
-            processing_status=Community.PROCESSING_STATUS_ACTIVE,
+            processing_status__in=[
+                Community.PROCESSING_STATUS_ACTIVE,
+                Community.PROCESSING_STATUS_HISTORICAL,
+            ],
             community_publishing_status__community_public=True,
         )
         qs = self.filter_queryset(qs)
