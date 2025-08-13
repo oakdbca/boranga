@@ -186,7 +186,7 @@
                             <div class="col-sm-12">
                                 <strong>Status</strong><br />
                                 {{ species_community.processing_status }}
-                                <span v-if="isActive">
+                                <span v-if="showPublicationStatus">
                                     -
                                     {{
                                         species_community.publishing_status
@@ -733,6 +733,11 @@ export default {
             return this.species_community.processing_status === 'Active'
                 ? true
                 : false;
+        },
+        showPublicationStatus: function () {
+            return ['Active', 'Historical'].includes(
+                this.species_community.processing_status
+            );
         },
         canDiscard: function () {
             return this.species_community &&
