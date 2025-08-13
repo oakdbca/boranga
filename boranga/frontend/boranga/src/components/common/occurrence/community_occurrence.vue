@@ -30,7 +30,7 @@
                         :ref="community_name_lookup"
                         :disabled="isReadOnly"
                         :name="community_name_lookup"
-                        class="form-control"
+                        class="form-select"
                     />
                 </div>
             </div>
