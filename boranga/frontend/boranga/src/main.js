@@ -17,6 +17,7 @@ import 'datatables.net-bs5';
 import 'datatables.net-buttons-bs5';
 import 'datatables.net-responsive-bs5';
 import 'datatables.net-buttons/js/dataTables.buttons.js';
+// jszip used for exporting to .xlsx from datatables
 import JSZip from 'jszip';
 window.JSZip = JSZip;
 import 'datatables.net-buttons/js/buttons.html5.js';
