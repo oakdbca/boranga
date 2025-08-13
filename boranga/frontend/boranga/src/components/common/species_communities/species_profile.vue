@@ -2065,10 +2065,10 @@ export default {
         initialiseScientificNameLookup: function () {
             let vm = this;
             let refName = 'scientific_name_lookup';
-            if (!vm.rename_species) {
+            if (vm.rename_species) {
                 refName = 'scientific_name_lookup_rename';
             }
-            if (!vm.combine_species) {
+            if (vm.combine_species) {
                 refName = 'scientific_name_lookup_combine';
             }
             $(vm.$refs[refName])
