@@ -21,9 +21,6 @@
   <link rel="icon" type="image/png" href="/static/boranga/favicon.ico" />
 
   <link rel="stylesheet" href="{% static 'boranga/css/base.css' %}?v={{ build_tag }}" />
-  {% if not use_vite_dev_server %}
-  <link rel="stylesheet" href="{% static 'boranga_vue/css/main.css' %}?v={{ build_tag }}" />
-  {% endif %}
 {% endblock %}
 
 {% block extra_js %}
