@@ -58,287 +58,276 @@
                         </ul>
                     </alert>
                 </div>
-                <div class="row">
-                    <FormSection
-                        v-if="new_community"
-                        :form-collapse="false"
-                        label="New Community Taxonomy Information"
-                        Index="new-community"
-                    >
-                        <form
-                            class="form-horizontal"
-                            name="rename-community-form"
+                <FormSection
+                    v-if="new_community"
+                    :form-collapse="false"
+                    label="New Community Taxonomy Information"
+                    Index="new-community"
+                >
+                    <form class="form-horizontal" name="rename-community-form">
+                        <alert v-if="errors" type="danger"
+                            ><strong>{{ errors }}</strong></alert
                         >
-                            <alert v-if="errors" type="danger"
-                                ><strong>{{ errors }}</strong></alert
-                            >
-                            <div class="row border-bottom mb-4 pb-3">
-                                <label
-                                    for=""
-                                    class="col-sm-3 control-label fw-bold"
-                                ></label>
-                                <div class="col-sm-6">
-                                    <button
-                                        class="btn btn-primary float-end"
-                                        @click.prevent="resetForm"
-                                    >
-                                        Reset form
-                                    </button>
-                                </div>
-                                <div class="col-sm-3">
-                                    <button
-                                        class="btn btn-primary w-100"
-                                        @click.prevent="
-                                            populateFromOriginalCommunity
-                                        "
-                                    >
-                                        Populate all from
-                                        {{
-                                            species_community_original.community_number
-                                        }}
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="row mb-3">
-                                <label
-                                    for=""
-                                    class="col-sm-3 control-label fw-bold"
-                                    >Community Name:
-                                    <span class="text-danger">*</span></label
+                        <div class="row border-bottom mb-4 pb-3">
+                            <label
+                                for=""
+                                class="col-sm-3 control-label fw-bold"
+                            ></label>
+                            <div class="col-sm-6">
+                                <button
+                                    class="btn btn-primary float-end"
+                                    @click.prevent="resetForm"
                                 >
-                                <div class="col-sm-6">
-                                    <textarea
-                                        id="community_name"
-                                        ref="community_name"
-                                        v-model="
-                                            new_community.taxonomy_details
-                                                .community_name
-                                        "
-                                        class="form-control"
-                                        rows="1"
-                                        placeholder=""
-                                    />
-                                </div>
+                                    Reset form
+                                </button>
                             </div>
-                            <div class="row mb-3">
-                                <label
-                                    for=""
-                                    class="col-sm-3 control-label fw-bold"
-                                    >Community ID:
-                                    <span class="text-danger">*</span></label
-                                >
-                                <div class="col-sm-6">
-                                    <input
-                                        id="community_migrated_id"
-                                        ref="community_migrated_id"
-                                        v-model="
-                                            new_community.taxonomy_details
-                                                .community_migrated_id
-                                        "
-                                        type="text"
-                                        class="form-control"
-                                        placeholder=""
-                                    />
-                                </div>
-                            </div>
-                            <div class="row mb-3">
-                                <label for="" class="col-sm-3 control-label"
-                                    >Community Description:</label
-                                >
-                                <div class="col-sm-6">
-                                    <textarea
-                                        id="community_description"
-                                        v-model="
-                                            new_community.taxonomy_details
-                                                .community_description
-                                        "
-                                        class="form-control"
-                                        rows="2"
-                                        placeholder=""
-                                    />
-                                </div>
-                                <div class="col-sm-3">
-                                    <button
-                                        v-if="
-                                            species_community_original
-                                                .taxonomy_details
-                                                .community_description
-                                        "
-                                        class="btn btn-primary w-100"
-                                        @click.prevent="
-                                            new_community.taxonomy_details.community_description =
-                                                species_community_original.taxonomy_details.community_description
-                                        "
-                                    >
-                                        Populate from
-                                        {{
-                                            species_community_original.community_number
-                                        }}
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="row mb-3">
-                                <label for="" class="col-sm-3 control-label"
-                                    >Previous Name:</label
-                                >
-                                <div class="col-sm-6">
-                                    <textarea
-                                        id="community_previous_name"
-                                        v-model="
-                                            new_community.taxonomy_details
-                                                .previous_name
-                                        "
-                                        class="form-control"
-                                        placeholder=""
-                                    />
-                                </div>
-                                <div class="col-sm-3">
-                                    <button
-                                        v-if="
-                                            species_community_original
-                                                .taxonomy_details.previous_name
-                                        "
-                                        class="btn btn-primary w-100"
-                                        @click.prevent="
-                                            new_community.taxonomy_details.previous_name =
-                                                species_community_original.taxonomy_details.previous_name
-                                        "
-                                    >
-                                        Populate from
-                                        {{
-                                            species_community_original.community_number
-                                        }}
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="row mb-3">
-                                <label for="" class="col-sm-3 control-label"
-                                    >Name Authority:</label
-                                >
-                                <div class="col-sm-6">
-                                    <textarea
-                                        id="name_authority"
-                                        v-model="
-                                            new_community.taxonomy_details
-                                                .name_authority
-                                        "
-                                        rows="1"
-                                        class="form-control"
-                                        placeholder=""
-                                    />
-                                </div>
-                                <div class="col-sm-3">
-                                    <button
-                                        v-if="
-                                            species_community_original
-                                                .taxonomy_details.name_authority
-                                        "
-                                        class="btn btn-primary w-100"
-                                        @click.prevent="
-                                            new_community.taxonomy_details.name_authority =
-                                                species_community_original.taxonomy_details.name_authority
-                                        "
-                                    >
-                                        Populate from
-                                        {{
-                                            species_community_original.community_number
-                                        }}
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="row mb-3">
-                                <label for="" class="col-sm-3 control-label"
-                                    >Name Comments:</label
-                                >
-                                <div class="col-sm-6">
-                                    <textarea
-                                        id="community_comment"
-                                        v-model="
-                                            new_community.taxonomy_details
-                                                .name_comments
-                                        "
-                                        class="form-control"
-                                        placeholder=""
-                                    />
-                                </div>
-                                <div class="col-sm-3">
-                                    <button
-                                        v-if="
-                                            species_community_original
-                                                .taxonomy_details.name_comments
-                                        "
-                                        class="btn btn-primary w-100"
-                                        @click.prevent="
-                                            new_community.taxonomy_details.name_comments =
-                                                species_community_original.taxonomy_details.name_comments
-                                        "
-                                    >
-                                        Populate from
-                                        {{
-                                            species_community_original.community_number
-                                        }}
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-sm-3"></div>
-                                <div class="col-sm-9">
-                                    <button
-                                        class="btn btn-primary float-end mt-2"
-                                        :disabled="
-                                            !new_community.taxonomy_details
-                                                .community_name ||
-                                            !new_community.taxonomy_details
-                                                .community_migrated_id
-                                        "
-                                        @click.prevent="finaliseRenameCommunity"
-                                    >
-                                        <i class="bi bi-check2-circle"></i>
-                                        Finalise Rename Community<template
-                                            v-if="finaliseCommunityLoading"
-                                        >
-                                            <span
-                                                class="spinner-border spinner-border-sm"
-                                                role="status"
-                                                aria-hidden="true"
-                                            ></span>
-                                            <span class="visually-hidden"
-                                                >Loading...</span
-                                            ></template
-                                        >
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </FormSection>
-                    <FormSection
-                        :form-collapse="false"
-                        :label="`Original Community - ${species_community_original.community_number} - ${species_community_original.taxonomy_details.community_name}`"
-                        Index="original-community"
-                    >
-                        <div>
-                            <div class="col-md-12">
-                                <FormSpeciesCommunities
-                                    v-if="species_community_original"
-                                    id="rename_community"
-                                    ref="rename_community"
-                                    :species_community_original="
-                                        species_community_original
+                            <div class="col-sm-3">
+                                <button
+                                    class="btn btn-primary w-100"
+                                    @click.prevent="
+                                        populateFromOriginalCommunity
                                     "
-                                    :species_community="
-                                        species_community_original
-                                    "
-                                    :is_internal="true"
-                                    :is_readonly="true"
-                                    :rename_species="true"
                                 >
-                                    // rename=true used to make only taxon
-                                    select editable on form
-                                </FormSpeciesCommunities>
+                                    Populate all from
+                                    {{
+                                        species_community_original.community_number
+                                    }}
+                                </button>
                             </div>
                         </div>
-                    </FormSection>
-                </div>
+                        <div class="row mb-3">
+                            <label for="" class="col-sm-3 control-label fw-bold"
+                                >Community Name:
+                                <span class="text-danger">*</span></label
+                            >
+                            <div class="col-sm-6">
+                                <textarea
+                                    id="community_name"
+                                    ref="community_name"
+                                    v-model="
+                                        new_community.taxonomy_details
+                                            .community_name
+                                    "
+                                    class="form-control"
+                                    rows="1"
+                                    placeholder=""
+                                />
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="" class="col-sm-3 control-label fw-bold"
+                                >Community ID:
+                                <span class="text-danger">*</span></label
+                            >
+                            <div class="col-sm-6">
+                                <input
+                                    id="community_migrated_id"
+                                    ref="community_migrated_id"
+                                    v-model="
+                                        new_community.taxonomy_details
+                                            .community_migrated_id
+                                    "
+                                    type="text"
+                                    class="form-control"
+                                    placeholder=""
+                                />
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="" class="col-sm-3 control-label"
+                                >Community Description:</label
+                            >
+                            <div class="col-sm-6">
+                                <textarea
+                                    id="community_description"
+                                    v-model="
+                                        new_community.taxonomy_details
+                                            .community_description
+                                    "
+                                    class="form-control"
+                                    rows="2"
+                                    placeholder=""
+                                />
+                            </div>
+                            <div class="col-sm-3">
+                                <button
+                                    v-if="
+                                        species_community_original
+                                            .taxonomy_details
+                                            .community_description
+                                    "
+                                    class="btn btn-primary w-100"
+                                    @click.prevent="
+                                        new_community.taxonomy_details.community_description =
+                                            species_community_original.taxonomy_details.community_description
+                                    "
+                                >
+                                    Populate from
+                                    {{
+                                        species_community_original.community_number
+                                    }}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="" class="col-sm-3 control-label"
+                                >Previous Name:</label
+                            >
+                            <div class="col-sm-6">
+                                <textarea
+                                    id="community_previous_name"
+                                    v-model="
+                                        new_community.taxonomy_details
+                                            .previous_name
+                                    "
+                                    class="form-control"
+                                    placeholder=""
+                                />
+                            </div>
+                            <div class="col-sm-3">
+                                <button
+                                    v-if="
+                                        species_community_original
+                                            .taxonomy_details.previous_name
+                                    "
+                                    class="btn btn-primary w-100"
+                                    @click.prevent="
+                                        new_community.taxonomy_details.previous_name =
+                                            species_community_original.taxonomy_details.previous_name
+                                    "
+                                >
+                                    Populate from
+                                    {{
+                                        species_community_original.community_number
+                                    }}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="" class="col-sm-3 control-label"
+                                >Name Authority:</label
+                            >
+                            <div class="col-sm-6">
+                                <textarea
+                                    id="name_authority"
+                                    v-model="
+                                        new_community.taxonomy_details
+                                            .name_authority
+                                    "
+                                    rows="1"
+                                    class="form-control"
+                                    placeholder=""
+                                />
+                            </div>
+                            <div class="col-sm-3">
+                                <button
+                                    v-if="
+                                        species_community_original
+                                            .taxonomy_details.name_authority
+                                    "
+                                    class="btn btn-primary w-100"
+                                    @click.prevent="
+                                        new_community.taxonomy_details.name_authority =
+                                            species_community_original.taxonomy_details.name_authority
+                                    "
+                                >
+                                    Populate from
+                                    {{
+                                        species_community_original.community_number
+                                    }}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="" class="col-sm-3 control-label"
+                                >Name Comments:</label
+                            >
+                            <div class="col-sm-6">
+                                <textarea
+                                    id="community_comment"
+                                    v-model="
+                                        new_community.taxonomy_details
+                                            .name_comments
+                                    "
+                                    class="form-control"
+                                    placeholder=""
+                                />
+                            </div>
+                            <div class="col-sm-3">
+                                <button
+                                    v-if="
+                                        species_community_original
+                                            .taxonomy_details.name_comments
+                                    "
+                                    class="btn btn-primary w-100"
+                                    @click.prevent="
+                                        new_community.taxonomy_details.name_comments =
+                                            species_community_original.taxonomy_details.name_comments
+                                    "
+                                >
+                                    Populate from
+                                    {{
+                                        species_community_original.community_number
+                                    }}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-3"></div>
+                            <div class="col-sm-9">
+                                <button
+                                    class="btn btn-primary float-end mt-2"
+                                    :disabled="
+                                        !new_community.taxonomy_details
+                                            .community_name ||
+                                        !new_community.taxonomy_details
+                                            .community_migrated_id
+                                    "
+                                    @click.prevent="finaliseRenameCommunity"
+                                >
+                                    <i class="bi bi-check2-circle"></i>
+                                    Finalise Rename Community<template
+                                        v-if="finaliseCommunityLoading"
+                                    >
+                                        <span
+                                            class="spinner-border spinner-border-sm"
+                                            role="status"
+                                            aria-hidden="true"
+                                        ></span>
+                                        <span class="visually-hidden"
+                                            >Loading...</span
+                                        ></template
+                                    >
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </FormSection>
+                <FormSection
+                    :form-collapse="false"
+                    :label="`Original Community - ${species_community_original.community_number} - ${species_community_original.taxonomy_details.community_name}`"
+                    Index="original-community"
+                >
+                    <div>
+                        <div class="col-md-12">
+                            <FormSpeciesCommunities
+                                v-if="species_community_original"
+                                id="rename_community"
+                                ref="rename_community"
+                                :species_community_original="
+                                    species_community_original
+                                "
+                                :species_community="species_community_original"
+                                :is_internal="true"
+                                :is_readonly="true"
+                                :rename_species="true"
+                            >
+                                // rename=true used to make only taxon select
+                                editable on form
+                            </FormSpeciesCommunities>
+                        </div>
+                    </div>
+                </FormSection>
             </div>
             <template #footer>
                 <div>
