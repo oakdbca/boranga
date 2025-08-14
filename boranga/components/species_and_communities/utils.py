@@ -152,6 +152,19 @@ def process_species_from_combine_list(
             )
             active_conservation_status.save(version_user=request.user)
 
+            active_conservation_status.log_user_action(
+                ConservationStatus.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_COMBINE.format(
+                    active_conservation_status.conservation_status_number
+                ),
+                request,
+            )
+            request.user.log_user_action(
+                ConservationStatus.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_COMBINE.format(
+                    active_conservation_status.conservation_status_number
+                ),
+                request,
+            )
+
         ACTION = SpeciesUserAction.ACTION_COMBINE_ACTIVE_SPECIES_TO_NEW
         if resulting_species_exists:
             ACTION = SpeciesUserAction.ACTION_COMBINE_ACTIVE_SPECIES_TO_EXISTING
