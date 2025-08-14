@@ -1395,7 +1395,6 @@ class SpeciesUserAction(UserAction):
     ACTION_DISCARD_THREAT = "Threat {} discarded for Species {}"
     ACTION_REINSTATE_THREAT = "Threat {} reinstated for Species {}"
 
-    ACTION_CLOSE_CONSERVATIONSTATUS = "De list species {}"
     ACTION_DISCARD_PROPOSAL = "Discard species proposal {}"
 
     class Meta:
