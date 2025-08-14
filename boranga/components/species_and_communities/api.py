@@ -2850,7 +2850,6 @@ class CommunityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             )
 
         resulting_community = None
-
         if not rename_community_id:
             taxonomy_details = rename_community_request_data.get(
                 "taxonomy_details", None
@@ -2860,22 +2859,10 @@ class CommunityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             )
             rename_community_serializer.is_valid(raise_exception=True)
 
-            resulting_community = instance.copy_for_rename(request)
-
-            # Apply the taxonomy details to the new community
-            community_taxonomy, created = CommunityTaxonomy.objects.get_or_create(
-                community=resulting_community
+            resulting_community = instance.copy_for_rename(
+                request,
+                rename_community_serializer_data=rename_community_serializer.validated_data,
             )
-            if created:
-                logger.info(
-                    f"Created new taxonomy instance for community {resulting_community}"
-                )
-            serializer = SaveCommunityTaxonomySerializer(
-                community_taxonomy, data=rename_community_serializer.data
-            )
-
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
 
             # Log community action for the new community
             resulting_community.log_user_action(
@@ -3008,7 +2995,7 @@ class CommunityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         else:
             # Log action against original community
             instance.log_user_action(
-                CommunityUserAction.ACTION_RENAME_COMMUNITY.format(
+                CommunityUserAction.ACTION_RENAME_COMMUNITY_RETAINED.format(
                     instance.community_number, resulting_community.community_number
                 ),
                 request,
@@ -3016,7 +3003,7 @@ class CommunityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
 
             # Create a log entry for original community against the user
             request.user.log_user_action(
-                CommunityUserAction.ACTION_RENAME_COMMUNITY.format(
+                CommunityUserAction.ACTION_RENAME_COMMUNITY_RETAINED.format(
                     instance.community_number, resulting_community.community_number
                 ),
                 request,
@@ -3031,8 +3018,15 @@ class CommunityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         serializer = InternalCommunitySerializer(
             resulting_community, context={"request": request}
         )
-
-        send_community_rename_email_notification(request, instance, resulting_community)
+        original_made_historical = (
+            True
+            if processing_status_for_original_after_rename
+            == Community.PROCESSING_STATUS_HISTORICAL
+            else False
+        )
+        send_community_rename_email_notification(
+            request, instance, resulting_community, original_made_historical
+        )
 
         return Response(serializer.data)
 
