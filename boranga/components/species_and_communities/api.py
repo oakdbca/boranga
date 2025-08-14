@@ -2907,7 +2907,7 @@ class CommunityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                     f"No community with id {rename_community_id} and processing status of "
                     "Active, Draft or Historical exists"
                 )
-            instance.copy_for_rename(resulting_community, request)
+            instance.copy_for_rename(request, resulting_community)
 
             if (
                 resulting_community.processing_status
