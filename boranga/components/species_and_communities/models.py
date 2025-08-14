@@ -1761,8 +1761,8 @@ class Community(RevisionedMixin):
                             )
                         )
                 # Add renamed to related items to the list (limited to one degree of separation)
-                if self.renamed_to.exists():
-                    for community in self.renamed_to.all():
+                if a_field.name == "renamed_to" and self.renamed_to.exists():
+                    for community in self.renamed_to.select_related("taxonomy").all():
                         if filter_type == "for_occurrence":
                             return_list.extend(
                                 community.get_related_items(
@@ -1776,10 +1776,16 @@ class Community(RevisionedMixin):
                                 )
                             )
 
-        # Remove duplicates
-        return_list = list(set(return_list))
+        # Remove duplicates by (model_name, identifier)
+        seen = set()
+        deduped = []
+        for it in return_list:
+            key = (getattr(it, "model_name", None), getattr(it, "identifier", None))
+            if key not in seen:
+                seen.add(key)
+                deduped.append(it)
 
-        return return_list
+        return deduped
 
     @property
     def as_related_item(self):
@@ -1802,7 +1808,11 @@ class Community(RevisionedMixin):
 
     @property
     def related_item_descriptor(self):
-        return CommunityTaxonomy.objects.get(community=self).community_name
+        try:
+            name = self.taxonomy.community_name
+        except CommunityTaxonomy.DoesNotExist:
+            return "Descriptor not available"
+        return name or "Descriptor not available"
 
     @property
     def related_item_status(self):
