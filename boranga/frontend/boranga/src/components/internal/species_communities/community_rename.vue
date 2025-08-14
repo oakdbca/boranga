@@ -887,36 +887,31 @@ export default {
                                 },
                                 body: JSON.stringify(vm.rename_community),
                             }
-                        )
-                            .then(async (response) => {
-                                const data = await response.json();
-                                if (!response.ok) {
-                                    swal.fire({
-                                        title: 'Error renaming community',
-                                        text: JSON.stringify(data),
-                                        icon: 'error',
-                                        customClass: {
-                                            confirmButton: 'btn btn-primary',
-                                        },
-                                    });
-                                    return;
-                                }
-                            })
-                            .then((rename_community_json) => {
-                                vm.$router.push({
-                                    name: 'internal-species-communities',
-                                    params: {
-                                        species_community_id:
-                                            rename_community_json.id,
-                                    },
-                                    query: {
-                                        group_type_name:
-                                            rename_community_json.group_type,
+                        ).then(async (response) => {
+                            const data = await response.json();
+                            if (!response.ok) {
+                                swal.fire({
+                                    title: 'Error renaming community',
+                                    text: JSON.stringify(data),
+                                    icon: 'error',
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary',
                                     },
                                 });
-                                vm.$router.go();
-                                vm.isModalOpen = false;
+                                return;
+                            }
+                            vm.$router.push({
+                                name: 'internal-species-communities',
+                                params: {
+                                    species_community_id: data.id,
+                                },
+                                query: {
+                                    group_type_name: data.group_type,
+                                },
                             });
+                            vm.$router.go();
+                            vm.isModalOpen = false;
+                        });
                     }
                 })
                 .finally(() => {
