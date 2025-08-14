@@ -615,6 +615,9 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
         if self.species:
             if self.species.taxonomy and self.species.taxonomy.scientific_name:
                 return self.species.taxonomy.scientific_name
+        if self.community:
+            if self.community.taxonomy and self.community.taxonomy.community_name:
+                return self.community.taxonomy.community_name
         return "Descriptor not available"
 
     @property
@@ -4009,6 +4012,9 @@ class Occurrence(DirtyFieldsMixin, LockableModel, RevisionedMixin):
         if self.species:
             if self.species.taxonomy and self.species.taxonomy.scientific_name:
                 return self.species.taxonomy.scientific_name
+        if self.community:
+            if self.community.taxonomy and self.community.taxonomy.community_name:
+                return self.community.taxonomy.community_name
         return "Descriptor not available"
 
     @property
