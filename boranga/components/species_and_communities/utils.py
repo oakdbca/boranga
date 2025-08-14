@@ -240,6 +240,33 @@ def rename_species_original_submit(species_instance, new_species, request):
     species_instance.processing_status = Species.PROCESSING_STATUS_HISTORICAL
     species_instance.save(version_user=request.user)
 
+    # If there is an approved conservation status for this species, close it
+    active_conservation_status = ConservationStatus.objects.filter(
+        species=species_instance,
+        processing_status=ConservationStatus.PROCESSING_STATUS_APPROVED,
+    ).first()
+    if active_conservation_status:
+        active_conservation_status.customer_status = (
+            ConservationStatus.CUSTOMER_STATUS_CLOSED
+        )
+        active_conservation_status.processing_status = (
+            ConservationStatus.PROCESSING_STATUS_CLOSED
+        )
+        active_conservation_status.save(version_user=request.user)
+
+        active_conservation_status.log_user_action(
+            ConservationStatus.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_RENAME.format(
+                active_conservation_status.conservation_status_number
+            ),
+            request,
+        )
+        request.user.log_user_action(
+            ConservationStatus.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_RENAME.format(
+                active_conservation_status.conservation_status_number
+            ),
+            request,
+        )
+
     # send the rename species email notification
     send_species_rename_email_notification(request, species_instance, new_species)
 
