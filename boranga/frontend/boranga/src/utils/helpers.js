@@ -1,3 +1,5 @@
+import constants from './constants';
+
 export default {
     truncate(text, { length = 30, omission = '...', separator } = {}) {
         if (text == null) return '';
@@ -279,5 +281,71 @@ export default {
         const last = parts.pop();
         const target = parts.reduce((o, p) => (o ? o[p] : undefined), obj);
         if (target && last) target[last] = value;
+    },
+    /**
+     * Confirm the change of species or community name in selecting/unselecting select2 event.
+     * @param {Object} event - The event object.
+     * @param {HTMLElement} selector - The selector for the element to change.
+     * @param {string=} type - The type of change (species or community).
+     */
+    confirmChangeOfSpeciesOrCommunityName: function (
+        event,
+        selector,
+        type = ''
+    ) {
+        // Prevent firing select/unselect events, we do that ourselves below
+        event.preventDefault();
+
+        let newData = null;
+        if (event.params.args._type === 'select') {
+            newData = event.params.args.data;
+        } else if (event.params.args._type === 'unselect') {
+            // Unselecting means no new value
+        }
+        console.log(`Changing to ${newData?.id}`);
+
+        const typeCapitalized = type.charAt(0).toUpperCase() + type.slice(1);
+        swal.fire({
+            title: `Confirm Change of ${typeCapitalized} Name?`,
+            html: `Changing this Occurrence's ${type.toLowerCase()} name will also auto-change <b>all</b> related ${constants.MODELS.OCCURRENCE_REPORT.MODEL_PREFIX} to the same name.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: `Confirm New ${typeCapitalized} Name`,
+            reverseButtons: true,
+            customClass: {
+                confirmButton: 'btn btn-primary',
+                cancelButton: 'btn btn-secondary',
+            },
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $(selector).trigger({
+                    type: `select2:${newData === null ? 'un' : ''}select`,
+                    params: {
+                        data: newData,
+                    },
+                });
+
+                const optionExists =
+                    $(`#${selector.id} option`).filter(
+                        (_, option) => option.value === String(newData?.id)
+                    ).length > 0;
+
+                if (newData && !optionExists) {
+                    const newOption = new Option(
+                        newData.text,
+                        newData.id,
+                        true,
+                        true
+                    );
+                    $(selector).append(newOption);
+                }
+
+                $(selector)
+                    .val(newData?.id ? newData.id : null)
+                    .trigger('change');
+            } else {
+                // User cancelled the change
+            }
+        });
     },
 };
