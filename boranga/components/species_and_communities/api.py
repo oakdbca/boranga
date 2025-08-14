@@ -2979,9 +2979,9 @@ class CommunityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 request,
             )
 
-            # If there is an approved conservation status for this species, close it
+            # If there is an approved conservation status for this community, close it
             active_conservation_status = ConservationStatus.objects.filter(
-                species=instance,
+                community=instance,
                 processing_status=ConservationStatus.PROCESSING_STATUS_APPROVED,
             ).first()
             if active_conservation_status:
