@@ -857,6 +857,8 @@ export default {
             } else {
                 html += `<p>The original community will remain active (and if an approved conservation status exists, it will remain approved).</p>`;
             }
+
+            html += `<p>Any and all occurrences from the original community will be moved to the resulting community.</p>`;
             swal.fire({
                 title: `Rename Community`,
                 html: html,
