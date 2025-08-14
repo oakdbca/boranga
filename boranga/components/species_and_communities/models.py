@@ -2053,6 +2053,7 @@ class Community(RevisionedMixin):
             )
             resulting_community.taxonomy.name_authority = self.taxonomy.name_authority
             resulting_community.taxonomy.name_comments = self.taxonomy.name_comments
+            resulting_community.taxonomy.save()
         else:
             # Create a new community with appropriate values overridden
             resulting_community = Community.objects.get(pk=self.pk)
