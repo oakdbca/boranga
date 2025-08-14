@@ -238,83 +238,6 @@
                                                 </template>
                                             </div>
                                         </div>
-                                        <div class="row mb-3">
-                                            <label
-                                                for="community_description"
-                                                class="col-sm-3 control-label"
-                                                >Community Description:
-                                            </label>
-                                            <div class="col-sm-9">
-                                                <textarea
-                                                    id="community_description"
-                                                    v-model="
-                                                        rename_community
-                                                            .taxonomy_details
-                                                            .community_description
-                                                    "
-                                                    class="form-control"
-                                                    rows="2"
-                                                    :disabled="true"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div class="row mb-3">
-                                            <label
-                                                for="community_previous_name"
-                                                class="col-sm-3 control-label"
-                                                >Previous Name:</label
-                                            >
-                                            <div class="col-sm-9">
-                                                <textarea
-                                                    id="community_previous_name"
-                                                    v-model="
-                                                        rename_community
-                                                            .taxonomy_details
-                                                            .previous_name
-                                                    "
-                                                    class="form-control"
-                                                    :disabled="true"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div class="row mb-3">
-                                            <label
-                                                for="community_name_authority"
-                                                class="col-sm-3 control-label"
-                                                >Name Authority:</label
-                                            >
-                                            <div class="col-sm-9">
-                                                <textarea
-                                                    id="community_name_authority"
-                                                    v-model="
-                                                        rename_community
-                                                            .taxonomy_details
-                                                            .name_authority
-                                                    "
-                                                    class="form-control"
-                                                    :disabled="true"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div class="row mb-3">
-                                            <label
-                                                for="community_name_comments"
-                                                class="col-sm-3 control-label"
-                                                >Name Comments:</label
-                                            >
-                                            <div class="col-sm-9">
-                                                <textarea
-                                                    id="community_name_comments"
-                                                    v-model="
-                                                        rename_community
-                                                            .taxonomy_details
-                                                            .name_comments
-                                                    "
-                                                    class="form-control"
-                                                    :disabled="true"
-                                                />
-                                            </div>
-                                        </div>
                                     </FormSection>
                                 </div>
                             </div>
@@ -539,10 +462,10 @@
                                 <select
                                     class="form-select"
                                     v-model="
-                                        rename_community.processing_status_for_original_after_rename
+                                        processingStatusForOriginalAfterRename
                                     "
                                 >
-                                    <option disabled value="">
+                                    <option disabled :value="null">
                                         Select status...
                                     </option>
                                     <option value="historical">
@@ -562,7 +485,7 @@
                                             .community_name ||
                                         !rename_community.taxonomy_details
                                             .community_migrated_id ||
-                                        !rename_community.processing_status_for_original_after_rename
+                                        !processingStatusForOriginalAfterRename
                                     "
                                     @click.prevent="finaliseRenameCommunity"
                                 >
@@ -661,6 +584,7 @@ export default {
             finaliseCommunityLoading: false,
             select2Initialised: false,
             renameCommunityFetched: false,
+            processingStatusForOriginalAfterRename: null,
             errors: null,
         };
     },
@@ -923,9 +847,19 @@ export default {
                 });
                 return;
             }
+            let html = `<p>Are you sure you want to rename community '${this.species_community_original.taxonomy_details.community_name}' to '${this.rename_community.taxonomy_details.community_name}'?</p>`;
+            if (vm.rename_community.id) {
+                html += `<p>Taxonomy details for the existing community will be overwritten from the original community.</p>`;
+            }
+
+            if (vm.processingStatusForOriginalAfterRename == 'historical') {
+                html += `<p>The original community will be made historical (and if an approved conservation status exists, it will be closed).</p>`;
+            } else {
+                html += `<p>The original community will remain active (and if an approved conservation status exists, it will remain approved).</p>`;
+            }
             swal.fire({
                 title: `Rename Community`,
-                text: `Are you sure you want to rename community ${this.species_community_original.taxonomy_details.community_name} to ${this.rename_community.taxonomy_details.community_name}?`,
+                html: html,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: 'Rename Community',
@@ -937,6 +871,8 @@ export default {
             })
                 .then((swalresult) => {
                     vm.finaliseCommunityLoading = true;
+                    vm.rename_community.processing_status_for_original_after_rename =
+                        vm.processingStatusForOriginalAfterRename;
                     if (swalresult.isConfirmed) {
                         fetch(
                             api_endpoints.rename_community(
