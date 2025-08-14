@@ -2041,7 +2041,9 @@ class Community(RevisionedMixin):
         return round(self.area_occurrence_convex_hull_m2 / 1000000, 5)
 
     @transaction.atomic
-    def copy_for_rename(self, request, existing_community=None):
+    def copy_for_rename(
+        self, request, existing_community=None, rename_community_serializer_data=None
+    ):
         if not self.processing_status == Community.PROCESSING_STATUS_ACTIVE:
             raise ValidationError("You cannot rename a community that is not active")
 
@@ -2052,7 +2054,37 @@ class Community(RevisionedMixin):
 
         if existing_community:
             resulting_community = existing_community
+        else:
+            # Create a new community with appropriate values overridden
+            resulting_community = Community.objects.get(pk=self.pk)
+            resulting_community.pk = None
+            resulting_community.community_number = ""
+            resulting_community.processing_status = Community.PROCESSING_STATUS_ACTIVE
 
+        resulting_community.renamed_from_id = self.id
+        resulting_community.save(version_user=request.user)
+
+        if not existing_community:
+            from boranga.components.species_and_communities.serializers import (
+                SaveCommunityTaxonomySerializer,
+            )
+
+            # Apply the taxonomy details to the new community
+            community_taxonomy, created = CommunityTaxonomy.objects.get_or_create(
+                community=resulting_community
+            )
+            if created:
+                logger.info(
+                    f"Created new taxonomy instance for community {resulting_community}"
+                )
+            serializer = SaveCommunityTaxonomySerializer(
+                community_taxonomy, data=rename_community_serializer_data
+            )
+
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        if existing_community:
             # Append original community name to existing if there is one
             resulting_community.taxonomy.previous_name = (
                 f"{resulting_community.taxonomy.previous_name}, {self.taxonomy.community_name}"
@@ -2066,16 +2098,9 @@ class Community(RevisionedMixin):
             resulting_community.taxonomy.name_authority = self.taxonomy.name_authority
             resulting_community.taxonomy.name_comments = self.taxonomy.name_comments
         else:
-            # Create a new community with appropriate values overridden
-            resulting_community = Community.objects.get(pk=self.pk)
-            resulting_community.pk = None
-            resulting_community.community_number = ""
-            resulting_community.processing_status = Community.PROCESSING_STATUS_ACTIVE
-            resulting_community.taxonomy.previous_name = self.community_name
+            resulting_community.taxonomy.previous_name = self.taxonomy.community_name
 
         resulting_community.taxonomy.save()
-        resulting_community.renamed_from_id = self.id
-        resulting_community.save(version_user=request.user)
 
         if not existing_community:
             # Copy the community publishing status but set it to private (not public)
