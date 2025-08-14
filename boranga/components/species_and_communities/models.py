@@ -2031,7 +2031,7 @@ class Community(RevisionedMixin):
         return round(self.area_occurrence_convex_hull_m2 / 1000000, 5)
 
     @transaction.atomic
-    def copy_for_rename(self, request):
+    def copy_for_rename(self, request, existing_community=None):
         if not self.processing_status == Community.PROCESSING_STATUS_ACTIVE:
             raise ValidationError("You cannot rename a community that is not active")
 
@@ -2040,13 +2040,21 @@ class Community(RevisionedMixin):
                 "You cannot rename a community unless you are a species communities approver"
             )
 
-        # Create a new community with appropriate values overridden
-        new_community = Community.objects.get(pk=self.pk)
-        new_community.pk = None
-        new_community.community_number = ""
-        new_community.processing_status = Community.PROCESSING_STATUS_ACTIVE
-        new_community.renamed_from_id = self.id
-        new_community.save(version_user=request.user)
+        if existing_community:
+            resulting_community = existing_community
+            resulting_community.previous_name = (
+                f"{resulting_community.previous_name}, {self.community_name}"
+            )
+        else:
+            # Create a new community with appropriate values overridden
+            resulting_community = Community.objects.get(pk=self.pk)
+            resulting_community.pk = None
+            resulting_community.community_number = ""
+            resulting_community.processing_status = Community.PROCESSING_STATUS_ACTIVE
+            resulting_community.previous_name = self.community_name
+
+        resulting_community.renamed_from_id = self.id
+        resulting_community.save(version_user=request.user)
 
         # Copy the community publishing status but set it to private (not public)
         try:
@@ -2054,38 +2062,37 @@ class Community(RevisionedMixin):
                 id=self.community_publishing_status.id
             )
             publishing_status.pk = None
-            publishing_status.community = new_community
-            publishing_status.community_public = False
+            publishing_status.community = resulting_community
             publishing_status.save()
         except CommunityPublishingStatus.DoesNotExist:
             CommunityPublishingStatus.objects.get_or_create(community=self)
 
-        new_community.regions.add(*self.regions.all())
-        new_community.districts.add(*self.districts.all())
+        resulting_community.regions.add(*self.regions.all())
+        resulting_community.districts.add(*self.districts.all())
 
         # Copy the community distribution
-        new_community_distribution = CommunityDistribution.objects.filter(
+        resulting_community_distribution = CommunityDistribution.objects.filter(
             community=self
         ).first()
-        new_community_distribution.pk = None
-        new_community_distribution.community = new_community
-        new_community_distribution.save()
+        resulting_community_distribution.pk = None
+        resulting_community_distribution.community = resulting_community
+        resulting_community_distribution.save()
 
         for new_document in self.community_documents.all():
             new_doc_instance = new_document
-            new_doc_instance.community = new_community
+            new_doc_instance.community = resulting_community
             new_doc_instance.id = None
             new_doc_instance.document_number = ""
             new_doc_instance.save(version_user=request.user)
             new_doc_instance.community.log_user_action(
-                SpeciesUserAction.ACTION_ADD_DOCUMENT.format(
+                CommunityUserAction.ACTION_ADD_DOCUMENT.format(
                     new_doc_instance.document_number,
                     new_doc_instance.community.community_number,
                 ),
                 request,
             )
             request.user.log_user_action(
-                SpeciesUserAction.ACTION_ADD_DOCUMENT.format(
+                CommunityUserAction.ACTION_ADD_DOCUMENT.format(
                     new_doc_instance.document_number,
                     new_doc_instance.community.community_number,
                 ),
@@ -2094,29 +2101,28 @@ class Community(RevisionedMixin):
 
         for new_threat in self.community_threats.all():
             new_threat_instance = new_threat
-            new_threat_instance.community = new_community
+            new_threat_instance.community = resulting_community
             new_threat_instance.id = None
             new_threat_instance.threat_number = ""
             new_threat_instance.save(version_user=request.user)
             new_threat_instance.community.log_user_action(
-                SpeciesUserAction.ACTION_ADD_THREAT.format(
+                CommunityUserAction.ACTION_ADD_THREAT.format(
                     new_threat_instance.threat_number,
                     new_threat_instance.community.community_number,
                 ),
                 request,
             )
             request.user.log_user_action(
-                SpeciesUserAction.ACTION_ADD_THREAT.format(
+                CommunityUserAction.ACTION_ADD_THREAT.format(
                     new_threat_instance.threat_number,
                     new_threat_instance.community.community_number,
                 ),
                 request,
             )
 
-        self.processing_status = Community.PROCESSING_STATUS_HISTORICAL
         self.save(version_user=request.user)
 
-        return new_community
+        return resulting_community
 
 
 class CommunityTaxonomy(BaseModel):
@@ -2194,7 +2200,12 @@ class CommunityUserAction(UserAction):
     ACTION_REINSTATE_COMMUNITY = "Reinstate Community {}"
     ACTION_CREATE_COMMUNITY = "Create new community {}"
     ACTION_SAVE_COMMUNITY = "Save Community {}"
-    ACTION_RENAME_COMMUNITY = "Community {} renamed to {}"
+    ACTION_RENAME_COMMUNITY_MADE_HISTORICAL = (
+        "Community {} renamed to {} and made historical"
+    )
+    ACTION_RENAME_COMMUNITY_RETAINED = (
+        "Community {} renamed to {} and retained as part of a rename"
+    )
     ACTION_IMAGE_UPDATE = "Community Image document updated for Community {}"
     ACTION_IMAGE_DELETE = "Community Image document deleted for Community {}"
     ACTION_IMAGE_REINSTATE = "Community Image document reinstated for Community {}"
