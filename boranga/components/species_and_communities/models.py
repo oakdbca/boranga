@@ -2053,7 +2053,6 @@ class Community(RevisionedMixin):
             )
             resulting_community.taxonomy.name_authority = self.taxonomy.name_authority
             resulting_community.taxonomy.name_comments = self.taxonomy.name_comments
-            resulting_community.taxonomy.save()
         else:
             # Create a new community with appropriate values overridden
             resulting_community = Community.objects.get(pk=self.pk)
@@ -2062,6 +2061,7 @@ class Community(RevisionedMixin):
             resulting_community.processing_status = Community.PROCESSING_STATUS_ACTIVE
             resulting_community.taxonomy.previous_name = self.community_name
 
+        resulting_community.taxonomy.save()
         resulting_community.renamed_from_id = self.id
         resulting_community.save(version_user=request.user)
 
@@ -2076,8 +2076,9 @@ class Community(RevisionedMixin):
         except CommunityPublishingStatus.DoesNotExist:
             CommunityPublishingStatus.objects.get_or_create(community=self)
 
-        resulting_community.regions.add(*self.regions.all())
-        resulting_community.districts.add(*self.districts.all())
+        resulting_community.species.set(self.species.all())
+        resulting_community.regions.set(self.regions.all())
+        resulting_community.districts.set(self.districts.all())
 
         # Copy the community distribution
         resulting_community_distribution = CommunityDistribution.objects.filter(
