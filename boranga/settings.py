@@ -1,4 +1,3 @@
-import hashlib
 import logging
 import os
 import sys
@@ -26,9 +25,6 @@ SYSTEM_MAINTENANCE_WARNING = env("SYSTEM_MAINTENANCE_WARNING", 24)  # hours
 DISABLE_EMAIL = env("DISABLE_EMAIL", False)
 SHOW_TESTS_URL = env("SHOW_TESTS_URL", False)
 SHOW_DEBUG_TOOLBAR = env("SHOW_DEBUG_TOOLBAR", False)
-BUILD_TAG = env(
-    "BUILD_TAG", hashlib.md5(os.urandom(32)).hexdigest()
-)  # URL of the Dev app.js served by webpack & express
 TIME_ZONE = "Australia/Perth"
 
 SILENCE_SYSTEM_CHECKS = env("SILENCE_SYSTEM_CHECKS", False)

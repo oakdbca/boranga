@@ -12,7 +12,6 @@
 {% system_name_short as system_name_short %}
 {% support_email as support_email %}
 {% is_django_admin as is_django_admin_user %}
-{% build_tag as build_tag %}
 
 {% block header_top_menu %}
 {% endblock %}
@@ -20,7 +19,7 @@
 {% block extra_css %}
   <link rel="icon" type="image/png" href="/static/boranga/favicon.ico" />
 
-  <link rel="stylesheet" href="{% static 'boranga/css/base.css' %}?v={{ build_tag }}" />
+  <link rel="stylesheet" href="{% static 'boranga/css/base.css' %}?v={{ GIT_COMMIT_HASH }}" />
 {% endblock %}
 
 {% block extra_js %}
