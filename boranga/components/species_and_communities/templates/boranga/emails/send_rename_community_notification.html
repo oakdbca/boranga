@@ -1,22 +1,30 @@
 {%  extends 'boranga/emails/base_email.html' %}
 
 {%  block content %}
-    <p>Community {{ community_proposal.community_number }} has been renamed. You can review the historical and new Community Profiles at:</p>
+    <p>Community:</p>
     <ul>
-        <li>Historical: <a href="{{community_url}}?group_type_name=community">{{ community_proposal.community_number }} - {{ community_proposal.taxonomy.community_name }}</a></li>
-        <li>New: <a href="{{new_community_url}}?group_type_name=community">{{ new_community.community_number }} - {{ new_community.taxonomy.community_name }}</a></li>
+        <li><a href="{{original_community_url}}?group_type_name=community">{{ original_community.community_number }} - {{ original_community.taxonomy.community_name }}</a></li>
     </ul>
+    <p>has been renamed to:
+    <ul>
+        <li><a href="{{resulting_community_url}}?group_type_name=community">{{ resulting_community.community_number }} - {{ resulting_community.taxonomy.community_name }}</a></li>
+    </ul>
+    {% if original_made_historical %}
     <p>
-        {% if conservation_status_url %}
-            Please action the related Conservation Status <a href="{{conservation_status_url}}">here</a>
-        {% endif %}
+        The original community has been made historical.
     </p>
     <p>
-        {% if occurrences_url %}
-            Please action any related Occurrences:
-            {% for occ in occurrences_url %}
-                <li><a href="{{occ.occurrence_url}}">{{ occ.occurrence_number }}</a></li>
-            {% endfor %}
-        {% endif %}
+        Any approved conservation status for the original community has been closed.
+    </p>
+    {% else %}
+    <p>
+        The original community has been retained and is still active.
+    </p>
+    <p>
+        Any approved conservation status for the original community will remain approved.
+    </p>
+    {% endif %}
+    <p>
+        Any and all occurrences from the original community have been moved to the resulting community.
     </p>
 {%  endblock %}
