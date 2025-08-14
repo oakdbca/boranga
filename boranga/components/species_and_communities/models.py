@@ -2042,16 +2042,24 @@ class Community(RevisionedMixin):
 
         if existing_community:
             resulting_community = existing_community
-            resulting_community.previous_name = (
-                f"{resulting_community.previous_name}, {self.community_name}"
+
+            # Append original community name to existing
+            resulting_community.taxonomy.previous_name = (
+                f"{resulting_community.taxonomy.previous_name}, {self.community_name}"
             )
+            # Overwrite other taxonomy details
+            resulting_community.taxonomy.community_description = (
+                resulting_community.community_description
+            )
+            resulting_community.taxonomy.name_authority = self.taxonomy.name_authority
+            resulting_community.taxonomy.name_comments = self.taxonomy.name_comments
         else:
             # Create a new community with appropriate values overridden
             resulting_community = Community.objects.get(pk=self.pk)
             resulting_community.pk = None
             resulting_community.community_number = ""
             resulting_community.processing_status = Community.PROCESSING_STATUS_ACTIVE
-            resulting_community.previous_name = self.community_name
+            resulting_community.taxonomy.previous_name = self.community_name
 
         resulting_community.renamed_from_id = self.id
         resulting_community.save(version_user=request.user)
