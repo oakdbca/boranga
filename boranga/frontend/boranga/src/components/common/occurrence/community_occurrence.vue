@@ -229,7 +229,7 @@ export default {
                 .on('select2:select', function (e) {
                     let data = e.params.data.id;
                     vm.occurrence_obj.community = data;
-                    vm.occurrence_obj.community_id = data.id;
+                    vm.occurrence_obj.community_id = e.params.data.id;
                     vm.community_display = e.params.data.text;
                     vm.taxon_previous_name = e.params.data.taxon_previous_name;
                 })
