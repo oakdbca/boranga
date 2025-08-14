@@ -135,7 +135,7 @@
 import FormSection from '@/components/forms/section_toggle.vue';
 import ContactDatatable from './contact_datatable.vue';
 import RelatedReports from '@/components/common/occurrence/occ_related_ocr_table.vue';
-import { api_endpoints } from '@/utils/hooks';
+import { api_endpoints, helpers } from '@/utils/hooks';
 
 export default {
     name: 'CommunityOccurrence',
@@ -245,6 +245,13 @@ export default {
                             '-results"]'
                     );
                     searchField[0].focus();
+                })
+                .on('select2:selecting select2:unselecting', function (e) {
+                    helpers.confirmChangeOfSpeciesOrCommunityName(
+                        e,
+                        vm.$refs[vm.community_name_lookup],
+                        'community'
+                    );
                 });
         },
         getCommunityDisplay: function () {
