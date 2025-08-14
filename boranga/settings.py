@@ -343,13 +343,13 @@ SECURE_CROSS_ORIGIN_OPENER_POLICY = env(
 
 # Make sure this returns true when in local development
 # so you can use the vite dev server with hot module reloading
-USE_VITE_DEV_SERVER = RUNNING_DEVSERVER and EMAIL_INSTANCE == "DEV" and DEBUG is True
+DJANGO_VITE_DEV_MODE = RUNNING_DEVSERVER and EMAIL_INSTANCE == "DEV" and DEBUG is True
 
-STATIC_URL_PREFIX = "/static/boranga_vue/" if USE_VITE_DEV_SERVER else "boranga_vue/"
+STATIC_URL_PREFIX = "/static/boranga_vue/" if DJANGO_VITE_DEV_MODE else "boranga_vue/"
 
 DJANGO_VITE = {
     "default": {
-        "dev_mode": USE_VITE_DEV_SERVER,
+        "dev_mode": DJANGO_VITE_DEV_MODE,
         "manifest_path": os.path.join(
             BASE_DIR, "boranga", "static", "boranga_vue", "manifest.json"
         ),
