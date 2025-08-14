@@ -538,17 +538,17 @@
                             <div class="col-sm-5">
                                 <select
                                     class="form-select"
-                                    v-model="processingStatusForOriginal"
+                                    v-model="
+                                        rename_community.processing_status_for_original_after_rename
+                                    "
                                 >
                                     <option disabled value="">
                                         Select status...
                                     </option>
-                                    <option value="make_historical">
+                                    <option value="historical">
                                         Make Historical
                                     </option>
-                                    <option value="leave_active">
-                                        Leave Active
-                                    </option>
+                                    <option value="active">Leave Active</option>
                                 </select>
                             </div>
                         </div>
@@ -562,7 +562,7 @@
                                             .community_name ||
                                         !rename_community.taxonomy_details
                                             .community_migrated_id ||
-                                        !processingStatusForOriginal
+                                        !rename_community.processing_status_for_original_after_rename
                                     "
                                     @click.prevent="finaliseRenameCommunity"
                                 >
@@ -661,7 +661,6 @@ export default {
             finaliseCommunityLoading: false,
             select2Initialised: false,
             renameCommunityFetched: false,
-            processingStatusForOriginal: '',
             errors: null,
         };
     },
@@ -948,19 +947,21 @@ export default {
                                 headers: {
                                     'Content-Type': 'application/json',
                                 },
-                                body: JSON.stringify(
-                                    vm.rename_community.taxonomy_details
-                                ),
+                                body: JSON.stringify(vm.rename_community),
                             }
                         )
                             .then(async (response) => {
-                                console.log(response);
-                                if (response.status === 200) {
-                                    return response.json();
-                                } else {
-                                    throw new Error(
-                                        'Failed to rename community'
-                                    );
+                                const data = await response.json();
+                                if (!response.ok) {
+                                    swal.fire({
+                                        title: 'Error renaming community',
+                                        text: JSON.stringify(data),
+                                        icon: 'error',
+                                        customClass: {
+                                            confirmButton: 'btn btn-primary',
+                                        },
+                                    });
+                                    return;
                                 }
                             })
                             .then((rename_community_json) => {
@@ -977,9 +978,6 @@ export default {
                                 });
                                 vm.$router.go();
                                 vm.isModalOpen = false;
-                            })
-                            .catch(async (response) => {
-                                this.errors = await response.json();
                             });
                     }
                 })
