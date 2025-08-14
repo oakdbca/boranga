@@ -2053,13 +2053,15 @@ class Community(RevisionedMixin):
         if existing_community:
             resulting_community = existing_community
 
-            # Append original community name to existing
+            # Append original community name to existing if there is one
             resulting_community.taxonomy.previous_name = (
-                f"{resulting_community.taxonomy.previous_name}, {self.community_name}"
+                f"{resulting_community.taxonomy.previous_name}, {self.taxonomy.community_name}"
+                if resulting_community.taxonomy.previous_name
+                else self.taxonomy.community_name
             )
             # Overwrite other taxonomy details
             resulting_community.taxonomy.community_description = (
-                resulting_community.community_description
+                self.taxonomy.community_description
             )
             resulting_community.taxonomy.name_authority = self.taxonomy.name_authority
             resulting_community.taxonomy.name_comments = self.taxonomy.name_comments
@@ -2075,26 +2077,35 @@ class Community(RevisionedMixin):
         resulting_community.renamed_from_id = self.id
         resulting_community.save(version_user=request.user)
 
-        # Copy the community publishing status but set it to private (not public)
-        try:
-            publishing_status = CommunityPublishingStatus.objects.get(
-                id=self.community_publishing_status.id
-            )
-            publishing_status.pk = None
-            publishing_status.community = resulting_community
-            publishing_status.save()
-        except CommunityPublishingStatus.DoesNotExist:
-            CommunityPublishingStatus.objects.get_or_create(community=self)
+        if not existing_community:
+            # Copy the community publishing status but set it to private (not public)
+            try:
+                publishing_status = CommunityPublishingStatus.objects.get(
+                    id=self.community_publishing_status.id
+                )
+                publishing_status.pk = None
+                publishing_status.community = resulting_community
+                publishing_status.save()
+            except CommunityPublishingStatus.DoesNotExist:
+                CommunityPublishingStatus.objects.get_or_create(community=self)
 
         resulting_community.species.set(self.species.all())
         resulting_community.regions.set(self.regions.all())
         resulting_community.districts.set(self.districts.all())
 
-        # Copy the community distribution
         resulting_community_distribution = CommunityDistribution.objects.filter(
             community=self
         ).first()
-        resulting_community_distribution.pk = None
+
+        if not existing_community:
+            # This will create a new CommunityDistribution instance
+            resulting_community_distribution.pk = None
+        else:
+            # This will overwrite the existing CommunityDistribution instance
+            resulting_community_distribution.pk = (
+                resulting_community.community_distribution.pk
+            )
+
         resulting_community_distribution.community = resulting_community
         resulting_community_distribution.save()
 
