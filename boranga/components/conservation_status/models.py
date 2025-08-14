@@ -1596,7 +1596,7 @@ class ConservationStatus(
 
             # Create a log entry for the conservation status
             self.log_user_action(
-                ConservationStatusUserAction.ACTION_CLOSE_CONSERVATIONSTATUS.format(
+                ConservationStatusUserAction.ACTION_CLOSE_CONSERVATION_STATUS.format(
                     previous_approved_version.conservation_status_number
                 ),
                 request,
@@ -1604,7 +1604,7 @@ class ConservationStatus(
 
             # Create a log entry for the user
             request.user.log_user_action(
-                ConservationStatusUserAction.ACTION_CLOSE_CONSERVATIONSTATUS.format(
+                ConservationStatusUserAction.ACTION_CLOSE_CONSERVATION_STATUS.format(
                     previous_approved_version.conservation_status_number,
                 ),
                 request,
@@ -2149,7 +2149,16 @@ class ConservationStatusUserAction(UserAction):
     ACTION_UNASSIGN_APPROVER = "Unassign approver from conservation status proposal {}"
     ACTION_DECLINE = "Decline conservation status application {}"
     ACTION_APPROVE_PROPOSAL_ = "Approve conservation status  proposal {}"
-    ACTION_CLOSE_CONSERVATIONSTATUS = "De list conservation status {}"
+    ACTION_CLOSE_CONSERVATION_STATUS = "Conservation status {} has been closed"
+    ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_RENAME = (
+        "Conservation status {} has been closed due to a rename"
+    )
+    ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_SPLIT = (
+        "Conservation status {} has been closed due to a split"
+    )
+    ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_COMBINE = (
+        "Conservation status {} has been closed due to a combine"
+    )
     ACTION_DISCARD_PROPOSAL = "Discard conservation status proposal {}"
     ACTION_PROPOSE_DELIST_PROPOSAL = (
         "Propose discard conservation status proposal {}. Reason: {}"
