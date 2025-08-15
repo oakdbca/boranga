@@ -274,39 +274,51 @@ def rename_species_original_submit(species_instance, new_species, request):
 
 
 @transaction.atomic
-def rename_deep_copy(instance: Species, request: HttpRequest) -> Species:
+def rename_deep_copy(
+    request: HttpRequest, instance: Species, existing_species: Species = None
+) -> Species:
     # related items to instance that needs to create for new rename instance as well
     instance_documents = SpeciesDocument.objects.filter(species=instance.id)
     instance_threats = ConservationThreat.objects.filter(species=instance.id)
-    instance_conservation_attributes = SpeciesConservationAttributes.objects.filter(
+    src_cons_attrs = SpeciesConservationAttributes.objects.filter(
         species=instance.id
-    )
-    instance_distribution = SpeciesDistribution.objects.filter(species=instance.id)
+    ).first()
+    src_distribution = SpeciesDistribution.objects.filter(species=instance.id).first()
 
-    # clone the species instance into new rename instance
-    new_rename_instance = Species.objects.get(pk=instance.pk)
-    new_rename_instance.id = None
-    new_rename_instance.taxonomy_id = None
-    new_rename_instance.species_number = ""
-    new_rename_instance.processing_status = Species.PROCESSING_STATUS_DRAFT
-    new_rename_instance.lodgement_date = None
-    new_rename_instance.save(version_user=request.user)
+    if existing_species:
+        resulting_species = existing_species
+        resulting_species.department_file_numbers = instance.department_file_numbers
+        resulting_species.last_data_curation_date = instance.last_data_curation_date
+        resulting_species.conservation_plan_exists = instance.conservation_plan_exists
+        resulting_species.conservation_plan_reference = (
+            instance.conservation_plan_reference
+        )
+        resulting_species.comment = instance.comment
+    else:
+        # clone the species instance into new rename instance
+        resulting_species = Species.objects.get(pk=instance.pk)
+        resulting_species.id = None
+        resulting_species.taxonomy_id = None
+        resulting_species.species_number = ""
+        resulting_species.lodgement_date = None
+
+    resulting_species.save(version_user=request.user)
 
     # Copy the regions an districts
-    new_rename_instance.regions.add(*instance.regions.all())
-    new_rename_instance.districts.add(*instance.districts.all())
+    resulting_species.regions.set(instance.regions.all())
+    resulting_species.districts.set(instance.districts.all())
 
     # Log action
-    new_rename_instance.log_user_action(
+    resulting_species.log_user_action(
         SpeciesUserAction.ACTION_COPY_SPECIES_FROM.format(
-            new_rename_instance.species_number,
+            resulting_species.species_number,
             instance.species_number,
         ),
         request,
     )
     request.user.log_user_action(
         SpeciesUserAction.ACTION_COPY_SPECIES_FROM.format(
-            new_rename_instance.species_number,
+            resulting_species.species_number,
             instance.species_number,
         ),
         request,
@@ -314,21 +326,21 @@ def rename_deep_copy(instance: Species, request: HttpRequest) -> Species:
     instance.log_user_action(
         SpeciesUserAction.ACTION_COPY_SPECIES_TO.format(
             instance.species_number,
-            new_rename_instance.species_number,
+            resulting_species.species_number,
         ),
         request,
     )
     request.user.log_user_action(
         SpeciesUserAction.ACTION_COPY_SPECIES_TO.format(
             instance.species_number,
-            new_rename_instance.species_number,
+            resulting_species.species_number,
         ),
         request,
     )
 
     for new_document in instance_documents:
         new_doc_instance = new_document
-        new_doc_instance.species = new_rename_instance
+        new_doc_instance.species = resulting_species
         new_doc_instance.id = None
         new_doc_instance.document_number = ""
         new_doc_instance.save(version_user=request.user)
@@ -349,7 +361,7 @@ def rename_deep_copy(instance: Species, request: HttpRequest) -> Species:
 
     for new_threat in instance_threats:
         new_threat_instance = new_threat
-        new_threat_instance.species = new_rename_instance
+        new_threat_instance.species = resulting_species
         new_threat_instance.id = None
         new_threat_instance.threat_number = ""
         new_threat_instance.save(version_user=request.user)
@@ -368,18 +380,29 @@ def rename_deep_copy(instance: Species, request: HttpRequest) -> Species:
             request,
         )
 
-    for new_cons_attr in instance_conservation_attributes:
-        new_cons_attr_instance = new_cons_attr
-        new_cons_attr_instance.species = new_rename_instance
-        new_cons_attr_instance.id = None
-        new_cons_attr_instance.save()
+    # Conservation Attributes (OneToOne): update-or-create, no duplicates
+    if src_cons_attrs:
+        dest_cons_attrs, _ = SpeciesConservationAttributes.objects.get_or_create(
+            species=resulting_species
+        )
+        for f in dest_cons_attrs._meta.concrete_fields:
+            if f.name in ("id", "species"):
+                continue
+            setattr(dest_cons_attrs, f.name, getattr(src_cons_attrs, f.name))
+        dest_cons_attrs.save()
 
-    for new_distribution in instance_distribution:
-        new_distribution.species = new_rename_instance
-        new_distribution.id = None
-        new_distribution.save()
+    # Distribution (OneToOne): update-or-create, no duplicates
+    if src_distribution:
+        dest_distribution, _ = SpeciesDistribution.objects.get_or_create(
+            species=resulting_species
+        )
+        for f in dest_distribution._meta.concrete_fields:
+            if f.name in ("id", "species"):
+                continue
+            setattr(dest_distribution, f.name, getattr(src_distribution, f.name))
+        dest_distribution.save()
 
-    return new_rename_instance
+    return resulting_species
 
 
 def process_species_general_data(species_instance, species_request_data):
