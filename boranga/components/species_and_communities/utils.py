@@ -31,8 +31,8 @@ logger = logging.getLogger(__name__)
 
 
 @transaction.atomic
-def species_form_submit(species_instance, request, split=False):
-    if not split:
+def species_form_submit(species_instance, request, split=False, rename=False):
+    if not split and not rename:
         if not species_instance.can_user_edit:
             raise ValidationError("You can't submit this species at this moment")
 
