@@ -35,13 +35,13 @@ function _alertWMTSConnection(layerDef, err) {
 
     const status = helpers.statusFromError(err);
     const footerHtml = status
-        ? `Response Code: ${helpers.escapeHtml(status)}. See console for more details.`
+        ? `Response Code: ${helpers.escapeHtml(status)}.`
         : undefined;
 
     swal.fire({
         icon: 'error',
         title: `Unable to load map layer: ${name}`,
-        html: `<p>Could not connect to the WMTS service.</p> <p>Please try again later.</p>`,
+        html: `<p>Could not connect to the WMTS service.</p><p>This will prevent this page from functioning correctly.</p><p>Please contact support.</p>`,
         footer: footerHtml,
         confirmButtonText: 'OK',
         customClass: { confirmButton: 'btn btn-primary' },
