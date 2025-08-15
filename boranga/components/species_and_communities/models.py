@@ -2103,7 +2103,7 @@ class Community(RevisionedMixin):
         resulting_community.taxonomy.save()
 
         if not existing_community:
-            # Copy the community publishing status but set it to private (not public)
+            # Copy the community publishing status and leave all values as is
             try:
                 publishing_status = CommunityPublishingStatus.objects.get(
                     id=self.community_publishing_status.id
