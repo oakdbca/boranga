@@ -2274,7 +2274,7 @@ class CommunityUserAction(UserAction):
     )
 
     # Document
-    ACTION_ADD_DOCUMENT = "Document {} uploaded for Community {}"
+    ACTION_ADD_DOCUMENT = "Document {} added for Community {}"
     ACTION_UPDATE_DOCUMENT = "Document {} updated for Community {}"
     ACTION_DISCARD_DOCUMENT = "Document {} discarded for Community {}"
     ACTION_REINSTATE_DOCUMENT = "Document {} reinstated for Community {}"
