@@ -2903,6 +2903,7 @@ class CommunityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 resulting_community.processing_status = (
                     Community.PROCESSING_STATUS_ACTIVE
                 )
+                resulting_community.submitter = request.user.id
                 resulting_community.save(version_user=request.user)
 
                 # Log community action for the draft community
