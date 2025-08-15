@@ -286,9 +286,6 @@ def send_species_combine_email_notification(
 def send_species_rename_email_notification(request, species_proposal, new_species):
     email = RenameSpeciesSendNotificationEmail()
 
-    url = request.build_absolute_uri(
-        reverse("internal-conservation-status-dashboard", kwargs={})
-    )
     species_url = request.build_absolute_uri(
         reverse(
             "internal-species-detail",
@@ -310,58 +307,12 @@ def send_species_rename_email_notification(request, species_proposal, new_specie
 
     all_ccs = notification_emails
 
-    conservation_status_url = []
-    conservation_status_list = species_proposal.conservation_status.filter(
-        processing_status=ConservationStatus.PROCESSING_STATUS_APPROVED
-    )
-    if conservation_status_list:
-        conservation_status_url = request.build_absolute_uri(
-            reverse(
-                "internal-conservation-status-detail",
-                kwargs={"cs_proposal_pk": conservation_status_list[0].id},
-            )
-        )
-        cs_notification_emails = SystemEmailGroup.emails_by_group_and_area(
-            group_type=species_proposal.group_type,
-            area=SystemEmailGroup.AREA_CONSERVATION_STATUS,
-        )
-        all_ccs.extend(cs_notification_emails)
-
-    occurrences_url = []
-    occurrences = species_proposal.occurrences.filter(
-        processing_status=Occurrence.PROCESSING_STATUS_ACTIVE
-    )
-    if occurrences:
-        for occ in occurrences:
-            occurrences_url.append(
-                {
-                    "occurrence_url": request.build_absolute_uri(
-                        reverse(
-                            "internal-occurrence-detail",
-                            kwargs={"occurrence_pk": occ.id},
-                        )
-                    ),
-                    "occurrence_number": occ.occurrence_number,
-                }
-            )
-
-        occ_notification_emails = SystemEmailGroup.emails_by_group_and_area(
-            group_type=species_proposal.group_type,
-            area=SystemEmailGroup.AREA_OCCURRENCE,
-        )
-        all_ccs.extend(occ_notification_emails)
-
     context = {
         "species_proposal": species_proposal,
-        "url": url,
         "species_url": species_url,
         "new_species_url": new_species_url,
         "new_species": new_species,
-        "conservation_status_url": conservation_status_url,
-        "occurrences_url": occurrences_url,
     }
-
-    all_ccs = list(set(all_ccs))
 
     submitter_email = EmailUser.objects.get(id=species_proposal.submitter).email
 
