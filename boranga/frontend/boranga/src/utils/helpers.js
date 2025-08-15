@@ -38,6 +38,29 @@ export default {
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
     },
+    escapeHtml: function (s) {
+        if (!s) return '';
+        return s.replace(
+            /[&<>"']/g,
+            (ch) =>
+                ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;',
+                })[ch]
+        );
+    },
+    statusFromError: function (err) {
+        const s = String((err && (err.detail || err.message)) || err || '');
+        // Prefer "HTTP 502 Bad Gateway", else "HTTP 502", else bare "502"
+        const m =
+            s.match(/HTTP\s+\d{3}\s+[^\n<]+/i) ||
+            s.match(/HTTP\s+\d{3}/i) ||
+            s.match(/\b\d{3}\b/);
+        return m ? m[0] : null;
+    },
     formatError: function (err) {
         let returnStr = '';
         // object {}
