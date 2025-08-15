@@ -936,7 +936,10 @@ class SpeciesPaginatedViewSet(viewsets.ReadOnlyModelViewSet):
     )
     def species_external(self, request, *args, **kwargs):
         qs = self.get_queryset().filter(
-            processing_status=Species.PROCESSING_STATUS_ACTIVE,
+            processing_status__in=[
+                Community.PROCESSING_STATUS_ACTIVE,
+                Community.PROCESSING_STATUS_HISTORICAL,
+            ],
             species_publishing_status__species_public=True,
         )
         qs = self.filter_queryset(qs)
@@ -1103,7 +1106,10 @@ class CommunitiesPaginatedViewSet(viewsets.ReadOnlyModelViewSet):
     )
     def communities_external(self, request, *args, **kwargs):
         qs = self.get_queryset().filter(
-            processing_status=Community.PROCESSING_STATUS_ACTIVE,
+            processing_status__in=[
+                Community.PROCESSING_STATUS_ACTIVE,
+                Community.PROCESSING_STATUS_HISTORICAL,
+            ],
             community_publishing_status__community_public=True,
         )
         qs = self.filter_queryset(qs)
@@ -1681,6 +1687,33 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             # Set the original species from the split to historical and its conservation status to 'closed'
             instance.processing_status = Species.PROCESSING_STATUS_HISTORICAL
             instance.save(version_user=request.user)
+
+            # If there is an approved conservation status for this species, close it
+            active_conservation_status = ConservationStatus.objects.filter(
+                species=instance,
+                processing_status=ConservationStatus.PROCESSING_STATUS_APPROVED,
+            ).first()
+            if active_conservation_status:
+                active_conservation_status.customer_status = (
+                    ConservationStatus.CUSTOMER_STATUS_CLOSED
+                )
+                active_conservation_status.processing_status = (
+                    ConservationStatus.PROCESSING_STATUS_CLOSED
+                )
+                active_conservation_status.save(version_user=request.user)
+
+                active_conservation_status.log_user_action(
+                    ConservationStatus.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_SPLIT.format(
+                        active_conservation_status.conservation_status_number
+                    ),
+                    request,
+                )
+                request.user.log_user_action(
+                    ConservationStatus.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_SPLIT.format(
+                        active_conservation_status.conservation_status_number
+                    ),
+                    request,
+                )
 
             instance.log_user_action(
                 SpeciesUserAction.ACTION_SPLIT_MAKE_ORIGINAL_HISTORICAL.format(
@@ -2804,62 +2837,197 @@ class CommunityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
     @transaction.atomic
     def rename(self, request, *args, **kwargs):
         instance = self.get_object()
-        rename_community_serializer = RenameCommunitySerializer(
-            data=request.data, context={"request": request}
-        )
-        rename_community_serializer.is_valid(raise_exception=True)
-        new_community = instance.copy_for_rename(request)
 
-        # Apply the taxonomy details to the new community
-        community_taxonomy, created = CommunityTaxonomy.objects.get_or_create(
-            community=new_community
-        )
-        if created:
-            logger.info(f"Created new taxonomy instance for community {new_community}")
-        serializer = SaveCommunityTaxonomySerializer(
-            community_taxonomy, data=rename_community_serializer.data
+        rename_community_request_data = request.data
+        rename_community_id = rename_community_request_data.get("id", None)
+        processing_status_for_original_after_rename = rename_community_request_data.get(
+            "processing_status_for_original_after_rename", None
         )
 
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+        if not processing_status_for_original_after_rename:
+            raise serializers.ValidationError(
+                "No processing_status_for_original_after_rename provided"
+            )
+
+        resulting_community = None
+        if not rename_community_id:
+            taxonomy_details = rename_community_request_data.get(
+                "taxonomy_details", None
+            )
+            rename_community_serializer = RenameCommunitySerializer(
+                data=taxonomy_details, context={"request": request}
+            )
+            rename_community_serializer.is_valid(raise_exception=True)
+
+            resulting_community = instance.copy_for_rename(
+                request,
+                rename_community_serializer_data=rename_community_serializer.validated_data,
+            )
+
+            # Log community action for the new community
+            resulting_community.log_user_action(
+                CommunityUserAction.ACTION_CREATED_FROM_RENAME_COMMUNITY.format(
+                    resulting_community.community_number, instance.community_number
+                ),
+                request,
+            )
+
+            # Create a log entry for the new community against the user
+            request.user.log_user_action(
+                CommunityUserAction.ACTION_CREATED_FROM_RENAME_COMMUNITY.format(
+                    resulting_community.community_number, instance.community_number
+                ),
+                request,
+            )
+        else:
+            try:
+                resulting_community = Community.objects.get(
+                    id=rename_community_id,
+                    processing_status__in=[
+                        Community.PROCESSING_STATUS_DRAFT,
+                        Community.PROCESSING_STATUS_ACTIVE,
+                        Community.PROCESSING_STATUS_HISTORICAL,
+                    ],
+                )
+            except Community.DoesNotExist:
+                raise serializers.ValidationError(
+                    f"No community with id {rename_community_id} and processing status of "
+                    "Active, Draft or Historical exists"
+                )
+            instance.copy_for_rename(request, resulting_community)
+
+            if (
+                resulting_community.processing_status
+                == Community.PROCESSING_STATUS_DRAFT
+            ):
+                resulting_community.processing_status = (
+                    Community.PROCESSING_STATUS_ACTIVE
+                )
+                resulting_community.submitter = request.user.id
+                resulting_community.save(version_user=request.user)
+
+                # Log community action for the draft community
+                resulting_community.log_user_action(
+                    CommunityUserAction.ACTION_ACTIVATED_FROM_RENAME_COMMUNITY.format(
+                        resulting_community.community_number, instance.community_number
+                    ),
+                    request,
+                )
+
+                # Create a log entry for the draft community against the user
+                request.user.log_user_action(
+                    CommunityUserAction.ACTION_ACTIVATED_FROM_RENAME_COMMUNITY.format(
+                        resulting_community.community_number, instance.community_number
+                    ),
+                    request,
+                )
+
+            elif (
+                resulting_community.processing_status
+                == Community.PROCESSING_STATUS_HISTORICAL
+            ):
+                resulting_community.processing_status = (
+                    Community.PROCESSING_STATUS_ACTIVE
+                )
+                resulting_community.save(version_user=request.user)
+
+                # Log community action for the historical community
+                resulting_community.log_user_action(
+                    CommunityUserAction.ACTION_REACTIVATED_FROM_RENAME_COMMUNITY.format(
+                        resulting_community.community_number, instance.community_number
+                    ),
+                    request,
+                )
+
+                # Create a log entry for the historical community against the user
+                request.user.log_user_action(
+                    CommunityUserAction.ACTION_REACTIVATED_FROM_RENAME_COMMUNITY.format(
+                        resulting_community.community_number, instance.community_number
+                    ),
+                    request,
+                )
+
+        if (
+            processing_status_for_original_after_rename
+            == Community.PROCESSING_STATUS_HISTORICAL
+        ):
+            instance.processing_status = Community.PROCESSING_STATUS_HISTORICAL
+            instance.save(version_user=request.user)
+
+            instance.log_user_action(
+                CommunityUserAction.ACTION_RENAME_COMMUNITY_MADE_HISTORICAL.format(
+                    instance.community_number, resulting_community.community_number
+                ),
+                request,
+            )
+            request.user.log_user_action(
+                CommunityUserAction.ACTION_RENAME_COMMUNITY_MADE_HISTORICAL.format(
+                    instance.community_number, resulting_community.community_number
+                ),
+                request,
+            )
+
+            # If there is an approved conservation status for this community, close it
+            active_conservation_status = ConservationStatus.objects.filter(
+                community=instance,
+                processing_status=ConservationStatus.PROCESSING_STATUS_APPROVED,
+            ).first()
+            if active_conservation_status:
+                active_conservation_status.customer_status = (
+                    ConservationStatus.CUSTOMER_STATUS_CLOSED
+                )
+                active_conservation_status.processing_status = (
+                    ConservationStatus.PROCESSING_STATUS_CLOSED
+                )
+                active_conservation_status.save(version_user=request.user)
+
+                active_conservation_status.log_user_action(
+                    ConservationStatus.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_RENAME.format(
+                        active_conservation_status.conservation_status_number
+                    ),
+                    request,
+                )
+                request.user.log_user_action(
+                    ConservationStatus.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_RENAME.format(
+                        active_conservation_status.conservation_status_number
+                    ),
+                    request,
+                )
+        else:
+            # Log action against original community
+            instance.log_user_action(
+                CommunityUserAction.ACTION_RENAME_COMMUNITY_RETAINED.format(
+                    instance.community_number, resulting_community.community_number
+                ),
+                request,
+            )
+
+            # Create a log entry for original community against the user
+            request.user.log_user_action(
+                CommunityUserAction.ACTION_RENAME_COMMUNITY_RETAINED.format(
+                    instance.community_number, resulting_community.community_number
+                ),
+                request,
+            )
+
+        # Reassign all occurrences from instance to resulting
+        occurrences = Occurrence.objects.filter(community=instance)
+        for occurrence in occurrences:
+            occurrence.community = resulting_community
+            occurrence.save()
 
         serializer = InternalCommunitySerializer(
-            new_community, context={"request": request}
+            resulting_community, context={"request": request}
         )
-
-        # Log action against original community
-        instance.log_user_action(
-            CommunityUserAction.ACTION_RENAME_COMMUNITY.format(
-                instance.community_number, new_community.community_number
-            ),
-            request,
+        original_made_historical = (
+            True
+            if processing_status_for_original_after_rename
+            == Community.PROCESSING_STATUS_HISTORICAL
+            else False
         )
-
-        # Create a log entry for original community against the user
-        request.user.log_user_action(
-            CommunityUserAction.ACTION_RENAME_COMMUNITY.format(
-                instance.community_number, new_community.community_number
-            ),
-            request,
+        send_community_rename_email_notification(
+            request, instance, resulting_community, original_made_historical
         )
-
-        # Log community action for the new communtiy
-        new_community.log_user_action(
-            CommunityUserAction.ACTION_CREATED_FROM_RENAME_COMMUNITY.format(
-                new_community.community_number, instance.community_number
-            ),
-            request,
-        )
-
-        # Create a log entry for new community against the user
-        request.user.log_user_action(
-            CommunityUserAction.ACTION_CREATED_FROM_RENAME_COMMUNITY.format(
-                new_community.community_number, instance.community_number
-            ),
-            request,
-        )
-
-        send_community_rename_email_notification(request, instance, new_community)
 
         return Response(serializer.data)
 

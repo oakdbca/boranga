@@ -23,7 +23,7 @@
                         </div>
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item bg-transparent">
-                                All fields, document and threats will be copied
+                                All fields, documents and threats will be copied
                                 from
                                 <span class="fw-bold"
                                     >{{
@@ -35,13 +35,10 @@
                                             .taxonomy_details.community_name
                                     }}</span
                                 >
-                                to the new community record
+                                to the resulting community record
                             </li>
                             <li class="list-group-item bg-transparent">
-                                Please modify the taxonomy details for the new
-                                community then click 'Finalise Rename Community'
-                            </li>
-                            <li class="list-group-item bg-transparent">
+                                All occurrences of
                                 <span class="fw-bold"
                                     >{{
                                         species_community_original.community_number
@@ -52,26 +49,200 @@
                                             .taxonomy_details.community_name
                                     }}</span
                                 >
-                                will be made historical (it may be reactivated
-                                using rename, split or combine at a later date)
+                                will be reassigned to the new community record
+                            </li>
+                            <li class="list-group-item bg-transparent">
+                                If
+                                <span class="fw-bold"
+                                    >{{
+                                        species_community_original.community_number
+                                    }}
+                                    -
+                                    {{
+                                        species_community_original
+                                            .taxonomy_details.community_name
+                                    }}</span
+                                >
+                                is made historical, it may be reactivated using
+                                rename at a later date
                             </li>
                         </ul>
                     </alert>
                 </div>
-                <div class="row">
-                    <FormSection
-                        v-if="new_community"
-                        :form-collapse="false"
-                        label="New Community Taxonomy Information"
-                        Index="new-community"
-                    >
-                        <form
-                            class="form-horizontal"
-                            name="rename-community-form"
-                        >
-                            <alert v-if="errors" type="danger"
-                                ><strong>{{ errors }}</strong></alert
+                <FormSection
+                    v-if="rename_community"
+                    :form-collapse="false"
+                    label="Select Community to Rename To"
+                    Index="community-taxonomy-information"
+                >
+                    <form class="form-horizontal" name="rename-community-form">
+                        <div class="row mb-3 align-items-center">
+                            <label
+                                class="col-form-label col-sm-3 form-label fw-bold d-block"
+                                >Rename to:</label
                             >
+                            <div class="col-sm-9">
+                                <div
+                                    class="d-flex flex-wrap align-items-center gap-4"
+                                >
+                                    <div class="form-check form-check-inline">
+                                        <input
+                                            class="form-check-input"
+                                            type="radio"
+                                            name="renameOption"
+                                            id="renameExisting2"
+                                            value="existing"
+                                            v-model="renameOption"
+                                        />
+                                        <label
+                                            class="form-check-label"
+                                            for="renameExisting2"
+                                            >Existing Community</label
+                                        >
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input
+                                            class="form-check-input"
+                                            type="radio"
+                                            name="renameOption"
+                                            id="renameNew2"
+                                            value="new"
+                                            v-model="renameOption"
+                                        />
+                                        <label
+                                            class="form-check-label"
+                                            for="renameNew2"
+                                            >New Community</label
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <alert v-if="errors" type="danger"
+                            ><strong>{{ errors }}</strong></alert
+                        >
+                        <template v-if="renameOption === 'existing'">
+                            <div class="row mb-3">
+                                <label
+                                    for="community_name_lookup_rename_community"
+                                    class="col-sm-3 control-label fw-bold"
+                                    >Community Name:
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <div class="col-sm-9">
+                                    <div id="rename_community_select2_parent">
+                                        <select
+                                            id="community_name_lookup_rename_community"
+                                            ref="community_name_lookup_rename_community"
+                                            class="form-select"
+                                        ></select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                v-if="renameCommunityFetched"
+                                class="row mb-3 border-top pt-3"
+                            >
+                                <div class="col">
+                                    <FormSection
+                                        :form-collapse="false"
+                                        label="Selected Existing Community"
+                                        Index="selected-rename-taxonomy"
+                                    >
+                                        <div class="row mb-3">
+                                            <label
+                                                for="community_name"
+                                                class="col-sm-3 control-label"
+                                                >Community Name:
+                                            </label>
+                                            <div class="col-sm-9">
+                                                <textarea
+                                                    id="community_name"
+                                                    v-model="
+                                                        rename_community
+                                                            .taxonomy_details
+                                                            .community_name
+                                                    "
+                                                    :disabled="true"
+                                                    class="form-control"
+                                                    rows="1"
+                                                    placeholder=""
+                                                />
+                                            </div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <label
+                                                for="community_migrated_id"
+                                                class="col-sm-3 control-label"
+                                                >Community ID:
+                                            </label>
+                                            <div class="col-sm-9">
+                                                <input
+                                                    id="community_migrated_id"
+                                                    v-model="
+                                                        rename_community
+                                                            .taxonomy_details
+                                                            .community_migrated_id
+                                                    "
+                                                    type="text"
+                                                    class="form-control"
+                                                    :disabled="true"
+                                                    placeholder=""
+                                                />
+                                            </div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <label
+                                                class="col-sm-3 control-label"
+                                                >Status:
+                                            </label>
+                                            <div class="col-sm-9">
+                                                <span
+                                                    class="badge"
+                                                    :class="
+                                                        renameCommunityBadgeClass
+                                                    "
+                                                >
+                                                    {{
+                                                        rename_community.processing_status
+                                                    }}
+                                                </span>
+                                                <template
+                                                    v-if="
+                                                        [
+                                                            'Active',
+                                                            'Historical',
+                                                        ].includes(
+                                                            rename_community.processing_status
+                                                        )
+                                                    "
+                                                >
+                                                    -
+                                                    <span
+                                                        class="badge"
+                                                        :class="
+                                                            rename_community
+                                                                .publishing_status
+                                                                .public_status ===
+                                                            'Public'
+                                                                ? 'bg-success'
+                                                                : 'bg-secondary'
+                                                        "
+                                                    >
+                                                        {{
+                                                            rename_community
+                                                                .publishing_status
+                                                                .public_status
+                                                        }}
+                                                    </span>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </FormSection>
+                                </div>
+                            </div>
+                        </template>
+                        <template v-if="renameOption === 'new'">
                             <div class="row border-bottom mb-4 pb-3">
                                 <label
                                     for=""
@@ -111,7 +282,7 @@
                                         id="community_name"
                                         ref="community_name"
                                         v-model="
-                                            new_community.taxonomy_details
+                                            rename_community.taxonomy_details
                                                 .community_name
                                         "
                                         class="form-control"
@@ -132,7 +303,7 @@
                                         id="community_migrated_id"
                                         ref="community_migrated_id"
                                         v-model="
-                                            new_community.taxonomy_details
+                                            rename_community.taxonomy_details
                                                 .community_migrated_id
                                         "
                                         type="text"
@@ -149,7 +320,7 @@
                                     <textarea
                                         id="community_description"
                                         v-model="
-                                            new_community.taxonomy_details
+                                            rename_community.taxonomy_details
                                                 .community_description
                                         "
                                         class="form-control"
@@ -166,7 +337,7 @@
                                         "
                                         class="btn btn-primary w-100"
                                         @click.prevent="
-                                            new_community.taxonomy_details.community_description =
+                                            rename_community.taxonomy_details.community_description =
                                                 species_community_original.taxonomy_details.community_description
                                         "
                                     >
@@ -185,7 +356,7 @@
                                     <textarea
                                         id="community_previous_name"
                                         v-model="
-                                            new_community.taxonomy_details
+                                            rename_community.taxonomy_details
                                                 .previous_name
                                         "
                                         class="form-control"
@@ -200,7 +371,7 @@
                                         "
                                         class="btn btn-primary w-100"
                                         @click.prevent="
-                                            new_community.taxonomy_details.previous_name =
+                                            rename_community.taxonomy_details.previous_name =
                                                 species_community_original.taxonomy_details.previous_name
                                         "
                                     >
@@ -219,7 +390,7 @@
                                     <textarea
                                         id="name_authority"
                                         v-model="
-                                            new_community.taxonomy_details
+                                            rename_community.taxonomy_details
                                                 .name_authority
                                         "
                                         rows="1"
@@ -235,7 +406,7 @@
                                         "
                                         class="btn btn-primary w-100"
                                         @click.prevent="
-                                            new_community.taxonomy_details.name_authority =
+                                            rename_community.taxonomy_details.name_authority =
                                                 species_community_original.taxonomy_details.name_authority
                                         "
                                     >
@@ -254,7 +425,7 @@
                                     <textarea
                                         id="community_comment"
                                         v-model="
-                                            new_community.taxonomy_details
+                                            rename_community.taxonomy_details
                                                 .name_comments
                                         "
                                         class="form-control"
@@ -269,7 +440,7 @@
                                         "
                                         class="btn btn-primary w-100"
                                         @click.prevent="
-                                            new_community.taxonomy_details.name_comments =
+                                            rename_community.taxonomy_details.name_comments =
                                                 species_community_original.taxonomy_details.name_comments
                                         "
                                     >
@@ -280,65 +451,87 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="row mb-2">
-                                <div class="col-sm-3"></div>
-                                <div class="col-sm-9">
-                                    <button
-                                        class="btn btn-primary float-end mt-2"
-                                        :disabled="
-                                            !new_community.taxonomy_details
-                                                .community_name ||
-                                            !new_community.taxonomy_details
-                                                .community_migrated_id
-                                        "
-                                        @click.prevent="finaliseRenameCommunity"
-                                    >
-                                        <i class="bi bi-check2-circle"></i>
-                                        Finalise Rename Community<template
-                                            v-if="finaliseCommunityLoading"
-                                        >
-                                            <span
-                                                class="spinner-border spinner-border-sm"
-                                                role="status"
-                                                aria-hidden="true"
-                                            ></span>
-                                            <span class="visually-hidden"
-                                                >Loading...</span
-                                            ></template
-                                        >
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </FormSection>
-                    <FormSection
-                        :form-collapse="false"
-                        :label="`Original Community - ${species_community_original.community_number} - ${species_community_original.taxonomy_details.community_name}`"
-                        Index="original-community"
-                    >
-                        <div>
-                            <div class="col-md-12">
-                                <FormSpeciesCommunities
-                                    v-if="species_community_original"
-                                    id="rename_community"
-                                    ref="rename_community"
-                                    :species_community_original="
-                                        species_community_original
+                        </template>
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-form-label col-sm-7 fw-bold"
+                                >What status would you like the original to have
+                                after the rename?:
+                                <span class="text-danger">*</span></label
+                            >
+                            <div class="col-sm-5">
+                                <select
+                                    class="form-select"
+                                    v-model="
+                                        processingStatusForOriginalAfterRename
                                     "
-                                    :species_community="
-                                        species_community_original
-                                    "
-                                    :is_internal="true"
-                                    :is_readonly="true"
-                                    :rename_species="true"
                                 >
-                                    // rename=true used to make only taxon
-                                    select editable on form
-                                </FormSpeciesCommunities>
+                                    <option disabled :value="null">
+                                        Select status...
+                                    </option>
+                                    <option value="historical">
+                                        Make Historical
+                                    </option>
+                                    <option value="active">Leave Active</option>
+                                </select>
                             </div>
                         </div>
-                    </FormSection>
-                </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-3"></div>
+                            <div class="col-sm-9">
+                                <button
+                                    class="btn btn-primary float-end mt-2"
+                                    :disabled="
+                                        !rename_community.taxonomy_details
+                                            .community_name ||
+                                        !rename_community.taxonomy_details
+                                            .community_migrated_id ||
+                                        !processingStatusForOriginalAfterRename
+                                    "
+                                    @click.prevent="finaliseRenameCommunity"
+                                >
+                                    <i class="bi bi-check2-circle"></i>
+                                    Finalise Rename Community<template
+                                        v-if="finaliseCommunityLoading"
+                                    >
+                                        <span
+                                            class="spinner-border spinner-border-sm"
+                                            role="status"
+                                            aria-hidden="true"
+                                        ></span>
+                                        <span class="visually-hidden"
+                                            >Loading...</span
+                                        ></template
+                                    >
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </FormSection>
+                <FormSection
+                    :form-collapse="false"
+                    :label="`Original Community - ${species_community_original.community_number} - ${species_community_original.taxonomy_details.community_name}`"
+                    Index="original-community"
+                >
+                    <div>
+                        <div class="col-md-12">
+                            <FormSpeciesCommunities
+                                v-if="species_community_original"
+                                id="rename_community"
+                                ref="rename_community"
+                                :species_community_original="
+                                    species_community_original
+                                "
+                                :species_community="species_community_original"
+                                :is_internal="true"
+                                :is_readonly="true"
+                                :rename_species="true"
+                            >
+                                // rename=true used to make only taxon select
+                                editable on form
+                            </FormSpeciesCommunities>
+                        </div>
+                    </div>
+                </FormSection>
             </div>
             <template #footer>
                 <div>
@@ -383,9 +576,15 @@ export default {
     },
     data: function () {
         return {
-            new_community: null,
+            rename_community: null,
             isModalOpen: false,
+            renameOption: 'existing',
+            community_display: '',
+            taxon_previous_name: '',
             finaliseCommunityLoading: false,
+            select2Initialised: false,
+            renameCommunityFetched: false,
+            processingStatusForOriginalAfterRename: null,
             errors: null,
         };
     },
@@ -396,52 +595,198 @@ export default {
         title: function () {
             return `Rename Community ${this.original_community_display}`;
         },
+        renameCommunityBadgeClass: function () {
+            if (!this.rename_community) return {};
+            return {
+                'bg-primary':
+                    this.rename_community.processing_status === 'Active',
+                'bg-secondary':
+                    this.rename_community.processing_status === 'Draft',
+                'bg-dark':
+                    this.rename_community.processing_status === 'Historical',
+            };
+        },
     },
     watch: {
-        isModalOpen: function (val) {
+        isModalOpen(val) {
             if (val) {
                 this.$nextTick(() => {
-                    this.new_community = structuredClone(
+                    this.rename_community = structuredClone(
                         toRaw(this.species_community_original)
                     );
-                    this.new_community.id = null;
-                    this.new_community.community_number = '';
-                    this.new_community.taxonomy_details.community_id = null;
-                    this.new_community.taxonomy_details.community_name = null;
-                    this.new_community.taxonomy_details.community_migrated_id =
+                    this.rename_community.id = null;
+                    this.rename_community.community_number = '';
+                    this.rename_community.taxonomy_details.community_id = null;
+                    this.rename_community.taxonomy_details.community_name =
                         null;
-                    this.new_community.taxonomy_details.previous_name =
+                    this.rename_community.taxonomy_details.community_migrated_id =
+                        null;
+                    this.rename_community.taxonomy_details.previous_name =
                         this.species_community_original.taxonomy_details.community_name;
                     this.$nextTick(() => {
-                        this.$refs.community_name.focus();
+                        if (this.renameOption === 'existing') {
+                            this.select2Initialised = false;
+                            this.initialiseCommunityNameLookup(() => {
+                                this.openAndFocusSelect2();
+                            });
+                        }
                     });
+                });
+            } else {
+                this.destroySelect2();
+            }
+        },
+        renameOption(val, oldVal) {
+            if (oldVal === 'existing' && val !== 'existing') {
+                this.destroySelect2();
+            }
+            if (val === 'existing') {
+                this.$nextTick(() => {
+                    this.select2Initialised = false;
+                    this.initialiseCommunityNameLookup(() => {
+                        this.openAndFocusSelect2();
+                    });
+                });
+            } else {
+                this.renameCommunityFetched = false;
+                this.$nextTick(() => {
+                    this.resetForm();
+                    this.$refs.community_name &&
+                        this.$refs.community_name.focus();
                 });
             }
         },
     },
+    beforeUnmount() {
+        this.destroySelect2();
+    },
     methods: {
+        initialiseCommunityNameLookup(callback) {
+            const el = this.$refs.community_name_lookup_rename_community;
+            if (!el) return;
+            if (this.select2Initialised) {
+                if (callback) this.$nextTick(callback);
+                return;
+            }
+            const vm = this;
+            $(el)
+                .select2({
+                    minimumInputLength: 2,
+                    dropdownParent: $('#rename_community_select2_parent'),
+                    theme: 'bootstrap-5',
+                    allowClear: true,
+                    placeholder: 'Select Community Name',
+                    ajax: {
+                        url: api_endpoints.community_name_lookup,
+                        dataType: 'json',
+                        data(params) {
+                            return {
+                                term: params.term,
+                                type: 'public',
+                                group_type_id:
+                                    vm.species_community_original.group_type_id,
+                            };
+                        },
+                    },
+                })
+                .on('select2:select', function (e) {
+                    vm.fetchCommunity(e.params.data.id);
+                })
+                .on('select2:unselect', function () {
+                    vm.resetForm();
+                    vm.renameCommunityFetched = false;
+                })
+                .on('select2:open', function () {
+                    const searchField = document.querySelector(
+                        '[aria-controls="select2-community_name_lookup_rename_community-results"]'
+                    );
+                    searchField && searchField.focus();
+                });
+            this.select2Initialised = true;
+            this.$nextTick(() => callback && callback());
+        },
+        openAndFocusSelect2() {
+            const el = this.$refs.community_name_lookup_rename_community;
+            if (!el) return;
+            // Ensure open after any reflow
+            this.$nextTick(() => {
+                try {
+                    $(el).select2('open');
+                } catch {
+                    /* ignore */
+                }
+            });
+        },
+        destroySelect2() {
+            const el = this.$refs.community_name_lookup_rename_community;
+            if (el && this.select2Initialised) {
+                try {
+                    $(el).off().select2('destroy');
+                } catch {
+                    /* ignore */
+                }
+            }
+            this.select2Initialised = false;
+        },
+        fetchCommunity: function (community_id) {
+            let vm = this;
+            fetch(api_endpoints.community + '/' + community_id)
+                .then(async (response) => {
+                    const data = await response.json();
+                    if (!response.ok) {
+                        swal.fire({
+                            title: 'Error fetching community',
+                            text: data,
+                            icon: 'error',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            },
+                        });
+                        return;
+                    }
+                    vm.rename_community.id = data.id;
+                    vm.rename_community.taxonomy_id = data.taxonomy_id;
+                    vm.rename_community.processing_status =
+                        data.processing_status;
+                    vm.rename_community.publishing_status.public_status =
+                        data.publishing_status.public_status;
+                    vm.rename_community.taxonomy_details =
+                        data.taxonomy_details;
+                    vm.renameCommunityFetched = true;
+                })
+                .catch(async (response) => {
+                    this.errors = await response.json();
+                });
+        },
         resetForm: function () {
-            this.new_community.taxonomy_details.community_name = '';
-            this.new_community.taxonomy_details.community_migrated_id = '';
-            this.new_community.taxonomy_details.community_description = '';
-            this.new_community.taxonomy_details.previous_name =
-                this.species_community_original.taxonomy_details.community_name;
-            this.new_community.taxonomy_details.name_authority = '';
-            this.new_community.taxonomy_details.name_comments = '';
-            this.$refs.community_name.focus();
+            this.rename_community.id = null;
+            this.rename_community.taxonomy_id = null;
+            this.rename_community.taxonomy_details = {
+                community_name: '',
+                community_migrated_id: '',
+                community_description: '',
+                previous_name:
+                    this.species_community_original.taxonomy_details
+                        .community_name,
+                name_authority: '',
+                name_comments: '',
+            };
+            if (this.$refs.community_name) {
+                this.$refs.community_name.focus();
+            }
         },
         populateFromOriginalCommunity: function () {
-            this.new_community.taxonomy_details.community_name =
+            this.rename_community.taxonomy_details.community_name =
                 this.species_community_original.taxonomy_details.community_name;
-            this.new_community.taxonomy_details.community_migrated_id =
+            this.rename_community.taxonomy_details.community_migrated_id =
                 this.species_community_original.taxonomy_details.community_migrated_id;
-            this.new_community.taxonomy_details.community_description =
+            this.rename_community.taxonomy_details.community_description =
                 this.species_community_original.taxonomy_details.community_description;
-            this.new_community.taxonomy_details.previous_name =
+            this.rename_community.taxonomy_details.previous_name =
                 this.species_community_original.taxonomy_details.previous_name;
-            this.new_community.taxonomy_details.name_authority =
+            this.rename_community.taxonomy_details.name_authority =
                 this.species_community_original.taxonomy_details.name_authority;
-            this.new_community.taxonomy_details.name_comments =
+            this.rename_community.taxonomy_details.name_comments =
                 this.species_community_original.taxonomy_details.name_comments;
             this.$refs.community_name.focus();
         },
@@ -470,7 +815,7 @@ export default {
         finaliseRenameCommunity: function () {
             let vm = this;
             if (
-                this.new_community.taxonomy_details.community_name ===
+                this.rename_community.taxonomy_details.community_name ===
                 this.species_community_original.taxonomy_details.community_name
             ) {
                 swal.fire({
@@ -486,7 +831,7 @@ export default {
                 return;
             }
             if (
-                this.new_community.taxonomy_details.community_migrated_id ===
+                this.rename_community.taxonomy_details.community_migrated_id ===
                 this.species_community_original.taxonomy_details
                     .community_migrated_id
             ) {
@@ -502,9 +847,21 @@ export default {
                 });
                 return;
             }
+            let html = `<p>Are you sure you want to rename community '${this.species_community_original.taxonomy_details.community_name}' to '${this.rename_community.taxonomy_details.community_name}'?</p>`;
+            if (vm.rename_community.id) {
+                html += `<p>Taxonomy details for the existing community will be overwritten from the original community.</p>`;
+            }
+
+            if (vm.processingStatusForOriginalAfterRename == 'historical') {
+                html += `<p>The original community will be made historical (and if an approved conservation status exists, it will be closed).</p>`;
+            } else {
+                html += `<p>The original community will remain active (and if an approved conservation status exists, it will remain approved).</p>`;
+            }
+
+            html += `<p>Any and all occurrences from the original community will be moved to the resulting community.</p>`;
             swal.fire({
                 title: `Rename Community`,
-                text: `Are you sure you want to rename community ${this.species_community_original.taxonomy_details.community_name} to ${this.new_community.taxonomy_details.community_name}?`,
+                html: html,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: 'Rename Community',
@@ -516,6 +873,8 @@ export default {
             })
                 .then((swalresult) => {
                     vm.finaliseCommunityLoading = true;
+                    vm.rename_community.processing_status_for_original_after_rename =
+                        vm.processingStatusForOriginalAfterRename;
                     if (swalresult.isConfirmed) {
                         fetch(
                             api_endpoints.rename_community(
@@ -526,40 +885,33 @@ export default {
                                 headers: {
                                     'Content-Type': 'application/json',
                                 },
-                                body: JSON.stringify(
-                                    vm.new_community.taxonomy_details
-                                ),
+                                body: JSON.stringify(vm.rename_community),
                             }
-                        )
-                            .then(async (response) => {
-                                console.log(response);
-                                if (response.status === 200) {
-                                    return response.json();
-                                } else {
-                                    throw new Error(
-                                        'Failed to rename community'
-                                    );
-                                }
-                            })
-                            .then((new_community_json) => {
-                                console.log(new_community_json);
-                                vm.$router.push({
-                                    name: 'internal-species-communities',
-                                    params: {
-                                        species_community_id:
-                                            new_community_json.id,
-                                    },
-                                    query: {
-                                        group_type_name:
-                                            new_community_json.group_type,
+                        ).then(async (response) => {
+                            const data = await response.json();
+                            if (!response.ok) {
+                                swal.fire({
+                                    title: 'Error renaming community',
+                                    text: JSON.stringify(data),
+                                    icon: 'error',
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary',
                                     },
                                 });
-                                vm.$router.go();
-                                vm.isModalOpen = false;
-                            })
-                            .catch(async (response) => {
-                                this.errors = await response.json();
+                                return;
+                            }
+                            vm.$router.push({
+                                name: 'internal-species-communities',
+                                params: {
+                                    species_community_id: data.id,
+                                },
+                                query: {
+                                    group_type_name: data.group_type,
+                                },
                             });
+                            vm.$router.go();
+                            vm.isModalOpen = false;
+                        });
                     }
                 })
                 .finally(() => {

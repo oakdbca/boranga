@@ -58,8 +58,3 @@ def dict_get(d, key):
         return d.get(key, "")
     except AttributeError:
         return ""
-
-
-@register.simple_tag()
-def build_tag():
-    return settings.BUILD_TAG

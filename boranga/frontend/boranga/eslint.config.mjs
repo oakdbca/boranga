@@ -14,7 +14,6 @@ const projectGlobals = {
     swal: true,
     bootstrap: true,
     env: true,
-    _: true, // Lodash
 };
 
 export default [

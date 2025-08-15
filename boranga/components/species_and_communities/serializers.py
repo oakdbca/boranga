@@ -1330,6 +1330,9 @@ class InternalCommunitySerializer(BaseCommunitySerializer):
     can_user_edit = serializers.SerializerMethodField()
     can_add_log = serializers.SerializerMethodField()
     renamed_from = SimpleCommunityDisplaySerializer(read_only=True, allow_null=True)
+    renamed_to = SimpleCommunityDisplaySerializer(
+        many=True, read_only=True, allow_null=True
+    )
     readonly = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -1365,6 +1368,7 @@ class InternalCommunitySerializer(BaseCommunitySerializer):
             "area_occurrence_convex_hull_km2",
             "can_add_log",
             "renamed_from",
+            "renamed_to",
             "department_file_numbers",
         )
 

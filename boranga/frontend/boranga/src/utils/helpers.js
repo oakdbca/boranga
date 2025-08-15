@@ -1,6 +1,66 @@
 import constants from './constants';
 
 export default {
+    truncate(text, { length = 30, omission = '...', separator } = {}) {
+        if (text == null) return '';
+        const str = String(text);
+        if (str.length <= length) return str;
+        const end = length - omission.length;
+        if (end < 1) return omission;
+        let slice = str.slice(0, end);
+        if (separator) {
+            const sepIdx = slice.lastIndexOf(separator);
+            if (sepIdx > -1) {
+                slice = slice.slice(0, sepIdx);
+            }
+        }
+        return slice + omission;
+    },
+    escapeAttr(value) {
+        // Normalize first so objects/arrays become readable JSON not [object Object]
+        let str;
+        if (value == null) {
+            str = '';
+        } else if (typeof value === 'string') {
+            str = value;
+        } else if (typeof value === 'number' || typeof value === 'boolean') {
+            str = String(value);
+        } else {
+            try {
+                str = JSON.stringify(value);
+            } catch {
+                str = String(value);
+            }
+        }
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    },
+    escapeHtml: function (s) {
+        if (!s) return '';
+        return s.replace(
+            /[&<>"']/g,
+            (ch) =>
+                ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;',
+                })[ch]
+        );
+    },
+    statusFromError: function (err) {
+        const s = String((err && (err.detail || err.message)) || err || '');
+        // Prefer "HTTP 502 Bad Gateway", else "HTTP 502", else bare "502"
+        const m =
+            s.match(/HTTP\s+\d{3}\s+[^\n<]+/i) ||
+            s.match(/HTTP\s+\d{3}/i) ||
+            s.match(/\b\d{3}\b/);
+        return m ? m[0] : null;
+    },
     formatError: function (err) {
         let returnStr = '';
         // object {}
@@ -123,65 +183,48 @@ export default {
         endpoint = endpoint.replace('//', '/'); // Remove duplicated '/' just in case
         return endpoint;
     },
-    dtPopover: function (value, truncate_length = 30, trigger = 'hover') {
-        var ellipsis = '...',
-            truncated = _.truncate(value, {
-                length: truncate_length,
-                omission: ellipsis,
-                separator: ' ',
-            }),
-            result = '<span>' + truncated + '</span>',
-            popTemplate = _.template(
-                '<a class="mx-0 ps-1 pe-0" href="javascript://" ' +
-                    'role="button" ' +
-                    'data-bs-toggle="popover" ' +
-                    'data-bs-trigger="' +
-                    trigger +
-                    '" ' +
-                    'data-bs-placement="top"' +
-                    'data-bs-html="true" ' +
-                    'data-bs-content="<%= text %>" ' +
-                    '><small>hover for more</small></a>'
-            );
-        if (_.endsWith(truncated, ellipsis)) {
-            result += popTemplate({
-                text: value,
-            });
+    dtPopover(value, truncate_length = 30, trigger = 'hover') {
+        const ellipsis = '...';
+        const raw = value == null ? '' : String(value);
+        const truncated = this.truncate(raw, {
+            length: truncate_length,
+            omission: ellipsis,
+            separator: ' ',
+        });
+        let result = '<span>' + truncated + '</span>';
+        if (raw.length > truncated.length) {
+            result += `<a class="mx-0 ps-1 pe-0" href="javascript://"
+                role="button"
+                data-bs-toggle="popover"
+                data-bs-trigger="${this.escapeAttr(trigger)}"
+                data-bs-placement="top"
+                data-bs-html="true"
+                data-bs-content="${this.escapeAttr(raw)}"
+            ><small>hover for more</small></a>`;
         }
         return result;
     },
-    //for when we need the text and hover link to be separated
-    dtPopoverSplit: function (value, truncate_length = 30, trigger = 'hover') {
-        var ellipsis = '...',
-            truncated = _.truncate(value, {
-                length: truncate_length,
-                omission: ellipsis,
-                separator: ' ',
-            }),
-            result = '<span>' + truncated + '</span>',
-            popTemplate = _.template(
-                '<a class="mx-0 ps-1 pe-0" href="javascript://" ' +
-                    'role="button" ' +
-                    'data-bs-toggle="popover" ' +
-                    'data-bs-trigger="' +
-                    trigger +
-                    '" ' +
-                    'data-bs-placement="top"' +
-                    'data-bs-html="true" ' +
-                    'data-bs-content="<%= text %>" ' +
-                    '><small>hover for more</small></a>'
-            );
-
-        if (_.endsWith(truncated, ellipsis)) {
-            return {
-                text: result,
-                link: popTemplate({
-                    text: value,
-                }),
-            };
-        } else {
-            return { text: result, link: '' };
+    dtPopoverSplit(value, truncate_length = 30, trigger = 'hover') {
+        const ellipsis = '...';
+        const raw = value == null ? '' : String(value);
+        const truncated = this.truncate(raw, {
+            length: truncate_length,
+            omission: ellipsis,
+            separator: ' ',
+        });
+        const text = '<span>' + truncated + '</span>';
+        if (raw.length > truncated.length) {
+            const link = `<a class="mx-0 ps-1 pe-0" href="javascript://"
+                role="button"
+                data-bs-toggle="popover"
+                data-bs-trigger="${this.escapeAttr(trigger)}"
+                data-bs-placement="top"
+                data-bs-html="true"
+                data-bs-content="${this.escapeAttr(raw)}"
+            ><small>hover for more</small></a>`;
+            return { text, link };
         }
+        return { text, link: '' };
     },
     processError: async function (err) {
         console.log(err);

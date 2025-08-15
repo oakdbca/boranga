@@ -1,4 +1,3 @@
-import hashlib
 import logging
 import os
 import sys
@@ -26,9 +25,6 @@ SYSTEM_MAINTENANCE_WARNING = env("SYSTEM_MAINTENANCE_WARNING", 24)  # hours
 DISABLE_EMAIL = env("DISABLE_EMAIL", False)
 SHOW_TESTS_URL = env("SHOW_TESTS_URL", False)
 SHOW_DEBUG_TOOLBAR = env("SHOW_DEBUG_TOOLBAR", False)
-BUILD_TAG = env(
-    "BUILD_TAG", hashlib.md5(os.urandom(32)).hexdigest()
-)  # URL of the Dev app.js served by webpack & express
 TIME_ZONE = "Australia/Perth"
 
 SILENCE_SYSTEM_CHECKS = env("SILENCE_SYSTEM_CHECKS", False)
@@ -343,13 +339,16 @@ SECURE_CROSS_ORIGIN_OPENER_POLICY = env(
 
 # Make sure this returns true when in local development
 # so you can use the vite dev server with hot module reloading
-USE_VITE_DEV_SERVER = RUNNING_DEVSERVER and EMAIL_INSTANCE == "DEV" and DEBUG is True
+DJANGO_VITE_DEV_MODE = RUNNING_DEVSERVER and EMAIL_INSTANCE == "DEV" and DEBUG is True
 
-STATIC_URL_PREFIX = "/static/boranga_vue/" if USE_VITE_DEV_SERVER else "boranga_vue/"
+STATIC_URL_PREFIX = "/static/boranga_vue/" if DJANGO_VITE_DEV_MODE else "boranga_vue/"
 
 DJANGO_VITE = {
     "default": {
-        "dev_mode": USE_VITE_DEV_SERVER,
+        "dev_mode": DJANGO_VITE_DEV_MODE,
+        "manifest_path": os.path.join(
+            BASE_DIR, "boranga", "static", "boranga_vue", "manifest.json"
+        ),
         "dev_server_host": "localhost",  # Default host for vite (can change if needed)
         "dev_server_port": 5173,  # Default port for vite (can change if needed)
         "static_url_prefix": STATIC_URL_PREFIX,

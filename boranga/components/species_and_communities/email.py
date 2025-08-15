@@ -445,89 +445,48 @@ def send_user_community_create_email_notification(request, community_proposal):
 
 
 def send_community_rename_email_notification(
-    request, community_proposal, new_community
+    request,
+    original_community,
+    resulting_community,
+    original_made_historical,
 ):
     email = RenameCommunitySendNotificationEmail()
 
-    url = request.build_absolute_uri(
-        reverse("internal-conservation-status-dashboard", kwargs={})
-    )
-    community_url = request.build_absolute_uri(
+    original_community_url = request.build_absolute_uri(
         reverse(
             "internal-community-detail",
-            kwargs={"community_proposal_pk": community_proposal.id},
+            kwargs={"community_proposal_pk": original_community.id},
         )
     )
-    community_url = convert_external_url_to_internal_url(community_url)
+    original_community_url = convert_external_url_to_internal_url(
+        original_community_url
+    )
 
-    new_community_url = request.build_absolute_uri(
+    resulting_community_url = request.build_absolute_uri(
         reverse(
             "internal-community-detail",
-            kwargs={"community_proposal_pk": new_community.id},
+            kwargs={"community_proposal_pk": resulting_community.id},
         )
     )
-    new_community_url = convert_external_url_to_internal_url(new_community_url)
+    resulting_community_url = convert_external_url_to_internal_url(
+        resulting_community_url
+    )
 
     notification_emails = SystemEmailGroup.emails_by_group_and_area(
-        group_type=community_proposal.group_type,
+        group_type=original_community.group_type,
     )
 
     all_ccs = notification_emails
 
-    conservation_status_url = []
-    conservation_status_list = community_proposal.conservation_status.filter(
-        processing_status=ConservationStatus.PROCESSING_STATUS_APPROVED
-    )
-    if conservation_status_list:
-        conservation_status_url = request.build_absolute_uri(
-            reverse(
-                "internal-conservation-status-detail",
-                kwargs={"cs_proposal_pk": conservation_status_list[0].id},
-            )
-        )
-        cs_notification_emails = SystemEmailGroup.emails_by_group_and_area(
-            group_type=community_proposal.group_type,
-            area=SystemEmailGroup.AREA_CONSERVATION_STATUS,
-        )
-        all_ccs.extend(cs_notification_emails)
-
-    occurrences_url = []
-    occurrences = community_proposal.occurrences.filter(
-        processing_status=Occurrence.PROCESSING_STATUS_ACTIVE
-    )
-    if occurrences:
-        for occ in occurrences:
-            occurrences_url.append(
-                {
-                    "occurrence_url": request.build_absolute_uri(
-                        reverse(
-                            "internal-occurrence-detail",
-                            kwargs={"occurrence_pk": occ.id},
-                        )
-                    ),
-                    "occurrence_number": occ.occurrence_number,
-                }
-            )
-
-        occ_notification_emails = SystemEmailGroup.emails_by_group_and_area(
-            group_type=community_proposal.group_type,
-            area=SystemEmailGroup.AREA_OCCURRENCE,
-        )
-        all_ccs.extend(occ_notification_emails)
-
     context = {
-        "community_proposal": community_proposal,
-        "url": url,
-        "community_url": community_url,
-        "new_community_url": new_community_url,
-        "new_community": new_community,
-        "conservation_status_url": conservation_status_url,
-        "occurrences_url": occurrences_url,
+        "original_community": original_community,
+        "original_community_url": original_community_url,
+        "resulting_community": resulting_community,
+        "resulting_community_url": resulting_community_url,
+        "original_made_historical": original_made_historical,
     }
 
-    all_ccs = list(set(all_ccs))
-
-    submitter_email = EmailUser.objects.get(id=community_proposal.submitter).email
+    submitter_email = EmailUser.objects.get(id=original_community.submitter).email
 
     to = request.user.email if request else submitter_email
 
@@ -538,7 +497,7 @@ def send_community_rename_email_notification(
     )
     sender = request.user if request else settings.DEFAULT_FROM_EMAIL
 
-    _log_community_email(msg, community_proposal, sender=sender)
+    _log_community_email(msg, original_community, sender=sender)
 
     return msg
 

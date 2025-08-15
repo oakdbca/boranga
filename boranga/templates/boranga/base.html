@@ -12,7 +12,6 @@
 {% system_name_short as system_name_short %}
 {% support_email as support_email %}
 {% is_django_admin as is_django_admin_user %}
-{% build_tag as build_tag %}
 
 {% block header_top_menu %}
 {% endblock %}
@@ -20,30 +19,21 @@
 {% block extra_css %}
   <link rel="icon" type="image/png" href="/static/boranga/favicon.ico" />
 
-  <link rel="stylesheet" href="{% static 'boranga/css/base.css' %}?v={{ build_tag }}" />
-  {% if not use_vite_dev_server %}
-  <link rel="stylesheet" href="{% static 'boranga_vue/css/main.css' %}?v={{ build_tag }}" />
-  {% endif %}
+  <link rel="stylesheet" href="{% static 'boranga/css/base.css' %}?v={{ GIT_COMMIT_HASH }}" />
 {% endblock %}
 
 {% block extra_js %}
-    {% if use_vite_dev_server %}
-        {% vite_hmr_client %}
-    {% endif %}
+    {% vite_hmr_client %}
 {% endblock %}
 
 {% block custom_js %}
-  <script language="javascript">
-            var env = {
-                "gis_server_url": "{{ GIS_SERVER_URL }}",
-                "user_is_authenticated": {% if request.user.is_authenticated %}true{% else %}false{% endif %},
-            }
+    <script language="javascript">
+        var env = {
+            "gis_server_url": "{{ GIS_SERVER_URL }}",
+            "user_is_authenticated": {% if request.user.is_authenticated %}true{% else %}false{% endif %},
+        }
     </script>
-    {% if use_vite_dev_server %}
-        <script type="module" src="{% vite_asset_url vue3_entry_script %}?v={{ build_tag }}"></script>
-    {% else %}
-        <script type="module" src="{% static 'boranga_vue/js/main.js' %}?v={{ build_tag }}"></script>
-    {% endif %}
+    {% vite_asset vue3_entry_script %}
 {% endblock %}
 
 {% block menu_items_left_brand %}

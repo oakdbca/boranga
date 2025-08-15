@@ -1,16 +1,26 @@
 {%  extends 'boranga/emails/base_email.txt' %}
 
 {%  block content %}
-        Community {{ community_proposal.community_number }} has been renamed. You can review the historical and new Community Profiles at:
-        Historical: {{community_url}}?group_type_name=community {{ community_proposal.community_number }} - {{ community_proposal.taxonomy.community_name }}
-        New: {{new_community_url}}?group_type_name=community {{ new_community.community_number }} - {{ new_community.taxonomy.community_name }}
-        {% if conservation_status_url %}
-            Please action for related Conservation Status here {{conservation_status_url}}
-        {% endif %}
-        {% if occurrences_url %}
-            To action related Occurrences:
-            {% for occ in occurrences_url %}
-                {{ occ.occurrence_number }}
-            {% endfor %}
-        {% endif %}
+Community:
+
+{{ original_community.community_number }} - {{ original_community.taxonomy.community_name }}
+
+(url: {{original_community_url}}?group_type_name=community)
+
+has been renamed to:
+
+{{ resulting_community.community_number }} - {{ resulting_community.taxonomy.community_name }}
+
+(url: {{resulting_community_url}}?group_type_name=community)
+
+{% if original_made_historical %}
+    The original community has been made historical.
+
+    Any approved conservation status for the original community has been closed.
+{% else %}
+    The original community has been retained and is still active.
+
+    Any approved conservation status for the original community will remain approved.
+{% endif %}
+    Any and all occurrences from the original community have been moved to the resulting community.
 {%  endblock %}
