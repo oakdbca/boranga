@@ -16,10 +16,37 @@ import { booleanWithin } from '@turf/boolean-within';
 import { polygon, multiPolygon, featureCollection } from '@turf/helpers';
 import { area } from '@turf/area';
 import { intersect } from '@turf/intersect';
+import { helpers } from '@/utils/hooks.js';
 
 // Layer to use as map base layer
 export var baselayer_name = 'mapbox-streets';
 // export var baselayer_name = 'mapbox-dark'
+
+// WMTS connection alert (displayed once per layer)
+const _wmtsAlerted = new Set();
+function _alertWMTSConnection(layerDef, err) {
+    const name =
+        (layerDef.display_title && layerDef.display_title.trim()) ||
+        layerDef.layer_name ||
+        'WMTS layer';
+    const key = `${layerDef.geoserver_url}|${layerDef.layer_name}`;
+    if (_wmtsAlerted.has(key)) return;
+    _wmtsAlerted.add(key);
+
+    const status = helpers.statusFromError(err);
+    const footerHtml = status
+        ? `Response Code: ${helpers.escapeHtml(status)}. See console for more details.`
+        : undefined;
+
+    swal.fire({
+        icon: 'error',
+        title: `Unable to load map layer: ${name}`,
+        html: `<p>Could not connect to the WMTS service.</p> <p>Please try again later.</p>`,
+        footer: footerHtml,
+        confirmButtonText: 'OK',
+        customClass: { confirmButton: 'btn btn-primary' },
+    });
+}
 
 /**
  * Returns layers at map event pixel coordinates
@@ -701,6 +728,7 @@ const _helper = {
                                 'Error fetching WMTS capabilities:',
                                 error
                             );
+                            _alertWMTSConnection(layer, error);
                         });
                 } else {
                     // WMTS from layer definition directly
