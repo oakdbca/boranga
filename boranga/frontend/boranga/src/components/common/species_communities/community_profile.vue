@@ -31,7 +31,7 @@
                     </div>
                 </div>
                 <div v-if="species_community.renamed_from" class="row mb-3">
-                    <label for="" class="col-sm-3 control-label"
+                    <label for="renamed_from" class="col-sm-3 control-label"
                         >Renamed From:</label
                     >
                     <div class="col-sm-7">
@@ -58,6 +58,47 @@
                         </a>
                     </div>
                 </div>
+                <template
+                    v-if="
+                        species_community.renamed_to &&
+                        species_community.renamed_to.length > 0
+                    "
+                >
+                    <div
+                        v-for="(renamed, index) in species_community.renamed_to"
+                        class="row mb-3"
+                        :key="renamed.id"
+                    >
+                        <label
+                            v-if="index === 0"
+                            for="renamed_to_0"
+                            class="col-sm-3 control-label"
+                            >Renamed To:</label
+                        >
+                        <div v-else class="col-sm-3"></div>
+                        <div class="col-sm-7">
+                            <textarea
+                                :id="`renamed_to_${index}`"
+                                :disabled="true"
+                                class="form-control"
+                                rows="1"
+                                placeholder=""
+                                :value="`${renamed.community_number} - ${renamed.community_name}`"
+                            />
+                        </div>
+                        <div class="col-sm-2">
+                            <a
+                                class="btn btn-primary"
+                                role="button"
+                                target="_blank"
+                                :href="`/internal/species-communities/${renamed.id}?group_type_name=${species_community.group_type}`"
+                            >
+                                <i class="bi bi-box-arrow-up-right"></i>
+                                {{ renamed.community_number }}
+                            </a>
+                        </div>
+                    </div>
+                </template>
                 <div class="row mb-3">
                     <label
                         for=""
