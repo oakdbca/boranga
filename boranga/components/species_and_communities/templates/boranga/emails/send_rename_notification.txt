@@ -1,16 +1,21 @@
 {%  extends 'boranga/emails/base_email.txt' %}
 
 {%  block content %}
-        Species {{ species_proposal.species_number }} has been renamed. You can review the historical and new Species Profiles at:
-        Historical: {{species_url}} {{ species_proposal.species_number }} - {{ species_proposal.taxonomy.scientific_name }}
-        New: {{new_species_url}} {{ new_species.species_number }} - {{ new_species.taxonomy.scientific_name }}
-        {% if conservation_status_url %}
-            Please action the related Conservation Status here {{conservation_status_url}}
-        {% endif %}
-        {% if occurrences_url %}
-            To action related Occurrences:
-            {% for occ in occurrences_url %}
-                {{ occ.occurrence_number }}
-            {% endfor %}
-        {% endif %}
+    Species
+
+    Original: {{ species_proposal.species_number }} - {{ species_proposal.taxonomy.scientific_name }}
+
+    ({{species_url}})
+
+    has been renamed to:
+
+    Resulting: {{ new_species.species_number }} - {{ new_species.taxonomy.scientific_name }}
+
+    ({{new_species_url}})
+
+    The original species has been made historical.
+
+    Any approved conservation status for the original species has been closed.
+
+    Any and all occurrences have been moved from the original species to the resulting species.
 {%  endblock %}
