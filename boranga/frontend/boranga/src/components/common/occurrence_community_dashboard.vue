@@ -544,6 +544,7 @@ export default {
                         className: 'no-export',
                     },
                     { responsivePriority: 2, targets: -2 },
+                    { responsivePriority: 4, targets: 5 },
                 ],
                 ajax: {
                     url: this.url,

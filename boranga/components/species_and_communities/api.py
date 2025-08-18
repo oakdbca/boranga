@@ -22,6 +22,7 @@ from boranga.components.conservation_status.models import (
     CommonwealthConservationList,
     ConservationChangeCode,
     ConservationStatus,
+    ConservationStatusUserAction,
     WALegislativeCategory,
     WALegislativeList,
     WAPriorityCategory,
@@ -1703,13 +1704,13 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 active_conservation_status.save(version_user=request.user)
 
                 active_conservation_status.log_user_action(
-                    ConservationStatus.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_SPLIT.format(
+                    ConservationStatusUserAction.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_SPLIT.format(
                         active_conservation_status.conservation_status_number
                     ),
                     request,
                 )
                 request.user.log_user_action(
-                    ConservationStatus.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_SPLIT.format(
+                    ConservationStatusUserAction.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_SPLIT.format(
                         active_conservation_status.conservation_status_number
                     ),
                     request,
@@ -2986,13 +2987,13 @@ class CommunityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 active_conservation_status.save(version_user=request.user)
 
                 active_conservation_status.log_user_action(
-                    ConservationStatus.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_RENAME.format(
+                    ConservationStatusUserAction.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_RENAME.format(
                         active_conservation_status.conservation_status_number
                     ),
                     request,
                 )
                 request.user.log_user_action(
-                    ConservationStatus.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_RENAME.format(
+                    ConservationStatusUserAction.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_RENAME.format(
                         active_conservation_status.conservation_status_number
                     ),
                     request,
