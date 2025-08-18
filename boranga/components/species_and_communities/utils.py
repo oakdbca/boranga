@@ -6,7 +6,10 @@ from django.db import transaction
 from django.http import HttpRequest
 from django.utils import timezone
 
-from boranga.components.conservation_status.models import ConservationStatus
+from boranga.components.conservation_status.models import (
+    ConservationStatus,
+    ConservationStatusUserAction,
+)
 from boranga.components.species_and_communities.email import (
     send_community_create_email_notification,
     send_species_create_email_notification,
@@ -153,13 +156,13 @@ def process_species_from_combine_list(
             active_conservation_status.save(version_user=request.user)
 
             active_conservation_status.log_user_action(
-                ConservationStatus.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_COMBINE.format(
+                ConservationStatusUserAction.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_COMBINE.format(
                     active_conservation_status.conservation_status_number
                 ),
                 request,
             )
             request.user.log_user_action(
-                ConservationStatus.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_COMBINE.format(
+                ConservationStatusUserAction.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_COMBINE.format(
                     active_conservation_status.conservation_status_number
                 ),
                 request,
@@ -255,13 +258,13 @@ def rename_species_original_submit(species_instance, new_species, request):
         active_conservation_status.save(version_user=request.user)
 
         active_conservation_status.log_user_action(
-            ConservationStatus.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_RENAME.format(
+            ConservationStatusUserAction.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_RENAME.format(
                 active_conservation_status.conservation_status_number
             ),
             request,
         )
         request.user.log_user_action(
-            ConservationStatus.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_RENAME.format(
+            ConservationStatusUserAction.ACTION_CLOSE_CONSERVATION_STATUS_DUE_TO_RENAME.format(
                 active_conservation_status.conservation_status_number
             ),
             request,
