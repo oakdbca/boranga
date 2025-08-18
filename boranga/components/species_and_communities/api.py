@@ -2053,12 +2053,16 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                     SpeciesUserAction.ACTION_RENAME_SPECIES_FROM_EXISTING_HISTORICAL
                 )
 
+            rename_instance = rename_deep_copy(
+                request, instance, existing_species=rename_instance
+            )
             rename_instance.processing_status = Species.PROCESSING_STATUS_ACTIVE
             rename_instance.save(version_user=request.user)
         else:
-            rename_instance = rename_deep_copy(instance, request)
+            rename_instance = rename_deep_copy(request, instance)
             rename_instance.taxonomy_id = request.data["taxonomy_id"]
-            species_form_submit(rename_instance, request)
+            rename_instance.processing_status = Species.PROCESSING_STATUS_ACTIVE
+            species_form_submit(rename_instance, request, rename=True)
 
         rename_instance.parent_species.add(instance)
 
