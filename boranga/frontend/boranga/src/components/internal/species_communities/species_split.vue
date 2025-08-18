@@ -196,174 +196,185 @@
                                                         : ''
                                                 "
                                             >
-                                                <table
-                                                    class="table table-sm"
-                                                    style="
-                                                        table-layout: fixed;
-                                                        width: 100%;
-                                                    "
+                                                <div
+                                                    class="overflow-auto"
+                                                    style="max-height: 60vh"
                                                 >
-                                                    <colgroup>
-                                                        <col
-                                                            style="width: 25%"
-                                                        />
-                                                        <col
-                                                            v-for="i in split_species_taxonomy_ids.length"
-                                                            :key="i"
-                                                            :style="{
-                                                                width:
-                                                                    abbrColPercent +
-                                                                    '%',
-                                                            }"
-                                                        />
-                                                    </colgroup>
-                                                    <thead>
-                                                        <tr>
-                                                            <th>
-                                                                Occs for
-                                                                {{
-                                                                    species_community_original
-                                                                        .taxonomy_details
-                                                                        .scientific_name
-                                                                }}
-                                                            </th>
-                                                            <th
-                                                                v-for="name in uniqueScientificNames"
-                                                                :key="
-                                                                    name.scientificName
+                                                    <table
+                                                        class="table table-sm"
+                                                        style="
+                                                            table-layout: fixed;
+                                                            width: 100%;
+                                                        "
+                                                    >
+                                                        <colgroup>
+                                                            <col
+                                                                style="
+                                                                    width: 25%;
                                                                 "
-                                                                :title="
-                                                                    name.full
-                                                                "
-                                                                class="text-center"
-                                                                :style="{
-                                                                    width:
-                                                                        abbrColPercent +
-                                                                        '%',
-                                                                }"
-                                                            >
-                                                                {{ name.abbr }}
-                                                            </th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <tr
-                                                            class="border-bottom border-dark"
-                                                        >
-                                                            <td
-                                                                class="text-muted"
-                                                            >
-                                                                Select All
-                                                            </td>
-                                                            <td
-                                                                v-for="(
-                                                                    taxonomy_id,
-                                                                    i
-                                                                ) in split_species_taxonomy_ids"
+                                                            />
+                                                            <col
+                                                                v-for="i in split_species_taxonomy_ids.length"
                                                                 :key="i"
-                                                                class="text-center"
                                                                 :style="{
                                                                     width:
                                                                         abbrColPercent +
                                                                         '%',
                                                                 }"
-                                                            >
-                                                                <div
-                                                                    class="form-check form-check-inline"
+                                                            />
+                                                        </colgroup>
+                                                        <thead>
+                                                            <tr>
+                                                                <th>
+                                                                    Occs for
+                                                                    {{
+                                                                        species_community_original
+                                                                            .taxonomy_details
+                                                                            .scientific_name
+                                                                    }}
+                                                                </th>
+                                                                <th
+                                                                    v-for="name in uniqueScientificNames"
+                                                                    :key="
+                                                                        name.scientificName
+                                                                    "
+                                                                    :title="
+                                                                        name.full
+                                                                    "
+                                                                    class="text-center"
+                                                                    :style="{
+                                                                        width:
+                                                                            abbrColPercent +
+                                                                            '%',
+                                                                    }"
                                                                 >
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        class="form-check-input mt-2"
-                                                                        @change="
-                                                                            toggleSelectAll(
-                                                                                $event,
-                                                                                taxonomy_id
-                                                                            )
-                                                                        "
-                                                                        :checked="
-                                                                            selectAllCheckedState[
+                                                                    {{
+                                                                        name.abbr
+                                                                    }}
+                                                                </th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr
+                                                                class="border-bottom border-dark"
+                                                            >
+                                                                <td
+                                                                    class="text-muted"
+                                                                >
+                                                                    Select All
+                                                                </td>
+                                                                <td
+                                                                    v-for="(
+                                                                        taxonomy_id,
+                                                                        i
+                                                                    ) in split_species_taxonomy_ids"
+                                                                    :key="i"
+                                                                    class="text-center"
+                                                                    :style="{
+                                                                        width:
+                                                                            abbrColPercent +
+                                                                            '%',
+                                                                    }"
+                                                                >
+                                                                    <div
+                                                                        class="form-check form-check-inline"
+                                                                    >
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            class="form-check-input mt-2"
+                                                                            @change="
+                                                                                toggleSelectAll(
+                                                                                    $event,
+                                                                                    taxonomy_id
+                                                                                )
+                                                                            "
+                                                                            :checked="
+                                                                                selectAllCheckedState[
+                                                                                    uniqueScientificNames[
+                                                                                        i
+                                                                                    ]
+                                                                                        .slug
+                                                                                ]
+                                                                            "
+                                                                        />
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            <tr
+                                                                v-for="occurrence in occurrences"
+                                                                :key="
+                                                                    occurrence.id
+                                                                "
+                                                                :id="
+                                                                    'occurrence-' +
+                                                                    occurrence.id
+                                                                "
+                                                                class="occurrence-assignment-row"
+                                                            >
+                                                                <td
+                                                                    class="abbr-nowrap small"
+                                                                    :title="
+                                                                        occurrence.occurrence_name
+                                                                    "
+                                                                >
+                                                                    {{
+                                                                        occurrence.occurrence_number
+                                                                    }}
+                                                                    -
+                                                                    {{
+                                                                        occurrence.occurrence_name
+                                                                    }}
+                                                                </td>
+                                                                <td
+                                                                    v-for="(
+                                                                        taxonomyId,
+                                                                        index
+                                                                    ) in split_species_taxonomy_ids"
+                                                                    :key="index"
+                                                                    class="text-center"
+                                                                    :style="{
+                                                                        width:
+                                                                            abbrColPercent +
+                                                                            '%',
+                                                                    }"
+                                                                >
+                                                                    <div
+                                                                        class="form-check form-check-inline"
+                                                                    >
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            :name="
+                                                                                'occurrence:' +
+                                                                                occurrence.id
+                                                                            "
+                                                                            :checked="
+                                                                                assignmentCheckedState[
+                                                                                    occurrence
+                                                                                        .id
+                                                                                ] ===
+                                                                                taxonomyId
+                                                                            "
+                                                                            @change="
+                                                                                onOccurrenceCheckboxChange(
+                                                                                    occurrence.id,
+                                                                                    taxonomyId,
+                                                                                    $event
+                                                                                )
+                                                                            "
+                                                                            class="form-check-input mt-2"
+                                                                            :data-slug="
                                                                                 uniqueScientificNames[
-                                                                                    i
+                                                                                    index
                                                                                 ]
                                                                                     .slug
-                                                                            ]
-                                                                        "
-                                                                    />
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                        <tr
-                                                            v-for="occurrence in occurrences"
-                                                            :key="occurrence.id"
-                                                            :id="
-                                                                'occurrence-' +
-                                                                occurrence.id
-                                                            "
-                                                            class="occurrence-assignment-row"
-                                                        >
-                                                            <td
-                                                                class="abbr-nowrap small"
-                                                                :title="
-                                                                    occurrence.occurrence_name
-                                                                "
-                                                            >
-                                                                {{
-                                                                    occurrence.occurrence_number
-                                                                }}
-                                                                -
-                                                                {{
-                                                                    occurrence.occurrence_name
-                                                                }}
-                                                            </td>
-                                                            <td
-                                                                v-for="(
-                                                                    taxonomyId,
-                                                                    index
-                                                                ) in split_species_taxonomy_ids"
-                                                                :key="index"
-                                                                class="text-center"
-                                                                :style="{
-                                                                    width:
-                                                                        abbrColPercent +
-                                                                        '%',
-                                                                }"
-                                                            >
-                                                                <div
-                                                                    class="form-check form-check-inline"
-                                                                >
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        :name="
-                                                                            'occurrence:' +
-                                                                            occurrence.id
-                                                                        "
-                                                                        :checked="
-                                                                            assignmentCheckedState[
-                                                                                occurrence
-                                                                                    .id
-                                                                            ] ===
-                                                                            taxonomyId
-                                                                        "
-                                                                        @change="
-                                                                            onOccurrenceCheckboxChange(
-                                                                                occurrence.id,
-                                                                                taxonomyId,
-                                                                                $event
-                                                                            )
-                                                                        "
-                                                                        class="form-check-input mt-2"
-                                                                        :data-slug="
-                                                                            uniqueScientificNames[
-                                                                                index
-                                                                            ]
-                                                                                .slug
-                                                                        "
-                                                                    />
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
+                                                                            "
+                                                                        />
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                             </div>
                                             <template v-else>
                                                 <div
