@@ -382,12 +382,10 @@
                                 id="listing_date"
                                 v-model="conservation_status_obj.listing_date"
                                 :type="
-                                    listing_and_review_due_date_display_as_na
-                                        ? 'text'
-                                        : 'date'
+                                    listing_date_display_as_na ? 'text' : 'date'
                                 "
                                 :placeholder="
-                                    listing_and_review_due_date_display_as_na
+                                    listing_date_display_as_na
                                         ? 'N/A'
                                         : 'DD/MM/YYYY'
                                 "
@@ -407,12 +405,12 @@
                                     conservation_status_obj.review_due_date
                                 "
                                 :type="
-                                    listing_and_review_due_date_display_as_na
+                                    review_due_date_display_as_na
                                         ? 'text'
                                         : 'date'
                                 "
                                 :placeholder="
-                                    listing_and_review_due_date_display_as_na
+                                    review_due_date_display_as_na
                                         ? 'N/A'
                                         : 'DD/MM/YYYY'
                                 "
@@ -1692,9 +1690,15 @@ export default {
                 this.conservation_status_obj.locked
             );
         },
-        listing_and_review_due_date_display_as_na: function () {
+        listing_date_display_as_na: function () {
             return (
                 !this.conservation_status_obj.listing_date &&
+                this.listing_and_review_due_date_disabled
+            );
+        },
+        review_due_date_display_as_na: function () {
+            return (
+                !this.conservation_status_obj.review_due_date &&
                 this.listing_and_review_due_date_disabled
             );
         },
