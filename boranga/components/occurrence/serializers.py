@@ -4225,6 +4225,9 @@ class OccurrenceReportBulkImportSchemaColumnNestedSerializer(BaseModelSerializer
         many=True, allow_null=True, required=False
     )
     is_editable_by_user = serializers.SerializerMethodField(read_only=True)
+    is_valid = serializers.BooleanField(read_only=True)
+    model_exists = serializers.BooleanField(read_only=True)
+    field_exists = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = OccurrenceReportBulkImportSchemaColumn
