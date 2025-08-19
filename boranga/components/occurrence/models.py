@@ -7563,6 +7563,9 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
         if not self.django_import_content_type or not self.django_import_field_name:
             return None
 
+        if not self.model_exists or not self.field_exists:
+            return None
+
         field = self.django_import_content_type.model_class()._meta.get_field(
             self.django_import_field_name
         )
