@@ -334,6 +334,8 @@
                                 />
                             </div>
                         </template>
+                        <!-- Empty column in case effective-from is not rendered to force effective-to into the right column -->
+                        <template v-else><div class="col-sm-6"></div></template>
                         <template v-if="show_effective_to">
                             <label
                                 for="effective_to"
@@ -379,8 +381,16 @@
                             <input
                                 id="listing_date"
                                 v-model="conservation_status_obj.listing_date"
-                                type="date"
-                                placeholder="DD/MM/YYYY"
+                                :type="
+                                    listing_and_review_due_date_display_as_na
+                                        ? 'text'
+                                        : 'date'
+                                "
+                                :placeholder="
+                                    listing_and_review_due_date_display_as_na
+                                        ? 'N/A'
+                                        : 'DD/MM/YYYY'
+                                "
                                 class="form-control"
                                 :disabled="listing_and_review_due_date_disabled"
                             />
@@ -396,8 +406,16 @@
                                 v-model="
                                     conservation_status_obj.review_due_date
                                 "
-                                type="date"
-                                placeholder="DD/MM/YYYY"
+                                :type="
+                                    listing_and_review_due_date_display_as_na
+                                        ? 'text'
+                                        : 'date'
+                                "
+                                :placeholder="
+                                    listing_and_review_due_date_display_as_na
+                                        ? 'N/A'
+                                        : 'DD/MM/YYYY'
+                                "
                                 class="form-control"
                                 :disabled="listing_and_review_due_date_disabled"
                             />
@@ -1645,21 +1663,14 @@ export default {
         },
         show_effective_from: function () {
             return (
-                (this.conservation_status_obj &&
-                    this.conservation_status_obj.effective_from) ||
-                (constants.EFFECTIVE_FROM_STATUSES.includes(
+                constants.EFFECTIVE_FROM_STATUSES.includes(
                     this.conservation_status_obj.processing_status
-                ) &&
-                    !this.conservation_status_obj.locked)
+                ) && !this.conservation_status_obj.locked
             );
         },
         show_effective_to: function () {
-            return (
-                (this.conservation_status_obj &&
-                    this.conservation_status_obj.effective_to) ||
-                constants.EFFECTIVE_TO_STATUSES.includes(
-                    this.conservation_status_obj.processing_status
-                )
+            return constants.EFFECTIVE_TO_STATUSES.includes(
+                this.conservation_status_obj.processing_status
             );
         },
         effective_to_mandatory: function () {
@@ -1668,11 +1679,8 @@ export default {
             );
         },
         show_listing_and_review_due_date: function () {
-            return (
-                this.conservation_status_obj.listing_date ||
-                this.conservation_status_obj.review_due_date ||
-                this.conservation_status_obj.processing_status ==
-                    'With Assessor'
+            return !['Draft', 'Discarded'].includes(
+                this.conservation_status_obj.processing_status
             );
         },
         listing_and_review_due_date_disabled: function () {
@@ -1682,6 +1690,12 @@ export default {
                     this.conservation_status_obj.processing_status
                 ) ||
                 this.conservation_status_obj.locked
+            );
+        },
+        listing_and_review_due_date_display_as_na: function () {
+            return (
+                !this.conservation_status_obj.listing_date &&
+                this.listing_and_review_due_date_disabled
             );
         },
         approval_level_disabled: function () {
