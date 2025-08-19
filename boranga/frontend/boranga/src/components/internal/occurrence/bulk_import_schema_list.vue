@@ -68,7 +68,7 @@
                         <table class="table table-sm">
                             <thead>
                                 <tr>
-                                    <th scope="col" style="width: 40px">
+                                    <th scope="col" style="width: 80px">
                                         Version
                                     </th>
                                     <th scope="col" style="width: 250px">
@@ -99,6 +99,12 @@
                                         }}<i
                                             v-if="schema.is_master"
                                             class="bi bi-lock-fill text-warning fs-5 ps-2"
+                                            title="Master Schema"
+                                        ></i>
+                                        <i
+                                            v-if="!schema.is_valid"
+                                            class="bi bi-exclamation-circle-fill text-danger fs-5 ps-2"
+                                            title="Schema contains models and/or fields no longer present in the underlying database"
                                         ></i>
                                     </td>
                                     <td
