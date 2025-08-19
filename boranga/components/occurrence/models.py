@@ -6954,19 +6954,24 @@ class OccurrenceReportBulkImportSchema(BaseModel):
         invalid_models = []
         for column in self.columns.all():
             if not column.model_exists:
-                invalid_models.append(
-                    column.django_import_content_type.model_class().__name__
-                )
+                invalid_models.append(column.django_import_content_type.model)
         return invalid_models
 
     @property
     def invalid_fields(self):
         invalid_fields = []
         for column in self.columns.all():
-            if not column.field_exists:
+            if not column.model_exists:
                 invalid_fields.append(
-                    f"{column.django_import_content_type.model_class().__name__}: "
-                    f"{column.django_import_field_name}"
+                    f"XLSX Column: {column.xlsx_column_header_name}, "
+                    f"Model: {column.django_import_content_type.model}, "
+                    f"Database Column: {column.django_import_field_name}"
+                )
+            elif not column.field_exists:
+                invalid_fields.append(
+                    f"XLSX Column: {column.xlsx_column_header_name}, "
+                    f"Model: {column.django_import_content_type.model_class().__name__}, "
+                    f"Database Column: {column.django_import_field_name}"
                 )
         return invalid_fields
 
