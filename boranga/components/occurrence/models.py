@@ -6944,7 +6944,7 @@ class OccurrenceReportBulkImportSchema(BaseModel):
     def is_valid(self):
         columns = self.columns.all()
         for column in columns:
-            if not column.field_exists:
+            if not column.model_exists or not column.field_exists:
                 return False
 
         return True
