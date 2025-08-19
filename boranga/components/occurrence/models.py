@@ -7498,8 +7498,10 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
 
     @property
     def model_name(self):
-        if not self.django_import_content_type:
+        if not self.django_import_content_type.id:
             return None
+        elif not self.django_import_content_type.model_class():
+            return self.django_import_content_type.model
 
         model = self.django_import_content_type.model_class()
         return model._meta.verbose_name
