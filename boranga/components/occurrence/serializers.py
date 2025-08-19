@@ -4247,7 +4247,6 @@ class OccurrenceReportBulkImportSchemaListSerializer(BaseModelSerializer):
     group_type_display = serializers.CharField(source="group_type.name", read_only=True)
     version = serializers.CharField(read_only=True)
     can_user_edit = serializers.SerializerMethodField(read_only=True)
-    is_valid = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = OccurrenceReportBulkImportSchema
@@ -4263,6 +4262,8 @@ class OccurrenceReportBulkImportSchemaListSerializer(BaseModelSerializer):
             "is_master",
             "can_user_edit",
             "is_valid",
+            "invalid_models",
+            "invalid_fields",
         ]
         read_only_fields = ("id",)
 
@@ -4292,6 +4293,13 @@ class OccurrenceReportBulkImportSchemaSerializer(
     version = serializers.CharField(read_only=True)
     can_user_edit = serializers.SerializerMethodField(read_only=True)
     can_user_toggle_master = serializers.SerializerMethodField(read_only=True)
+    is_valid = serializers.BooleanField(read_only=True)
+    invalid_models = serializers.ListField(
+        child=serializers.CharField(), read_only=True
+    )
+    invalid_fields = serializers.ListField(
+        child=serializers.CharField(), read_only=True
+    )
 
     class Meta:
         model = OccurrenceReportBulkImportSchema
