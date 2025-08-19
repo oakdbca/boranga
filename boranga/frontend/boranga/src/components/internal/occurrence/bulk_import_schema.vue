@@ -17,6 +17,66 @@
                 </div>
             </div>
         </div>
+        <template v-if="schema">
+            <div v-if="!schema.is_valid" class="row mb-2">
+                <div class="col">
+                    <alert type="danger">
+                        <i
+                            class="bi bi-exclamation-circle-fill text-danger fs-4 me-2"
+                        ></i>
+                        This schema is no longer valid.
+                        <p class="mt-2">
+                            You must resolve the following issues before it can
+                            be used again:
+                        </p>
+                        <template
+                            v-if="
+                                schema.invalid_models &&
+                                schema.invalid_models.length
+                            "
+                        >
+                            <h6>
+                                The following model(s) no longer exist in the
+                                database and must be modified or removed:
+                            </h6>
+                            <ul>
+                                <li
+                                    v-for="invalidModel in schema.invalid_models"
+                                    :key="invalidModel"
+                                >
+                                    {{ invalidModel }}
+                                </li>
+                            </ul>
+                        </template>
+
+                        <template
+                            v-if="
+                                schema.invalid_fields &&
+                                schema.invalid_fields.length
+                            "
+                        >
+                            <h6>
+                                The following field(s) no longer exist in the
+                                database and must be modified or removed:
+                            </h6>
+                            <ul>
+                                <li
+                                    v-for="invalidField in schema.invalid_fields"
+                                    :key="invalidField"
+                                >
+                                    {{ invalidField }}
+                                </li>
+                            </ul>
+                        </template>
+                        <p>
+                            <strong>Note:</strong> It is recommended that you
+                            make a copy of the schema and make the changes to
+                            the new copy.
+                        </p>
+                    </alert>
+                </div>
+            </div>
+        </template>
         <div v-if="schema" class="row mb-3">
             <div class="col">
                 <form>
@@ -75,7 +135,10 @@
                                                 <button
                                                     type="button"
                                                     class="btn btn-primary me-2"
-                                                    :disabled="validatingSchema"
+                                                    :disabled="
+                                                        validatingSchema ||
+                                                        !schema.is_valid
+                                                    "
                                                     @click.prevent="validate()"
                                                 >
                                                     <span
@@ -98,6 +161,18 @@
                                                 <a
                                                     role="button"
                                                     class="btn btn-primary"
+                                                    :class="{
+                                                        disabled:
+                                                            !schema.is_valid,
+                                                    }"
+                                                    :aria-disabled="
+                                                        (!schema.is_valid).toString()
+                                                    "
+                                                    :tabindex="
+                                                        !schema.is_valid
+                                                            ? -1
+                                                            : 0
+                                                    "
                                                     :href="`/api/occurrence_report_bulk_import_schemas/${schema.id}/preview_import_file/?updated=${schema.datetime_updated}`"
                                                     ><i
                                                         class="bi bi-filetype-xlsx me-1"
@@ -290,6 +365,11 @@
                                                 title="Mandatory Column"
                                                 >*</span
                                             >
+                                            <i
+                                                v-if="!column.is_valid"
+                                                class="bi bi-exclamation-circle-fill text-danger"
+                                                title="This column is no longer present in the underlying database"
+                                            ></i>
                                             <small
                                                 class="d-block text-capitalize mb-0"
                                                 :class="
@@ -298,7 +378,21 @@
                                                         : 'text-muted'
                                                 "
                                             >
-                                                {{ column.model_name }}
+                                                <span
+                                                    :class="
+                                                        column.model_exists
+                                                            ? ''
+                                                            : 'text-danger'
+                                                    "
+                                                    :title="
+                                                        column.model_exists
+                                                            ? ''
+                                                            : `Model ${column.model_name} no longer exists in the database`
+                                                    "
+                                                    >{{
+                                                        column.model_name
+                                                    }}</span
+                                                >
                                             </small>
                                         </td>
                                         <td
@@ -511,6 +605,28 @@
                                     </div>
                                 </div>
                                 <div
+                                    v-if="!selectedColumn.field_exists"
+                                    class="row d-flex align-items-center mb-2"
+                                >
+                                    <label
+                                        for="inputEmail3"
+                                        class="col-sm-4 col-form-label"
+                                        >Invalid Django Import Field
+                                        <i
+                                            class="fas fa-exclamation-circle text-danger"
+                                            title="This field no longer exists in the underlying database"
+                                        ></i
+                                    ></label>
+                                    <div class="col-sm-8">
+                                        <input
+                                            class="form-control form-control-sm text-danger"
+                                            type="text"
+                                            disabled
+                                            :value="`${selectedColumn.invalid_field} - No longer exists in database`"
+                                        />
+                                    </div>
+                                </div>
+                                <div
                                     v-if="showDjangoImportFieldSelect"
                                     class="row d-flex align-items-center mb-2"
                                 >
@@ -680,171 +796,178 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div
-                                        class="row d-flex align-items-center mb-2"
-                                    >
-                                        <label
-                                            for="inputEmail3"
-                                            class="col-sm-4 col-form-label"
-                                            >Django Field Type</label
+                                    <template v-if="selectedColumn.is_valid">
+                                        <div
+                                            class="row d-flex align-items-center mb-2"
                                         >
-                                        <div class="col-sm-8">
-                                            <div
-                                                class="input-group input-group-sm"
+                                            <label
+                                                for="inputEmail3"
+                                                class="col-sm-4 col-form-label"
+                                                >Django Field Type</label
                                             >
-                                                <input
-                                                    id=""
-                                                    type="text"
-                                                    class="form-control"
-                                                    name=""
-                                                    placeholder=""
-                                                    disabled
-                                                    :value="selectedField.type"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div
-                                        class="row d-flex align-items-center mb-2"
-                                    >
-                                        <label
-                                            for="xlsx-validation-type"
-                                            class="col-sm-4 col-form-label"
-                                            >Excel Validation Type</label
-                                        >
-                                        <div class="col-sm-8">
-                                            <div
-                                                class="input-group input-group-sm"
-                                            >
-                                                <input
-                                                    id="xlsx-validation-type"
-                                                    type="text"
-                                                    class="form-control form-control-sm"
-                                                    name="xlsx-validation-type"
-                                                    disabled
-                                                    :value="
-                                                        excelValidationType()
-                                                    "
-                                                />
-                                                <template
-                                                    v-if="
-                                                        selectedField.xlsx_validation_type ==
-                                                        'date'
-                                                    "
+                                            <div class="col-sm-8">
+                                                <div
+                                                    class="input-group input-group-sm"
                                                 >
-                                                    <span
-                                                        id="datetime-format"
-                                                        class="input-group-text"
-                                                        >Format:</span
-                                                    >
-                                                    <span
-                                                        id="datetime-format-mask"
-                                                        class="input-group-text"
-                                                        >DD/MM/YYYY
-                                                        HH:MM:SS</span
-                                                    >
-                                                </template>
-                                                <template
-                                                    v-if="
-                                                        selectedField.xlsx_validation_type ==
-                                                        'list'
-                                                    "
-                                                >
-                                                    <button
-                                                        v-if="
-                                                            selectedField.choices &&
-                                                            selectedField
-                                                                .choices
-                                                                .length > 0
+                                                    <input
+                                                        id=""
+                                                        type="text"
+                                                        class="form-control"
+                                                        name=""
+                                                        placeholder=""
+                                                        disabled
+                                                        :value="
+                                                            selectedField.type
                                                         "
-                                                        type="button"
-                                                        class="btn btn-primary"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#preview-choices"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="row d-flex align-items-center mb-2"
+                                        >
+                                            <label
+                                                for="xlsx-validation-type"
+                                                class="col-sm-4 col-form-label"
+                                                >Excel Validation Type</label
+                                            >
+                                            <div class="col-sm-8">
+                                                <div
+                                                    class="input-group input-group-sm"
+                                                >
+                                                    <input
+                                                        id="xlsx-validation-type"
+                                                        type="text"
+                                                        class="form-control form-control-sm"
+                                                        name="xlsx-validation-type"
+                                                        disabled
+                                                        :value="
+                                                            excelValidationType()
+                                                        "
+                                                    />
+                                                    <template
+                                                        v-if="
+                                                            selectedField.xlsx_validation_type ==
+                                                            'date'
+                                                        "
                                                     >
-                                                        <i
-                                                            class="bi bi-search"
-                                                            role="button"
-                                                        ></i>
-                                                        Preview List Choices
-                                                    </button>
-                                                </template>
+                                                        <span
+                                                            id="datetime-format"
+                                                            class="input-group-text"
+                                                            >Format:</span
+                                                        >
+                                                        <span
+                                                            id="datetime-format-mask"
+                                                            class="input-group-text"
+                                                            >DD/MM/YYYY
+                                                            HH:MM:SS</span
+                                                        >
+                                                    </template>
+                                                    <template
+                                                        v-if="
+                                                            selectedField.xlsx_validation_type ==
+                                                            'list'
+                                                        "
+                                                    >
+                                                        <button
+                                                            v-if="
+                                                                selectedField.choices &&
+                                                                selectedField
+                                                                    .choices
+                                                                    .length > 0
+                                                            "
+                                                            type="button"
+                                                            class="btn btn-primary"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#preview-choices"
+                                                        >
+                                                            <i
+                                                                class="bi bi-search"
+                                                                role="button"
+                                                            ></i>
+                                                            Preview List Choices
+                                                        </button>
+                                                    </template>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div
-                                        v-if="
-                                            selectedField.xlsx_validation_type
-                                        "
-                                        class="row mb-2"
-                                    >
-                                        <label
-                                            for="inputEmail3"
-                                            class="col-sm-4 col-form-label"
-                                            >Excel Data Validations<i
-                                                id="pre-import-validation-help-text"
-                                                class="bi bi-info-circle-fill text-primary ms-2"
-                                                data-bs-toggle="popover"
-                                                data-bs-trigger="hover focus"
-                                                data-bs-content="Basic validations embedded in the .xlsx file"
-                                                data-bs-placement="top"
-                                            ></i
-                                        ></label>
-                                        <div class="col-sm-4">
-                                            <div
-                                                class="input-group input-group-sm mb-2"
-                                            >
-                                                <span
-                                                    id="allow-blank-label"
-                                                    class="input-group-text"
-                                                    >Allow Blank</span
+                                        <div
+                                            v-if="
+                                                selectedField.xlsx_validation_type
+                                            "
+                                            class="row mb-2"
+                                        >
+                                            <label
+                                                for="inputEmail3"
+                                                class="col-sm-4 col-form-label"
+                                                >Excel Data Validations<i
+                                                    id="pre-import-validation-help-text"
+                                                    class="bi bi-info-circle-fill text-primary ms-2"
+                                                    data-bs-toggle="popover"
+                                                    data-bs-trigger="hover focus"
+                                                    data-bs-content="Basic validations embedded in the .xlsx file"
+                                                    data-bs-placement="top"
+                                                ></i
+                                            ></label>
+                                            <div class="col-sm-4">
+                                                <div
+                                                    class="input-group input-group-sm mb-2"
                                                 >
-                                                <select
-                                                    v-model="
-                                                        selectedColumn.xlsx_data_validation_allow_blank
-                                                    "
-                                                    class="form-select w-50"
-                                                    aria-label="Allow Blank"
-                                                    :disabled="
-                                                        !selectedField.allow_null &&
-                                                        selectedField.name !=
-                                                            'occurrence_number'
-                                                    "
+                                                    <span
+                                                        id="allow-blank-label"
+                                                        class="input-group-text"
+                                                        >Allow Blank</span
+                                                    >
+                                                    <select
+                                                        v-model="
+                                                            selectedColumn.xlsx_data_validation_allow_blank
+                                                        "
+                                                        class="form-select w-50"
+                                                        aria-label="Allow Blank"
+                                                        :disabled="
+                                                            !selectedField.allow_null &&
+                                                            selectedField.name !=
+                                                                'occurrence_number'
+                                                        "
+                                                    >
+                                                        <option :value="true">
+                                                            Yes
+                                                        </option>
+                                                        <option :value="false">
+                                                            No
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                                <div
+                                                    class="input-group input-group-sm mb-2"
                                                 >
-                                                    <option :value="true">
-                                                        Yes
-                                                    </option>
-                                                    <option :value="false">
-                                                        No
-                                                    </option>
-                                                </select>
-                                            </div>
-                                            <div
-                                                class="input-group input-group-sm mb-2"
-                                            >
-                                                <span
-                                                    id="max-length"
-                                                    class="input-group-text"
-                                                    >Max Length</span
-                                                >
-                                                <input
-                                                    type="text"
-                                                    class="form-control"
-                                                    aria-label="Max Length"
-                                                    aria-describedby="max-length"
-                                                    :value="
-                                                        selectedField.max_length
-                                                            ? selectedField.max_length
-                                                            : 'N/A'
-                                                    "
-                                                    disabled
-                                                />
+                                                    <span
+                                                        id="max-length"
+                                                        class="input-group-text"
+                                                        >Max Length</span
+                                                    >
+                                                    <input
+                                                        type="text"
+                                                        class="form-control"
+                                                        aria-label="Max Length"
+                                                        aria-describedby="max-length"
+                                                        :value="
+                                                            selectedField.max_length
+                                                                ? selectedField.max_length
+                                                                : 'N/A'
+                                                        "
+                                                        disabled
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </template>
                                 </template>
                                 <div
-                                    v-if="showDjangoLookupField"
+                                    v-if="
+                                        selectColumn.is_valid &&
+                                        showDjangoLookupField
+                                    "
                                     class="row mb-2"
                                 >
                                     <label
@@ -1109,6 +1232,7 @@
                                 class="border-top pt-3 d-flex justify-content-end"
                             >
                                 <button
+                                    v-if="selectedColumn.is_valid"
                                     class="btn btn-primary btn-sm me-2"
                                     @click.prevent="selectedColumn = null"
                                 >
@@ -1123,6 +1247,7 @@
                                 >
                                     <button
                                         v-if="
+                                            selectedColumn.django_import_content_type &&
                                             selectedColumn.django_import_content_type &&
                                             selectedColumn.django_import_field_name
                                         "
@@ -1739,28 +1864,44 @@ export default {
         },
         selectColumn(column) {
             if (column.django_import_content_type) {
-                this.selectedContentType = this.djangoContentTypes.filter(
-                    (djangoContentType) =>
-                        djangoContentType.id ==
-                        column.django_import_content_type
-                )[0];
+                if (!column.model_exists) {
+                    console.debug(
+                        `Column ${column.xlsx_column_header_name} has a content type that no longer exists in the database.`
+                    );
+                }
+                this.selectedContentType =
+                    this.djangoContentTypes.filter(
+                        (djangoContentType) =>
+                            djangoContentType.id ==
+                            column.django_import_content_type
+                    )[0] || 'invalid_content_type';
                 if (column.django_import_field_name) {
                     this.selectedField =
                         this.selectedContentType.model_fields.filter(
                             (modelField) =>
                                 modelField.name ==
                                 column.django_import_field_name
-                        )[0];
-                    if (
-                        this.selectedField.lookup_field_options &&
-                        !this.selectedField.lookup_field_options.includes(
-                            column.django_lookup_field_name
-                        )
-                    ) {
-                        this.customLookupField = true;
-                        if (column.django_lookup_field_name) {
-                            this.previousCustomLookupField =
-                                column.django_lookup_field_name;
+                        )[0] || 'invalid_field';
+                    if (this.selectedField != 'invalid_field') {
+                        if (
+                            this.selectedField.lookup_field_options &&
+                            !this.selectedField.lookup_field_options.includes(
+                                column.django_lookup_field_name
+                            )
+                        ) {
+                            this.customLookupField = true;
+                            if (column.django_lookup_field_name) {
+                                this.previousCustomLookupField =
+                                    column.django_lookup_field_name;
+                            }
+                        }
+                    } else {
+                        if (!column.model_exists) {
+                            column.invalid_model =
+                                column.django_import_content_type;
+                        } else if (!column.field_exists) {
+                            column.invalid_field =
+                                column.django_import_field_name;
                         }
                     }
                 }
