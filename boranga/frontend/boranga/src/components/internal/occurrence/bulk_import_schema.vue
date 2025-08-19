@@ -1025,7 +1025,7 @@
                                 </template>
                                 <div
                                     v-if="
-                                        selectColumn.is_valid &&
+                                        selectedColumn.is_valid &&
                                         showDjangoLookupField
                                     "
                                     class="row mb-2"
