@@ -54,7 +54,6 @@
                         >
                     </div>
                     <div v-else class="col-9 p-3 border rounded">
-                        >
                         <strong
                             >Sorry it looks like there isn't any application
                             currently in your session.</strong
