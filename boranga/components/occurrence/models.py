@@ -6950,6 +6950,26 @@ class OccurrenceReportBulkImportSchema(BaseModel):
         return True
 
     @property
+    def invalid_models(self):
+        invalid_models = []
+        for column in self.columns.all():
+            if not column.model_exists:
+                invalid_models.append(
+                    column.django_import_content_type.model_class().__name__
+                )
+        return invalid_models
+
+    @property
+    def invalid_fields(self):
+        invalid_fields = []
+        for column in self.columns.all():
+            if not column.field_exists:
+                invalid_fields.append(
+                    f"{column.django_import_content_type.model_class().__name__}: "
+                    f"{column.django_import_field_name}"
+                )
+        return invalid_fields
+
     @property
     def preview_import_file(self):
         workbook = openpyxl.Workbook()
@@ -7508,15 +7528,21 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
             return False
 
         # Check that the model for this column exists in the database
-        if not self.model_exists():
+        if not self.model_exists:
             return False
 
         # Check if the field for this column exists in the database
-        return self.field_exists()
+        return self.field_exists
 
     @property
     def field(self):
         if not self.django_import_content_type or not self.django_import_field_name:
+            return None
+
+        if not self.model_exists:
+            return None
+
+        if not self.field_exists:
             return None
 
         return self.django_import_content_type.model_class()._meta.get_field(
@@ -7525,6 +7551,9 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
 
     @property
     def field_type(self):
+        if not self.field_exists:
+            return "N/A"
+
         if not self.field:
             return None
 
