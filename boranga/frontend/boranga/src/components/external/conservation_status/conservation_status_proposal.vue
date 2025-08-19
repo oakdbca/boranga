@@ -696,8 +696,20 @@ export default {
                                 }
                             ).then(
                                 async (response) => {
-                                    vm.conservation_status_obj =
-                                        await response.json();
+                                    const data = await response.json();
+                                    if (!response.ok) {
+                                        swal.fire({
+                                            title: 'Submission Error',
+                                            text: data,
+                                            icon: 'error',
+                                            customClass: {
+                                                confirmButton:
+                                                    'btn btn-primary',
+                                            },
+                                        });
+                                        return;
+                                    }
+                                    vm.conservation_status_obj = data;
                                     vm.$router.push({
                                         name: 'submit_cs_proposal',
                                         state: {
