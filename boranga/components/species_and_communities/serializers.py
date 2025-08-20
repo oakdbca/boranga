@@ -700,6 +700,7 @@ class BaseSpeciesSerializer(BaseModelSerializer):
         model = Species
         fields = (
             "id",
+            "migrated_from_id",
             "species_number",
             "group_type",
             "group_type_id",
@@ -868,6 +869,7 @@ class InternalSpeciesSerializer(BaseSpeciesSerializer):
         model = Species
         fields = (
             "id",
+            "migrated_from_id",
             "species_number",
             "group_type",
             "group_type_id",
@@ -1158,6 +1160,7 @@ class BaseCommunitySerializer(BaseModelSerializer):
         model = Community
         fields = (
             "id",
+            "migrated_from_id",
             "community_number",
             "species",
             "group_type",
@@ -1339,6 +1342,7 @@ class InternalCommunitySerializer(BaseCommunitySerializer):
         model = Community
         fields = (
             "id",
+            "migrated_from_id",
             "community_number",
             "group_type",
             "taxonomy_details",

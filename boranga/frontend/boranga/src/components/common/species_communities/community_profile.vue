@@ -220,6 +220,23 @@
                         />
                     </div>
                 </div>
+                <div v-if="species_community.migrated_from_id" class="row mb-3">
+                    <label
+                        for="migrated-from-id"
+                        class="col-sm-3 col-form-label"
+                        >Migrated From ID:</label
+                    >
+                    <div class="col-sm-9">
+                        <input
+                            id="migrated-from-id"
+                            v-model="species_community.migrated_from_id"
+                            :disabled="true"
+                            type="text"
+                            class="form-control"
+                            placeholder=""
+                        />
+                    </div>
+                </div>
             </FormSection>
             <FormSection
                 v-if="distribution_public || is_internal"

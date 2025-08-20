@@ -669,7 +669,8 @@ export default {
     computed: {
         title: function () {
             return (
-                this.$route.query.group_type + ' Occurrence Report Bulk Import'
+                this.$route.query.group_type +
+                ' Occurrence Report Form Bulk Import'
             );
         },
     },

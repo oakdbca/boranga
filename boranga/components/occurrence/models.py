@@ -6891,8 +6891,8 @@ class OccurrenceReportBulkImportSchema(BaseModel):
 
     class Meta:
         app_label = "boranga"
-        verbose_name = "Occurrence Report Bulk Import Schema"
-        verbose_name_plural = "Occurrence Report Bulk Import Schemas"
+        verbose_name = "Occurrence Report Form Bulk Import Schema"
+        verbose_name_plural = "Occurrence Report Form Bulk Import Schemas"
         ordering = ["group_type", "-version"]
         constraints = [
             models.UniqueConstraint(
@@ -7473,8 +7473,8 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
 
     class Meta(OrderedModel.Meta):
         app_label = "boranga"
-        verbose_name = "Occurrence Report Bulk Import Schema Column"
-        verbose_name_plural = "Occurrence Report Bulk Import Schema Columns"
+        verbose_name = "Occurrence Report Form Bulk Import Schema Column"
+        verbose_name_plural = "Occurrence Report Form Bulk Import Schema Columns"
         ordering = ["schema", "order"]
         constraints = [
             models.UniqueConstraint(
@@ -7700,6 +7700,13 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
         ):
             return True
 
+        if (
+            self.django_import_content_type
+            == ct_models.ContentType.objects.get_for_model(OCRAssociatedSpecies)
+            and self.django_import_field_name == "related_species"
+        ):
+            return True
+
         return (
             self.foreign_key_count > settings.OCR_BULK_IMPORT_LOOKUP_TABLE_RECORD_LIMIT
         )
@@ -7825,6 +7832,8 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
                 .distinct()[: random.randint(1, 3)]
             )
 
+            random_values = [str(value) for value in random_values]
+
             return settings.OCR_BULK_IMPORT_M2M_DELIMITER.join(random_values)
 
         if isinstance(field, MultiSelectField):
@@ -7934,35 +7943,42 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
         if isinstance(field, gis_models.GeometryField):
             # Generate a random point and polygon that falls within Western Australia
             # In this case the dbca building in Kensington
-            return json.dumps(
-                {
-                    "type": "FeatureCollection",
-                    "features": [
-                        {
-                            "type": "Feature",
-                            "geometry": {
-                                "type": "Point",
-                                "coordinates": [115.8840195356077, -31.99563118840819],
-                            },
+
+            feature_collection_dict = {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [115.8840195356077, -31.99563118840819],
                         },
-                        {
-                            "type": "Feature",
-                            "geometry": {
-                                "type": "Polygon",
-                                "coordinates": [
-                                    [
-                                        [115.88337912139104, -31.995016820738698],
-                                        [115.88337912139104, -31.99586499034117],
-                                        [115.88434603648648, -31.99586499034117],
-                                        [115.88434603648648, -31.995016820738698],
-                                        [115.88337912139104, -31.995016820738698],
-                                    ]
-                                ],
-                            },
+                    }
+                ],
+            }
+
+            # Add a test polygon for group types that support them (flora/community)
+            if self.schema.group_type.name != GroupType.GROUP_TYPE_FAUNA:
+                # Add the sample polygon
+                feature_collection_dict["features"].append(
+                    {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [
+                                [
+                                    [115.88337912139104, -31.995016820738698],
+                                    [115.88337912139104, -31.99586499034117],
+                                    [115.88434603648648, -31.99586499034117],
+                                    [115.88434603648648, -31.995016820738698],
+                                    [115.88337912139104, -31.995016820738698],
+                                ]
+                            ],
                         },
-                    ],
-                }
-            )
+                    }
+                )
+
+            return json.dumps(feature_collection_dict)
 
         if isinstance(field, models.FileField):
             return "sample_file.txt"

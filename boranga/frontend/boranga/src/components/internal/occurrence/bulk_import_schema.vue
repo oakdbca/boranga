@@ -4,7 +4,7 @@
             <div class="col">
                 <div class="mb-4">
                     <h2 class="text-capitalize">
-                        Occurrence Report Bulk Import Schema
+                        Occurrence Report Form Bulk Import Schema
                     </h2>
                 </div>
                 <div class="mb-3">
@@ -2075,6 +2075,7 @@ export default {
                     } else {
                         errors = error;
                     }
+
                     let error_message_string = 'Something went wrong :-(';
                     if (errors instanceof Object) {
                         error_message_string = '';

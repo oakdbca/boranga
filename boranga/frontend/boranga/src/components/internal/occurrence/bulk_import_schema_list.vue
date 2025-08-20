@@ -4,7 +4,7 @@
             <div class="col">
                 <div class="mb-4">
                     <h2 class="text-capitalize">
-                        Occurrence Report Bulk Import Schemas
+                        Occurrence Report Form Bulk Import Schemas
                     </h2>
                 </div>
                 <div class="mb-3">
