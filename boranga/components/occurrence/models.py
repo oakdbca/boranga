@@ -7943,35 +7943,42 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
         if isinstance(field, gis_models.GeometryField):
             # Generate a random point and polygon that falls within Western Australia
             # In this case the dbca building in Kensington
-            return json.dumps(
-                {
-                    "type": "FeatureCollection",
-                    "features": [
-                        {
-                            "type": "Feature",
-                            "geometry": {
-                                "type": "Point",
-                                "coordinates": [115.8840195356077, -31.99563118840819],
-                            },
+
+            feature_collection_dict = {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [115.8840195356077, -31.99563118840819],
                         },
-                        {
-                            "type": "Feature",
-                            "geometry": {
-                                "type": "Polygon",
-                                "coordinates": [
-                                    [
-                                        [115.88337912139104, -31.995016820738698],
-                                        [115.88337912139104, -31.99586499034117],
-                                        [115.88434603648648, -31.99586499034117],
-                                        [115.88434603648648, -31.995016820738698],
-                                        [115.88337912139104, -31.995016820738698],
-                                    ]
-                                ],
-                            },
+                    }
+                ],
+            }
+
+            # Add a test polygon for group types that support them (flora/community)
+            if self.schema.group_type.name != GroupType.GROUP_TYPE_FAUNA:
+                # Add the sample polygon
+                feature_collection_dict["features"].append(
+                    {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [
+                                [
+                                    [115.88337912139104, -31.995016820738698],
+                                    [115.88337912139104, -31.99586499034117],
+                                    [115.88434603648648, -31.99586499034117],
+                                    [115.88434603648648, -31.995016820738698],
+                                    [115.88337912139104, -31.995016820738698],
+                                ]
+                            ],
                         },
-                    ],
-                }
-            )
+                    }
+                )
+
+            return json.dumps(feature_collection_dict)
 
         if isinstance(field, models.FileField):
             return "sample_file.txt"
