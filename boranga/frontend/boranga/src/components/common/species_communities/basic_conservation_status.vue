@@ -23,7 +23,7 @@
             </div>
             <fieldset disabled>
                 <div
-                    v-if="conservation_status.wa_legislative_list"
+                    v-if="conservation_status.wa_legislative_list_code"
                     class="row mb-3"
                 >
                     <label
@@ -35,12 +35,12 @@
                         <input
                             id="wa_legislative_list"
                             class="form-control"
-                            :value="conservation_status.wa_legislative_list"
+                            :value="`${conservation_status.wa_legislative_list_code} - ${conservation_status.wa_legislative_list_label}`"
                         />
                     </div>
                 </div>
                 <div
-                    v-if="conservation_status.wa_legislative_category"
+                    v-if="conservation_status.wa_legislative_category_code"
                     class="row mb-3"
                 >
                     <label
@@ -52,12 +52,12 @@
                         <input
                             id="wa_legislative_category"
                             class="form-control"
-                            :value="conservation_status.wa_legislative_category"
+                            :value="`${conservation_status.wa_legislative_category_code} - ${conservation_status.wa_legislative_category_label}`"
                         />
                     </div>
                 </div>
                 <div
-                    v-if="conservation_status.wa_priority_category"
+                    v-if="conservation_status.wa_priority_category_code"
                     class="row mb-3"
                 >
                     <label
@@ -69,13 +69,13 @@
                         <input
                             id="wa_priority_category"
                             class="form-control"
-                            :value="conservation_status.wa_priority_category"
+                            :value="`${conservation_status.wa_priority_category_code} - ${conservation_status.wa_priority_category_label}`"
                         />
                     </div>
                 </div>
                 <div
                     v-if="
-                        conservation_status.commonwealth_conservation_category
+                        conservation_status.commonwealth_conservation_category_code
                     "
                     class="row mb-3"
                 >
@@ -88,14 +88,14 @@
                         <input
                             id="commonwealth_conservation_category"
                             class="form-control"
-                            :value="
-                                conservation_status.commonwealth_conservation_category
-                            "
+                            :value="`${conservation_status.commonwealth_conservation_category_code} - ${conservation_status.commonwealth_conservation_category_label}`"
                         />
                     </div>
                 </div>
                 <div
-                    v-if="conservation_status.other_conservation_assessment"
+                    v-if="
+                        conservation_status.other_conservation_assessment_code
+                    "
                     class="row mb-3"
                 >
                     <label
@@ -107,9 +107,7 @@
                         <input
                             id="other_conservation_assessment"
                             class="form-control"
-                            :value="
-                                conservation_status.other_conservation_assessment
-                            "
+                            :value="`${conservation_status.other_conservation_assessment_code} - ${conservation_status.other_conservation_assessment_label}`"
                         />
                     </div>
                 </div>

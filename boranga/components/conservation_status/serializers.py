@@ -42,20 +42,35 @@ logger = logging.getLogger("boranga")
 
 # Serializer used for species and communities forms
 class BasicConservationStatusSerializer(BaseModelSerializer):
-    wa_legislative_list = serializers.CharField(
+    wa_legislative_list_code = serializers.CharField(
         source="wa_legislative_list.code", allow_null=True
     )
-    wa_legislative_category = serializers.CharField(
+    wa_legislative_list_label = serializers.CharField(
+        source="wa_legislative_list.label", allow_null=True
+    )
+    wa_legislative_category_code = serializers.CharField(
         source="wa_legislative_category.code", allow_null=True
     )
-    wa_priority_category = serializers.CharField(
+    wa_legislative_category_label = serializers.CharField(
+        source="wa_legislative_category.label", allow_null=True
+    )
+    wa_priority_category_code = serializers.CharField(
         source="wa_priority_category.code", allow_null=True
     )
-    commonwealth_conservation_category = serializers.CharField(
+    wa_priority_category_label = serializers.CharField(
+        source="wa_priority_category.label", allow_null=True
+    )
+    commonwealth_conservation_category_code = serializers.CharField(
         source="commonwealth_conservation_category.code", allow_null=True
     )
-    other_conservation_assessment = serializers.CharField(
+    commonwealth_conservation_category_label = serializers.CharField(
+        source="commonwealth_conservation_category.label", allow_null=True
+    )
+    other_conservation_assessment_code = serializers.CharField(
         source="other_conservation_assessment.code", allow_null=True
+    )
+    other_conservation_assessment_label = serializers.CharField(
+        source="other_conservation_assessment.label", allow_null=True
     )
     under_review = serializers.SerializerMethodField()
 
@@ -64,11 +79,16 @@ class BasicConservationStatusSerializer(BaseModelSerializer):
         fields = (
             "id",
             "conservation_status_number",
-            "wa_legislative_list",
-            "wa_legislative_category",
-            "wa_priority_category",
-            "commonwealth_conservation_category",
-            "other_conservation_assessment",
+            "wa_legislative_list_code",
+            "wa_legislative_list_label",
+            "wa_legislative_category_code",
+            "wa_legislative_category_label",
+            "wa_priority_category_code",
+            "wa_priority_category_label",
+            "commonwealth_conservation_category_code",
+            "commonwealth_conservation_category_label",
+            "other_conservation_assessment_code",
+            "other_conservation_assessment_label",
             "conservation_criteria",
             "under_review",
         )
