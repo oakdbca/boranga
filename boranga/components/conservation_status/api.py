@@ -223,22 +223,16 @@ class SpeciesConservationStatusFilterBackend(DatatablesFilterBackend):
                     conservation_status__species__taxonomy__vernaculars__id=filter_common_name
                 )
 
-        filter_phylogenetic_group = request.POST.get("filter_phylogenetic_group")
+        filter_informal_group = request.POST.get("filter_informal_group")
         if queryset.model is ConservationStatus:
-            if (
-                filter_phylogenetic_group
-                and not filter_phylogenetic_group.lower() == "all"
-            ):
+            if filter_informal_group and not filter_informal_group.lower() == "all":
                 queryset = queryset.filter(
-                    species__taxonomy__informal_groups__classification_system_fk_id=filter_phylogenetic_group
+                    species__taxonomy__informal_groups__classification_system_fk_id=filter_informal_group
                 )
         elif queryset.model is ConservationStatusReferral:
-            if (
-                filter_phylogenetic_group
-                and not filter_phylogenetic_group.lower() == "all"
-            ):
+            if filter_informal_group and not filter_informal_group.lower() == "all":
                 queryset = queryset.filter(
-                    conservation_status__species__taxonomy__informal_groups__classification_system_id=filter_phylogenetic_group  # noqa
+                    conservation_status__species__taxonomy__informal_groups__classification_system_id=filter_informal_group  # noqa
                 )
 
         filter_family = request.POST.get("filter_family")
@@ -1927,7 +1921,7 @@ class ConservationStatusReferralViewSet(
                             "name": family.scientific_name,
                         }
                     )
-        phylogenetic_group_list = []
+        informal_group_list = []
         if group_type:
             taxonomy_qs = (
                 qs.filter(conservation_status__species__group_type__name=group_type)
@@ -1944,7 +1938,7 @@ class ConservationStatusReferralViewSet(
             phylo_groups = ClassificationSystem.objects.filter(id__in=phylo_group_qs)
             if phylo_groups:
                 for group in phylo_groups:
-                    phylogenetic_group_list.append(
+                    informal_group_list.append(
                         {
                             "id": group.id,
                             "name": group.class_desc,
@@ -1973,7 +1967,7 @@ class ConservationStatusReferralViewSet(
             "scientific_name_list": scientific_name_list,
             "common_name_list": common_name_list,
             "family_list": family_list,
-            "phylogenetic_group_list": phylogenetic_group_list,
+            "informal_group_list": informal_group_list,
             "wa_priority_lists": WAPriorityList.get_lists_dict(group_type),
             "wa_priority_categories": WAPriorityCategory.get_categories_dict(
                 group_type

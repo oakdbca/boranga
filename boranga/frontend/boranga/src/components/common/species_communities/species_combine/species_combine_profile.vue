@@ -74,12 +74,12 @@
                 <label
                     for="combine-phylogenetic-group"
                     class="col-sm-3 col-form-label"
-                    >Phylogenetic Group:</label
+                    >Informal Group:</label
                 >
                 <div class="col-sm-8">
                     <textarea
                         id="combine-phylogenetic-group"
-                        v-model="phylogenetic_group"
+                        v-model="informal_group"
                         :disabled="true"
                         class="form-control"
                         rows="1"
@@ -1319,7 +1319,7 @@ export default {
             common_name: null,
             taxon_name_id: null,
             taxon_previous_name: null,
-            phylogenetic_group: null,
+            informal_group: null,
             family: null,
             genus: null,
             name_authority: null,
@@ -1470,8 +1470,8 @@ export default {
                     vm.species_community.taxonomy_details.taxon_name_id;
                 vm.taxon_previous_name =
                     vm.species_community.taxonomy_details.taxon_previous_name;
-                vm.phylogenetic_group =
-                    vm.species_community.taxonomy_details.phylogenetic_group;
+                vm.informal_group =
+                    vm.species_community.taxonomy_details.informal_group;
                 vm.family = vm.species_community.taxonomy_details.family_name;
                 vm.genus = vm.species_community.taxonomy_details.genera_name;
                 vm.name_authority =

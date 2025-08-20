@@ -183,7 +183,7 @@ class ListSpeciesConservationStatusSerializer(BaseModelSerializer):
     common_name = serializers.SerializerMethodField()
     family = serializers.SerializerMethodField()
     genus = serializers.SerializerMethodField()
-    phylogenetic_group = serializers.SerializerMethodField()
+    informal_group = serializers.SerializerMethodField()
     wa_priority_list = serializers.CharField(
         source="wa_priority_list.code", allow_null=True
     )
@@ -233,7 +233,7 @@ class ListSpeciesConservationStatusSerializer(BaseModelSerializer):
             "common_name",
             "family",
             "genus",
-            "phylogenetic_group",
+            "informal_group",
             "wa_priority_list",
             "wa_priority_category",
             "wa_legislative_list",
@@ -273,7 +273,7 @@ class ListSpeciesConservationStatusSerializer(BaseModelSerializer):
             "common_name",
             "family",
             "genus",
-            "phylogenetic_group",
+            "informal_group",
             "wa_priority_list",
             "wa_priority_category",
             "wa_legislative_list",
@@ -335,7 +335,7 @@ class ListSpeciesConservationStatusSerializer(BaseModelSerializer):
                 return obj.species.taxonomy.genera_name
         return ""
 
-    def get_phylogenetic_group(self, obj):
+    def get_informal_group(self, obj):
         if obj.species:
             if obj.species.taxonomy.informal_groups:
                 return obj.species.taxonomy.informal_groups.all().values_list(

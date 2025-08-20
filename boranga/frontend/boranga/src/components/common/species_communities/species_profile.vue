@@ -119,14 +119,14 @@
                         />
                     </div>
                 </div>
-                <div v-if="showField(phylogenetic_group)" class="row mb-3">
+                <div v-if="showField(informal_group)" class="row mb-3">
                     <label for="" class="col-sm-3 col-form-label"
-                        >Phylogenetic Group:</label
+                        >Informal Group:</label
                     >
                     <div class="col-sm-9">
                         <textarea
-                            id="phylogenetic_group"
-                            v-model="phylogenetic_group"
+                            id="informal_group"
+                            v-model="informal_group"
                             :disabled="true"
                             class="form-control"
                             rows="1"
@@ -1519,7 +1519,7 @@ export default {
             common_name: null,
             taxon_name_id: null,
             taxon_previous_name: null,
-            phylogenetic_group: null,
+            informal_group: null,
             family: null,
             genus: null,
             name_authority: null,
@@ -2128,7 +2128,7 @@ export default {
                     vm.common_name = e.params.data.common_name;
                     vm.taxon_name_id = e.params.data.taxon_name_id;
                     vm.taxon_previous_name = e.params.data.taxon_previous_name;
-                    vm.phylogenetic_group = e.params.data.phylogenetic_group;
+                    vm.informal_group = e.params.data.informal_group;
                     vm.family = e.params.data.family_name;
                     vm.genus = e.params.data.genera_name;
                     vm.name_authority = e.params.data.name_authority;
@@ -2144,7 +2144,7 @@ export default {
                     vm.common_name = '';
                     vm.taxon_name_id = '';
                     vm.taxon_previous_name = '';
-                    vm.phylogenetic_group = '';
+                    vm.informal_group = '';
                     vm.family = '';
                     vm.genus = '';
                     vm.name_authority = '';
@@ -2187,8 +2187,8 @@ export default {
                     vm.species_community.taxonomy_details.taxon_name_id;
                 vm.taxon_previous_name =
                     vm.species_community.taxonomy_details.taxon_previous_name;
-                vm.phylogenetic_group =
-                    vm.species_community.taxonomy_details.phylogenetic_group;
+                vm.informal_group =
+                    vm.species_community.taxonomy_details.informal_group;
                 vm.family = vm.species_community.taxonomy_details.family_name;
                 vm.genus = vm.species_community.taxonomy_details.genera_name;
                 vm.name_authority =

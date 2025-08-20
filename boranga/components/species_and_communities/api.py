@@ -792,6 +792,12 @@ class SpeciesFilterBackend(DatatablesFilterBackend):
         if filter_fauna_sub_group and not filter_fauna_sub_group.lower() == "all":
             queryset = queryset.filter(fauna_sub_group_id=filter_fauna_sub_group)
 
+        filter_informal_group = request.POST.get("filter_informal_group")
+        if filter_informal_group and not filter_informal_group.lower() == "all":
+            queryset = queryset.filter(
+                taxonomy__informal_groups__classification_system_fk_id=filter_informal_group
+            )
+
         filter_family = request.POST.get("filter_family")
         if filter_family and not filter_family.lower() == "all":
             queryset = queryset.filter(taxonomy__family_id=filter_family)
