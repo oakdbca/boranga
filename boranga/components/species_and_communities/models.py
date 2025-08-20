@@ -511,6 +511,8 @@ class Species(RevisionedMixin):
         blank=True,
         related_name="species",
     )
+    # Field to use when importing data from the legacy system
+    migrated_from_id = models.CharField(max_length=50, blank=True, default="")
 
     class Meta:
         app_label = "boranga"
@@ -1525,6 +1527,8 @@ class Community(RevisionedMixin):
     lodgement_date = models.DateTimeField(blank=True, null=True)
     comment = models.CharField(max_length=500, null=True, blank=True)
     department_file_numbers = models.CharField(max_length=512, null=True, blank=True)
+    # Field to use when importing data from the legacy system
+    migrated_from_id = models.CharField(max_length=50, blank=True, default="")
 
     class Meta:
         app_label = "boranga"
