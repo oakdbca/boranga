@@ -7825,6 +7825,8 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
                 .distinct()[: random.randint(1, 3)]
             )
 
+            random_values = [str(value) for value in random_values]
+
             return settings.OCR_BULK_IMPORT_M2M_DELIMITER.join(random_values)
 
         if isinstance(field, MultiSelectField):
