@@ -6891,8 +6891,8 @@ class OccurrenceReportBulkImportSchema(BaseModel):
 
     class Meta:
         app_label = "boranga"
-        verbose_name = "Occurrence Report Bulk Import Schema"
-        verbose_name_plural = "Occurrence Report Bulk Import Schemas"
+        verbose_name = "Occurrence Report Form Bulk Import Schema"
+        verbose_name_plural = "Occurrence Report Form Bulk Import Schemas"
         ordering = ["group_type", "-version"]
         constraints = [
             models.UniqueConstraint(
@@ -7473,8 +7473,8 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
 
     class Meta(OrderedModel.Meta):
         app_label = "boranga"
-        verbose_name = "Occurrence Report Bulk Import Schema Column"
-        verbose_name_plural = "Occurrence Report Bulk Import Schema Columns"
+        verbose_name = "Occurrence Report Form Bulk Import Schema Column"
+        verbose_name_plural = "Occurrence Report Form Bulk Import Schema Columns"
         ordering = ["schema", "order"]
         constraints = [
             models.UniqueConstraint(
@@ -7697,6 +7697,13 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
             self.django_import_content_type
             == ct_models.ContentType.objects.get_for_model(OccurrenceReport)
             and self.django_import_field_name in ["species", "community"]
+        ):
+            return True
+
+        if (
+            self.django_import_content_type
+            == ct_models.ContentType.objects.get_for_model(OCRAssociatedSpecies)
+            and self.django_import_field_name == "related_species"
         ):
             return True
 
