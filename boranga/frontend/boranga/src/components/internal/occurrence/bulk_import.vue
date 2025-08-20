@@ -44,12 +44,18 @@
                                             v-for="schema_version in schema_versions"
                                             :value="schema_version"
                                             :key="schema_version.id"
+                                            :disabled="!schema_version.is_valid"
                                         >
                                             {{
                                                 getSchemaVersionText(
                                                     schema_version
                                                 )
-                                            }}
+                                            }}<template
+                                                v-if="!schema_version.is_valid"
+                                            >
+                                                (Schema not selectable: No
+                                                longer valid)</template
+                                            >
                                         </option>
                                     </select>
                                 </div>
@@ -1021,5 +1027,9 @@ div.currently-running {
     100% {
         border-color: rgba(34, 111, 187, 1);
     }
+}
+
+option:disabled {
+    color: #6c757d;
 }
 </style>

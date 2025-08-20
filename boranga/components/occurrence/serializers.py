@@ -4225,6 +4225,9 @@ class OccurrenceReportBulkImportSchemaColumnNestedSerializer(BaseModelSerializer
         many=True, allow_null=True, required=False
     )
     is_editable_by_user = serializers.SerializerMethodField(read_only=True)
+    is_valid = serializers.BooleanField(read_only=True)
+    model_exists = serializers.BooleanField(read_only=True)
+    field_exists = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = OccurrenceReportBulkImportSchemaColumn
@@ -4258,6 +4261,9 @@ class OccurrenceReportBulkImportSchemaListSerializer(BaseModelSerializer):
             "datetime_updated",
             "is_master",
             "can_user_edit",
+            "is_valid",
+            "invalid_models",
+            "invalid_fields",
         ]
         read_only_fields = ("id",)
 
@@ -4287,6 +4293,13 @@ class OccurrenceReportBulkImportSchemaSerializer(
     version = serializers.CharField(read_only=True)
     can_user_edit = serializers.SerializerMethodField(read_only=True)
     can_user_toggle_master = serializers.SerializerMethodField(read_only=True)
+    is_valid = serializers.BooleanField(read_only=True)
+    invalid_models = serializers.ListField(
+        child=serializers.CharField(), read_only=True
+    )
+    invalid_fields = serializers.ListField(
+        child=serializers.CharField(), read_only=True
+    )
 
     class Meta:
         model = OccurrenceReportBulkImportSchema
