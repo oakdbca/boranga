@@ -14,7 +14,7 @@ from boranga.components.occurrence.models import (
     OCRExternalRefereeInvite,
 )
 from boranga.components.users.models import ExternalContributorBlacklist
-from boranga.helpers import is_internal
+from boranga.helpers import is_internal, is_internal_contributor
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +118,10 @@ def add_external_user_to_external_contributors_group(sender, user, request, **kw
     )
 
     # Only add external users to the external contributors group
-    if is_internal(request):
+    # The check here has to check if the user is an internal contributor as well because
+    # in terms of security checks, the internal contributor group is not included in the INTERNAL_GROUPS
+    # in settings.py
+    if is_internal(request) or is_internal_contributor(request):
         # Check if the internal user is in the external contributors group and remove them if so
         if SystemGroupPermission.objects.filter(
             system_group=external_contributor_group, emailuser=user
