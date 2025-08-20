@@ -3094,7 +3094,13 @@ class OCRPlantCount(BaseModel):
     plant_condition = models.ForeignKey(
         PlantCondition, on_delete=models.SET_NULL, null=True, blank=True
     )
-    estimated_population_area = models.IntegerField(null=True, blank=True, default=0)
+    estimated_population_area = models.DecimalField(
+        null=True,
+        blank=True,
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
 
     count_status = models.CharField(
         choices=settings.COUNT_STATUS_CHOICES,
@@ -5356,7 +5362,13 @@ class OCCPlantCount(BaseModel):
     plant_condition = models.ForeignKey(
         PlantCondition, on_delete=models.SET_NULL, null=True, blank=True
     )
-    estimated_population_area = models.IntegerField(null=True, blank=True, default=0)
+    estimated_population_area = models.DecimalField(
+        null=True,
+        blank=True,
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
 
     count_status = models.CharField(
         choices=settings.COUNT_STATUS_CHOICES,

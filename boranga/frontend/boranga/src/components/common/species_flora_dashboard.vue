@@ -33,7 +33,7 @@
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label for="phylo_group_lookup">Phylo Group:</label>
+                        <label for="phylo_group_lookup">Informal Group:</label>
                         <select
                             id="phylo_group_lookup"
                             ref="phylo_group_lookup"
@@ -546,7 +546,7 @@ export default {
             scientific_name_list: [],
             common_name_list: [],
             family_list: [],
-            phylogenetic_group_list: [],
+            informal_group_list: [],
             filterRegionDistrict: {},
             region_list: [],
             district_list: [],
@@ -623,7 +623,7 @@ export default {
                     'Number',
                     'Scientific Name',
                     'Common Name',
-                    'Phylo Group(s)',
+                    'Informal Group(s)',
                     'Family',
                     'Genera',
                     'Region(s)',
@@ -642,7 +642,7 @@ export default {
                     'Number',
                     'Scientific Name',
                     'Common Name',
-                    'Phylo Group(s)',
+                    'Informal Group(s)',
                     'Family',
                     'Genera',
                     'Region(s)',
@@ -721,21 +721,17 @@ export default {
                 name: 'taxonomy__family_name',
             };
         },
-        column_phylogenetic_group: function () {
+        column_informal_group: function () {
             return {
-                data: 'phylogenetic_group',
+                data: 'informal_group',
                 orderable: true,
                 searchable: true,
                 visible: true,
                 render: function (data, type, full) {
                     let html = '';
-                    if (full.phylogenetic_group) {
-                        for (
-                            let i = 0;
-                            i < full.phylogenetic_group.length;
-                            i++
-                        ) {
-                            html += `<span class="badge bg-primary me-2">${full.phylogenetic_group[i]}</span>`;
+                    if (full.informal_group) {
+                        for (let i = 0; i < full.informal_group.length; i++) {
+                            html += `<span class="badge bg-primary me-2">${full.informal_group[i]}</span>`;
                         }
                     }
                     return html;
@@ -917,7 +913,7 @@ export default {
                     vm.column_number,
                     vm.column_scientific_name,
                     vm.column_common_name,
-                    vm.column_phylogenetic_group,
+                    vm.column_informal_group,
                     vm.column_family,
                     vm.column_genera,
                     vm.column_region,
@@ -938,7 +934,7 @@ export default {
                     vm.column_number,
                     vm.column_scientific_name,
                     vm.column_common_name,
-                    vm.column_phylogenetic_group,
+                    vm.column_informal_group,
                     vm.column_family,
                     vm.column_genera,
                     vm.column_region,
@@ -991,7 +987,7 @@ export default {
                         d.filter_scientific_name = vm.filterFloraScientificName;
                         d.filter_common_name = vm.filterFloraCommonName;
                         d.filter_family = vm.filterFloraFamily;
-                        d.filter_phylogenetic_group =
+                        d.filter_informal_group =
                             vm.filterFloraPhylogeneticGroup;
                         d.filter_genus = vm.filterFloraGenus;
                         d.filter_name_status = vm.filterFloraNameStatus;
@@ -1476,7 +1472,7 @@ export default {
                     minimumInputLength: 2,
                     theme: 'bootstrap-5',
                     allowClear: true,
-                    placeholder: 'Select Phylo Group',
+                    placeholder: 'Select Informal Group',
                     ajax: {
                         url: api_endpoints.phylo_group_lookup,
                         dataType: 'json',
@@ -1527,8 +1523,8 @@ export default {
                     vm.common_name_list =
                         vm.filterListsSpecies.common_name_list;
                     vm.family_list = vm.filterListsSpecies.family_list;
-                    vm.phylogenetic_group_list =
-                        vm.filterListsSpecies.phylogenetic_group_list;
+                    vm.informal_group_list =
+                        vm.filterListsSpecies.informal_group_list;
                     vm.filterDistrict();
                     vm.species_status = vm.internal_status
                         .slice()

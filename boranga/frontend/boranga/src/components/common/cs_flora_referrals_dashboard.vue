@@ -36,7 +36,7 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         <label for="cs_ref_phylo_group_lookup"
-                            >Phylo Group:</label
+                            >Informal Group:</label
                         >
                         <select
                             id="cs_ref_phylo_group_lookup"
@@ -418,7 +418,7 @@ export default {
                         d.filter_scientific_name =
                             vm.filterCSRefFloraScientificName;
                         d.filter_common_name = vm.filterCSRefFloraCommonName;
-                        d.filter_phylogenetic_group =
+                        d.filter_informal_group =
                             vm.filterCSRefFloraPhylogeneticGroup;
                         d.filter_family = vm.filterCSRefFloraFamily;
                         d.filter_genus = vm.filterCSRefFloraGenus;
@@ -717,7 +717,7 @@ export default {
                     minimumInputLength: 2,
                     theme: 'bootstrap-5',
                     allowClear: true,
-                    placeholder: 'Select Phylo Group',
+                    placeholder: 'Select Informal Group',
                     ajax: {
                         url: api_endpoints.phylo_group_lookup,
                         dataType: 'json',

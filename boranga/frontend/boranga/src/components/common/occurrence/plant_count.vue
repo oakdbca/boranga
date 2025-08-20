@@ -174,18 +174,23 @@
         </div>
         <div class="row mb-3">
             <label for="" class="col-sm-3 control-label"
-                >Estimated Population Area(m<sup>2</sup>):</label
+                >Estimated Population Area:</label
             >
             <div class="col-sm-6">
-                <input
-                    id="est_population_area"
-                    v-model="plant_count.estimated_population_area"
-                    :disabled="isReadOnly"
-                    type="number"
-                    class="form-control ocr_number"
-                    placeholder=""
-                    min="0"
-                />
+                <div class="input-group">
+                    <input
+                        id="est_population_area"
+                        v-model="plant_count.estimated_population_area"
+                        :disabled="isReadOnly"
+                        type="number"
+                        class="form-control ocr_number"
+                        placeholder=""
+                        min="0.00"
+                        max="9999999999.99"
+                        step="0.01"
+                    />
+                    <span class="input-group-text">m<sup>2</sup></span>
+                </div>
             </div>
         </div>
         <div class="row mb-3">

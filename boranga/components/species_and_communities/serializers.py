@@ -55,7 +55,7 @@ class ListSpeciesSerializer(BaseModelSerializer):
     common_name = serializers.SerializerMethodField()
     family = serializers.SerializerMethodField()
     genus = serializers.SerializerMethodField()
-    phylogenetic_group = serializers.SerializerMethodField()
+    informal_group = serializers.SerializerMethodField()
     regions = serializers.SerializerMethodField()
     districts = serializers.SerializerMethodField()
     processing_status = serializers.CharField(source="get_processing_status_display")
@@ -85,7 +85,7 @@ class ListSpeciesSerializer(BaseModelSerializer):
             "common_name",
             "family",
             "genus",
-            "phylogenetic_group",
+            "informal_group",
             "regions",
             "districts",
             "processing_status",
@@ -113,7 +113,7 @@ class ListSpeciesSerializer(BaseModelSerializer):
             "common_name",
             "family",
             "genus",
-            "phylogenetic_group",
+            "informal_group",
             "regions",
             "districts",
             "processing_status",
@@ -161,7 +161,7 @@ class ListSpeciesSerializer(BaseModelSerializer):
                 return obj.taxonomy.genera_name
         return ""
 
-    def get_phylogenetic_group(self, obj):
+    def get_informal_group(self, obj):
         if obj.taxonomy:
             if obj.taxonomy.informal_groups:
                 return obj.taxonomy.informal_groups.all().values_list(
@@ -386,7 +386,7 @@ class TaxonomySerializer(BaseModelSerializer):
     # text is added as need for select2 format
     text = serializers.SerializerMethodField()
     common_name = serializers.SerializerMethodField()
-    phylogenetic_group = serializers.SerializerMethodField()
+    informal_group = serializers.SerializerMethodField()
     conservation_status = serializers.SerializerMethodField()
     species_id = serializers.SerializerMethodField()
     common_names_list = serializers.SerializerMethodField()
@@ -403,7 +403,7 @@ class TaxonomySerializer(BaseModelSerializer):
             "common_name",
             "common_names_list",
             "taxon_previous_name",
-            "phylogenetic_group",
+            "informal_group",
             "name_authority",
             "name_comments",
             "conservation_status",
@@ -430,7 +430,7 @@ class TaxonomySerializer(BaseModelSerializer):
 
         return obj.vernaculars.values_list("vernacular_name", flat=True)
 
-    def get_phylogenetic_group(self, obj):
+    def get_informal_group(self, obj):
         try:
             if obj.informal_groups:
                 # informal_groups = InformalGroup.objects.get(taxonomy=obj.id)

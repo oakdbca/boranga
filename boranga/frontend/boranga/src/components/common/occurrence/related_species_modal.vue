@@ -53,12 +53,29 @@
                                         >
                                     </div>
                                     <div class="col-sm-9">
-                                        <span
-                                            class="badge bg-primary me-2 p-2"
-                                            v-for="common_name in associatedSpeciesTaxonomy.common_name"
-                                            :key="common_name"
-                                            >{{ common_name }}</span
+                                        <template
+                                            v-if="
+                                                associatedSpeciesTaxonomy.common_name &&
+                                                associatedSpeciesTaxonomy
+                                                    .common_name.length > 0
+                                            "
                                         >
+                                            <span
+                                                class="badge bg-primary me-2 p-2"
+                                                v-for="common_name in associatedSpeciesTaxonomy.common_name"
+                                                :key="common_name"
+                                                >{{ common_name }}</span
+                                            >
+                                        </template>
+                                        <template v-else>
+                                            <textarea
+                                                id="no-common-name"
+                                                :disabled="true"
+                                                class="form-control"
+                                                rows="1"
+                                                value=""
+                                            />
+                                        </template>
                                     </div>
                                 </div>
                                 <div v-if="speciesRoles" class="row mb-3">

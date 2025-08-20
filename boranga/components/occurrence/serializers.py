@@ -869,6 +869,7 @@ class OCRPlantCountSerializer(BaseModelSerializer):
     individual_quadrat_area = serializers.FloatField(allow_null=True, default=None)
     total_quadrat_area = serializers.FloatField(allow_null=True, default=None)
     flowering_plants_per = serializers.FloatField(allow_null=True, default=None)
+    estimated_population_area = serializers.FloatField(allow_null=True, default=None)
 
     class Meta:
         model = OCRPlantCount
@@ -3205,6 +3206,7 @@ class OCCPlantCountSerializer(BaseModelSerializer):
     individual_quadrat_area = serializers.FloatField(allow_null=True, default=None)
     total_quadrat_area = serializers.FloatField(allow_null=True, default=None)
     flowering_plants_per = serializers.FloatField(allow_null=True, default=None)
+    estimated_population_area = serializers.FloatField(allow_null=True, default=None)
 
     class Meta:
         model = OCCPlantCount

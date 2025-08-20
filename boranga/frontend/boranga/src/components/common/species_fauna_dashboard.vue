@@ -674,7 +674,7 @@ export default {
                     'Number',
                     'Scientific Name',
                     'Common Name',
-                    'Phylo Group(s)',
+                    'Informal Group(s)',
                     'Fauna Group',
                     'Fauna Sub Group',
                     'Family',
@@ -695,7 +695,7 @@ export default {
                     'Number',
                     'Scientific Name',
                     'Common Name',
-                    'Phylo Group(s)',
+                    'Informal Group(s)',
                     'Fauna Group',
                     'Fauna Sub Group',
                     'Family',
@@ -763,21 +763,17 @@ export default {
                 name: 'taxonomy__vernaculars__vernacular_name',
             };
         },
-        column_phylogenetic_group: function () {
+        column_informal_group: function () {
             return {
-                data: 'phylogenetic_group',
+                data: 'informal_group',
                 orderable: true,
                 searchable: true,
                 visible: true,
                 render: function (data, type, full) {
                     let html = '';
-                    if (full.phylogenetic_group) {
-                        for (
-                            let i = 0;
-                            i < full.phylogenetic_group.length;
-                            i++
-                        ) {
-                            html += `<span class="badge bg-primary me-2">${full.phylogenetic_group[i]}</span>`;
+                    if (full.informal_group) {
+                        for (let i = 0; i < full.informal_group.length; i++) {
+                            html += `<span class="badge bg-primary me-2">${full.informal_group[i]}</span>`;
                         }
                     }
                     return html;
@@ -984,7 +980,7 @@ export default {
                     vm.column_number,
                     vm.column_scientific_name,
                     vm.column_common_name,
-                    vm.column_phylogenetic_group,
+                    vm.column_informal_group,
                     vm.column_fauna_group,
                     vm.column_fauna_sub_group,
                     vm.column_family,
@@ -1007,7 +1003,7 @@ export default {
                     vm.column_number,
                     vm.column_scientific_name,
                     vm.column_common_name,
-                    vm.column_phylogenetic_group,
+                    vm.column_informal_group,
                     vm.column_fauna_group,
                     vm.column_fauna_sub_group,
                     vm.column_family,
