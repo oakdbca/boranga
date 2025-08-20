@@ -1685,10 +1685,8 @@ export default {
             );
         },
         conservation_list_proposed: function () {
-            return (
-                !['Approved', 'DeListed', 'Declined', 'Closed'].includes(
-                    this.conservation_status_obj.processing_status
-                ) || this.conservation_status_obj.locked
+            return !['Approved', 'DeListed', 'Closed'].includes(
+                this.conservation_status_obj.processing_status
             );
         },
         canViewCurrentList: function () {
