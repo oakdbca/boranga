@@ -39,24 +39,6 @@
                 </li>
                 <li class="nav-item">
                     <a
-                        id="pills-habitat-tab"
-                        class="nav-link"
-                        data-bs-toggle="pill"
-                        data-target-id="occ_habitat"
-                        :href="'#' + habitatBody"
-                        role="tab"
-                        aria-selected="false"
-                    >
-                        Habitat<template v-if="tabDirtyMap['occ_habitat']"
-                            ><i
-                                class="bi bi-exclamation-circle-fill text-warning ms-2"
-                                title="This tab has unsaved changes"
-                            ></i
-                        ></template>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a
                         id="pills-observation-tab"
                         class="nav-link"
                         data-bs-toggle="pill"
@@ -67,6 +49,24 @@
                     >
                         Observation<template
                             v-if="tabDirtyMap['occ_observation']"
+                            ><i
+                                class="bi bi-exclamation-circle-fill text-warning ms-2"
+                                title="This tab has unsaved changes"
+                            ></i
+                        ></template>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a
+                        id="pills-habitat-tab"
+                        class="nav-link"
+                        data-bs-toggle="pill"
+                        data-target-id="occ_habitat"
+                        :href="'#' + habitatBody"
+                        role="tab"
+                        aria-selected="false"
+                    >
+                        Habitat<template v-if="tabDirtyMap['occ_habitat']"
                             ><i
                                 class="bi bi-exclamation-circle-fill text-warning ms-2"
                                 title="This tab has unsaved changes"
@@ -133,22 +133,6 @@
                     </OCCLocations>
                 </div>
                 <div
-                    :id="habitatBody"
-                    class="tab-pane fade"
-                    role="tabpanel"
-                    aria-labelledby="pills-habitat-tab"
-                >
-                    <OCCHabitat
-                        id="occ_habitat"
-                        :key="reloadcount"
-                        ref="occ_habitat"
-                        :is_internal="is_internal"
-                        :occurrence_obj="occurrence_obj"
-                        @dirty="onTabDirtyChange('occ_habitat', $event)"
-                    >
-                    </OCCHabitat>
-                </div>
-                <div
                     :id="observationBody"
                     class="tab-pane fade"
                     role="tabpanel"
@@ -163,6 +147,22 @@
                         @dirty="onTabDirtyChange('occ_observation', $event)"
                     >
                     </OCCObservation>
+                </div>
+                <div
+                    :id="habitatBody"
+                    class="tab-pane fade"
+                    role="tabpanel"
+                    aria-labelledby="pills-habitat-tab"
+                >
+                    <OCCHabitat
+                        id="occ_habitat"
+                        :key="reloadcount"
+                        ref="occ_habitat"
+                        :is_internal="is_internal"
+                        :occurrence_obj="occurrence_obj"
+                        @dirty="onTabDirtyChange('occ_habitat', $event)"
+                    >
+                    </OCCHabitat>
                 </div>
                 <div
                     :id="documentBody"
