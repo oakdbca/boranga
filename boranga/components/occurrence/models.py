@@ -8527,7 +8527,7 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
             except related_model.DoesNotExist:
                 error_message = (
                     f"Can't find {self.django_import_field_name} record by looking up "
-                    f"{self.django_lookup_field_name} with value {cell_value} "
+                    f"{lookup_field} with value {cell_value} "
                     f"for column {self.xlsx_column_header_name}"
                 )
                 errors.append(
@@ -8541,9 +8541,10 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
                 errors_added += 1
                 return cell_value, errors_added
             except related_model.MultipleObjectsReturned:
+
                 error_message = (
                     f"Multiple {self.django_import_field_name} records found by looking up "
-                    f"{self.django_lookup_field_name} with value {cell_value} "
+                    f"{lookup_field} with value {cell_value} "
                     f"for column {self.xlsx_column_header_name}"
                 )
                 errors.append(
