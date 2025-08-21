@@ -604,7 +604,8 @@
                                         .aoo_actual_auto
                                 "
                                 section_id="species_actual_area_of_occupancy"
-                        /></label>
+                            />
+                        </label>
                         <div class="col-sm-4">
                             <div class="input-group">
                                 <input
@@ -734,14 +735,10 @@
                     </div>
                 </div>
             </FormSection>
-
             <BasicConservationStatus
-                v-if="
-                    species_community.conservation_status &&
-                    (conservation_status_public || is_internal)
-                "
                 :conservation_status="species_community.conservation_status"
                 :is_internal="is_internal"
+                :is-conservation-status-public="conservation_status_public"
             />
             <FormSection
                 v-if="is_internal"
