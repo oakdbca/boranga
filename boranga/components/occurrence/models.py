@@ -186,7 +186,7 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
     objects = OccurrenceReportManager()
 
     MODEL_PREFIX = "ORF"
-    BULK_IMPORT_ABBREVIATION = "ocr"
+    BULK_IMPORT_ABBREVIATION = "orf"
     BULK_IMPORT_EXCLUDE_FIELDS = ["occurrence_report_number", "import_hash"]
 
     CUSTOMER_STATUS_DRAFT = "draft"
@@ -1452,7 +1452,7 @@ class OccurrenceReportDeclinedDetails(BaseModel):
 
 
 class OccurrenceReportApprovalDetails(BaseModel):
-    BULK_IMPORT_ABBREVIATION = "ocrapp"
+    BULK_IMPORT_ABBREVIATION = "orfapp"
 
     occurrence_report = models.OneToOneField(
         OccurrenceReport, on_delete=models.CASCADE, related_name="approval_details"
@@ -2030,7 +2030,7 @@ class LocationAccuracy(OrderedModel, ArchivableModel):
 
 # NOTE: this and OCCLocation have a number of unused fields that should be removed
 class OCRLocation(BaseModel):
-    BULK_IMPORT_ABBREVIATION = "ocrloc"
+    BULK_IMPORT_ABBREVIATION = "orfloc"
 
     """
     Location data  for occurrence report
@@ -2254,7 +2254,7 @@ class DrawnByGeometry(BaseModel):
 
 
 class OccurrenceReportGeometry(GeometryBase, DrawnByGeometry):
-    BULK_IMPORT_ABBREVIATION = "ocrgeo"
+    BULK_IMPORT_ABBREVIATION = "orfgeo"
 
     occurrence_report = models.ForeignKey(
         OccurrenceReport,
@@ -2298,7 +2298,7 @@ class ObserverCategory(AbstractOrderedList):
 
 
 class OCRObserverDetail(RevisionedMixin):
-    BULK_IMPORT_ABBREVIATION = "ocrcon"
+    BULK_IMPORT_ABBREVIATION = "orfcon"
 
     """
     Observer data  for occurrence report
@@ -2498,7 +2498,7 @@ class SoilCondition(OrderedModel, ArchivableModel):
 
 
 class OCRHabitatComposition(BaseModel):
-    BULK_IMPORT_ABBREVIATION = "ocrhab"
+    BULK_IMPORT_ABBREVIATION = "orfhab"
     """
     Habitat data  for occurrence report
 
@@ -2557,7 +2557,7 @@ class OCRHabitatComposition(BaseModel):
 
 
 class OCRHabitatCondition(BaseModel):
-    BULK_IMPORT_ABBREVIATION = "ocrhq"
+    BULK_IMPORT_ABBREVIATION = "orfhq"
     """
     Habitat Condition data for occurrence report
 
@@ -2649,7 +2649,7 @@ class OCRHabitatCondition(BaseModel):
 
 
 class OCRVegetationStructure(BaseModel):
-    BULK_IMPORT_ABBREVIATION = "ocrveg"
+    BULK_IMPORT_ABBREVIATION = "orfveg"
 
     """
     Vegetation Structure data for occurrence report
@@ -2708,7 +2708,7 @@ class Intensity(OrderedModel, ArchivableModel):
 
 
 class OCRFireHistory(BaseModel):
-    BULK_IMPORT_ABBREVIATION = "ocrfh"
+    BULK_IMPORT_ABBREVIATION = "orffh"
 
     """
     Fire History data for occurrence report
@@ -2831,7 +2831,7 @@ class AssociatedSpeciesTaxonomy(BaseModel):
 
 
 class OCRAssociatedSpecies(BaseModel):
-    BULK_IMPORT_ABBREVIATION = "ocrspe"
+    BULK_IMPORT_ABBREVIATION = "orfspe"
 
     """
     Associated Species data for occurrence report
@@ -2914,7 +2914,7 @@ class AreaAssessment(OrderedModel, ArchivableModel):
 
 
 class OCRObservationDetail(BaseModel):
-    BULK_IMPORT_ABBREVIATION = "ocrobs"
+    BULK_IMPORT_ABBREVIATION = "orfobs"
 
     """
     Observation Details data for occurrence report
@@ -3065,7 +3065,7 @@ class PlantCondition(OrderedModel, ArchivableModel):
 
 
 class OCRPlantCount(BaseModel):
-    BULK_IMPORT_ABBREVIATION = "ocrnum"
+    BULK_IMPORT_ABBREVIATION = "orfnum"
 
     """
     Plant Count data for occurrence report
@@ -3348,7 +3348,7 @@ class AnimalBehaviour(OrderedModel, ArchivableModel):
 
 
 class OCRAnimalObservation(BaseModel):
-    BULK_IMPORT_ABBREVIATION = "ocrnum"
+    BULK_IMPORT_ABBREVIATION = "orfnum"
 
     """
     Animal Observation data for occurrence report
@@ -3606,7 +3606,7 @@ class PermitType(OrderedModel, ArchivableModel):
 
 
 class OCRIdentification(BaseModel):
-    BULK_IMPORT_ABBREVIATION = "ocrid"
+    BULK_IMPORT_ABBREVIATION = "orfid"
 
     """
     Identification data for occurrence report
@@ -3650,7 +3650,7 @@ class OCRIdentification(BaseModel):
 
 
 class OccurrenceReportDocument(Document):
-    BULK_IMPORT_ABBREVIATION = "ocrdoc"
+    BULK_IMPORT_ABBREVIATION = "orfdoc"
 
     document_number = models.CharField(max_length=9, blank=True, default="")
     occurrence_report = models.ForeignKey(
@@ -3741,7 +3741,7 @@ class OccurrenceReportShapefileDocument(Document):
 
 
 class OCRConservationThreat(RevisionedMixin):
-    BULK_IMPORT_ABBREVIATION = "ocrthr"
+    BULK_IMPORT_ABBREVIATION = "orfthr"
     """
     Threat for a occurrence_report in a particular location.
 

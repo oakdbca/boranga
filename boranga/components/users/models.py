@@ -57,7 +57,7 @@ class SubmitterCategory(OrderedModel, ArchivableModel):
 
 
 class SubmitterInformation(BaseModel):
-    BULK_IMPORT_ABBREVIATION = "ocrsub"
+    BULK_IMPORT_ABBREVIATION = "orfsub"
 
     email_user = models.IntegerField(blank=True, null=True)
     name = models.CharField(max_length=100, blank=True, null=True)
