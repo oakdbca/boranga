@@ -12,20 +12,27 @@
                     >Conservation Status Number:</label
                 >
                 <div class="col-sm-8">
+                    <span
+                        v-if="noApprovedConservationStatus"
+                        class="btn btn-primary disabled"
+                        >No Approved CS</span
+                    >
                     <a
-                        :href="`/internal/conservation-status/${conservation_status.id}`"
+                        v-else
+                        :href="
+                            conservation_status?.id
+                                ? '#'
+                                : `/internal/conservation-status/${conservation_status.id}`
+                        "
                         target="_blank"
                         class="btn btn-primary"
-                        >{{ conservation_status.conservation_status_number
+                        >{{ conservation_status?.conservation_status_number
                         }}<i class="bi bi-box-arrow-up-right ps-2"></i
                     ></a>
                 </div>
             </div>
             <fieldset disabled>
-                <div
-                    v-if="conservation_status.wa_legislative_list_code"
-                    class="row mb-3"
-                >
+                <div class="row mb-3">
                     <label
                         for="wa_legislative_list"
                         class="col-sm-4 col-form-label"
@@ -35,14 +42,15 @@
                         <input
                             id="wa_legislative_list"
                             class="form-control"
-                            :value="`${conservation_status.wa_legislative_list_code} - ${conservation_status.wa_legislative_list_label}`"
+                            :value="
+                                conservation_status?.wa_legislative_list_code
+                                    ? `${conservation_status.wa_legislative_list_code} - ${conservation_status.wa_legislative_list_label}`
+                                    : ''
+                            "
                         />
                     </div>
                 </div>
-                <div
-                    v-if="conservation_status.wa_legislative_category_code"
-                    class="row mb-3"
-                >
+                <div class="row mb-3">
                     <label
                         for="wa_legislative_category"
                         class="col-sm-4 col-form-label"
@@ -52,14 +60,15 @@
                         <input
                             id="wa_legislative_category"
                             class="form-control"
-                            :value="`${conservation_status.wa_legislative_category_code} - ${conservation_status.wa_legislative_category_label}`"
+                            :value="
+                                conservation_status?.wa_legislative_category_code
+                                    ? `${conservation_status.wa_legislative_category_code} - ${conservation_status.wa_legislative_category_label}`
+                                    : ''
+                            "
                         />
                     </div>
                 </div>
-                <div
-                    v-if="conservation_status.wa_priority_category_code"
-                    class="row mb-3"
-                >
+                <div class="row mb-3">
                     <label
                         for="wa_priority_category"
                         class="col-sm-4 col-form-label"
@@ -69,13 +78,17 @@
                         <input
                             id="wa_priority_category"
                             class="form-control"
-                            :value="`${conservation_status.wa_priority_category_code} - ${conservation_status.wa_priority_category_label}`"
+                            :value="
+                                conservation_status?.wa_priority_category_code
+                                    ? `${conservation_status.wa_priority_category_code} - ${conservation_status.wa_priority_category_label}`
+                                    : ''
+                            "
                         />
                     </div>
                 </div>
                 <div
                     v-if="
-                        conservation_status.commonwealth_conservation_category_code
+                        conservation_status?.commonwealth_conservation_category_code
                     "
                     class="row mb-3"
                 >
@@ -94,7 +107,7 @@
                 </div>
                 <div
                     v-if="
-                        conservation_status.other_conservation_assessment_code
+                        conservation_status?.other_conservation_assessment_code
                     "
                     class="row mb-3"
                 >
@@ -111,10 +124,7 @@
                         />
                     </div>
                 </div>
-                <div
-                    v-if="conservation_status.conservation_criteria"
-                    class="row pb-3 mb-3 border-bottom"
-                >
+                <div class="row pb-3 mb-3 border-bottom">
                     <label
                         for="conservation_criteria"
                         class="col-sm-4 col-form-label"
@@ -124,7 +134,11 @@
                         <input
                             id="conservation_criteria"
                             class="form-control"
-                            :value="conservation_status.conservation_criteria"
+                            :value="
+                                conservation_status?.conservation_criteria
+                                    ? conservation_status.conservation_criteria
+                                    : ''
+                            "
                         />
                     </div>
                 </div>
@@ -133,7 +147,7 @@
                         >Conservation Status under review?</label
                     >
                     <div class="col-sm-8 d-flex align-items-center">
-                        <template v-if="conservation_status.under_review"
+                        <template v-if="conservation_status?.under_review"
                             >Yes</template
                         >
                         <template v-else> No </template>
@@ -160,6 +174,18 @@ export default {
         is_internal: {
             type: Boolean,
             default: false,
+        },
+        isConservationStatusPublic: {
+            type: Boolean,
+            default: false,
+        },
+    },
+    computed: {
+        noApprovedConservationStatus() {
+            return (
+                !this.conservation_status ||
+                (!this.isConservationStatusPublic && !this.is_internal)
+            );
         },
     },
 };
