@@ -7646,6 +7646,13 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
         if issubclass(self.related_model, ArchivableModel):
             related_model_qs = self.related_model.objects.exclude(archived=True)
 
+        # If the related model has a group_type field, filter by the schema's group type
+        # (i.e. flora, fauna or community)
+        if hasattr(self.related_model, "group_type"):
+            related_model_qs = related_model_qs.filter(
+                group_type=self.schema.group_type
+            )
+
         return related_model_qs.order_by(display_field)
 
     @cached_property
