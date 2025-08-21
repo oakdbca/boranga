@@ -18,12 +18,8 @@
                         >No Approved CS</span
                     >
                     <a
-                        v-else
-                        :href="
-                            conservation_status?.id
-                                ? '#'
-                                : `/internal/conservation-status/${conservation_status.id}`
-                        "
+                        v-else-if="conservation_status"
+                        :href="`/internal/conservation-status/${conservation_status.id}`"
                         target="_blank"
                         class="btn btn-primary"
                         >{{ conservation_status?.conservation_status_number
