@@ -704,12 +704,9 @@
                 </div>
             </FormSection>
             <BasicConservationStatus
-                v-if="
-                    species_community.conservation_status &&
-                    (conservation_status_public || is_internal)
-                "
                 :conservation_status="species_community.conservation_status"
                 :is_internal="is_internal"
+                :is-conservation-status-public="conservation_status_public"
             />
             <!-- <FormSection v-if="conservation_attributes_public || is_internal" :formCollapse="false"
             label="Conservation Attributes" Index="conservation_attributes">

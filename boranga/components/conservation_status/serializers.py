@@ -766,14 +766,7 @@ class BaseConservationStatusSerializer(BaseModelSerializer):
                 else []
             )
         elif obj.community:
-            return (
-                [
-                    vernacular.vernacular_name
-                    for vernacular in obj.community.taxonomy.vernaculars.all()
-                ]
-                if obj.community.taxonomy
-                else []
-            )
+            return [obj.community.taxonomy.community_name]
         return []
 
 
