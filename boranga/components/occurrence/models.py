@@ -8533,6 +8533,22 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
                 )
                 errors_added += 1
                 return cell_value, errors_added
+            except related_model.MultipleObjectsReturned:
+                error_message = (
+                    f"Multiple {self.django_import_field_name} records found by looking up "
+                    f"{self.django_lookup_field_name} with value {cell_value} "
+                    f"for column {self.xlsx_column_header_name}"
+                )
+                errors.append(
+                    {
+                        "row_index": index,
+                        "error_type": "column",
+                        "data": cell_value,
+                        "error_message": error_message,
+                    }
+                )
+                errors_added += 1
+                return cell_value, errors_added
 
             # Replace the lookup cell_value with the actual instance to be assigned
             cell_value = related_model_instance
