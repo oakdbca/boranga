@@ -241,7 +241,6 @@ export default {
                 { value: 'draft', name: 'Draft' },
                 { value: 'discarded', name: 'Discarded' },
                 { value: 'active', name: 'Active' },
-                { value: 'locked', name: 'Locked' },
                 { value: 'historical', name: 'Historical' },
             ],
 

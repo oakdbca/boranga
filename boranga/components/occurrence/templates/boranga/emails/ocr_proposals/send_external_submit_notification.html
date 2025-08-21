@@ -1,25 +1,10 @@
 {% extends 'boranga/emails/base_email.html' %}
 
 {% block content %}
-  {% if ocr_proposal.is_flora_application %}
-    <p>Your proposal for a flora occurrence report has been submitted, the proposal number is {{ ocr_proposal.occurrence_report_number }}</p>Submitter: {{ submitter }}<br />
-    Lodgement date: {{ ocr_proposal.lodgement_date }}
-
-    <p>Please note it may take up to 21 days to process your proposal.</p>
-    <p>You will receive a notification email if there is any incomplete information or documents missing from the proposal.</p>
-  {% elif ocr_proposal.is_fauna_application %}
-    <p>Your proposal for a fauna occurrence report has been submitted, the proposal number is {{ ocr_proposal.occurrence_report_number }}</p>Submitter: {{ submitter }}<br />
-    Lodgement date: {{ ocr_proposal.lodgement_date }}
-
-    <p>Please note it may take up to 21 days to process your proposal.</p>
-
-    <p>You will receive a notification email if there is any incomplete information or documents missing from the proposal.</p>
-  {% else %}
-    <p>Your proposal for a community occurrence report has been submitted, the proposal number is {{ ocr_proposal.occurrence_report_number }}</p>Submitter: {{ submitter }}<br />
-    Lodgement date: {{ ocr_proposal.lodgement_date }}
-
-    <p>Please note it may take up to 21 days to process your proposal.</p>
-
-    <p>You will receive a notification email if there is any incomplete information or documents missing from the proposal.</p>
-  {% endif %}
+    <p>Your proposal for a {% if occurrence_report.is_flora_application %}flora{% elif occurrence_report.is_fauna_application %}fauna{% else %}community{% endif %}
+        occurrence report form has been submitted, the occurrence report form number is {{ occurrence_report.occurrence_report_number }}</p>
+    Submitter: {{ submitter }}<br />
+    Lodgement date: {{ occurrence_report.lodgement_date }}
+    <p>Please note it may take up to 21 days to process your occurrence report form.</p>
+    <p>You will receive a notification email if there is any incomplete information or documents missing from the occurrence report form.</p>
 {% endblock %}

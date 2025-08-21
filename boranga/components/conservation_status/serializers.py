@@ -765,8 +765,7 @@ class BaseConservationStatusSerializer(BaseModelSerializer):
                 if obj.species_taxonomy
                 else []
             )
-        elif obj.community:
-            return [obj.community.taxonomy.community_name]
+
         return []
 
 

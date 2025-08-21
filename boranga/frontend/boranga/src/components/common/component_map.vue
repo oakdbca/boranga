@@ -1474,13 +1474,10 @@
         </div>
         <!-- If no context provided, e.g. no proposal or cp, don't allow for shapefile upload -->
         <div v-if="context" class="row shapefile-row">
-            <div class="col-sm-6 border p-2">
+            <div v-if="!fileUploadDisabled" class="col-sm-6 border p-2">
                 <div class="row mb-2">
                     <div class="col">
-                        <label v-if="fileUploadDisabled" class="text-muted"
-                            >Files added to this record:</label
-                        >
-                        <label v-else for="shapefile_document" class="fw-bold"
+                        <label for="shapefile_document" class="fw-bold"
                             >Upload Shapefile or archive(s) containing
                             shapefiles
                             <span>({{ archiveTypesAllowed.join(', ') }})</span>
@@ -1516,7 +1513,6 @@
                     class="row"
                 >
                     <div class="col">
-                        <!-- <BootstrapAlert> -->
                         <alert
                             >If you do not upload a .prj file, we will use
                             <a
@@ -1526,7 +1522,6 @@
                             >
                             / 'EPSG:4326'
                         </alert>
-                        <!-- </BootstrapAlert> -->
                     </div>
                 </div>
                 <div v-if="hasUploadedShapefiles" class="row">
