@@ -749,9 +749,6 @@ export default {
             fetch(api_endpoints.occurrence_report_bulk_imports, {
                 method: 'POST',
                 body: formData,
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
             }).then(
                 async (response) => {
                     const data = await response.json();

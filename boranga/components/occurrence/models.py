@@ -7646,6 +7646,13 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
         if issubclass(self.related_model, ArchivableModel):
             related_model_qs = self.related_model.objects.exclude(archived=True)
 
+        # If the related model has a group_type field, filter by the schema's group type
+        # (i.e. flora, fauna or community)
+        if hasattr(self.related_model, "group_type"):
+            related_model_qs = related_model_qs.filter(
+                group_type=self.schema.group_type
+            )
+
         return related_model_qs.order_by(display_field)
 
     @cached_property
@@ -8520,7 +8527,7 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
             except related_model.DoesNotExist:
                 error_message = (
                     f"Can't find {self.django_import_field_name} record by looking up "
-                    f"{self.django_lookup_field_name} with value {cell_value} "
+                    f"{lookup_field} with value {cell_value} "
                     f"for column {self.xlsx_column_header_name}"
                 )
                 errors.append(
@@ -8534,9 +8541,10 @@ class OccurrenceReportBulkImportSchemaColumn(OrderedModel):
                 errors_added += 1
                 return cell_value, errors_added
             except related_model.MultipleObjectsReturned:
+
                 error_message = (
                     f"Multiple {self.django_import_field_name} records found by looking up "
-                    f"{self.django_lookup_field_name} with value {cell_value} "
+                    f"{lookup_field} with value {cell_value} "
                     f"for column {self.xlsx_column_header_name}"
                 )
                 errors.append(

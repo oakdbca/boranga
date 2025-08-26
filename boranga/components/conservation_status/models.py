@@ -771,7 +771,15 @@ class ConservationStatus(
             ConservationStatus.PROCESSING_STATUS_READY_FOR_AGENDA,
             ConservationStatus.PROCESSING_STATUS_WITH_APPROVER,
         ]
-        return not self.locked or self.processing_status in approver_process_state
+        unlocked_editing_statuses = [
+            ConservationStatus.PROCESSING_STATUS_APPROVED,
+            ConservationStatus.PROCESSING_STATUS_DECLINED,
+            ConservationStatus.PROCESSING_STATUS_CLOSED,
+            ConservationStatus.PROCESSING_STATUS_DELISTED,
+        ]
+        return (
+            self.processing_status in unlocked_editing_statuses and not self.locked
+        ) or self.processing_status in approver_process_state
 
     @property
     def can_officer_edit(self):
