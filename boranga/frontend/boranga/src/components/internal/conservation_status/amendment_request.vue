@@ -202,9 +202,6 @@ export default {
             fetch('/api/cs_amendment_request.json', {
                 method: 'POST',
                 body: formData,
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
             }).then(async (response) => {
                 const data = await response.json();
                 if (!response.ok) {
