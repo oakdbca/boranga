@@ -421,6 +421,13 @@ export default {
             );
             sessionStorage.setItem(this.filterPurposeCache, this.filterPurpose);
         },
+        hrefContainerId: function () {
+            // This is to ensure that the hrefContainerId is updated in the datatable
+            this.$refs.occurrence_tenure_datatable.vmDataTable.ajax.reload(
+                helpers.enablePopovers,
+                false
+            );
+        },
     },
     mounted: function () {
         this.$nextTick(() => {
