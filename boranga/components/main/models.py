@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import os
 from abc import ABCMeta, abstractmethod
@@ -5,6 +7,8 @@ from abc import ABCMeta, abstractmethod
 import nh3
 from django.apps import apps
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.core.files.storage import FileSystemStorage
 from django.db import models
@@ -439,3 +443,50 @@ class LockableModel(BaseModel):
     def toggle_lock(self):
         self.locked = not self.locked
         self.save()
+
+
+class LegacyValueMap(models.Model):
+    """
+    Maps a legacy enumerated value to a target Django object (any model) or a
+    canonical free value (when target object not applicable).
+
+    Use cases:
+      - Enumerated lookups (taxon rank, region codes, statuses, etc.)
+      - Synonyms: multiple legacy_value rows can point to the same target
+    """
+
+    legacy_system = models.CharField(max_length=30)  # e.g. 'TPFL', 'TEC'
+    list_name = models.CharField(max_length=50)  # e.g. 'taxon_rank'
+    legacy_value = models.CharField(max_length=255)
+
+    # Optional canonical normalised string (if not pointing to an object)
+    canonical_name = models.CharField(max_length=255, blank=True, null=True)
+
+    # Generic FK to target object (optional)
+    target_content_type = models.ForeignKey(
+        ContentType, on_delete=models.CASCADE, blank=True, null=True
+    )
+    target_object_id = models.PositiveIntegerField(blank=True, null=True)
+    target_object = GenericForeignKey("target_content_type", "target_object_id")
+
+    active = models.BooleanField(default=True)
+    notes = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        app_label = "boranga"
+        unique_together = (("legacy_system", "list_name", "legacy_value"),)
+        indexes = [
+            models.Index(fields=["legacy_system", "list_name"]),
+            models.Index(fields=["legacy_system", "list_name", "legacy_value"]),
+        ]
+
+    def __str__(self):
+        tgt = self.target_object or self.canonical_name or "∅"
+        return f"{self.legacy_system}:{self.list_name}:{self.legacy_value} -> {tgt}"
+
+    @property
+    def key_tuple(self):
+        return (self.legacy_system, self.list_name, self.legacy_value)
