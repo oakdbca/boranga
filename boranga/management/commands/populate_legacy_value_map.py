@@ -1,5 +1,6 @@
 import csv
 
+from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -12,7 +13,7 @@ APP_LABEL = "boranga"  # all target models live in this app
 class Command(BaseCommand):
     help = (
         "Import LegacyValueMap rows from CSV. Columns: legacy_value, "
-        "target_model, target_object_id, canonical_name, active"
+        "target_model, target_lookup_field_name, target_lookup_field_value, canonical_name, active"
     )
 
     def add_arguments(self, parser):
@@ -65,12 +66,61 @@ class Command(BaseCommand):
                     "false",
                     "no",
                 )
-                target_id = (
-                    r.get("target_object_id") or r.get("target_id") or ""
-                ).strip() or None
+
+                # required: model and lookup field/value (we no longer accept target_object_id)
                 target_model = (
                     r.get("target_model") or r.get("model") or ""
                 ).strip() or None
+                # default lookup field to "name" when the CSV cell is empty
+                lookup_field = (
+                    r.get("target_lookup_field_name") or r.get("lookup_field") or ""
+                ).strip()
+                if not lookup_field:
+                    lookup_field = "name"
+                lookup_value = (
+                    r.get("target_lookup_field_value") or r.get("lookup_value") or ""
+                ).strip() or None
+
+                if not target_model:
+                    self.stderr.write(
+                        f"Missing target_model; skipping row '{legacy_value}'"
+                    )
+                    skipped += 1
+                    continue
+                if not lookup_value:
+                    self.stderr.write(
+                        f"Missing lookup_value for model '{target_model}' (lookup_field='{lookup_field}'); "
+                        f"skipping row '{legacy_value}'"
+                    )
+                    skipped += 1
+                    continue
+
+                # Resolve lookup -> target_id
+                try:
+                    model_cls = apps.get_model(APP_LABEL, target_model.strip().lower())
+                except (LookupError, ValueError):
+                    self.stderr.write(
+                        f"Unknown model '{target_model}' in app '{APP_LABEL}'; skipping row '{legacy_value}'"
+                    )
+                    skipped += 1
+                    continue
+                try:
+                    obj = model_cls._default_manager.get(**{lookup_field: lookup_value})
+                    target_id = str(obj.pk)
+                except model_cls.DoesNotExist:
+                    self.stderr.write(
+                        f"No {target_model} matching {lookup_field}={lookup_value}; skipping row '{legacy_value}'"
+                    )
+                    skipped += 1
+                    continue
+                except model_cls.MultipleObjectsReturned:
+                    self.stderr.write(
+                        f"Multiple {target_model} matching {lookup_field}={lookup_value}; skipping row '{legacy_value}'"
+                    )
+                    skipped += 1
+                    continue
+
+                # target_id may be a numeric string or None at this point
 
                 ct = self._resolve_content_type(target_model)
                 if target_model and ct is None:
