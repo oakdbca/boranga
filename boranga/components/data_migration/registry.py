@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Any
 
 from django.db import models
+from ledger_api_client.ledger_models import EmailUserRO
 
 from boranga.components.species_and_communities.models import GroupType
 
@@ -207,6 +208,24 @@ def t_group_type_by_name(value, ctx):
         return TransformResult(
             value=None,
             issues=[TransformIssue("error", f"Unknown group_type '{value}'")],
+        )
+
+
+@registry.register("emailuser_by_email")
+def t_emailuser_by_email(value, ctx):
+    if value in (None, ""):
+        return _result(None)
+    email = str(value).strip()
+    try:
+        user = EmailUserRO.objects.get(email__iexact=email)
+        return _result(user.id)
+    except EmailUserRO.DoesNotExist:
+        return _result(
+            value, TransformIssue("error", f"User with email='{value}' not found")
+        )
+    except EmailUserRO.MultipleObjectsReturned:
+        return _result(
+            value, TransformIssue("error", f"Multiple users with email='{value}'")
         )
 
 
