@@ -288,6 +288,15 @@ export default {
             vm.addEventListeners();
         });
     },
+    watch: {
+        hrefContainerId: function () {
+            // This is to ensure that the hrefContainerId is updated in the datatable
+            this.$refs.related_ocr_datatable.vmDataTable.ajax.reload(
+                helpers.enablePopovers,
+                false
+            );
+        },
+    },
     methods: {
         toggleCollapse: function () {
             //console.log("toggle");
