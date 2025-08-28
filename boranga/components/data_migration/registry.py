@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import re
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -227,6 +228,60 @@ def t_emailuser_by_email(value, ctx):
         return _result(
             value, TransformIssue("error", f"Multiple users with email='{value}'")
         )
+
+
+@registry.register("split_multiselect")
+def t_split_multiselect(value, ctx):
+    """Split a multi-select cell into a trimmed, deduped list (split on ';' or ',')."""
+    if value in (None, ""):
+        return _result(None)
+    s = str(value)
+    parts = [p.strip() for p in re.split(r"[;,]", s) if p.strip()]
+    seen = set()
+    out = []
+    for p in parts:
+        key = p.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(p)
+    return _result(out)
+
+
+def validate_multiselect(choice_transform_name: str):
+    """
+    Factory returning a transform name that applies a single-item transform to
+    every element in a list and returns the normalized list (or issues).
+    """
+    h = hashlib.sha1(choice_transform_name.encode()).hexdigest()[:8]
+    name = f"validate_multiselect_{h}"
+    if name in registry._fns:
+        return name
+
+    def inner(value, ctx):
+        if value in (None, ""):
+            return _result(None)
+        if not isinstance(value, (list, tuple)):
+            return _result(
+                value, TransformIssue("error", "Expected list for multiselect")
+            )
+        item_fn = registry._fns.get(choice_transform_name)
+        if item_fn is None:
+            return _result(
+                value,
+                TransformIssue("error", f"Unknown transform '{choice_transform_name}'"),
+            )
+
+        normalized = []
+        issues = []
+        for item in value:
+            res = item_fn(item, ctx)
+            normalized.append(res.value)
+            issues.extend(res.issues)
+        return TransformResult(normalized, issues)
+
+    registry._fns[name] = inner
+    return name
 
 
 # ------------------------ End Common Transform Functions ------------------------
