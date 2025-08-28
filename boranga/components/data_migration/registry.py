@@ -82,6 +82,13 @@ def t_blank_to_none(value, ctx):
     return _result(value)
 
 
+@registry.register("null_to_none")
+def t_null_to_none(value, ctx):
+    if value in ("Null", "NULL", "null", "None", "none"):
+        return _result(None)
+    return _result(value)
+
+
 @registry.register("required")
 def t_required(value, ctx):
     if value in (None, "", []):
