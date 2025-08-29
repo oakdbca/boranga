@@ -475,6 +475,7 @@ export default {
             });
         },
         save_wo_confirm: function () {
+            const vm = this;
             fetch(this.cs_proposal_form_url, {
                 method: 'POST',
                 headers: {
@@ -483,8 +484,8 @@ export default {
                 body: JSON.stringify(this.conservation_status_obj),
             }).then(
                 async (response) => {
+                    const data = await response.json();
                     if (!response.ok) {
-                        const data = await response.json();
                         swal.fire({
                             title: 'Error',
                             text: JSON.stringify(data),
@@ -495,6 +496,7 @@ export default {
                         });
                         return;
                     }
+                    vm.conservation_status_obj = data;
                 },
                 (err) => {
                     console.log(err);
