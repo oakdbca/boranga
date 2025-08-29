@@ -13,13 +13,13 @@ APP_LABEL = "boranga"  # all target models live in this app
 class Command(BaseCommand):
     help = (
         "Import LegacyValueMap rows from CSV. Columns: legacy_value, "
-        "target_model, target_lookup_field_name, target_lookup_field_value, canonical_name, active"
+        "list_name, target_model, target_lookup_field_name, target_lookup_field_value, "
+        "optional target_lookup_field_name_2/target_lookup_field_value_2, canonical_name, active"
     )
 
     def add_arguments(self, parser):
         parser.add_argument("csvfile", type=str)
         parser.add_argument("--legacy-system", required=True)
-        parser.add_argument("--list-name", required=True)
         parser.add_argument("--dry-run", action="store_true")
         parser.add_argument(
             "--update", action="store_true", help="update existing rows"
@@ -37,7 +37,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         csvfile = options["csvfile"]
         legacy_system = options["legacy_system"]
-        list_name = options["list_name"]
         dry_run = options["dry_run"]
         do_update = options["update"]
 
@@ -58,11 +57,7 @@ class Command(BaseCommand):
                     skipped += 1
                     continue
 
-                # allow per-row override of legacy_system; default to CLI value
-                row_legacy_system = (
-                    r.get("legacy_system") or legacy_system
-                ).strip() or legacy_system
-                # read list_name per-row (as you already have)
+                # list_name is taken per-row from the CSV (required)
                 row_list_name = (
                     r.get("list_name") or r.get("list") or ""
                 ).strip() or None
@@ -96,6 +91,18 @@ class Command(BaseCommand):
                     r.get("target_lookup_field_value") or r.get("lookup_value") or ""
                 ).strip() or None
 
+                # optional second lookup pair to further filter the target (parent/related)
+                # If provided, this will be added to the queryset filter as an additional key.
+                # Accepts related lookups using Django lookup syntax (e.g. "parent__name").
+                lookup_field_2 = (
+                    r.get("target_lookup_field_name_2") or r.get("lookup_field_2") or ""
+                ).strip() or None
+                lookup_value_2 = (
+                    r.get("target_lookup_field_value_2")
+                    or r.get("lookup_value_2")
+                    or ""
+                ).strip() or None
+
                 if not target_model:
                     self.stderr.write(
                         f"Missing target_model; skipping row '{legacy_value}'"
@@ -120,17 +127,21 @@ class Command(BaseCommand):
                     skipped += 1
                     continue
                 try:
-                    obj = model_cls._default_manager.get(**{lookup_field: lookup_value})
+                    # assemble filter kwargs; include the second lookup if provided
+                    filter_kwargs = {lookup_field: lookup_value}
+                    if lookup_field_2 and lookup_value_2:
+                        filter_kwargs[lookup_field_2] = lookup_value_2
+                    obj = model_cls._default_manager.get(**filter_kwargs)
                     target_id = str(obj.pk)
                 except model_cls.DoesNotExist:
                     self.stderr.write(
-                        f"No {target_model} matching {lookup_field}={lookup_value}; skipping row '{legacy_value}'"
+                        f"No {target_model} matching {filter_kwargs}; skipping row '{legacy_value}'"
                     )
                     skipped += 1
                     continue
                 except model_cls.MultipleObjectsReturned:
                     self.stderr.write(
-                        f"Multiple {target_model} matching {lookup_field}={lookup_value}; skipping row '{legacy_value}'"
+                        f"Multiple {target_model} matching {filter_kwargs}; skipping row '{legacy_value}'"
                     )
                     skipped += 1
                     continue
@@ -154,14 +165,13 @@ class Command(BaseCommand):
 
                 if dry_run:
                     self.stdout.write(
-                        f"[DRY] would create/update: legacy_system={row_legacy_system} "
-                        f"list_name={row_list_name} {legacy_value} -> {defaults}"
+                        f"[DRY] would create/update: list_name={row_list_name} {legacy_value} -> {defaults}"
                     )
                     continue
 
                 obj, created_flag = LegacyValueMap.objects.get_or_create(
-                    legacy_system=row_legacy_system,
-                    list_name=list_name,
+                    legacy_system=legacy_system,
+                    list_name=row_list_name,
                     legacy_value=legacy_value,
                     defaults=defaults,
                 )
