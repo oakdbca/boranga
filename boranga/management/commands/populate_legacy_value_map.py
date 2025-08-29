@@ -58,6 +58,21 @@ class Command(BaseCommand):
                     skipped += 1
                     continue
 
+                # allow per-row override of legacy_system; default to CLI value
+                row_legacy_system = (
+                    r.get("legacy_system") or legacy_system
+                ).strip() or legacy_system
+                # read list_name per-row (as you already have)
+                row_list_name = (
+                    r.get("list_name") or r.get("list") or ""
+                ).strip() or None
+                if not row_list_name:
+                    self.stderr.write(
+                        f"Missing list_name for legacy_value '{legacy_value}'; skipping"
+                    )
+                    skipped += 1
+                    continue
+
                 canonical = (
                     r.get("canonical_name") or r.get("canonical") or ""
                 ).strip()
@@ -139,12 +154,13 @@ class Command(BaseCommand):
 
                 if dry_run:
                     self.stdout.write(
-                        f"[DRY] would create/update: {legacy_value} -> {defaults}"
+                        f"[DRY] would create/update: legacy_system={row_legacy_system} "
+                        f"list_name={row_list_name} {legacy_value} -> {defaults}"
                     )
                     continue
 
                 obj, created_flag = LegacyValueMap.objects.get_or_create(
-                    legacy_system=legacy_system,
+                    legacy_system=row_legacy_system,
                     list_name=list_name,
                     legacy_value=legacy_value,
                     defaults=defaults,
