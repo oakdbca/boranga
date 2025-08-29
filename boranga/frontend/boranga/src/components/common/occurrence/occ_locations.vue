@@ -960,7 +960,10 @@ export default {
         },
         highlightOCROnMapLayer: function (id) {
             const feature = this.getMapFeatureById(id);
-            this.$refs.component_map.centerOnFeature(feature);
+            this.$refs.component_map.centerOnFeature(
+                feature,
+                this.$refs.component_map.mapDefaultZoom
+            );
         },
         editTenureDetails: function (id) {
             console.log(id);

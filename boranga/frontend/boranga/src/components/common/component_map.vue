@@ -5799,7 +5799,7 @@ export default {
             const feature = new Feature({
                 geometry: new Point(coordinates),
             });
-            this.centerOnFeature(feature, 12);
+            this.centerOnFeature(feature, this.mapDefaultZoom);
         },
         getLayerDefinitionByName: function (layer_name) {
             return this.vectorLayerDefinitions().find((layer_def) => {
