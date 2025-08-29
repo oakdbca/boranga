@@ -12,8 +12,8 @@ APP_LABEL = "boranga"  # all target models live in this app
 
 class Command(BaseCommand):
     help = (
-        "Import LegacyValueMap rows from CSV. Columns: legacy_value, "
-        "list_name, target_model, target_lookup_field_name, target_lookup_field_value, "
+        "Import LegacyValueMap rows from CSV. Columns: list_name, legacy_value, "
+        "target_model, target_lookup_field_name, target_lookup_field_value, "
         "optional target_lookup_field_name_2/target_lookup_field_value_2, canonical_name, active"
     )
 
