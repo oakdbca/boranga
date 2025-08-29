@@ -57,7 +57,7 @@
                     >
 
                     <div :id="select_common_name" class="col-sm-8">
-                        <template v-if="!conservation_status_obj.species_id">
+                        <div v-if="!conservation_status_obj.species_id">
                             <select
                                 :id="common_name_lookup"
                                 :ref="common_name_lookup"
@@ -65,7 +65,7 @@
                                 :name="common_name_lookup"
                                 class="form-control"
                             />
-                        </template>
+                        </div>
                         <template
                             v-else-if="
                                 conservation_status_obj.common_names &&
