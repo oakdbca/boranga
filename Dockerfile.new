@@ -1,0 +1,131 @@
+# syntax = docker/dockerfile:1.7
+
+# Reproducible pinned base + node major version
+ARG UBUNTU_BASE=ubuntu:24.04@sha256:353675e2a41babd526e2b837d7ec780c2a05bca0164f7ea5dbbd433d21d166fc
+ARG NODE_MAJOR=22
+ARG PYTHON_VERSION=3.12
+
+####################
+# Frontend build stage (use official Node 22)
+####################
+FROM node:22-bullseye AS node_build
+WORKDIR /build/frontend
+
+# copy frontend sources
+COPY boranga/frontend/boranga/package*.json ./
+COPY boranga/frontend/boranga/ ./
+
+# copy repo-level static assets so relative imports like ../../../../../static/... resolve
+# adjust path if your static assets live elsewhere
+COPY boranga/static /build/static
+
+# debug: show static files that frontend expects (will appear in build logs)
+RUN echo "frontend files:" && ls -la /build/frontend/src | sed -n '1,200p' || true
+RUN echo "static sample:" && ls -la /build/static/boranga || true
+
+RUN echo "node:" $(node -v) "npm:" $(npm -v)
+RUN npm ci --no-audit --no-fund
+# If you hit crypto/OpenSSL errors with Node 22, try:
+# RUN NODE_OPTIONS="--openssl-legacy-provider" npm run build
+RUN npm run build
+
+####################
+# Build stage
+####################
+FROM --platform=linux/amd64 ${UBUNTU_BASE} AS build
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    TZ=Australia/Perth \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONUNBUFFERED=1 \
+    NODE_OPTIONS=--max_old_space_size=4096
+
+# app user
+ARG APP_USER=oim
+ARG APP_UID=5000
+ARG APP_GID=5000
+
+RUN groupadd --gid ${APP_GID} ${APP_USER} \
+    && useradd --uid ${APP_UID} --gid ${APP_GID} --create-home --shell /bin/bash ${APP_USER}
+
+# Install build deps (combine and clean apt lists in one layer)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    ca-certificates curl gnupg build-essential python3 \
+    python3-venv python3-dev python3-pip git locales wget ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# set locale
+RUN locale-gen en_AU.UTF-8 || true
+ENV LANG=en_AU.UTF-8 LC_ALL=en_AU.UTF-8
+
+WORKDIR /app
+
+# copy only needed files (do not copy .git)
+COPY --chown=${APP_UID}:${APP_GID} requirements.txt /app/requirements.txt
+COPY --chown=${APP_UID}:${APP_GID} manage.py /app/manage.py
+COPY --chown=${APP_UID}:${APP_GID} startup.sh /app/startup.sh
+COPY --chown=${APP_UID}:${APP_GID} boranga /app/boranga
+
+# copy built frontend from node_build
+COPY --from=node_build --chown=${APP_UID}:${APP_GID} /build/frontend/dist /app/boranga/frontend/boranga/dist
+
+# create and populate venv
+USER ${APP_USER}
+RUN mkdir -p /app \
+    && chown -R ${APP_UID}:${APP_GID} /app \
+    && python3 -m venv /app/venv \
+    && /app/venv/bin/pip install --upgrade pip setuptools wheel \
+    && /app/venv/bin/pip install --no-cache-dir -r /app/requirements.txt
+
+# collectstatic and any Django build steps
+WORKDIR /app
+ENV PATH=/app/venv/bin:$PATH
+RUN /app/venv/bin/python manage.py collectstatic --noinput || true
+
+####################
+# Runtime stage
+####################
+FROM ${UBUNTU_BASE} AS runtime
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    TZ=Australia/Perth
+
+ARG APP_USER=oim
+ARG APP_UID=5000
+ARG APP_GID=5000
+
+# create runtime user and dirs
+RUN groupadd --gid ${APP_GID} ${APP_USER} \
+    && useradd --uid ${APP_UID} --gid ${APP_GID} --create-home --shell /bin/false ${APP_USER} \
+    && mkdir -p /app /var/log/boranga \
+    && chown -R ${APP_UID}:${APP_GID} /app /var/log/boranga
+
+# minimal runtime packages
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates libpq5 tini locales libgdal-dev curl wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# copy venv and app from build stage
+COPY --from=build --chown=${APP_UID}:${APP_GID} /app/venv /app/venv
+COPY --from=build --chown=${APP_UID}:${APP_GID} /app/boranga /app/boranga
+COPY --from=build --chown=${APP_UID}:${APP_GID} /app/startup.sh /app/startup.sh
+
+# ensure built frontend and static are present (built under boranga/frontend/boranga/dist)
+# keep them under application tree
+RUN if [ -d /app/boranga/frontend/boranga/dist ]; then \
+    mkdir -p /app/frontend && cp -r /app/boranga/frontend/boranga/dist /app/frontend/dist ; \
+    fi
+
+ENV PATH=/app/venv/bin:$PATH
+
+WORKDIR /app
+USER ${APP_USER}
+
+EXPOSE 8080
+HEALTHCHECK --interval=1m --timeout=5s --start-period=10s --retries=3 CMD curl -fsS --max-time 3 http://localhost:8080/ || exit 1
+
+ENTRYPOINT ["/usr/bin/tini", "--", "/app/startup.sh"]
+CMD []
