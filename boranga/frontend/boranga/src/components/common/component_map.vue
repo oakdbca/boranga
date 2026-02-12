@@ -3849,8 +3849,9 @@ export default {
                             // Enable modify polygon the hovered polygon is selected and drawing mode is active
                             vm.modifySetActive(true);
                             vm.transformSetActive(false);
-                        } else {
+                        } else if (!vm.modifying) {
                             // Disable modify polygon when drawing mode is not active
+                            // Don't deactivate modify if we're actively modifying (dragging a vertex)
                             vm.modifySetActive(false);
                         }
                     } else {
@@ -3860,27 +3861,10 @@ export default {
                         // Re-setting it to undefined MIGHT remove that smart function.
                         // To be safe, we re-apply the smart style function or just leave it undefined if we trust the Layer style.
                         selected.setStyle(undefined);
-
-                        /*
-                        if (!(vm.measuring || vm.drawing)) {
-                            // Don't highlight features when measuring or drawing
-                            const type = selected.getGeometry().getType();
-                            const rgba = vm.colorHexToRgbaValues(
-                                selected.values_.color
-                            );
-                            selected.setStyle(
-                                vm.createStyle(
-                                    selected.getProperties().color,
-                                    selected.getProperties().stroke,
-                                    type,
-                                    null,
-                                    null,
-                                    vm.mapMarker,
-                                    rgba[3]
-                                )
-                            );
+                        // Don't deactivate modify if we're actively modifying (dragging a vertex)
+                        if (!vm.modifying) {
+                            vm.modifySetActive(false);
                         }
-                        */
                     }
                     selected = null;
                 }
