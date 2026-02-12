@@ -2123,6 +2123,7 @@ class Community(RevisionedMixin):
             resulting_community.pk = None
             resulting_community.community_number = ""
             resulting_community.processing_status = Community.PROCESSING_STATUS_ACTIVE
+            resulting_community.submitter = request.user.id
 
         resulting_community.renamed_from_id = self.id
         resulting_community.save(version_user=request.user)

@@ -2027,6 +2027,9 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 rename_instance.submitter = request.user.id
             if rename_instance.processing_status == Species.PROCESSING_STATUS_HISTORICAL:
                 RENAME_FROM_ACTION = SpeciesUserAction.ACTION_RENAME_SPECIES_FROM_EXISTING_HISTORICAL
+                # The record has to have a submitter so since this is being reactivated
+                # we set the submitter to the current request user
+                rename_instance.submitter = request.user.id
 
             rename_instance = rename_deep_copy(request, instance, existing_species=rename_instance)
             rename_instance.processing_status = Species.PROCESSING_STATUS_ACTIVE
@@ -2952,6 +2955,9 @@ class CommunityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
 
             elif resulting_community.processing_status == Community.PROCESSING_STATUS_HISTORICAL:
                 resulting_community.processing_status = Community.PROCESSING_STATUS_ACTIVE
+                # The record has to have a submitter so since this is being reactivated
+                # we set the submitter to the current request user
+                resulting_community.submitter = request.user.id
                 resulting_community.save(version_user=request.user)
 
                 # Log community action for the historical community
