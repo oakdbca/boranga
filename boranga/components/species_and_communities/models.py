@@ -38,9 +38,7 @@ from boranga.settings import GROUP_NAME_SPECIES_COMMUNITIES_APPROVER
 logger = logging.getLogger(__name__)
 
 
-private_storage = FileSystemStorage(
-    location=settings.BASE_DIR + "/private-media/", base_url="/private-media/"
-)
+private_storage = FileSystemStorage(location=settings.BASE_DIR + "/private-media/", base_url="/private-media/")
 
 
 def update_species_doc_filename(instance, filename):
@@ -74,10 +72,7 @@ def _sum_area_of_occupancy_m2(obj, owner_field: str):
     from boranga.components.occurrence.models import Occurrence, OccurrenceGeometry
 
     # Fauna uses buffered geometries for area calculation
-    if (
-        getattr(obj, "group_type", None)
-        and obj.group_type.name == GroupType.GROUP_TYPE_FAUNA
-    ):
+    if getattr(obj, "group_type", None) and obj.group_type.name == GroupType.GROUP_TYPE_FAUNA:
         logger.warning(
             "_sum_area_of_occupancy_m2 called for fauna species which doesn't make sense as "
             "they are point based. Returnning 0."
@@ -146,9 +141,7 @@ def _convex_hull_area_m2(obj, owner_field: str):
 
 
 class Region(BaseModel):
-    name = models.CharField(
-        unique=True, default=None, max_length=200, validators=[no_commas_validator]
-    )
+    name = models.CharField(unique=True, default=None, max_length=200, validators=[no_commas_validator])
     forest_region = models.BooleanField(default=False)
 
     class Meta:
@@ -160,13 +153,9 @@ class Region(BaseModel):
 
 
 class District(BaseModel):
-    name = models.CharField(
-        unique=True, max_length=200, validators=[no_commas_validator]
-    )
+    name = models.CharField(unique=True, max_length=200, validators=[no_commas_validator])
     code = models.CharField(unique=True, max_length=3, null=True)
-    region = models.ForeignKey(
-        Region, on_delete=models.CASCADE, related_name="districts"
-    )
+    region = models.ForeignKey(Region, on_delete=models.CASCADE, related_name="districts")
     archive_date = models.DateField(null=True, blank=True)
 
     class Meta:
@@ -216,15 +205,11 @@ class GroupType(BaseModel):
 
     @property
     def flora_kingdoms(self):
-        return Kingdom.objects.get(
-            grouptype__name=GroupType.GROUP_TYPE_FLORA
-        ).value_list("kingdom_name", flat=True)
+        return Kingdom.objects.get(grouptype__name=GroupType.GROUP_TYPE_FLORA).value_list("kingdom_name", flat=True)
 
     @property
     def fauna_kingdoms(self):
-        return Kingdom.objects.get(
-            grouptype__name=GroupType.GROUP_TYPE_FAUNA
-        ).value_list("kingdom_name", flat=True)
+        return Kingdom.objects.get(grouptype__name=GroupType.GROUP_TYPE_FAUNA).value_list("kingdom_name", flat=True)
 
 
 class Kingdom(BaseModel):
@@ -239,9 +224,7 @@ class Kingdom(BaseModel):
         blank=True,
         related_name="kingdoms",
     )
-    kingdom_id = models.CharField(
-        max_length=100, null=True, blank=True, unique=True
-    )  # nomos data
+    kingdom_id = models.CharField(max_length=100, null=True, blank=True, unique=True)  # nomos data
     kingdom_name = models.CharField(max_length=100, null=True, blank=True)  # nomos data
 
     class Meta:
@@ -283,12 +266,8 @@ class TaxonomyRank(BaseModel):
     """
 
     kingdom_id = models.IntegerField(null=True, blank=True)  # nomos data
-    kingdom_fk = models.ForeignKey(
-        Kingdom, on_delete=models.SET_NULL, null=True, blank=True, related_name="ranks"
-    )
-    taxon_rank_id = models.IntegerField(
-        null=True, blank=True, unique=True
-    )  # nomos data
+    kingdom_fk = models.ForeignKey(Kingdom, on_delete=models.SET_NULL, null=True, blank=True, related_name="ranks")
+    taxon_rank_id = models.IntegerField(null=True, blank=True, unique=True)  # nomos data
     rank_name = models.CharField(max_length=512, null=True, blank=True)
 
     class Meta:
@@ -327,9 +306,7 @@ class Taxonomy(BaseModel):
     taxon_name_id = models.IntegerField(null=True, blank=True, unique=True)
     scientific_name = models.CharField(max_length=512, null=True, blank=True)
     kingdom_id = models.IntegerField(null=True, blank=True)
-    kingdom_fk = models.ForeignKey(
-        Kingdom, on_delete=models.SET_NULL, null=True, blank=True, related_name="taxons"
-    )
+    kingdom_fk = models.ForeignKey(Kingdom, on_delete=models.SET_NULL, null=True, blank=True, related_name="taxons")
     kingdom_name = models.CharField(max_length=512, null=True, blank=True)
     taxon_rank_id = models.IntegerField(null=True, blank=True)
     taxonomy_rank_fk = models.ForeignKey(
@@ -376,9 +353,9 @@ class Taxonomy(BaseModel):
     @property
     def taxon_previous_name(self):
         if hasattr(self, "previous_names") and self.previous_names.exists():
-            previous_names_list = TaxonPreviousName.objects.filter(
-                taxonomy=self.id
-            ).values_list("previous_scientific_name", flat=True)
+            previous_names_list = TaxonPreviousName.objects.filter(taxonomy=self.id).values_list(
+                "previous_scientific_name", flat=True
+            )
             return ",".join(previous_names_list)
         else:
             return ""
@@ -386,9 +363,7 @@ class Taxonomy(BaseModel):
     @property
     def taxon_previous_queryset(self):
         if hasattr(self, "new_taxon") and self.new_taxon.exists():
-            previous_queryset = TaxonPreviousName.objects.filter(
-                taxonomy=self.id
-            ).order_by("id")
+            previous_queryset = TaxonPreviousName.objects.filter(taxonomy=self.id).order_by("id")
             return previous_queryset
         else:
             return TaxonPreviousName.objects.none()
@@ -396,9 +371,9 @@ class Taxonomy(BaseModel):
     @property
     def taxon_vernacular_name(self):
         if hasattr(self, "vernaculars") and self.vernaculars.exists():
-            vernacular_names_list = TaxonVernacular.objects.filter(
-                taxonomy=self.id
-            ).values_list("vernacular_name", flat=True)
+            vernacular_names_list = TaxonVernacular.objects.filter(taxonomy=self.id).values_list(
+                "vernacular_name", flat=True
+            )
             return ",".join(vernacular_names_list)
         else:
             return ""
@@ -413,9 +388,7 @@ class TaxonVernacular(BaseModel):
 
     vernacular_id = models.IntegerField(null=True, blank=True, unique=True)
     vernacular_name = models.CharField(max_length=512, null=True, blank=True)
-    taxonomy = models.ForeignKey(
-        Taxonomy, on_delete=models.CASCADE, null=True, related_name="vernaculars"
-    )
+    taxonomy = models.ForeignKey(Taxonomy, on_delete=models.CASCADE, null=True, related_name="vernaculars")
     taxon_name_id = models.IntegerField(null=True, blank=True)
 
     class Meta:
@@ -431,9 +404,7 @@ class TaxonPreviousName(BaseModel):
     Previous Name(old name) of taxon
     """
 
-    taxonomy = models.ForeignKey(
-        Taxonomy, on_delete=models.CASCADE, null=True, related_name="previous_names"
-    )
+    taxonomy = models.ForeignKey(Taxonomy, on_delete=models.CASCADE, null=True, related_name="previous_names")
     previous_name_id = models.IntegerField(null=True, blank=True, unique=True)
     previous_scientific_name = models.CharField(max_length=512, null=True, blank=True)
     # FK to previous taxonomy record if it exists in Boranga
@@ -485,9 +456,7 @@ class InformalGroup(BaseModel):
         related_name="informal_groups",
     )
     taxon_name_id = models.IntegerField(null=True, blank=True)
-    taxonomy = models.ForeignKey(
-        Taxonomy, on_delete=models.CASCADE, null=True, related_name="informal_groups"
-    )
+    taxonomy = models.ForeignKey(Taxonomy, on_delete=models.CASCADE, null=True, related_name="informal_groups")
 
     class Meta:
         app_label = "boranga"
@@ -505,9 +474,7 @@ class InformalGroup(BaseModel):
 class FaunaGroup(ArchivableModel, OrderedModel, BaseModel):
     objects = OrderedArchivableManager()
 
-    name = models.CharField(
-        unique=True, max_length=255, validators=[no_commas_validator]
-    )
+    name = models.CharField(unique=True, max_length=255, validators=[no_commas_validator])
 
     class Meta:
         app_label = "boranga"
@@ -522,12 +489,8 @@ class FaunaGroup(ArchivableModel, OrderedModel, BaseModel):
 class FaunaSubGroup(ArchivableModel, OrderedModel, BaseModel):
     objects = OrderedArchivableManager()
 
-    name = models.CharField(
-        unique=True, max_length=255, validators=[no_commas_validator]
-    )
-    fauna_group = models.ForeignKey(
-        FaunaGroup, on_delete=models.CASCADE, related_name="sub_groups"
-    )
+    name = models.CharField(unique=True, max_length=255, validators=[no_commas_validator])
+    fauna_group = models.ForeignKey(FaunaGroup, on_delete=models.CASCADE, related_name="sub_groups")
     order_with_respect_to = "fauna_group"
 
     class Meta:
@@ -592,9 +555,7 @@ class Species(RevisionedMixin):
     species_number = models.CharField(max_length=9, blank=True, default="")
     group_type = models.ForeignKey(GroupType, on_delete=models.CASCADE)
 
-    taxonomy = models.OneToOneField(
-        Taxonomy, on_delete=models.SET_NULL, null=True, blank=True
-    )
+    taxonomy = models.OneToOneField(Taxonomy, on_delete=models.SET_NULL, null=True, blank=True)
 
     image_doc = models.ForeignKey(
         "SpeciesDocument",
@@ -605,14 +566,10 @@ class Species(RevisionedMixin):
         related_name="species_image",
     )
     regions = models.ManyToManyField(Region, blank=True, related_name="species_regions")
-    districts = models.ManyToManyField(
-        District, blank=True, related_name="species_districts"
-    )
+    districts = models.ManyToManyField(District, blank=True, related_name="species_districts")
     last_data_curation_date = models.DateField(blank=True, null=True)
     conservation_plan_exists = models.BooleanField(default=False)
-    conservation_plan_reference = models.CharField(
-        max_length=500, null=True, blank=True
-    )
+    conservation_plan_reference = models.CharField(max_length=500, null=True, blank=True)
     processing_status = models.CharField(
         "Processing Status",
         max_length=30,
@@ -781,10 +738,7 @@ class Species(RevisionedMixin):
 
     @property
     def is_deletable(self):
-        return (
-            self.processing_status == Species.PROCESSING_STATUS_DRAFT
-            and not self.species_number
-        )
+        return self.processing_status == Species.PROCESSING_STATUS_DRAFT and not self.species_number
 
     @property
     def is_flora_application(self):
@@ -857,9 +811,7 @@ class Species(RevisionedMixin):
         # Using it to reduce queries in the species list view
         from boranga.components.conservation_status.models import ConservationStatus
 
-        return self.conservation_status.filter(
-            processing_status=ConservationStatus.PROCESSING_STATUS_APPROVED
-        ).first()
+        return self.conservation_status.filter(processing_status=ConservationStatus.PROCESSING_STATUS_APPROVED).first()
 
     def can_user_save(self, request):
         user_closed_state = [
@@ -940,9 +892,7 @@ class Species(RevisionedMixin):
                 is_queryset = False
                 if a_field.is_relation:
                     if a_field.many_to_many:
-                        field_objects = a_field.related_model.objects.filter(
-                            **{a_field.remote_field.name: self}
-                        )
+                        field_objects = a_field.related_model.objects.filter(**{a_field.remote_field.name: self})
                         is_queryset = True
                     elif a_field.many_to_one:  # foreign key
                         val = getattr(self, a_field.name)
@@ -951,9 +901,7 @@ class Species(RevisionedMixin):
                         else:
                             field_objects = []
                     elif a_field.one_to_many:  # reverse foreign key
-                        qs = a_field.related_model.objects.filter(
-                            **{a_field.remote_field.name: self}
-                        )
+                        qs = a_field.related_model.objects.filter(**{a_field.remote_field.name: self})
                         field_objects = qs
                         is_queryset = True
                     elif a_field.one_to_one:
@@ -964,9 +912,7 @@ class Species(RevisionedMixin):
 
                 if is_queryset:
                     if "exclude_ids" in kwargs:
-                        field_objects = field_objects.exclude(
-                            id__in=kwargs["exclude_ids"]
-                        )
+                        field_objects = field_objects.exclude(id__in=kwargs["exclude_ids"])
                     subset = field_objects
                 else:
                     subset = field_objects
@@ -976,12 +922,9 @@ class Species(RevisionedMixin):
                         related_item = field_object.as_related_item
                         if search_value:
                             if (
-                                search_value.lower()
-                                not in related_item.identifier.lower()
-                                and search_value.lower()
-                                not in related_item.descriptor.lower()
-                                and search_value.lower()
-                                not in related_item.related_sc_id.lower()
+                                search_value.lower() not in related_item.identifier.lower()
+                                and search_value.lower() not in related_item.descriptor.lower()
+                                and search_value.lower() not in related_item.related_sc_id.lower()
                             ):
                                 continue
                         return_list.append(related_item)
@@ -1102,9 +1045,7 @@ class Species(RevisionedMixin):
     @property
     def image_history(self):
         images_qs = (
-            SpeciesDocument.objects.filter(
-                species=self, input_name="speciesCommunitiesImageFile"
-            )
+            SpeciesDocument.objects.filter(species=self, input_name="speciesCommunitiesImageFile")
             .distinct("uploaded_date", "_file")
             .order_by("-uploaded_date")
         )
@@ -1143,15 +1084,11 @@ class Species(RevisionedMixin):
     ) -> None:
         document_ids_queryset = copy_from.species_documents.all()
         if not split_species["copy_all_documents"]:
-            document_ids_queryset = document_ids_queryset.filter(
-                id__in=split_species["document_ids_to_copy"]
-            )
+            document_ids_queryset = document_ids_queryset.filter(id__in=split_species["document_ids_to_copy"])
         document_ids_to_copy = document_ids_queryset.values_list("id", flat=True)
         if split_species_is_original:
             # If this is the original species, discard any documents that are not in the request data
-            documents_to_discard = self.species_documents.exclude(
-                id__in=document_ids_to_copy
-            )
+            documents_to_discard = self.species_documents.exclude(id__in=document_ids_to_copy)
             for document in documents_to_discard:
                 document.active = False
                 document.save(version_user=request.user)
@@ -1203,9 +1140,7 @@ class Species(RevisionedMixin):
     ) -> None:
         threat_ids_queryset = copy_from.species_threats.all()
         if not split_species["copy_all_documents"]:
-            threat_ids_queryset = threat_ids_queryset.filter(
-                id__in=split_species["threat_ids_to_copy"]
-            )
+            threat_ids_queryset = threat_ids_queryset.filter(id__in=split_species["threat_ids_to_copy"])
         threat_ids_to_copy = threat_ids_queryset.values_list("id", flat=True)
 
         if split_species_is_original:
@@ -1253,9 +1188,7 @@ class Species(RevisionedMixin):
             )
 
     @transaction.atomic
-    def copy_combine_documents_and_threats(
-        self, selection: dict, request: HttpRequest
-    ) -> None:
+    def copy_combine_documents_and_threats(self, selection: dict, request: HttpRequest) -> None:
         if not selection:
             return
 
@@ -1344,14 +1277,10 @@ class Species(RevisionedMixin):
             raise ValidationError("You cannot discard a species that is not a draft")
 
         if self.lodgement_date:
-            raise ValidationError(
-                "You cannot discard a species that has been submitted"
-            )
+            raise ValidationError("You cannot discard a species that has been submitted")
 
         if not is_species_communities_approver(request):
-            raise ValidationError(
-                "You cannot discard a species unless you are a contributor"
-            )
+            raise ValidationError("You cannot discard a species unless you are a contributor")
 
         self.processing_status = Species.PROCESSING_STATUS_DISCARDED
         self.save(version_user=request.user)
@@ -1370,14 +1299,10 @@ class Species(RevisionedMixin):
 
     def reinstate(self, request):
         if not self.processing_status == Species.PROCESSING_STATUS_DISCARDED:
-            raise ValidationError(
-                "You cannot reinstate a species that is not discarded"
-            )
+            raise ValidationError("You cannot reinstate a species that is not discarded")
 
         if not is_species_communities_approver(request):
-            raise ValidationError(
-                "You cannot reinstate a species unless you are a species communities approver"
-            )
+            raise ValidationError("You cannot reinstate a species unless you are a species communities approver")
 
         self.processing_status = Species.PROCESSING_STATUS_DRAFT
         self.save(version_user=request.user)
@@ -1429,9 +1354,7 @@ class Species(RevisionedMixin):
 
 
 class SpeciesLogDocument(Document):
-    log_entry = models.ForeignKey(
-        "SpeciesLogEntry", related_name="documents", on_delete=models.CASCADE
-    )
+    log_entry = models.ForeignKey("SpeciesLogEntry", related_name="documents", on_delete=models.CASCADE)
     _file = models.FileField(
         upload_to=update_species_comms_log_filename,
         max_length=512,
@@ -1446,9 +1369,7 @@ class SpeciesLogDocument(Document):
 
 
 class SpeciesLogEntry(CommunicationsLogEntry):
-    species = models.ForeignKey(
-        Species, related_name="comms_logs", on_delete=models.CASCADE
-    )
+    species = models.ForeignKey(Species, related_name="comms_logs", on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.reference} - {self.subject}"
@@ -1483,52 +1404,40 @@ class SpeciesUserAction(UserAction):
     ACTION_RENAME_SPECIES_TO_EXISTING = "Species {} renamed to existing species {}"
 
     ACTION_RENAME_SPECIES_FROM_NEW = "Species {} created by renaming species {}"
-    ACTION_RENAME_SPECIES_FROM_EXISTING_DRAFT = (
-        "Species {} activated by renaming species {}"
-    )
-    ACTION_RENAME_SPECIES_FROM_EXISTING_HISTORICAL = (
-        "Species {} reactivated by renaming species {}"
-    )
+    ACTION_RENAME_SPECIES_FROM_EXISTING_DRAFT = "Species {} activated by renaming species {}"
+    ACTION_RENAME_SPECIES_FROM_EXISTING_HISTORICAL = "Species {} reactivated by renaming species {}"
 
     ACTION_SPLIT_SPECIES_TO_NEW = "Species {} split into new species {}"
     ACTION_SPLIT_SPECIES_TO_EXISTING = "Species {} split into existing species {}"
 
     ACTION_SPLIT_SPECIES_FROM_NEW = "Species {} created by splitting species {}"
-    ACTION_SPLIT_SPECIES_FROM_EXISTING_DRAFT = (
-        "Species {} activated by splitting species {}"
-    )
-    ACTION_SPLIT_SPECIES_FROM_EXISTING_HISTORICAL = (
-        "Species {} reactivated by splitting species {}"
-    )
+    ACTION_SPLIT_SPECIES_FROM_EXISTING_DRAFT = "Species {} activated by splitting species {}"
+    ACTION_SPLIT_SPECIES_FROM_EXISTING_HISTORICAL = "Species {} reactivated by splitting species {}"
 
-    ACTION_SPLIT_MAKE_ORIGINAL_HISTORICAL = (
-        "Species {} made historical as a result of being split"
-    )
+    ACTION_SPLIT_MAKE_ORIGINAL_HISTORICAL = "Species {} made historical as a result of being split"
     ACTION_SPLIT_RETAIN_ORIGINAL = "Species {} retained as part of a split."
 
-    ACTION_COMBINE_ACTIVE_SPECIES_TO_NEW = "Active species {} made historical as a result of being combined into new species {}"
-    ACTION_COMBINE_ACTIVE_SPECIES_TO_EXISTING = "Active species {} made historical as a result of being combined into existing species {}"
-    ACTION_COMBINE_DRAFT_SPECIES_TO_EXISTING = "Draft species {} discarded as a result of being combined into existing species {}"
-    ACTION_COMBINE_DRAFT_SPECIES_TO_NEW = (
-        "Draft species {} discarded as a result of being combined into new species {}"
+    ACTION_COMBINE_ACTIVE_SPECIES_TO_NEW = (
+        "Active species {} made historical as a result of being combined into new species {}"
     )
+    ACTION_COMBINE_ACTIVE_SPECIES_TO_EXISTING = (
+        "Active species {} made historical as a result of being combined into existing species {}"
+    )
+    ACTION_COMBINE_DRAFT_SPECIES_TO_EXISTING = (
+        "Draft species {} discarded as a result of being combined into existing species {}"
+    )
+    ACTION_COMBINE_DRAFT_SPECIES_TO_NEW = "Draft species {} discarded as a result of being combined into new species {}"
     ACTION_COMBINE_HISTORICAL_SPECIES_TO_NEW = (
         "Historical species {} was combined into new species {} and remains historical"
     )
-    ACTION_COMBINE_HISTORICAL_SPECIES_TO_EXISTING = "Historical species {} was combined into existing species {} and remains historical"
+    ACTION_COMBINE_HISTORICAL_SPECIES_TO_EXISTING = (
+        "Historical species {} was combined into existing species {} and remains historical"
+    )
 
-    ACTION_COMBINE_SPECIES_FROM_NEW = (
-        "Species {} created from a combination of species {}"
-    )
-    ACTION_COMBINE_SPECIES_FROM_EXISTING_ACTIVE = (
-        "Species {} retained from a combination of species {}"
-    )
-    ACTION_COMBINE_SPECIES_FROM_EXISTING_DRAFT = (
-        "Species {} activated from a combination of species {}"
-    )
-    ACTION_COMBINE_SPECIES_FROM_EXISTING_HISTORICAL = (
-        "Species {} reactivated from a combination of species {}"
-    )
+    ACTION_COMBINE_SPECIES_FROM_NEW = "Species {} created from a combination of species {}"
+    ACTION_COMBINE_SPECIES_FROM_EXISTING_ACTIVE = "Species {} retained from a combination of species {}"
+    ACTION_COMBINE_SPECIES_FROM_EXISTING_DRAFT = "Species {} activated from a combination of species {}"
+    ACTION_COMBINE_SPECIES_FROM_EXISTING_HISTORICAL = "Species {} reactivated from a combination of species {}"
 
     # Document
     ACTION_ADD_DOCUMENT = "Document {} added for Species {}"
@@ -1552,9 +1461,7 @@ class SpeciesUserAction(UserAction):
     def log_action(cls, species, action, user):
         return cls.objects.create(species=species, who=user, what=str(action))
 
-    species = models.ForeignKey(
-        Species, related_name="action_logs", on_delete=models.CASCADE
-    )
+    species = models.ForeignKey(Species, related_name="action_logs", on_delete=models.CASCADE)
 
 
 class SpeciesDistribution(BaseModel):
@@ -1568,9 +1475,7 @@ class SpeciesDistribution(BaseModel):
     """
 
     number_of_occurrences = models.IntegerField(null=True, blank=True)
-    noo_auto = models.BooleanField(
-        default=True
-    )  # to check auto or manual entry of number_of_occurrences
+    noo_auto = models.BooleanField(default=True)  # to check auto or manual entry of number_of_occurrences
     extent_of_occurrences = models.DecimalField(
         null=True,
         blank=True,
@@ -1582,12 +1487,8 @@ class SpeciesDistribution(BaseModel):
         default=True
     )  # extra boolean field to check auto or manual entry of extent_of_occurrences
     area_of_occupancy = models.IntegerField(null=True, blank=True)
-    area_of_occupancy_actual = models.DecimalField(
-        max_digits=15, decimal_places=5, null=True, blank=True
-    )
-    aoo_actual_auto = models.BooleanField(
-        default=True
-    )  # to check auto or manual entry of area_of_occupancy_actual
+    area_of_occupancy_actual = models.DecimalField(max_digits=15, decimal_places=5, null=True, blank=True)
+    aoo_actual_auto = models.BooleanField(default=True)  # to check auto or manual entry of area_of_occupancy_actual
     number_of_iucn_locations = models.IntegerField(null=True, blank=True)
     number_of_iucn_subpopulations = models.IntegerField(null=True, blank=True)
     species = models.OneToOneField(
@@ -1619,10 +1520,7 @@ class SpeciesDistribution(BaseModel):
         """
         try:
             if self.species and getattr(self.species, "group_type", None):
-                if (
-                    getattr(self.species.group_type, "name", None)
-                    == GroupType.GROUP_TYPE_FAUNA
-                ):
+                if getattr(self.species.group_type, "name", None) == GroupType.GROUP_TYPE_FAUNA:
                     # Force False for fauna
                     self.aoo_actual_auto = False
                 # else: leave eoo_auto unchanged for non-fauna
@@ -1674,17 +1572,11 @@ class Community(RevisionedMixin):
     )
     group_type = models.ForeignKey(GroupType, on_delete=models.CASCADE)
     species = models.ManyToManyField(Species, blank=True)
-    regions = models.ManyToManyField(
-        Region, blank=True, related_name="community_regions"
-    )
-    districts = models.ManyToManyField(
-        District, blank=True, related_name="community_districts"
-    )
+    regions = models.ManyToManyField(Region, blank=True, related_name="community_regions")
+    districts = models.ManyToManyField(District, blank=True, related_name="community_districts")
     last_data_curation_date = models.DateField(blank=True, null=True)
     conservation_plan_exists = models.BooleanField(default=False)
-    conservation_plan_reference = models.CharField(
-        max_length=500, null=True, blank=True
-    )
+    conservation_plan_reference = models.CharField(max_length=500, null=True, blank=True)
     submitter = models.IntegerField(null=True)  # EmailUserRO
     image_doc = models.ForeignKey(
         "CommunityDocument",
@@ -1831,10 +1723,7 @@ class Community(RevisionedMixin):
         An application can be deleted only if it is a draft and it hasn't been lodged yet
         :return:
         """
-        return (
-            self.processing_status == Community.PROCESSING_STATUS_DRAFT
-            and not self.community_number
-        )
+        return self.processing_status == Community.PROCESSING_STATUS_DRAFT and not self.community_number
 
     @property
     def is_community_application(self):
@@ -1873,9 +1762,7 @@ class Community(RevisionedMixin):
     def reference(self):
         return f"{self.community_number}-{self.community_number}"
 
-    def get_related_items(
-        self, filter_type, offset=None, limit=None, search_value=None, **kwargs
-    ):
+    def get_related_items(self, filter_type, offset=None, limit=None, search_value=None, **kwargs):
         return_list = []
         if filter_type == "all":
             related_field_names = [
@@ -1938,9 +1825,7 @@ class Community(RevisionedMixin):
                 is_queryset = False
                 if a_field.is_relation:
                     if a_field.many_to_many:
-                        field_objects = a_field.related_model.objects.filter(
-                            **{a_field.remote_field.name: self}
-                        )
+                        field_objects = a_field.related_model.objects.filter(**{a_field.remote_field.name: self})
                         is_queryset = True
                     elif a_field.many_to_one:  # foreign key
                         val = getattr(self, a_field.name)
@@ -1949,9 +1834,7 @@ class Community(RevisionedMixin):
                         else:
                             field_objects = []
                     elif a_field.one_to_many:  # reverse foreign key
-                        qs = a_field.related_model.objects.filter(
-                            **{a_field.remote_field.name: self}
-                        )
+                        qs = a_field.related_model.objects.filter(**{a_field.remote_field.name: self})
                         field_objects = qs
                         is_queryset = True
                     elif a_field.one_to_one:
@@ -1963,9 +1846,7 @@ class Community(RevisionedMixin):
                 count = 0
                 if is_queryset:
                     if "exclude_ids" in kwargs:
-                        field_objects = field_objects.exclude(
-                            id__in=kwargs["exclude_ids"]
-                        )
+                        field_objects = field_objects.exclude(id__in=kwargs["exclude_ids"])
                     count = field_objects.count()
                 else:
                     count = len(field_objects)
@@ -1979,10 +1860,8 @@ class Community(RevisionedMixin):
                             related_item = field_object.as_related_item
                             if search_value:
                                 if (
-                                    search_value.lower()
-                                    not in related_item.identifier.lower()
-                                    and search_value.lower()
-                                    not in related_item.descriptor.lower()
+                                    search_value.lower() not in related_item.identifier.lower()
+                                    and search_value.lower() not in related_item.descriptor.lower()
                                 ):
                                     continue
                             return_list.append(related_item)
@@ -2015,9 +1894,7 @@ class Community(RevisionedMixin):
             if parent_filter:
                 # Add renamed from related items to the list (limited to one degree of separation)
                 if self.renamed_from:
-                    items = self.renamed_from.get_related_items(
-                        parent_filter, check_parents=False
-                    )
+                    items = self.renamed_from.get_related_items(parent_filter, check_parents=False)
                     items = [
                         i
                         for i in items
@@ -2035,9 +1912,7 @@ class Community(RevisionedMixin):
                 # Add renamed to related items to the list (limited to one degree of separation)
                 if self.renamed_to.exists():
                     for community in self.renamed_to.select_related("taxonomy").all():
-                        items = community.get_related_items(
-                            parent_filter, check_parents=False
-                        )
+                        items = community.get_related_items(parent_filter, check_parents=False)
                         items = [
                             i
                             for i in items
@@ -2102,9 +1977,7 @@ class Community(RevisionedMixin):
         # Using it to reduce queries in the communities list view
         from boranga.components.conservation_status.models import ConservationStatus
 
-        return self.conservation_status.filter(
-            processing_status=ConservationStatus.PROCESSING_STATUS_APPROVED
-        ).first()
+        return self.conservation_status.filter(processing_status=ConservationStatus.PROCESSING_STATUS_APPROVED).first()
 
     @transaction.atomic
     def discard(self, request):
@@ -2112,14 +1985,10 @@ class Community(RevisionedMixin):
             raise ValidationError("You cannot discard a community that is not a draft")
 
         if self.lodgement_date:
-            raise ValidationError(
-                "You cannot discard a community that has been submitted"
-            )
+            raise ValidationError("You cannot discard a community that has been submitted")
 
         if not is_species_communities_approver(request):
-            raise ValidationError(
-                "You cannot discard a community unless you are a contributor"
-            )
+            raise ValidationError("You cannot discard a community unless you are a contributor")
 
         self.processing_status = Community.PROCESSING_STATUS_DISCARDED
         self.save(version_user=request.user)
@@ -2138,31 +2007,23 @@ class Community(RevisionedMixin):
 
     def reinstate(self, request):
         if not self.processing_status == Community.PROCESSING_STATUS_DISCARDED:
-            raise ValidationError(
-                "You cannot reinstate a community that is not discarded"
-            )
+            raise ValidationError("You cannot reinstate a community that is not discarded")
 
         if not is_species_communities_approver(request):
-            raise ValidationError(
-                "You cannot reinstate a community unless you are a species communities approver"
-            )
+            raise ValidationError("You cannot reinstate a community unless you are a species communities approver")
 
         self.processing_status = Community.PROCESSING_STATUS_DRAFT
         self.save(version_user=request.user)
 
         # Log proposal action
         self.log_user_action(
-            CommunityUserAction.ACTION_REINSTATE_COMMUNITY.format(
-                self.community_number
-            ),
+            CommunityUserAction.ACTION_REINSTATE_COMMUNITY.format(self.community_number),
             request,
         )
 
         # Create a log entry for the user
         request.user.log_user_action(
-            CommunityUserAction.ACTION_REINSTATE_COMMUNITY.format(
-                self.community_number
-            ),
+            CommunityUserAction.ACTION_REINSTATE_COMMUNITY.format(self.community_number),
             request,
         )
 
@@ -2184,9 +2045,7 @@ class Community(RevisionedMixin):
     @property
     def image_history(self):
         images_qs = (
-            CommunityDocument.objects.filter(
-                community=self, input_name="speciesCommunitiesImageFile"
-            )
+            CommunityDocument.objects.filter(community=self, input_name="speciesCommunitiesImageFile")
             .distinct("uploaded_date", "_file")
             .order_by("-uploaded_date")
         )
@@ -2249,16 +2108,12 @@ class Community(RevisionedMixin):
         return round(self.area_occurrence_convex_hull_m2 / 1000000, 5)
 
     @transaction.atomic
-    def copy_for_rename(
-        self, request, existing_community=None, rename_community_serializer_data=None
-    ):
+    def copy_for_rename(self, request, existing_community=None, rename_community_serializer_data=None):
         if not self.processing_status == Community.PROCESSING_STATUS_ACTIVE:
             raise ValidationError("You cannot rename a community that is not active")
 
         if not is_species_communities_approver(request):
-            raise ValidationError(
-                "You cannot rename a community unless you are a species communities approver"
-            )
+            raise ValidationError("You cannot rename a community unless you are a species communities approver")
 
         if existing_community:
             resulting_community = existing_community
@@ -2278,16 +2133,10 @@ class Community(RevisionedMixin):
             )
 
             # Apply the taxonomy details to the new community
-            community_taxonomy, created = CommunityTaxonomy.objects.get_or_create(
-                community=resulting_community
-            )
+            community_taxonomy, created = CommunityTaxonomy.objects.get_or_create(community=resulting_community)
             if created:
-                logger.info(
-                    f"Created new taxonomy instance for community {resulting_community}"
-                )
-            serializer = SaveCommunityTaxonomySerializer(
-                community_taxonomy, data=rename_community_serializer_data
-            )
+                logger.info(f"Created new taxonomy instance for community {resulting_community}")
+            serializer = SaveCommunityTaxonomySerializer(community_taxonomy, data=rename_community_serializer_data)
 
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -2300,9 +2149,7 @@ class Community(RevisionedMixin):
                 else self.taxonomy.community_name
             )
             # Overwrite other taxonomy details
-            resulting_community.taxonomy.community_description = (
-                self.taxonomy.community_description
-            )
+            resulting_community.taxonomy.community_description = self.taxonomy.community_description
             resulting_community.taxonomy.name_authority = self.taxonomy.name_authority
             resulting_community.taxonomy.name_comments = self.taxonomy.name_comments
             resulting_community.taxonomy.save()
@@ -2313,28 +2160,19 @@ class Community(RevisionedMixin):
 
         if not existing_community:
             # Copy the community publishing status and leave all values as is
-            if (
-                hasattr(self, "community_publishing_status")
-                and self.community_publishing_status
-            ):
-                publishing_status = CommunityPublishingStatus.objects.get(
-                    id=self.community_publishing_status.id
-                )
+            if hasattr(self, "community_publishing_status") and self.community_publishing_status:
+                publishing_status = CommunityPublishingStatus.objects.get(id=self.community_publishing_status.id)
                 publishing_status.pk = None
                 publishing_status.community = resulting_community
                 publishing_status.save()
             else:
-                CommunityPublishingStatus.objects.get_or_create(
-                    community=resulting_community
-                )
+                CommunityPublishingStatus.objects.get_or_create(community=resulting_community)
 
         resulting_community.species.set(self.species.all())
         resulting_community.regions.set(self.regions.all())
         resulting_community.districts.set(self.districts.all())
 
-        resulting_community_distribution = CommunityDistribution.objects.filter(
-            community=self
-        ).first()
+        resulting_community_distribution = CommunityDistribution.objects.filter(community=self).first()
 
         if resulting_community_distribution:
             if not existing_community:
@@ -2346,9 +2184,7 @@ class Community(RevisionedMixin):
                     hasattr(resulting_community, "community_distribution")
                     and resulting_community.community_distribution
                 ):
-                    resulting_community_distribution.pk = (
-                        resulting_community.community_distribution.pk
-                    )
+                    resulting_community_distribution.pk = resulting_community.community_distribution.pk
                 else:
                     resulting_community_distribution.pk = None
 
@@ -2416,15 +2252,9 @@ class CommunityTaxonomy(BaseModel):
     - Table
     """
 
-    community = models.OneToOneField(
-        Community, on_delete=models.CASCADE, null=True, related_name="taxonomy"
-    )
-    community_common_id = models.CharField(
-        max_length=200, null=True, blank=True, unique=True
-    )
-    community_name = models.CharField(
-        max_length=512, null=True, blank=True, unique=True
-    )
+    community = models.OneToOneField(Community, on_delete=models.CASCADE, null=True, related_name="taxonomy")
+    community_common_id = models.CharField(max_length=200, null=True, blank=True, unique=True)
+    community_name = models.CharField(max_length=512, null=True, blank=True, unique=True)
     community_description = models.CharField(max_length=2048, null=True, blank=True)
     previous_name = models.CharField(max_length=512, null=True, blank=True)
     name_authority = models.CharField(max_length=500, null=True, blank=True)
@@ -2439,9 +2269,7 @@ class CommunityTaxonomy(BaseModel):
 
 
 class CommunityLogDocument(Document):
-    log_entry = models.ForeignKey(
-        "CommunityLogEntry", related_name="documents", on_delete=models.CASCADE
-    )
+    log_entry = models.ForeignKey("CommunityLogEntry", related_name="documents", on_delete=models.CASCADE)
     _file = models.FileField(
         upload_to=update_community_comms_log_filename,
         max_length=512,
@@ -2456,9 +2284,7 @@ class CommunityLogDocument(Document):
 
 
 class CommunityLogEntry(CommunicationsLogEntry):
-    community = models.ForeignKey(
-        Community, related_name="comms_logs", on_delete=models.CASCADE
-    )
+    community = models.ForeignKey(Community, related_name="comms_logs", on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.reference} - {self.subject}"
@@ -2479,22 +2305,14 @@ class CommunityUserAction(UserAction):
     ACTION_REINSTATE_COMMUNITY = "Reinstate Community {}"
     ACTION_CREATE_COMMUNITY = "Create new community {}"
     ACTION_SAVE_COMMUNITY = "Save Community {}"
-    ACTION_RENAME_COMMUNITY_MADE_HISTORICAL = (
-        "Community {} renamed to {} and made historical"
-    )
+    ACTION_RENAME_COMMUNITY_MADE_HISTORICAL = "Community {} renamed to {} and made historical"
     ACTION_RENAME_COMMUNITY_RETAINED = "Community {} renamed to {} but left active"
     ACTION_IMAGE_UPDATE = "Community Image document updated for Community {}"
     ACTION_IMAGE_DELETE = "Community Image document deleted for Community {}"
     ACTION_IMAGE_REINSTATE = "Community Image document reinstated for Community {}"
-    ACTION_CREATED_FROM_RENAME_COMMUNITY = (
-        "New Community {} created by renaming Community {}"
-    )
-    ACTION_ACTIVATED_FROM_RENAME_COMMUNITY = (
-        "Draft Community {} activated by renaming Community {}"
-    )
-    ACTION_REACTIVATED_FROM_RENAME_COMMUNITY = (
-        "Historical Community {} reactivated by renaming Community {}"
-    )
+    ACTION_CREATED_FROM_RENAME_COMMUNITY = "New Community {} created by renaming Community {}"
+    ACTION_ACTIVATED_FROM_RENAME_COMMUNITY = "Draft Community {} activated by renaming Community {}"
+    ACTION_REACTIVATED_FROM_RENAME_COMMUNITY = "Historical Community {} reactivated by renaming Community {}"
     ACTION_REACTIVATE_COMMUNITY = "Reactivate Community {}"
     ACTION_DEACTIVATE_COMMUNITY = "Deactivate Community {}"
 
@@ -2518,9 +2336,7 @@ class CommunityUserAction(UserAction):
     def log_action(cls, community, action, user):
         return cls.objects.create(community=community, who=user, what=str(action))
 
-    community = models.ForeignKey(
-        Community, related_name="action_logs", on_delete=models.CASCADE
-    )
+    community = models.ForeignKey(Community, related_name="action_logs", on_delete=models.CASCADE)
 
 
 class CommunityDistribution(BaseModel):
@@ -2534,9 +2350,7 @@ class CommunityDistribution(BaseModel):
     """
 
     number_of_occurrences = models.IntegerField(null=True, blank=True)
-    noo_auto = models.BooleanField(
-        default=True
-    )  # to check auto or manual entry of number_of_occurrences
+    noo_auto = models.BooleanField(default=True)  # to check auto or manual entry of number_of_occurrences
     extent_of_occurrences = models.DecimalField(
         null=True,
         blank=True,
@@ -2548,12 +2362,8 @@ class CommunityDistribution(BaseModel):
         default=True
     )  # extra boolean field to check auto or manual entry of extent_of_occurrences
     area_of_occupancy = models.IntegerField(null=True, blank=True)
-    area_of_occupancy_actual = models.DecimalField(
-        max_digits=15, decimal_places=5, null=True, blank=True
-    )
-    aoo_actual_auto = models.BooleanField(
-        default=True
-    )  # to check auto or manual entry of area_of_occupancy_actual
+    area_of_occupancy_actual = models.DecimalField(max_digits=15, decimal_places=5, null=True, blank=True)
+    aoo_actual_auto = models.BooleanField(default=True)  # to check auto or manual entry of area_of_occupancy_actual
     number_of_iucn_locations = models.IntegerField(null=True, blank=True)
     # Community Ecological Attributes
     community_original_area = models.DecimalField(
@@ -2563,12 +2373,8 @@ class CommunityDistribution(BaseModel):
         decimal_places=2,
         validators=[MinValueValidator(Decimal("0.00"))],
     )
-    community_original_area_accuracy = models.DecimalField(
-        max_digits=15, decimal_places=5, null=True, blank=True
-    )
-    community_original_area_reference = models.CharField(
-        max_length=512, null=True, blank=True
-    )
+    community_original_area_accuracy = models.DecimalField(max_digits=15, decimal_places=5, null=True, blank=True)
+    community_original_area_reference = models.CharField(max_length=512, null=True, blank=True)
     community = models.OneToOneField(
         Community,
         on_delete=models.CASCADE,
@@ -2602,9 +2408,7 @@ class DocumentCategory(OrderedModel, ArchivableModel):
     - Table
     """
 
-    document_category_name = models.CharField(
-        max_length=128, unique=True, validators=[no_commas_validator]
-    )
+    document_category_name = models.CharField(max_length=128, unique=True, validators=[no_commas_validator])
 
     class Meta(OrderedModel.Meta):
         app_label = "boranga"
@@ -2672,12 +2476,8 @@ class SpeciesDocument(Document):
         storage=private_storage,
     )
     input_name = models.CharField(max_length=255, null=True, blank=True)
-    document_category = models.ForeignKey(
-        DocumentCategory, null=True, blank=True, on_delete=models.SET_NULL
-    )
-    document_sub_category = models.ForeignKey(
-        DocumentSubCategory, null=True, blank=True, on_delete=models.SET_NULL
-    )
+    document_category = models.ForeignKey(DocumentCategory, null=True, blank=True, on_delete=models.SET_NULL)
+    document_sub_category = models.ForeignKey(DocumentSubCategory, null=True, blank=True, on_delete=models.SET_NULL)
     species = models.ForeignKey(
         Species,
         blank=False,
@@ -2741,12 +2541,8 @@ class CommunityDocument(Document):
         storage=private_storage,
     )
     input_name = models.CharField(max_length=255, null=True, blank=True)
-    document_category = models.ForeignKey(
-        DocumentCategory, null=True, blank=True, on_delete=models.SET_NULL
-    )
-    document_sub_category = models.ForeignKey(
-        DocumentSubCategory, null=True, blank=True, on_delete=models.SET_NULL
-    )
+    document_category = models.ForeignKey(DocumentCategory, null=True, blank=True, on_delete=models.SET_NULL)
+    document_sub_category = models.ForeignKey(DocumentSubCategory, null=True, blank=True, on_delete=models.SET_NULL)
     community = models.ForeignKey(
         Community,
         blank=False,
@@ -2794,9 +2590,7 @@ class ThreatCategory(OrderedModel, ArchivableModel):
     # e.g. mechnical disturbance
     """
 
-    name = models.CharField(
-        max_length=128, blank=False, unique=True, validators=[no_commas_validator]
-    )
+    name = models.CharField(max_length=128, blank=False, unique=True, validators=[no_commas_validator])
 
     class Meta(OrderedModel.Meta):
         app_label = "boranga"
@@ -2817,9 +2611,7 @@ class CurrentImpact(OrderedModel, ArchivableModel):
 
     """
 
-    name = models.CharField(
-        max_length=100, blank=False, unique=True, validators=[no_commas_validator]
-    )
+    name = models.CharField(max_length=100, blank=False, unique=True, validators=[no_commas_validator])
 
     class Meta(OrderedModel.Meta):
         app_label = "boranga"
@@ -2840,9 +2632,7 @@ class PotentialImpact(OrderedModel, ArchivableModel):
 
     """
 
-    name = models.CharField(
-        max_length=100, blank=False, unique=True, validators=[no_commas_validator]
-    )
+    name = models.CharField(max_length=100, blank=False, unique=True, validators=[no_commas_validator])
 
     class Meta(OrderedModel.Meta):
         app_label = "boranga"
@@ -2863,9 +2653,7 @@ class PotentialThreatOnset(OrderedModel, ArchivableModel):
 
     """
 
-    name = models.CharField(
-        max_length=100, blank=False, unique=True, validators=[no_commas_validator]
-    )
+    name = models.CharField(max_length=100, blank=False, unique=True, validators=[no_commas_validator])
 
     class Meta(OrderedModel.Meta):
         app_label = "boranga"
@@ -2884,9 +2672,7 @@ class ThreatAgent(OrderedModel, ArchivableModel):
 
     """
 
-    name = models.CharField(
-        max_length=100, blank=False, unique=True, validators=[no_commas_validator]
-    )
+    name = models.CharField(max_length=100, blank=False, unique=True, validators=[no_commas_validator])
 
     class Meta(OrderedModel.Meta):
         app_label = "boranga"
@@ -2928,15 +2714,9 @@ class ConservationThreat(RevisionedMixin):
         related_name="community_threats",
     )
     threat_number = models.CharField(max_length=9, blank=True, default="")
-    threat_category = models.ForeignKey(
-        ThreatCategory, on_delete=models.CASCADE, default=None, null=True, blank=True
-    )
-    threat_agent = models.ForeignKey(
-        ThreatAgent, on_delete=models.SET_NULL, default=None, null=True, blank=True
-    )
-    current_impact = models.ForeignKey(
-        CurrentImpact, on_delete=models.SET_NULL, default=None, null=True, blank=True
-    )
+    threat_category = models.ForeignKey(ThreatCategory, on_delete=models.CASCADE, default=None, null=True, blank=True)
+    threat_agent = models.ForeignKey(ThreatAgent, on_delete=models.SET_NULL, default=None, null=True, blank=True)
+    current_impact = models.ForeignKey(CurrentImpact, on_delete=models.SET_NULL, default=None, null=True, blank=True)
     potential_impact = models.ForeignKey(
         PotentialImpact, on_delete=models.SET_NULL, default=None, null=True, blank=True
     )
@@ -2949,9 +2729,7 @@ class ConservationThreat(RevisionedMixin):
     )
     comment = models.CharField(max_length=512, blank=True, null=True)
     date_observed = models.DateField(blank=True, null=True)
-    visible = models.BooleanField(
-        default=True
-    )  # to prevent deletion, hidden and still be available in history
+    visible = models.BooleanField(default=True)  # to prevent deletion, hidden and still be available in history
 
     class Meta:
         app_label = "boranga"
@@ -3146,33 +2924,19 @@ class SpeciesConservationAttributes(BaseModel):
     )
 
     # flora related attributes
-    flowering_period = MultiSelectField(
-        max_length=250, blank=True, choices=PERIOD_CHOICES, null=True
-    )
-    fruiting_period = MultiSelectField(
-        max_length=250, blank=True, choices=PERIOD_CHOICES, null=True
-    )
-    flora_recruitment_type = models.ForeignKey(
-        FloraRecruitmentType, on_delete=models.SET_NULL, null=True, blank=True
-    )
+    flowering_period = MultiSelectField(max_length=250, blank=True, choices=PERIOD_CHOICES, null=True)
+    fruiting_period = MultiSelectField(max_length=250, blank=True, choices=PERIOD_CHOICES, null=True)
+    flora_recruitment_type = models.ForeignKey(FloraRecruitmentType, on_delete=models.SET_NULL, null=True, blank=True)
     flora_recruitment_notes = models.CharField(max_length=1000, null=True, blank=True)
-    seed_viability_germination_info = models.CharField(
-        max_length=1000, null=True, blank=True
-    )
-    root_morphology = models.ForeignKey(
-        RootMorphology, on_delete=models.SET_NULL, null=True, blank=True
-    )
+    seed_viability_germination_info = models.CharField(max_length=1000, null=True, blank=True)
+    root_morphology = models.ForeignKey(RootMorphology, on_delete=models.SET_NULL, null=True, blank=True)
     pollinator_information = models.CharField(max_length=1000, null=True, blank=True)
     response_to_dieback = models.CharField(max_length=1500, null=True, blank=True)
 
     # fauna related attributes
-    breeding_period = MultiSelectField(
-        max_length=250, blank=True, choices=PERIOD_CHOICES, null=True
-    )
+    breeding_period = MultiSelectField(max_length=250, blank=True, choices=PERIOD_CHOICES, null=True)
     fauna_breeding = models.CharField(max_length=2000, null=True, blank=True)
-    fauna_reproductive_capacity = models.CharField(
-        max_length=200, null=True, blank=True
-    )
+    fauna_reproductive_capacity = models.CharField(max_length=200, null=True, blank=True)
     diet_and_food_source = models.CharField(max_length=500, null=True, blank=True)
     home_range = models.CharField(max_length=1000, null=True, blank=True)
 
@@ -3180,24 +2944,16 @@ class SpeciesConservationAttributes(BaseModel):
     habitat_growth_form = models.CharField(max_length=200, null=True, blank=True)
     time_to_maturity_from = models.IntegerField(null=True, blank=True)
     time_to_maturity_to = models.IntegerField(null=True, blank=True)
-    time_to_maturity_choice = models.CharField(
-        max_length=10, choices=INTERVAL_CHOICES, null=True, blank=True
-    )
+    time_to_maturity_choice = models.CharField(max_length=10, choices=INTERVAL_CHOICES, null=True, blank=True)
     generation_length_from = models.IntegerField(null=True, blank=True)
     generation_length_to = models.IntegerField(null=True, blank=True)
-    generation_length_choice = models.CharField(
-        max_length=10, choices=INTERVAL_CHOICES, null=True, blank=True
-    )
+    generation_length_choice = models.CharField(max_length=10, choices=INTERVAL_CHOICES, null=True, blank=True)
     average_lifespan_from = models.IntegerField(null=True, blank=True)
     average_lifespan_to = models.IntegerField(null=True, blank=True)
-    average_lifespan_choice = models.CharField(
-        max_length=10, choices=INTERVAL_CHOICES, null=True, blank=True
-    )
+    average_lifespan_choice = models.CharField(max_length=10, choices=INTERVAL_CHOICES, null=True, blank=True)
     minimum_fire_interval_from = models.IntegerField(null=True, blank=True)
     minimum_fire_interval_to = models.IntegerField(null=True, blank=True)
-    minimum_fire_interval_choice = models.CharField(
-        max_length=10, choices=INTERVAL_CHOICES, null=True, blank=True
-    )
+    minimum_fire_interval_choice = models.CharField(max_length=10, choices=INTERVAL_CHOICES, null=True, blank=True)
     response_to_fire = models.CharField(max_length=200, null=True, blank=True)
     post_fire_habitat_interaction = models.ForeignKey(
         PostFireHabitatInteraction, on_delete=models.SET_NULL, null=True, blank=True
@@ -3248,9 +3004,7 @@ class CommunityConservationAttributes(BaseModel):
         PostFireHabitatInteraction, on_delete=models.SET_NULL, null=True, blank=True
     )
     hydrology = models.CharField(max_length=200, null=True, blank=True)
-    ecological_and_biological_information = models.CharField(
-        max_length=500, null=True, blank=True
-    )
+    ecological_and_biological_information = models.CharField(max_length=500, null=True, blank=True)
     research_requirements = models.CharField(max_length=500, null=True, blank=True)
     response_to_dieback = models.CharField(max_length=500, null=True, blank=True)
     other_relevant_diseases = models.CharField(max_length=500, null=True, blank=True)
@@ -3272,9 +3026,7 @@ class SystemEmailGroup(BaseModel):
         (AREA_CONSERVATION_STATUS, "Conservation Status"),
         (AREA_OCCURRENCE, "Occurrence"),
     ]
-    group_type = models.ForeignKey(
-        GroupType, on_delete=models.PROTECT, null=False, blank=False
-    )
+    group_type = models.ForeignKey(GroupType, on_delete=models.PROTECT, null=False, blank=False)
     area = models.CharField(max_length=50, choices=AREA_CHOICES, blank=True, null=True)
 
     class Meta:
@@ -3301,13 +3053,9 @@ class SystemEmailGroup(BaseModel):
         return ", ".join(self.email_address_list)
 
     @classmethod
-    def emails_by_group_and_area(
-        cls, group_type: GroupType, area: str | None = None
-    ) -> list[str]:
+    def emails_by_group_and_area(cls, group_type: GroupType, area: str | None = None) -> list[str]:
         if not group_type:
-            logger.warning(
-                "No group_type provided. Returning value from NOTIFICATION_EMAIL env instead."
-            )
+            logger.warning("No group_type provided. Returning value from NOTIFICATION_EMAIL env instead.")
             return settings.NOTIFICATION_EMAIL.split(",")
         try:
             group = cls.objects.get(group_type=group_type, area=area)
@@ -3329,9 +3077,7 @@ class SystemEmailGroup(BaseModel):
 
 
 class SystemEmail(BaseModel):
-    system_email_group = models.ForeignKey(
-        SystemEmailGroup, on_delete=models.PROTECT, null=False, blank=False
-    )
+    system_email_group = models.ForeignKey(SystemEmailGroup, on_delete=models.PROTECT, null=False, blank=False)
     email = models.EmailField(max_length=255, blank=False, null=False)
 
     class Meta:
