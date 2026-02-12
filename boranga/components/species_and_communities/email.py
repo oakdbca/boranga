@@ -476,7 +476,7 @@ def _log_species_email(email_message, species_proposal, sender=None, file_bytes=
 
     customer = species_proposal.submitter
 
-    staff = sender.id
+    staff = sender.id if sender and hasattr(sender, "id") else None
 
     kwargs = {
         "subject": subject,
@@ -533,7 +533,7 @@ def _log_community_email(email_message, community_proposal, sender=None, file_by
 
     customer = community_proposal.submitter
 
-    staff = sender.id
+    staff = sender.id if sender and hasattr(sender, "id") else None
 
     kwargs = {
         "subject": subject,

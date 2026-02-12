@@ -2305,10 +2305,11 @@ class Community(RevisionedMixin):
             )
             resulting_community.taxonomy.name_authority = self.taxonomy.name_authority
             resulting_community.taxonomy.name_comments = self.taxonomy.name_comments
+            resulting_community.taxonomy.save()
         else:
-            resulting_community.taxonomy.previous_name = self.taxonomy.community_name
-
-        resulting_community.taxonomy.save()
+            # Use community_taxonomy directly to avoid stale Django ORM cache
+            community_taxonomy.previous_name = self.taxonomy.community_name
+            community_taxonomy.save()
 
         if not existing_community:
             # Copy the community publishing status and leave all values as is
