@@ -884,7 +884,8 @@ def intersect_geometries(geoms, *args, **kwargs):
 def union_geometries(geoms, *args, **kwargs):
     """Calculates the union of the input geometries."""
 
-    mp = shp.MultiPolygon(geoms)
+    shapely_geoms = [wkt.loads(g.wkt) for g in geoms]
+    mp = shp.MultiPolygon(shapely_geoms)
     unary_union_geoms = unary_union(mp)
     union_geom = GEOSGeometry(unary_union_geoms.wkt)
 

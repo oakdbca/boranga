@@ -2042,6 +2042,7 @@ export default {
             unOrRedoing_sketchPoint: false, // Whether currently undoing or redoing a sketch point
             modifiedFeaturesStack: [], // A stack of only those undoable actions that modified a feature
             drawing: false, // Whether the map is in draw (pencil icon) mode
+            modifying: false, // Whether the map is actively modifying a feature (dragging a vertex)
             transforming: false, // Whether the map is in transform (resize, scale, rotate) mode
             numShapefiles: 0,
             uploadedFileTypes: [], // The currently uploaded types
@@ -3466,14 +3467,16 @@ export default {
                         );
                     }
                     // Listen for add/remove on the collection
-                    this.editableFeatureCollection.on(
-                        'add',
-                        this.onFeatureChanged
-                    );
-                    this.editableFeatureCollection.on(
-                        'remove',
-                        this.onFeatureChanged
-                    );
+                    this.editableFeatureCollection.on('add', (evt) => {
+                        // Attach change listener to new feature
+                        evt.element.on('change', this.onFeatureChanged);
+                        this.onFeatureChanged();
+                    });
+                    this.editableFeatureCollection.on('remove', (evt) => {
+                        // Detach change listener from removed feature
+                        evt.element.un('change', this.onFeatureChanged);
+                        this.onFeatureChanged();
+                    });
 
                     // Listen for changes to features (geometry edits, etc.)
                     this.editableFeatureCollection.forEach((feature) => {
@@ -4265,7 +4268,12 @@ export default {
                 },
             });
 
+            modify.addEventListener('modifystart', function () {
+                vm.modifying = true;
+            });
+
             modify.addEventListener('modifyend', function (evt) {
+                vm.modifying = false;
                 console.log('Modify end', evt.features);
                 const feature = evt.features[0];
                 const original_srid =
@@ -4282,6 +4290,8 @@ export default {
 
                 vm.userCoordinates(feature, coordinates);
                 vm.emitValidateFeature(feature);
+                // Update dirty state after modification
+                vm.onFeatureChanged();
             });
 
             return modify;
