@@ -2102,6 +2102,10 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         if serializer.is_valid():
             new_instance, new_returned = serializer.save(version_user=request.user)
 
+            # Set submitter to the user creating the record
+            new_instance.submitter = request.user.id
+            new_instance.save(version_user=request.user)
+
             data = {"species_id": new_instance.id}
 
             # create SpeciesConservationAttributes for new instance
@@ -2611,6 +2615,10 @@ class CommunityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         serializer.is_valid(raise_exception=True)
         if serializer.is_valid():
             new_instance, new_returned = serializer.save(version_user=request.user)
+
+            # Set submitter to the user creating the record
+            new_instance.submitter = request.user.id
+            new_instance.save(version_user=request.user)
 
             data = {"community_id": new_instance.id}
             # create CommunityTaxonomy for new instance
