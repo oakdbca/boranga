@@ -88,7 +88,9 @@ def _load_community_publications_map(path: str) -> dict:
     except Exception as e:
         logger.error(f"Error loading COMMUNITY_PUBLICATIONS.csv: {e}")
 
-    logger.debug(f"Loaded community-publication mappings for {len(com_pub_map)} communities")
+    logger.debug(
+        f"Loaded community-publication mappings for {len(com_pub_map)} communities"
+    )
     return com_pub_map
 
 
@@ -124,7 +126,9 @@ class CommunityImporter(BaseSheetImporter):
     slug = "communities_legacy"
     description = "Import communities data from legacy TPFL sources"
 
-    def clear_targets(self, ctx: ImportContext, include_children: bool = False, **options):
+    def clear_targets(
+        self, ctx: ImportContext, include_children: bool = False, **options
+    ):
         """Delete community target data. Respects `ctx.dry_run` (no-op when True)."""
         if ctx.dry_run:
             logger.info("CommunityImporter.clear_targets: dry-run, skipping delete")
@@ -158,7 +162,9 @@ class CommunityImporter(BaseSheetImporter):
             occ_filter = {"group_type__name__in": target_group_types}
             report_filter = {"group_type__name__in": target_group_types}
         else:
-            logger.warning("CommunityImporter: deleting ALL Community and related data...")
+            logger.warning(
+                "CommunityImporter: deleting ALL Community and related data..."
+            )
             comm_filter = {}
             occ_filter = {}
             report_filter = {}
@@ -177,10 +183,14 @@ class CommunityImporter(BaseSheetImporter):
             if not is_filtered:
                 vendor = getattr(conn, "vendor", None)
                 if vendor == "postgresql":
-                    logger.info("CommunityImporter: using TRUNCATE CASCADE for efficient bulk deletion")
+                    logger.info(
+                        "CommunityImporter: using TRUNCATE CASCADE for efficient bulk deletion"
+                    )
                     try:
                         with conn.cursor() as cur:
-                            cur.execute(f"TRUNCATE TABLE {Community._meta.db_table} CASCADE")
+                            cur.execute(
+                                f"TRUNCATE TABLE {Community._meta.db_table} CASCADE"
+                            )
                             logger.info(
                                 "CommunityImporter: successfully truncated %s with CASCADE",
                                 Community._meta.db_table,
@@ -188,14 +198,22 @@ class CommunityImporter(BaseSheetImporter):
                         # Also truncate dependent tables
                         try:
                             with conn.cursor() as cur:
-                                cur.execute(f"TRUNCATE TABLE {OccurrenceReport._meta.db_table} CASCADE")
+                                cur.execute(
+                                    f"TRUNCATE TABLE {OccurrenceReport._meta.db_table} CASCADE"
+                                )
                             with conn.cursor() as cur:
-                                cur.execute(f"TRUNCATE TABLE {Occurrence._meta.db_table} CASCADE")
+                                cur.execute(
+                                    f"TRUNCATE TABLE {Occurrence._meta.db_table} CASCADE"
+                                )
                         except Exception:
-                            logger.warning("Failed to truncate dependent tables, skipping")
+                            logger.warning(
+                                "Failed to truncate dependent tables, skipping"
+                            )
 
                     except Exception:
-                        logger.exception("Failed to truncate tables with CASCADE; falling back to DELETE")
+                        logger.exception(
+                            "Failed to truncate tables with CASCADE; falling back to DELETE"
+                        )
 
                         OccurrenceReport.objects.all().delete()
                         Occurrence.objects.all().update(combined_occurrence=None)
@@ -211,7 +229,9 @@ class CommunityImporter(BaseSheetImporter):
                 # Filtered delete
                 try:
                     OccurrenceReport.objects.filter(**report_filter).delete()
-                    Occurrence.objects.filter(**occ_filter).update(combined_occurrence=None)
+                    Occurrence.objects.filter(**occ_filter).update(
+                        combined_occurrence=None
+                    )
                     Occurrence.objects.filter(**occ_filter).delete()
 
                     # Break self-referential protected FKs to allow deletion
@@ -219,7 +239,9 @@ class CommunityImporter(BaseSheetImporter):
 
                     Community.objects.filter(**comm_filter).delete()
                 except Exception:
-                    logger.exception("CommunityImporter: Failed to delete filtered target data")
+                    logger.exception(
+                        "CommunityImporter: Failed to delete filtered target data"
+                    )
 
         finally:
             if not was_autocommit:
@@ -244,7 +266,9 @@ class CommunityImporter(BaseSheetImporter):
                             "SELECT setval(pg_get_serial_sequence(%s, %s), %s, %s)",
                             [table, "id", 1, False],
                         )
-                logger.info("Reset primary key sequence for table %s to %s", table, max_id)
+                logger.info(
+                    "Reset primary key sequence for table %s to %s", table, max_id
+                )
         except Exception:
             logger.exception("Failed to reset Community primary key sequence")
 
@@ -351,12 +375,23 @@ class CommunityImporter(BaseSheetImporter):
             return
 
         # Load existing communities for update
-        existing_communities = {c.migrated_from_id: c for c in Community.objects.filter(migrated_from_id__isnull=False)}
+        existing_communities = {
+            c.migrated_from_id: c
+            for c in Community.objects.filter(migrated_from_id__isnull=False)
+        }
 
         communities_cache = existing_communities.copy()
         to_create = []
         dirty_communities = set()
         valid_rows = []  # Store canonical rows for subsequent processing
+
+        # Pre-build seen_names set for duplicate detection (must happen before community creation)
+        # Include existing taxonomy names from database
+        seen_names = set()
+        for tax in CommunityTaxonomy.objects.filter(
+            community_name__isnull=False
+        ).values_list("community_name", flat=True):
+            seen_names.add(tax.lower())
 
         # Fields to update if record exists
         update_fields = [
@@ -393,7 +428,9 @@ class CommunityImporter(BaseSheetImporter):
             if src and canonical.get("migrated_from_id"):
                 prefix = src.lower().replace("_", "-")
                 if not str(canonical["migrated_from_id"]).startswith(f"{prefix}-"):
-                    canonical["migrated_from_id"] = f"{prefix}-{canonical['migrated_from_id']}"
+                    canonical["migrated_from_id"] = (
+                        f"{prefix}-{canonical['migrated_from_id']}"
+                    )
 
             if row_errors:
                 errors += 1
@@ -411,6 +448,28 @@ class CommunityImporter(BaseSheetImporter):
             if not migrated_id:
                 # Should be caught by 'required' pipeline, but just in case
                 continue
+
+            # Check for duplicate community_name before creating community
+            community_name = canonical.get("community_name")
+            if community_name:
+                name_lower = community_name.lower()
+                if name_lower in seen_names:
+                    error_msg = f"Duplicate community_name '{community_name}'; skipping community creation"
+                    logger.error(f"{error_msg} for migrated_from_id={migrated_id}")
+                    errors += 1
+                    errors_details.append(
+                        {
+                            "migrated_from_id": migrated_id,
+                            "column": "community_name",
+                            "level": "ERROR",
+                            "message": error_msg,
+                            "raw_value": community_name,
+                            "reason": "Unique constraint violation",
+                            "row": canonical,
+                        }
+                    )
+                    continue
+                seen_names.add(name_lower)
 
             valid_rows.append(canonical)
 
@@ -447,7 +506,9 @@ class CommunityImporter(BaseSheetImporter):
                 # bulk_create bypasses model .save() so logic generating `community_number`
                 # from PK won't have run.
                 new_migrated_ids = [c.migrated_from_id for c in to_create]
-                new_communities = Community.objects.filter(migrated_from_id__in=new_migrated_ids)
+                new_communities = Community.objects.filter(
+                    migrated_from_id__in=new_migrated_ids
+                )
 
                 communities_to_update_number = []
                 for c in new_communities:
@@ -456,7 +517,9 @@ class CommunityImporter(BaseSheetImporter):
                         communities_to_update_number.append(c)
 
                 if communities_to_update_number:
-                    logger.info(f"Updating community_number for {len(communities_to_update_number)} new communities...")
+                    logger.info(
+                        f"Updating community_number for {len(communities_to_update_number)} new communities..."
+                    )
                     Community.objects.bulk_update(
                         communities_to_update_number,
                         ["community_number"],
@@ -464,17 +527,27 @@ class CommunityImporter(BaseSheetImporter):
                     )
 
             if dirty_communities:
-                logger.info(f"Updating {len(dirty_communities)} existing communities...")
-                Community.objects.bulk_update(list(dirty_communities), update_fields, batch_size=1000)
+                logger.info(
+                    f"Updating {len(dirty_communities)} existing communities..."
+                )
+                Community.objects.bulk_update(
+                    list(dirty_communities), update_fields, batch_size=1000
+                )
 
             # 4b. Create/Update CommunityTaxonomy
             logger.info("Updating CommunityTaxonomy records...")
             # Reload communities to get IDs for newly created ones
-            all_communities = {c.migrated_from_id: c for c in Community.objects.filter(migrated_from_id__isnull=False)}
+            all_communities = {
+                c.migrated_from_id: c
+                for c in Community.objects.filter(migrated_from_id__isnull=False)
+            }
 
             # Load existing taxonomies
             existing_taxonomies = {
-                t.community_id: t for t in CommunityTaxonomy.objects.filter(community__in=all_communities.values())
+                t.community_id: t
+                for t in CommunityTaxonomy.objects.filter(
+                    community__in=all_communities.values()
+                )
             }
 
             taxonomy_to_create = []
@@ -484,12 +557,6 @@ class CommunityImporter(BaseSheetImporter):
                 "community_name",
                 "community_description",
             ]
-
-            # Track unique names we've seen to handle duplicates
-            seen_names = set()
-            for existing_tax in existing_taxonomies.values():
-                if existing_tax.community_name:
-                    seen_names.add(existing_tax.community_name.lower())
 
             for canonical in valid_rows:
                 migrated_id = canonical.get("migrated_from_id")
@@ -502,29 +569,6 @@ class CommunityImporter(BaseSheetImporter):
                     "community_name": canonical.get("community_name"),
                     "community_description": canonical.get("community_description"),
                 }
-
-                # Check for duplicate community names
-                original_name = tax_defaults.get("community_name")
-                if original_name:
-                    name_lower = original_name.lower()
-                    if name_lower in seen_names:
-                        # Duplicate found - log as error and skip
-                        error_msg = f"Duplicate community_name '{original_name}'; skipping taxonomy creation"
-                        logger.error(f"{error_msg} for migrated_from_id={migrated_id}")
-                        errors += 1
-                        errors_details.append(
-                            {
-                                "migrated_from_id": migrated_id,
-                                "column": "community_name",
-                                "level": "ERROR",
-                                "message": error_msg,
-                                "raw_value": original_name,
-                                "reason": "Unique constraint violation",
-                                "row": canonical,
-                            }
-                        )
-                        continue
-                    seen_names.add(name_lower)
 
                 if community.id in existing_taxonomies:
                     tax_obj = existing_taxonomies[community.id]
@@ -540,19 +584,30 @@ class CommunityImporter(BaseSheetImporter):
                     taxonomy_to_create.append(tax_obj)
 
             if taxonomy_to_create:
-                logger.info(f"Creating {len(taxonomy_to_create)} new CommunityTaxonomy records...")
-                CommunityTaxonomy.objects.bulk_create(taxonomy_to_create, batch_size=1000)
+                logger.info(
+                    f"Creating {len(taxonomy_to_create)} new CommunityTaxonomy records..."
+                )
+                CommunityTaxonomy.objects.bulk_create(
+                    taxonomy_to_create, batch_size=1000
+                )
 
             if taxonomy_to_update:
-                logger.info(f"Updating {len(taxonomy_to_update)} existing CommunityTaxonomy records...")
-                CommunityTaxonomy.objects.bulk_update(taxonomy_to_update, taxonomy_update_fields, batch_size=1000)
+                logger.info(
+                    f"Updating {len(taxonomy_to_update)} existing CommunityTaxonomy records..."
+                )
+                CommunityTaxonomy.objects.bulk_update(
+                    taxonomy_to_update, taxonomy_update_fields, batch_size=1000
+                )
 
             # 4c. Create/Update CommunityDistribution
             logger.info("Updating CommunityDistribution records...")
 
             # Load existing distributions
             existing_distributions = {
-                d.community_id: d for d in CommunityDistribution.objects.filter(community__in=all_communities.values())
+                d.community_id: d
+                for d in CommunityDistribution.objects.filter(
+                    community__in=all_communities.values()
+                )
             }
 
             dist_to_create = []
@@ -599,23 +654,35 @@ class CommunityImporter(BaseSheetImporter):
                     if changed:
                         dist_to_update.append(dist_obj)
                 else:
-                    dist_obj = CommunityDistribution(community=community, **dist_defaults)
+                    dist_obj = CommunityDistribution(
+                        community=community, **dist_defaults
+                    )
                     dist_to_create.append(dist_obj)
 
             if dist_to_create:
-                logger.info(f"Creating {len(dist_to_create)} new CommunityDistribution records...")
-                CommunityDistribution.objects.bulk_create(dist_to_create, batch_size=1000)
+                logger.info(
+                    f"Creating {len(dist_to_create)} new CommunityDistribution records..."
+                )
+                CommunityDistribution.objects.bulk_create(
+                    dist_to_create, batch_size=1000
+                )
 
             if dist_to_update:
-                logger.info(f"Updating {len(dist_to_update)} existing CommunityDistribution records...")
-                CommunityDistribution.objects.bulk_update(dist_to_update, dist_update_fields, batch_size=1000)
+                logger.info(
+                    f"Updating {len(dist_to_update)} existing CommunityDistribution records..."
+                )
+                CommunityDistribution.objects.bulk_update(
+                    dist_to_update, dist_update_fields, batch_size=1000
+                )
 
             # 4d. Create/Update CommunityPublishingStatus
             logger.info("Updating CommunityPublishingStatus records...")
 
             existing_publishing_statuses = {
                 ps.community_id: ps
-                for ps in CommunityPublishingStatus.objects.filter(community__in=all_communities.values())
+                for ps in CommunityPublishingStatus.objects.filter(
+                    community__in=all_communities.values()
+                )
             }
 
             pub_to_create = []
@@ -652,23 +719,35 @@ class CommunityImporter(BaseSheetImporter):
                     if changed:
                         pub_to_update.append(pub_obj)
                 else:
-                    pub_obj = CommunityPublishingStatus(community=community, **pub_defaults)
+                    pub_obj = CommunityPublishingStatus(
+                        community=community, **pub_defaults
+                    )
                     pub_to_create.append(pub_obj)
 
             if pub_to_create:
-                logger.info(f"Creating {len(pub_to_create)} new CommunityPublishingStatus records...")
-                CommunityPublishingStatus.objects.bulk_create(pub_to_create, batch_size=1000)
+                logger.info(
+                    f"Creating {len(pub_to_create)} new CommunityPublishingStatus records..."
+                )
+                CommunityPublishingStatus.objects.bulk_create(
+                    pub_to_create, batch_size=1000
+                )
 
             if pub_to_update:
-                logger.info(f"Updating {len(pub_to_update)} existing CommunityPublishingStatus records...")
-                CommunityPublishingStatus.objects.bulk_update(pub_to_update, pub_update_fields, batch_size=1000)
+                logger.info(
+                    f"Updating {len(pub_to_update)} existing CommunityPublishingStatus records..."
+                )
+                CommunityPublishingStatus.objects.bulk_update(
+                    pub_to_update, pub_update_fields, batch_size=1000
+                )
 
             # 4e. Update Regions and Districts (Many-to-Many)
             logger.info("Updating Community Regions and Districts...")
 
             # Load legacy mappings
             region_map = load_legacy_to_pk_map(legacy_system="TEC", model_name="Region")
-            district_map = load_legacy_to_pk_map(legacy_system="TEC", model_name="District")
+            district_map = load_legacy_to_pk_map(
+                legacy_system="TEC", model_name="District"
+            )
 
             def parse_keys(raw, mapping, label, mig_id):
                 if not raw:
@@ -688,7 +767,9 @@ class CommunityImporter(BaseSheetImporter):
                     if pk:
                         ids.append(pk)
                     else:
-                        logger.warning(f"{label}: '{item}' not found in legacy map for community {mig_id}")
+                        logger.warning(
+                            f"{label}: '{item}' not found in legacy map for community {mig_id}"
+                        )
                 return ids
 
             for canonical in valid_rows:
@@ -705,7 +786,9 @@ class CommunityImporter(BaseSheetImporter):
 
                 # Districts
                 districts_raw = canonical.get("districts")
-                district_ids = parse_keys(districts_raw, district_map, "District", migrated_id)
+                district_ids = parse_keys(
+                    districts_raw, district_map, "District", migrated_id
+                )
                 if district_ids:
                     community.districts.set(district_ids)
 
@@ -714,7 +797,9 @@ class CommunityImporter(BaseSheetImporter):
 
             # Fetch DocumentCategory
             try:
-                doc_category = DocumentCategory.objects.get(document_category_name="TEC Database Publication Reference")
+                doc_category = DocumentCategory.objects.get(
+                    document_category_name="TEC Database Publication Reference"
+                )
             except DocumentCategory.DoesNotExist:
                 logger.warning(
                     "DocumentCategory 'TEC Database Publication Reference' not found. Skipping document creation."
@@ -742,7 +827,9 @@ class CommunityImporter(BaseSheetImporter):
                     for pub_no in pub_nos:
                         pub_data = publications_data.get(str(pub_no))
                         if not pub_data:
-                            logger.warning(f"Publication {pub_no} not found for community {migrated_id}")
+                            logger.warning(
+                                f"Publication {pub_no} not found for community {migrated_id}"
+                            )
                             continue
 
                         pub_title = (pub_data.get("PUB_TITLE") or "").strip()
@@ -751,7 +838,9 @@ class CommunityImporter(BaseSheetImporter):
                         pub_place = (pub_data.get("PUB_PLACE") or "").strip()
 
                         # Construct description
-                        parts = [p for p in [pub_title, pub_author, pub_date, pub_place] if p]
+                        parts = [
+                            p for p in [pub_title, pub_author, pub_date, pub_place] if p
+                        ]
                         publication_desc = " ".join(parts)
 
                         if publication_desc:
@@ -771,8 +860,12 @@ class CommunityImporter(BaseSheetImporter):
                         docs_to_create.append(doc)
 
                 if docs_to_create:
-                    logger.info(f"Creating {len(docs_to_create)} new CommunityDocument records...")
-                    CommunityDocument.objects.bulk_create(docs_to_create, batch_size=1000)
+                    logger.info(
+                        f"Creating {len(docs_to_create)} new CommunityDocument records..."
+                    )
+                    CommunityDocument.objects.bulk_create(
+                        docs_to_create, batch_size=1000
+                    )
 
                     # Update document_number for created documents
                     # Since bulk_create doesn't return PKs on all DBs (but Postgres does),
@@ -788,18 +881,24 @@ class CommunityImporter(BaseSheetImporter):
                     # We can filter by input_name="community_doc" and document_number=""
 
                     docs_to_update = []
-                    for doc in CommunityDocument.objects.filter(input_name="community_doc", document_number=""):
+                    for doc in CommunityDocument.objects.filter(
+                        input_name="community_doc", document_number=""
+                    ):
                         doc.document_number = f"D{doc.pk}"
                         docs_to_update.append(doc)
 
                     if docs_to_update:
-                        CommunityDocument.objects.bulk_update(docs_to_update, ["document_number"], batch_size=1000)
+                        CommunityDocument.objects.bulk_update(
+                            docs_to_update, ["document_number"], batch_size=1000
+                        )
 
             # 4f. Create ConservationThreat
             logger.info("Creating ConservationThreat records...")
 
             # Load legacy threat code mappings from LegacyValueMap
-            threat_code_map = load_legacy_to_pk_map(legacy_system="TEC", model_name="ThreatCategory")
+            threat_code_map = load_legacy_to_pk_map(
+                legacy_system="TEC", model_name="ThreatCategory"
+            )
             logger.info(f"Loaded {len(threat_code_map)} threat code mappings")
 
             # Fetch "Unknown" CurrentImpact
@@ -810,7 +909,9 @@ class CommunityImporter(BaseSheetImporter):
                 unknown_impact = CurrentImpact.objects.create(name="Unknown")
 
             # Load threat code to ThreatCategory ID mapping from LegacyValueMap
-            threat_code_map = load_legacy_to_pk_map(legacy_system="TEC", model_name="ThreatCategory")
+            threat_code_map = load_legacy_to_pk_map(
+                legacy_system="TEC", model_name="ThreatCategory"
+            )
             logger.info(f"Loaded {len(threat_code_map)} threat code mappings")
 
             threats_to_create = []
@@ -883,9 +984,13 @@ class CommunityImporter(BaseSheetImporter):
                             from datetime import datetime
 
                             # Try ISO format first
-                            date_observed = datetime.fromisoformat(date_str.replace("Z", "+00:00")).date()
+                            date_observed = datetime.fromisoformat(
+                                date_str.replace("Z", "+00:00")
+                            ).date()
                         except Exception:
-                            logger.warning(f"Could not parse date '{date_str}' for threat in community {migrated_id}")
+                            logger.warning(
+                                f"Could not parse date '{date_str}' for threat in community {migrated_id}"
+                            )
 
                     threat = ConservationThreat(
                         community=community,
@@ -898,8 +1003,12 @@ class CommunityImporter(BaseSheetImporter):
                     threats_to_create.append(threat)
 
             if threats_to_create:
-                logger.info(f"Creating {len(threats_to_create)} new ConservationThreat records...")
-                ConservationThreat.objects.bulk_create(threats_to_create, batch_size=1000)
+                logger.info(
+                    f"Creating {len(threats_to_create)} new ConservationThreat records..."
+                )
+                ConservationThreat.objects.bulk_create(
+                    threats_to_create, batch_size=1000
+                )
 
                 # Update threat_number
                 threats_to_update = []
@@ -907,12 +1016,16 @@ class CommunityImporter(BaseSheetImporter):
                 # Note: This might pick up threats created by other means if they have empty number,
                 # but in migration context it's likely fine.
                 # To be safer, we could filter by community__in=all_communities.values()
-                for t in ConservationThreat.objects.filter(community__in=all_communities.values(), threat_number=""):
+                for t in ConservationThreat.objects.filter(
+                    community__in=all_communities.values(), threat_number=""
+                ):
                     t.threat_number = f"T{t.pk}"
                     threats_to_update.append(t)
 
                 if threats_to_update:
-                    ConservationThreat.objects.bulk_update(threats_to_update, ["threat_number"], batch_size=1000)
+                    ConservationThreat.objects.bulk_update(
+                        threats_to_update, ["threat_number"], batch_size=1000
+                    )
 
         # 5. Reporting
         stats["processed"] = processed
@@ -936,11 +1049,16 @@ class CommunityImporter(BaseSheetImporter):
             from django.conf import settings
 
             # Write to private-media/handler_output directory
-            base_dir = getattr(settings, "BASE_DIR", Path(__file__).resolve().parents[3])
+            base_dir = getattr(
+                settings, "BASE_DIR", Path(__file__).resolve().parents[3]
+            )
             output_dir = Path(base_dir) / "private-media" / "handler_output"
             output_dir.mkdir(parents=True, exist_ok=True)
 
-            out_file = output_dir / f"community_migration_errors_{timezone.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            out_file = (
+                output_dir
+                / f"community_migration_errors_{timezone.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            )
             with open(out_file, "w", newline="") as f:
                 fieldnames = [
                     "migrated_from_id",
