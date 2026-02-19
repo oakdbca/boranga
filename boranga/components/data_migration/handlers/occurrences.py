@@ -981,8 +981,25 @@ class OccurrenceImporter(BaseSheetImporter):
 
                         wkt = merged.get("OccurrenceGeometry__geometry")
                         if wkt:
-                            geom = GEOSGeometry(wkt)
-                            defaults["original_geometry_ewkb"] = geom.ewkb
+                            try:
+                                geom = GEOSGeometry(wkt)
+                                defaults["original_geometry_ewkb"] = geom.ewkb
+                            except Exception:
+                                logger.exception(
+                                    "Failed to parse WKT geometry for migrated_from_id=%s; "
+                                    "skipping original_geometry_ewkb",
+                                    mig,
+                                )
+                                errors_details.append(
+                                    {
+                                        "migrated_from_id": mig,
+                                        "reason": "invalid_wkt_geometry",
+                                        "level": "error",
+                                        "message": "Malformed WKT for OccurrenceGeometry; original_geometry_ewkb not set",
+                                        "row": merged,
+                                    }
+                                )
+                                errors += 1
                     apply_model_defaults(OccurrenceGeometry, defaults)
                     if occ.pk in existing_geo:
                         obj = existing_geo[occ.pk]
