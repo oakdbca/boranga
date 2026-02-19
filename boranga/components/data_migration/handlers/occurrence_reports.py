@@ -572,7 +572,8 @@ class OccurrenceReportImporter(BaseSheetImporter):
                         if v in (None, ""):
                             continue
                         try:
-                            nv = int(v)
+                            # Use float to preserve decimal precision (e.g. TEC SURVEYS % values)
+                            nv = float(v)
                         except Exception:
                             # ignore non-numeric values for the percentage flags
                             continue
