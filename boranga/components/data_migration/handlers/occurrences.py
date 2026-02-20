@@ -1448,8 +1448,23 @@ class OccurrenceImporter(BaseSheetImporter):
         # Attach lightweight error/warning details and write CSV if needed
         stats["error_count_details"] = len(errors_details)
         stats["warning_count_details"] = len(warnings_details)
-        stats["warning_messages"] = warnings
         stats["error_details_csv"] = None
+
+        # Merge extraction warnings and per-column transform warnings into errors_details
+        # so they appear in the CSV rather than in the stats object.
+        for w_msg in warnings:
+            source_ref, msg_body = w_msg.split(": ", 1) if ": " in w_msg else ("", w_msg)
+            errors_details.append(
+                {
+                    "migrated_from_id": "",
+                    "column": "",
+                    "level": "warning",
+                    "message": msg_body,
+                    "raw_value": "",
+                    "reason": source_ref,
+                }
+            )
+        errors_details.extend(warnings_details)
 
         elapsed = timezone.now() - start_time
         stats["time_taken"] = str(elapsed)

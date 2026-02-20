@@ -4478,32 +4478,24 @@ class OccurrenceReportImporter(BaseSheetImporter):
         )
         stats["error_count_details"] = len(errors_details)
         stats["warning_count_details"] = len(warnings_details)
-        stats["warning_messages"] = warnings
         stats["error_details_csv"] = None
 
-        # Append global warnings to errors_details if any, so they appear in CSV
+        # Merge extraction warnings into errors_details so they appear in the CSV
         for w_msg in warnings:
-            # simple parse specific to how we append these warnings
-            level = "warning"
-            source_ref = ""
-            msg_body = w_msg
-            if ": " in w_msg:
-                # "source: message"
-                parts = w_msg.split(": ", 1)
-                source_ref = parts[0]
-                msg_body = parts[1]
-
+            source_ref, msg_body = w_msg.split(": ", 1) if ": " in w_msg else ("", w_msg)
             errors_details.append(
                 {
                     "migrated_from_id": "",
                     "column": "",
-                    "level": level,
+                    "level": "warning",
                     "message": msg_body,
                     "raw_value": "",
                     "reason": source_ref,
                     "row": {},
                 }
             )
+        # Merge per-column transform warnings into errors_details
+        errors_details.extend(warnings_details)
 
         elapsed = timezone.now() - start_time
         stats["time_taken"] = str(elapsed)
