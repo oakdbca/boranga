@@ -2,6 +2,9 @@ import csv
 import logging
 import os
 
+from django.utils import timezone
+
+from boranga.components.data_migration import mappings as dm_mappings
 from boranga.components.data_migration.adapters.base import ExtractionResult, SourceAdapter
 from boranga.components.data_migration.adapters.sources import Source
 from boranga.components.data_migration.mappings import get_group_type_id
@@ -57,18 +60,29 @@ class SpeciesTfaunaAdapter(SourceAdapter):
         "noo_auto": [static_value_factory(True)],
         "distribution": [static_value_factory(None)],
         "submitter": ["default_user_for_source"],
-        "lodgement_date": [static_value_factory(None)],  # or migrate date?
+        # lodgement_date: set directly in extract() to the migration datetime
+        # (Task 11853: use date of migration rather than NULL)
+        # fauna_sub_group_id / fauna_group_id: set directly in extract() via LegacyValueMap
+        # (Tasks 11844, 11843: resolved from PhyloGroup column)
         # processing_status is resolved in extract() from the CS column (Task 11854)
         # with a fallback to "historical" when CS is absent/unrecognised.
+        # regions_raw: set directly in extract() from the Region column (Task 11872)
     }
 
     def extract(self, path: str, **options) -> ExtractionResult:
         # Task 11848: Concatenate Category and Notes
         # Task 11851: Concatenate File Nos
+        # Task 11843+11844: fauna_group / fauna_sub_group via PhyloGroup
+        # Task 11853: lodgement_date = migration datetime
+        # Task 11872: regions from Region column
 
         # We need to map row keys manually or rely on schema.map_raw_row
 
         raw_rows, warnings = self.read_table(path)
+
+        # Task 11853: capture migration datetime once for the whole batch so
+        # every created TFAUNA species carries the same migration timestamp.
+        migration_datetime = timezone.now()
 
         # Task 11848: Notes come from a separate "Species Notes.csv" file
         # keyed by SpCode.  Load it into a lookup dict.
@@ -91,6 +105,26 @@ class SpeciesTfaunaAdapter(SourceAdapter):
                 "TFAUNA: Species Notes.csv not found at %s – notes will be empty",
                 notes_path,
             )
+
+        # Tasks 11843+11844: preload PhyloGroup → FaunaSubGroup PK mapping via LegacyValueMap.
+        dm_mappings.preload_map("TFAUNA", "PhyloGroup")
+        phylo_table = dm_mappings._CACHE.get(("TFAUNA", "PhyloGroup"), {})
+
+        # Build FaunaSubGroup.id → fauna_group_id parent map so we can derive
+        # fauna_group_id immediately after resolving fauna_sub_group_id.
+        sub_group_to_fauna_group: dict[int, int] = {}
+        try:
+            from boranga.components.species_and_communities.models import FaunaSubGroup
+
+            for sg in FaunaSubGroup.objects.select_related("fauna_group").all():
+                if sg.fauna_group_id:
+                    sub_group_to_fauna_group[sg.id] = sg.fauna_group_id
+            logger.info(
+                "TFAUNA: loaded %d FaunaSubGroup→FaunaGroup parent mappings",
+                len(sub_group_to_fauna_group),
+            )
+        except Exception:
+            logger.exception("TFAUNA: failed to preload FaunaSubGroup parent map")
 
         rows = []
 
@@ -144,6 +178,56 @@ class SpeciesTfaunaAdapter(SourceAdapter):
             else:
                 # FALSE / NO / 0 / F / missing / unrecognised → historical
                 canonical["processing_status"] = "historical"
+
+            # Task 11853: lodgement_date — use migration date rather than NULL
+            # so that active records pass the cross-field validation check
+            # (active processing_status requires a non-null lodgement_date).
+            canonical["lodgement_date"] = migration_datetime
+
+            # Tasks 11843+11844: fauna_sub_group and fauna_group
+            # PhyloGroup column → LegacyValueMap("TFAUNA", "PhyloGroup") → FaunaSubGroup PK.
+            # fauna_group is then the parent of the resolved FaunaSubGroup.
+            phylo_raw = (raw.get("PhyloGroup") or "").strip()
+            if phylo_raw:
+                norm = dm_mappings._norm(phylo_raw)
+                entry = phylo_table.get(norm)
+                if entry and not entry.get("ignored"):
+                    sub_group_id = entry.get("target_id")
+                    if sub_group_id:
+                        try:
+                            sub_group_id = int(sub_group_id)
+                            canonical["fauna_sub_group_id"] = sub_group_id
+                            fauna_group_id = sub_group_to_fauna_group.get(sub_group_id)
+                            if fauna_group_id:
+                                canonical["fauna_group_id"] = fauna_group_id
+                            else:
+                                logger.warning(
+                                    "TFAUNA: no fauna_group parent found for fauna_sub_group_id=%s (PhyloGroup=%r)",
+                                    sub_group_id,
+                                    phylo_raw,
+                                )
+                        except (ValueError, TypeError):
+                            logger.warning(
+                                "TFAUNA: non-integer target_id for PhyloGroup=%r: %r",
+                                phylo_raw,
+                                sub_group_id,
+                            )
+                elif entry and entry.get("ignored"):
+                    logger.debug("TFAUNA: PhyloGroup=%r intentionally ignored", phylo_raw)
+                else:
+                    logger.warning(
+                        "TFAUNA: no LegacyValueMap entry for PhyloGroup=%r – "
+                        "fauna_sub_group_id will be NULL for SpCode=%s",
+                        phylo_raw,
+                        sp_code,
+                    )
+
+            # Task 11872: regions_raw — comma-separated CALMRegion values from
+            # the Region column.  Resolved to Region PKs in the handler via
+            # load_legacy_to_pk_map("TFAUNA", "Region").
+            region_raw = (raw.get("Region") or "").strip()
+            if region_raw:
+                canonical["regions_raw"] = region_raw
 
             # Task 11859, 11863, 11866, 11871, 11874, 11877 are related to child models (SpeciesDistribution etc)
             # The Handler creates the main Species object first.
