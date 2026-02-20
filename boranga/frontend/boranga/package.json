@@ -27,7 +27,7 @@
         "jquery-validation": "^1.21.0",
         "jszip": "^3.9",
         "moment-range": "^4.0.2",
-        "ol": "^9.2.4",
+        "ol": "^10.8.0",
         "ol-ext": "^4.0.24",
         "rollup-plugin-visualizer": "^6.0.3",
         "select2": "^4.1.0-rc.0",
