@@ -4074,6 +4074,7 @@ class OccurrenceReportImporter(BaseSheetImporter):
                     "group_type_id": ocr.group_type_id,
                     "species_id": ocr.species_id,
                     "processing_status": Occurrence.PROCESSING_STATUS_ACTIVE,
+                    "locked": True,
                 }
                 if getattr(ctx, "migration_run", None) is not None:
                     defaults["migration_run"] = ctx.migration_run
@@ -4132,6 +4133,7 @@ class OccurrenceReportImporter(BaseSheetImporter):
                     "group_type_id",
                     "species_id",
                     "processing_status",
+                    "locked",
                 ]
                 if getattr(ctx, "migration_run", None) is not None:
                     update_fields.append("migration_run_id")
