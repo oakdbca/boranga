@@ -2376,6 +2376,22 @@ class OccurrenceReportImporter(BaseSheetImporter):
         # Note: We create a text file containing the reference if no file is provided.
         doc_cat_photo = DocumentCategory.objects.filter(document_category_name="ORF Document").first()
         doc_sub_photo = DocumentSubCategory.objects.filter(document_sub_category_name="Photo").first()
+        # Task 12856: TFAUNA docs use sub-category "Tfauna Document Reference"
+        doc_sub_tfauna = DocumentSubCategory.objects.filter(
+            document_sub_category_name="Tfauna Document Reference"
+        ).first()
+        if doc_sub_tfauna is None:
+            errors_details.append(
+                {
+                    "migrated_from_id": "N/A",
+                    "column": "document_sub_category",
+                    "level": "error",
+                    "message": "DocumentSubCategory 'Tfauna Document Reference' not found in DB — TFAUNA documents will not be created.",
+                    "raw_value": "Tfauna Document Reference",
+                    "reason": "missing_lookup",
+                    "row": {},
+                }
+            )
 
         for mid in target_mig_ids:
             if mid in op_map:
@@ -2408,7 +2424,7 @@ class OccurrenceReportImporter(BaseSheetImporter):
 
                 # TFAUNA document description (Map/MudMap/Photo/Notes flags)
                 doc_desc = op["merged"].get("temp_document_description")
-                if doc_desc:
+                if doc_desc and doc_sub_tfauna:
                     ocr = target_map[mid]
                     if not OccurrenceReportDocument.objects.filter(
                         occurrence_report=ocr, description=doc_desc
@@ -2418,10 +2434,15 @@ class OccurrenceReportImporter(BaseSheetImporter):
                                 occurrence_report=ocr,
                                 description=doc_desc,
                                 document_category=doc_cat_photo,
-                                document_sub_category=doc_sub_photo,
+                                document_sub_category=doc_sub_tfauna,  # Task 12856
                                 can_submitter_access=False,
                             )
                             doc.save()
+                            # Task 12866: set uploaded_date to EnDate (lodgement_date)
+                            # auto_now_add prevents direct assignment, so use update()
+                            en_date = op["merged"].get("lodgement_date")
+                            if en_date:
+                                OccurrenceReportDocument.objects.filter(pk=doc.pk).update(uploaded_date=en_date)
                         except Exception:
                             logger.exception("Failed to create TFAUNA document for %s", mid)
 
@@ -3976,7 +3997,7 @@ class OccurrenceReportImporter(BaseSheetImporter):
             except Exception:
                 pass
 
-            action_text = f"Legacy record checked by {ch_name or 'unknown'}"
+            action_text = "Edited to improve accuracy"  # Task 12868
             ua = OccurrenceReportUserAction(
                 occurrence_report=ocr,
                 who=who_id,
