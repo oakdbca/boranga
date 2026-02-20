@@ -66,10 +66,6 @@ STATIC_DBCA = static_value_factory("DBCA")
 
 REGION_FROM_DISTRICT = region_from_district_factory()
 
-BOUNDARY_DESCRIPTION_DEFAULT = static_value_factory(
-    "Boundary not mapped, migrated point coordinate has had a 1 metre buffer applied"
-)
-
 EPSG_CODE_DEFAULT = static_value_factory(4326)
 
 # Task 12762 (S&C-blocked): Resolution → LocationAccuracy mapping.
@@ -197,7 +193,6 @@ PIPELINES = {
     "OCRLocation__location_accuracy": ["strip", "blank_to_none", LOCATION_ACCURACY_TRANSFORM],
     "OCRLocation__district": ["strip", "blank_to_none"],
     "OCRLocation__region": [REGION_FROM_DISTRICT],
-    "OCRLocation__boundary_description": [BOUNDARY_DESCRIPTION_DEFAULT],
     "OCRLocation__epsg_code": [EPSG_CODE_DEFAULT],
     # OCRObservationDetail
     "OCRObservationDetail__comments": ["strip", "blank_to_none"],
