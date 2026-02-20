@@ -665,7 +665,7 @@ def wkb_to_geojson(wkb):
     geo_json = shp.mapping(shapely_geometry)
     geo_json["properties"] = {
         "srid": geos_geometry.srid,
-        "crs_projected": geos_geometry.crs.projected,
+        "crs_projected": geos_geometry.crs.projected if geos_geometry.crs else None,
     }
 
     return geo_json
