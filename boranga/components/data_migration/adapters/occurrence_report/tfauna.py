@@ -12,6 +12,7 @@ from collections import defaultdict
 from boranga.components.data_migration.mappings import get_group_type_id
 from boranga.components.data_migration.registry import (
     _result,
+    build_legacy_map_transform,
     date_from_datetime_iso_local_factory,
     datetime_iso_factory,
     emailuser_by_legacy_username_factory,
@@ -70,6 +71,15 @@ BOUNDARY_DESCRIPTION_DEFAULT = static_value_factory(
 )
 
 EPSG_CODE_DEFAULT = static_value_factory(4326)
+
+# Task 12762 (S&C-blocked): Resolution → LocationAccuracy mapping.
+# `required=False` so that blank values → None silently, and unmapped codes
+# → None with an error issue rather than raising a FK violation.
+LOCATION_ACCURACY_TRANSFORM = build_legacy_map_transform(
+    "TFAUNA",
+    "Resolution",
+    required=False,
+)
 
 # ── Dead/alive determination helpers ────────────────────────────────
 
@@ -184,7 +194,7 @@ PIPELINES = {
     # OCRLocation
     "OCRLocation__locality": ["strip", "blank_to_none"],
     "OCRLocation__location_description": ["strip", "blank_to_none"],
-    "OCRLocation__location_accuracy": ["strip", "blank_to_none"],
+    "OCRLocation__location_accuracy": ["strip", "blank_to_none", LOCATION_ACCURACY_TRANSFORM],
     "OCRLocation__district": ["strip", "blank_to_none"],
     "OCRLocation__region": [REGION_FROM_DISTRICT],
     "OCRLocation__boundary_description": [BOUNDARY_DESCRIPTION_DEFAULT],
