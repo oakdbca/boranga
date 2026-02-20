@@ -230,6 +230,7 @@ PIPELINES = {
     # Geometry
     "OccurrenceReportGeometry__geometry": [GEOMETRY_FROM_COORDS],
     "OccurrenceReportGeometry__locked": [GEOMETRY_LOCKED_DEFAULT],
+    "OccurrenceReportGeometry__show_on_map": [static_value_factory(True)],  # Task 12781
 }
 
 
@@ -389,6 +390,7 @@ class OccurrenceReportTfaunaAdapter(SourceAdapter):
             if canonical.get("Lat") or canonical.get("Long"):
                 canonical["OccurrenceReportGeometry__geometry"] = None
                 canonical["OccurrenceReportGeometry__locked"] = True
+                canonical["OccurrenceReportGeometry__show_on_map"] = True
 
             rows.append(canonical)
 
