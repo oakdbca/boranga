@@ -95,7 +95,7 @@ def delete_document(request, instance, comms_instance, document_type, input_name
     document_id = request.data.get("document_id", None)
     if document_id:
         if document_type == "shapefile_document":
-            document = instance.shapefile_documents.get(id=document_id)
+            document = instance.shapefile_documents.filter(id=document_id).first()
         else:
             raise ValidationError(f"Invalid document type {document_type}")
 
