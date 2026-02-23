@@ -4,7 +4,6 @@ import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
 import helpers from '@/utils/helpers';
-import VueSelect from 'vue-select';
 
 import $ from 'jquery';
 import select2 from 'select2';
@@ -103,5 +102,5 @@ window.fetch = ((orig) => {
     };
 })(originalFetch);
 
-app.component('v-select', VueSelect).use(router);
+app.use(router);
 router.isReady().then(() => app.mount('#app'));

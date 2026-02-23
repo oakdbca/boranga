@@ -18,6 +18,7 @@
         "@turf/helpers": "^7.1.0",
         "@turf/intersect": "^7.1.0",
         "@vitejs/plugin-vue": "^6.0.0",
+        "@vueform/multiselect": "^2.6.11",
         "bootstrap-icons": "^1.13.1",
         "datatables.net-bs5": "^2.0.0",
         "datatables.net-buttons": "^3.0.0",
@@ -41,8 +42,7 @@
         "vite-plugin-static-copy": "^3.0",
         "vite-svg-loader": "^5.1.0",
         "vue": "^3.5",
-        "vue-router": "^5.0.3",
-        "vue-select": "^4.0.0-beta.6"
+        "vue-router": "^5.0.3"
     },
     "engines": {
         "node": ">= 24.11.0",

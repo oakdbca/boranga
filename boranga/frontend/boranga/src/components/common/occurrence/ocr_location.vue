@@ -832,8 +832,6 @@ export default {
 </script>
 
 <style lang="css" scoped>
-@import 'vue-select/dist/vue-select.css';
-
 /*ul, li {
         zoom:1;
         display: inline;
