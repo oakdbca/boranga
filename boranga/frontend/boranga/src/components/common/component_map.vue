@@ -2077,8 +2077,8 @@ export default {
     },
     computed: {
         shapefileDocumentUrl: function () {
-            let endpoint = '';
-            let obj_id = 0;
+            let endpoint;
+            let obj_id;
             if (this.context?.model_name == 'occurrencereport') {
                 endpoint = api_endpoints.occurrence_report;
                 obj_id = this.context.id;
@@ -4573,7 +4573,7 @@ export default {
 
             let success = false;
             let errorStr = '';
-            let endpoint = '';
+            let endpoint;
             if (this.context?.model_name == 'occurrencereport') {
                 endpoint = api_endpoints.occurrence_report;
             } else if (this.context?.model_name == 'occurrence') {
@@ -5277,7 +5277,7 @@ export default {
                 body: formData,
             };
             vm.isValidating = true;
-            let endpoint = '';
+            let endpoint;
             if (this.context?.model_name == 'occurrencereport') {
                 endpoint = api_endpoints.occurrence_report;
             } else if (this.context?.model_name == 'occurrence') {
@@ -5841,7 +5841,7 @@ export default {
         transformFeature: async function (feature, srid_from, srid_to) {
             const format = new GeoJSON();
             const geomStr = format.writeGeometry(feature.getGeometry());
-            let endpoint = '';
+            let endpoint;
             if (this.context?.model_name == 'occurrencereport') {
                 endpoint = api_endpoints.occurrence_report;
             } else if (this.context?.model_name == 'occurrence') {

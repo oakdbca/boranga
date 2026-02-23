@@ -1193,8 +1193,8 @@ export default {
         datatable_options: function () {
             let vm = this;
 
-            let columns = [];
-            let search = null;
+            let columns;
+            let search;
             let buttons = [
                 {
                     extend: 'excel',
@@ -1611,7 +1611,7 @@ export default {
             vm.initialiseAssessorLookup();
             vm.initialiseSubmitterLookup();
             vm.addEventListeners();
-            var newOption = null;
+            var newOption;
             // -- to set the select2 field with the session value if exists onload()
             if (
                 sessionStorage.getItem('filterCSFaunaScientificName') !=

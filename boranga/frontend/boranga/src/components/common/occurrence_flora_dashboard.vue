@@ -617,7 +617,7 @@ export default {
             vm.initialiseOccurrenceNameLookup();
             vm.initialiseScientificNameLookup();
             vm.addEventListeners();
-            var newOption = null;
+            var newOption;
             if (
                 sessionStorage.getItem('filterOCCFloraOccurrenceName') !=
                     'all' &&

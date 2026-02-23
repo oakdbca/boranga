@@ -1601,7 +1601,7 @@ export default {
             });
         },
         amendmentRequest: function () {
-            let value = '';
+            let value;
             value = $('#assessor_deficiencies').val();
             this.$refs.amendment_request.amendment.text = value;
             this.$refs.amendment_request.isModalOpen = true;
@@ -1930,7 +1930,7 @@ export default {
         },
         can_submit: function (check_action) {
             let vm = this;
-            let blank_fields = [];
+            let blank_fields;
             blank_fields = vm.can_submit_conservation_status(check_action);
 
             if (blank_fields.length == 0) {
@@ -2118,7 +2118,7 @@ export default {
         },
         assignTo: function () {
             let vm = this;
-            let unassign = true;
+            let unassign;
             let data = {};
             if (
                 [

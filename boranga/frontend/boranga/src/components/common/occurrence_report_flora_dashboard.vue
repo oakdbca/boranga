@@ -564,8 +564,8 @@ export default {
         },
         datatable_options: function () {
             let vm = this;
-            let columns = [];
-            let search = null;
+            let columns;
+            let search;
             let buttons = [
                 {
                     extend: 'excel',
@@ -806,7 +806,7 @@ export default {
             vm.initialiseAssessorLookup();
             vm.initialiseSubmitterLookup();
             vm.addEventListeners();
-            var newOption = null;
+            var newOption;
             if (
                 sessionStorage.getItem('filterOCRFloraOccurrence') != 'all' &&
                 sessionStorage.getItem('filterOCRFloraOccurrence') != null

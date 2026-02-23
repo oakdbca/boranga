@@ -196,7 +196,7 @@ export default {
     },
     data: function () {
         let vm = this;
-        let url = '';
+        let url;
         if (vm.is_internal) {
             url = helpers.add_endpoint_json(
                 api_endpoints.species,

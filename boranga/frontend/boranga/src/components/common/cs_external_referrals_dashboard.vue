@@ -163,7 +163,7 @@ export default {
                 searchable: true,
                 visible: true,
                 render: function (data, type, full) {
-                    let tick = '';
+                    let tick;
                     if (full.can_be_processed) {
                         tick =
                             "<i class='bi bi-exclamation-circle ms-2' style='color:#FFBF00'></i>";
@@ -374,7 +374,7 @@ export default {
             vm.initialiseScientificNameLookup();
             vm.initialiseCommunityNameLookup();
             vm.addEventListeners();
-            var newOption = null;
+            var newOption;
             if (
                 sessionStorage.getItem('filterCSRefFloraScientificName') !=
                     'all' &&

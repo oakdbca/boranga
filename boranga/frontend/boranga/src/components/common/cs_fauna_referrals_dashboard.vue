@@ -241,7 +241,7 @@ export default {
                 searchable: true,
                 visible: true,
                 render: function (data, type, full) {
-                    let tick = '';
+                    let tick;
                     if (full.can_be_processed) {
                         tick =
                             " <i class='bi bi-exclamation-circle' style='color:#FFBF00'></i>";
@@ -512,7 +512,7 @@ export default {
             vm.initialiseFamilyLookup();
             vm.initialiseGeneraLookup();
             vm.addEventListeners();
-            var newOption = null;
+            var newOption;
             if (
                 sessionStorage.getItem('filterCSRefFaunaScientificName') !=
                     'all' &&

@@ -497,7 +497,9 @@
                                                             "
                                                             ><i
                                                                 class="bi bi-scissors"
-                                                                style="font-size: 2em"
+                                                                style="
+                                                                    font-size: 2em;
+                                                                "
                                                             ></i
                                                             >&nbsp;Unlink</a
                                                         >

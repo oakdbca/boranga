@@ -1225,7 +1225,7 @@ export default {
             vm.initialiseFamilyLookup();
             vm.initialiseGeneraLookup();
             vm.addEventListeners();
-            var newOption = null;
+            var newOption;
             // -- to set the select2 field with the session value if exists onload()
             if (
                 sessionStorage.getItem('filterFloraScientificName') != 'all' &&

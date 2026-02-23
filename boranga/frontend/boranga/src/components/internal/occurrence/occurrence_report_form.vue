@@ -2107,7 +2107,7 @@ export default {
         },
         assignTo: function () {
             let vm = this;
-            let unassign = true;
+            let unassign;
             let data = {};
             if (vm.with_approver) {
                 unassign =

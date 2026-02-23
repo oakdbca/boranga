@@ -320,8 +320,8 @@ export default {
         datatable_options: function () {
             let vm = this;
 
-            let columns = [];
-            let search = null;
+            let columns;
+            let search;
             columns = [
                 vm.column_id,
                 vm.column_title,

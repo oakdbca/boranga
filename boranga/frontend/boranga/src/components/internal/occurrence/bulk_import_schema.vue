@@ -2175,13 +2175,13 @@ export default {
                     });
                 })
                 .catch(async (response) => {
-                    let error = null;
+                    let error;
                     try {
                         error = await response.json();
                     } catch {
                         error = await response.text();
                     }
-                    let errors = null;
+                    let errors;
                     if (Object.hasOwn(error, 'data')) {
                         errors = error.data;
                     } else if (Object.hasOwn(error, 'body')) {

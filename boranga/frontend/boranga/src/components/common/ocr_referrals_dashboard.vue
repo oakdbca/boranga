@@ -226,7 +226,7 @@ export default {
                 searchable: true,
                 visible: true,
                 render: function (data, type, full) {
-                    let tick = '';
+                    let tick;
                     if (full.can_be_processed) {
                         tick =
                             " <i class='bi bi-exclamation-circle' style='color:#FFBF00'></i>";
@@ -315,7 +315,7 @@ export default {
         },
         datatable_options: function () {
             let vm = this;
-            let search = null;
+            let search;
             let buttons = [
                 {
                     extend: 'excel',
@@ -475,7 +475,7 @@ export default {
                 vm.initialiseScientificNameLookup();
             }
             vm.addEventListeners();
-            var newOption = null;
+            var newOption;
             if (
                 sessionStorage.getItem('filterOCRReferralsOccurrence') !=
                     'all' &&

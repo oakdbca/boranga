@@ -219,7 +219,7 @@ export default {
             }
         },
         addOCRVisibility: function () {
-            let visibility = false;
+            let visibility;
             visibility = true;
             return visibility;
         },
@@ -321,7 +321,7 @@ export default {
         },
         datatable_options: function () {
             let vm = this;
-            let columns = [];
+            let columns;
             let buttons = [
                 {
                     extend: 'excel',
@@ -453,7 +453,7 @@ export default {
             vm.initialiseScientificNameLookup();
             vm.initialiseCommunityNameLookup();
             vm.addEventListeners();
-            var newOption = null;
+            var newOption;
             if (
                 sessionStorage.getItem('filterOCRScientificName') != 'all' &&
                 sessionStorage.getItem('filterOCRScientificName') != null

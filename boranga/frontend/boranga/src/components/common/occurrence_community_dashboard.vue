@@ -675,7 +675,7 @@ export default {
             vm.initialiseCommunityNameLookup();
             vm.initialiseCommunityIdLookup();
             vm.addEventListeners();
-            var newOption = null;
+            var newOption;
             // -- to set the select2 field with the session value if exists onload()
             if (
                 sessionStorage.getItem('filterOCCCommunityOccurrenceName') !=
