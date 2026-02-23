@@ -151,8 +151,8 @@
                     class="btn btn-primary mb-2"
                     @click.prevent="createCommunityOccurrenceReport"
                 >
-                    <i class="bi bi-plus-circle"></i> Add Community
-                    Occurrence Report
+                    <i class="bi bi-plus-circle"></i> Add Community Occurrence
+                    Report
                 </button>
             </div>
         </div>

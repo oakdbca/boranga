@@ -3,7 +3,10 @@
         <ul v-if="numDocuments > 0" class="list-group mb-3">
             <li v-for="v in documents" :key="v.id" class="list-group-item">
                 <div>
-                    <span v-if="v.name.endsWith('.pdf')" class="bi bi-file-earmark-pdf">
+                    <span
+                        v-if="v.name.endsWith('.pdf')"
+                        class="bi bi-file-earmark-pdf"
+                    >
                         &nbsp;
                     </span>
                     <span v-else class="bi bi-file-earmark"> &nbsp; </span>

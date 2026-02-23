@@ -1384,10 +1384,7 @@
                                 @click="overlay(undefined, undefined)"
                             >
                                 <span style="font-size: smaller"
-                                    ><i
-                                        class="bi bi-x-window"
-                                    ></i>
-                                    Close</span
+                                    ><i class="bi bi-x-window"></i> Close</span
                                 >
                             </button>
                         </div>
