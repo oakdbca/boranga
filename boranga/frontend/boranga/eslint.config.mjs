@@ -33,7 +33,7 @@ export default [
             globals: projectGlobals,
         },
         rules: {
-            'no-useless-assignment': 'warn',
+            'no-useless-assignment': 'off',
         },
     },
     {
@@ -55,7 +55,7 @@ export default [
             'prettier/prettier': 'error',
             'no-redeclare': 'warn',
             'no-unused-vars': 'warn',
-            'no-useless-assignment': 'warn',
+            'no-useless-assignment': 'off',
             'vue/no-mutating-props': 'off',
         },
     },
