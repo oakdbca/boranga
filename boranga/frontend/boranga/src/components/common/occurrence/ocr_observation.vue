@@ -320,7 +320,13 @@
                     />
                 </div>
             </div>
-            <div class="row mb-3">
+            <div
+                v-if="
+                    occurrence_report_obj.processing_status !=
+                    constants.PROPOSAL_STATUS.DRAFT.TEXT
+                "
+                class="row mb-3"
+            >
                 <label
                     for=""
                     class="col-sm-3 control-label"
