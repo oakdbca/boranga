@@ -135,6 +135,13 @@ class OccurrenceReportImporter(BaseSheetImporter):
             logger.warning("OccurrenceReportImporter: deleting OccurrenceReport and related data...")
             report_filter = {}
 
+        # Delete reversion history first (more efficient than waiting for cascade)
+        from boranga.components.data_migration.history_cleanup.reversion_cleanup import ReversionHistoryCleaner
+
+        cleaner = ReversionHistoryCleaner(batch_size=2000)
+        cleaner.clear_occurrence_report_and_related(report_filter)
+        logger.info("Reversion cleanup completed. Stats: %s", cleaner.get_stats())
+
         # Perform deletes in an autocommit block so they are committed
         # immediately. This mirrors the approach used in `SpeciesImporter` and
         # allows us to reset DB sequences safely after the delete.
