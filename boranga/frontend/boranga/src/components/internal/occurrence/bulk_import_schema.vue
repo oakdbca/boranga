@@ -520,7 +520,7 @@
                                         class="col-sm-4 col-form-label"
                                         >Invalid Django Import Model
                                         <i
-                                            class="fas fa-exclamation-circle text-danger"
+                                            class="bi bi-exclamation-circle text-danger"
                                             title="This model no longer exists in the underlying database"
                                         ></i
                                     ></label>
@@ -664,7 +664,7 @@
                                             class="col-sm-4 col-form-label"
                                             >Invalid Django Import Field
                                             <i
-                                                class="fas fa-exclamation-circle text-danger"
+                                                class="bi bi-exclamation-circle text-danger"
                                                 title="This field no longer exists in the underlying database"
                                             ></i
                                         ></label>

@@ -308,7 +308,7 @@
                                                     )
                                                 "
                                                 ><i
-                                                    class="fa fa-bell text-warning"
+                                                    class="bi bi-bell text-warning"
                                                     aria-hidden="true"
                                                 ></i>
                                             </a>
@@ -327,7 +327,7 @@
                                                     )
                                                 "
                                                 ><i
-                                                    class="fa fa-times-circle text-danger"
+                                                    class="bi bi-x-circle text-danger"
                                                     aria-hidden="true"
                                                 ></i>
                                             </a>
@@ -406,7 +406,7 @@
                                                         remindReferral(r)
                                                     "
                                                     ><i
-                                                        class="fa fa-bell text-warning"
+                                                        class="bi bi-bell text-warning"
                                                         aria-hidden="true"
                                                     ></i>
                                                 </a>
@@ -423,7 +423,7 @@
                                                         recallReferral(r)
                                                     "
                                                     ><i
-                                                        class="fa fa-times-circle text-danger"
+                                                        class="bi bi-x-circle text-danger"
                                                         aria-hidden="true"
                                                     ></i>
                                                 </a>

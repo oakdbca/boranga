@@ -364,7 +364,7 @@ export default {
                 {
                     extend: 'excel',
                     title: 'Boranga Conservation Status Excel Export',
-                    text: '<i class="fa-solid fa-download"></i> Excel',
+                    text: '<i class="bi bi-download"></i> Excel',
                     className: 'btn btn-primary me-2 rounded',
                     exportOptions: {
                         columns: ':not(.no-export)',
@@ -374,7 +374,7 @@ export default {
                 {
                     extend: 'csv',
                     title: 'Boranga Conservation Status CSV Export',
-                    text: '<i class="fa-solid fa-download"></i> CSV',
+                    text: '<i class="bi bi-download"></i> CSV',
                     className: 'btn btn-primary rounded',
                     exportOptions: {
                         columns: ':not(.no-export)',

@@ -691,7 +691,7 @@
                                         title="Add a new point"
                                         @click="addNewPoint(-31.0, 116.0)"
                                     >
-                                        <i class="fa-solid fa-circle-plus"></i>
+                                        <i class="bi bi-plus-circle"></i>
                                     </button>
                                 </div>
                                 <!-- A copy-selected Button -->
@@ -725,7 +725,7 @@
                                             )
                                         "
                                     >
-                                        <i class="fa-solid fa-copy"></i>
+                                        <i class="bi bi-copy"></i>
                                     </button>
                                 </div>
                             </div>
@@ -1385,7 +1385,7 @@
                             >
                                 <span style="font-size: smaller"
                                     ><i
-                                        class="fa-regular fa-window-close"
+                                        class="bi bi-x-window"
                                     ></i>
                                     Close</span
                                 >

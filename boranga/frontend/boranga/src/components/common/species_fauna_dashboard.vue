@@ -302,7 +302,7 @@
                     class="btn btn-primary mb-2"
                     @click.prevent="createFauna"
                 >
-                    <i class="fa-solid fa-circle-plus"></i> New Fauna
+                    <i class="bi bi-plus-circle"></i> New Fauna
                 </button>
             </div>
         </div>
@@ -956,7 +956,7 @@ export default {
                 {
                     extend: 'excel',
                     title: 'Boranga S&C Fauna Excel Export',
-                    text: '<i class="fa-solid fa-download"></i> Excel',
+                    text: '<i class="bi bi-download"></i> Excel',
                     className: 'btn btn-primary me-2 rounded',
                     exportOptions: {
                         columns: ':not(.no-export)',
@@ -966,7 +966,7 @@ export default {
                 {
                     extend: 'csv',
                     title: 'Boranga S&C Fauna CSV Export',
-                    text: '<i class="fa-solid fa-download"></i> CSV',
+                    text: '<i class="bi bi-download"></i> CSV',
                     className: 'btn btn-primary rounded',
                     exportOptions: {
                         columns: ':not(.no-export)',
