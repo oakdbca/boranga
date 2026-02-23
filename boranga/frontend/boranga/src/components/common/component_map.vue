@@ -1385,7 +1385,7 @@
                             >
                                 <span style="font-size: smaller"
                                     ><i
-                                        class="fa-fw fa-regular fa-window-close"
+                                        class="fa-regular fa-window-close"
                                     ></i>
                                     Close</span
                                 >
