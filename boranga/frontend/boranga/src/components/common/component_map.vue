@@ -1586,7 +1586,7 @@
 import { v4 as uuid } from 'uuid';
 import { api_endpoints, helpers } from '@/utils/hooks';
 
-import { toRaw, isProxy } from 'vue';
+import { toRaw, isProxy, markRaw } from 'vue';
 import 'ol/ol.css';
 import alert from '@vue-utils/alert.vue';
 import Map from 'ol/Map';
@@ -2011,27 +2011,39 @@ export default {
             vectorLayers: {},
             defaultQueryLayerName: null, // The layer where e.g. dropped geometries are added to
             defaultProcessedGeometryLayerName: null, // The layer to which processed geometries are added to
-            editableFeatureCollection: new Collection([], { unique: true }),
-            selectedFeatureCollection: new Collection([], { unique: true }),
+            editableFeatureCollection: markRaw(
+                new Collection([], { unique: true })
+            ),
+            selectedFeatureCollection: markRaw(
+                new Collection([], { unique: true })
+            ),
             zIndex: 0, // Incrementing Z-index for overlays
             lastPoint: null,
             sketchCoordinates: [[]],
             defaultColor: '#eeeeee',
-            clickSelectStroke: new Stroke({
-                color: 'rgba(255, 0, 0, 0.7)',
-                width: 2,
-            }),
-            hoverFill: new Fill({
-                color: 'rgba(255, 255, 255, 0.5)',
-            }),
-            hoverStrokePolygon: new Stroke({
-                color: 'rgba(255, 255, 255, 0.5)',
-                width: 1,
-            }),
-            hoverStrokePoint: new Stroke({
-                color: 'rgba(255, 255, 255, 0.5)',
-                width: 2,
-            }),
+            clickSelectStroke: markRaw(
+                new Stroke({
+                    color: 'rgba(255, 0, 0, 0.7)',
+                    width: 2,
+                })
+            ),
+            hoverFill: markRaw(
+                new Fill({
+                    color: 'rgba(255, 255, 255, 0.5)',
+                })
+            ),
+            hoverStrokePolygon: markRaw(
+                new Stroke({
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    width: 1,
+                })
+            ),
+            hoverStrokePoint: markRaw(
+                new Stroke({
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    width: 2,
+                })
+            ),
             set_mode: set_mode,
             isValidating: false,
             errorMessage: null,
@@ -3023,11 +3035,13 @@ export default {
 
             // Measure tool
             let draw_source = new VectorSource({ wrapX: false });
-            vm.drawForMeasure = new Draw({
-                source: draw_source,
-                type: 'LineString',
-                style: vm.styleFunctionForMeasurement,
-            });
+            vm.drawForMeasure = markRaw(
+                new Draw({
+                    source: draw_source,
+                    type: 'LineString',
+                    style: vm.styleFunctionForMeasurement,
+                })
+            );
             // Set a custom listener to the Measure tool
             vm.drawForMeasure.set('escKey', '');
             vm.drawForMeasure.on('change:escKey', function () {});
@@ -3039,53 +3053,67 @@ export default {
             });
 
             // Create a layer to retain the measurement
-            vm.measurementLayer = new VectorLayer({
-                title: 'Measurements',
-                source: draw_source,
-                style: function (feature, resolution) {
-                    feature.set('for_layer', true);
-                    return vm.styleFunctionForMeasurement(feature, resolution);
-                },
-            });
+            vm.measurementLayer = markRaw(
+                new VectorLayer({
+                    title: 'Measurements',
+                    source: draw_source,
+                    style: function (feature, resolution) {
+                        feature.set('for_layer', true);
+                        return vm.styleFunctionForMeasurement(
+                            feature,
+                            resolution
+                        );
+                    },
+                })
+            );
             vm.map.addInteraction(vm.drawForMeasure);
             vm.map.addLayer(vm.measurementLayer);
         },
         initialiseFeatureQueryLayer: function (title, name) {
             const modelQuerySource = new VectorSource({});
             const polygonStyle = this.createStyle(null, null, 'Polygon');
-            this.layerSources[name] = modelQuerySource;
+            this.layerSources[name] = markRaw(modelQuerySource);
             const layerDef = this.getLayerDefinitionByName(name);
             let zIndex = layerDef.z_index;
 
-            this.vectorLayers[name] = new VectorLayer({
-                title: title,
-                name: name,
-                source: modelQuerySource,
-                can_edit: layerDef.can_edit,
-                editing: false,
-                style: (feature, resolution) => {
-                    const color = feature.get('color') || this.defaultColor;
-                    let style = polygonStyle;
-                    let renderAsPoint = false;
-                    let pointGeom = null;
+            this.vectorLayers[name] = markRaw(
+                new VectorLayer({
+                    title: title,
+                    name: name,
+                    source: modelQuerySource,
+                    can_edit: layerDef.can_edit,
+                    editing: false,
+                    style: (feature, resolution) => {
+                        const color = feature.get('color') || this.defaultColor;
+                        let style = polygonStyle;
+                        let renderAsPoint = false;
+                        let pointGeom = null;
 
-                    if (this.isPolygonLikeFeature(feature)) {
-                        const extent = feature.getGeometry().getExtent();
-                        const width = extent[2] - extent[0]; // Width in View Units (Degrees)
-                        const widthPx = width / resolution;
+                        if (this.isPolygonLikeFeature(feature)) {
+                            const extent = feature.getGeometry().getExtent();
+                            const width = extent[2] - extent[0]; // Width in View Units (Degrees)
+                            const widthPx = width / resolution;
 
-                        // Threshold: 20 pixels
-                        if (widthPx < 20) {
-                            renderAsPoint = true;
-                            // Calculate centroid for the marker
-                            const type = feature.getGeometry().getType();
-                            if (type === 'Polygon') {
-                                try {
-                                    pointGeom = feature
-                                        .getGeometry()
-                                        .getInteriorPoint();
-                                } catch {
-                                    // Fallback if interior point fails
+                            // Threshold: 20 pixels
+                            if (widthPx < 20) {
+                                renderAsPoint = true;
+                                // Calculate centroid for the marker
+                                const type = feature.getGeometry().getType();
+                                if (type === 'Polygon') {
+                                    try {
+                                        pointGeom = feature
+                                            .getGeometry()
+                                            .getInteriorPoint();
+                                    } catch {
+                                        // Fallback if interior point fails
+                                        const center = [
+                                            (extent[0] + extent[2]) / 2,
+                                            (extent[1] + extent[3]) / 2,
+                                        ];
+                                        pointGeom = new Point(center);
+                                    }
+                                } else {
+                                    // MultiPolygon: use center of extent
                                     const center = [
                                         (extent[0] + extent[2]) / 2,
                                         (extent[1] + extent[3]) / 2,
@@ -3093,38 +3121,31 @@ export default {
                                     pointGeom = new Point(center);
                                 }
                             } else {
-                                // MultiPolygon: use center of extent
-                                const center = [
-                                    (extent[0] + extent[2]) / 2,
-                                    (extent[1] + extent[3]) / 2,
-                                ];
-                                pointGeom = new Point(center);
+                                // Render as Polygon (apply color to shared style)
+                                style.getFill().setColor(color);
                             }
-                        } else {
-                            // Render as Polygon (apply color to shared style)
-                            style.getFill().setColor(color);
                         }
-                    }
 
-                    if (this.isPointLikeFeature(feature) || renderAsPoint) {
-                        const rgba = this.colorHexToRgbaValues(color);
-                        style = this.createStyle(
-                            color,
-                            null,
-                            'Point',
-                            null,
-                            null,
-                            this.mapMarker,
-                            rgba[3]
-                        );
-                        if (renderAsPoint && pointGeom) {
-                            // Important: Set the point geometry to draw the marker
-                            style.setGeometry(pointGeom);
+                        if (this.isPointLikeFeature(feature) || renderAsPoint) {
+                            const rgba = this.colorHexToRgbaValues(color);
+                            style = this.createStyle(
+                                color,
+                                null,
+                                'Point',
+                                null,
+                                null,
+                                this.mapMarker,
+                                rgba[3]
+                            );
+                            if (renderAsPoint && pointGeom) {
+                                // Important: Set the point geometry to draw the marker
+                                style.setGeometry(pointGeom);
+                            }
                         }
-                    }
-                    return style;
-                },
-            });
+                        return style;
+                    },
+                })
+            );
             // Add the layer
             this.map.addLayer(this.vectorLayers[name]);
             // Set zIndex to some layers to be rendered over the other layers
@@ -3159,130 +3180,145 @@ export default {
                 return;
             }
 
-            vm.drawPolygonsForModel = new Draw({
-                source: vm.layerSources[vm.defaultQueryLayerName],
-                type: 'Polygon',
-                geometryFunction: function (coordinates, geometry) {
-                    if (geometry) {
-                        if (coordinates[0].length) {
-                            // Add a closing coordinate to match the first
-                            geometry.setCoordinates(
-                                [coordinates[0].concat([coordinates[0][0]])],
+            vm.drawPolygonsForModel = markRaw(
+                new Draw({
+                    source: vm.layerSources[vm.defaultQueryLayerName],
+                    type: 'Polygon',
+                    geometryFunction: function (coordinates, geometry) {
+                        if (geometry) {
+                            if (coordinates[0].length) {
+                                // Add a closing coordinate to match the first
+                                geometry.setCoordinates(
+                                    [
+                                        coordinates[0].concat([
+                                            coordinates[0][0],
+                                        ]),
+                                    ],
+                                    this.geometryLayout_
+                                );
+                            } else {
+                                geometry.setCoordinates(
+                                    [],
+                                    this.geometryLayout_
+                                );
+                            }
+                        } else {
+                            geometry = new Polygon(
+                                coordinates,
                                 this.geometryLayout_
                             );
-                        } else {
-                            geometry.setCoordinates([], this.geometryLayout_);
                         }
-                    } else {
-                        geometry = new Polygon(
-                            coordinates,
-                            this.geometryLayout_
-                        );
-                    }
 
-                    if (vm.unOrRedoing_sketchPoint) {
-                        // Don't run below undo stack logic while executing an undo/redo of sketch points
-                        return geometry;
-                    }
-
-                    // Current feature id list for undo stack
-                    let before = [...vm.sketchCoordinates];
-                    // Ignore the last coordinate that is the movable cursor point
-                    let drawnVertexCoords = coordinates[0].toSpliced(-1);
-                    if (before.length != drawnVertexCoords.length) {
-                        // Sort out back-to-back duplicate coordinates
-                        let sketchCoordinates = drawnVertexCoords
-                            .slice()
-                            .reduce((acc, cur) => {
-                                let prev = acc.slice(-1)[0] || [];
-                                if (prev[0] !== cur[0] && prev[1] !== cur[1]) {
-                                    acc.push(cur);
-                                }
-                                return acc;
-                            }, []);
-
-                        // Return from calculation if the new sketch coordinates are the same as the previous
-                        if (
-                            before.length === sketchCoordinates.length &&
-                            before
-                                .flat(1)
-                                .every(
-                                    (coord, index) =>
-                                        coord ===
-                                        sketchCoordinates.flat(1)[index]
-                                )
-                        ) {
+                        if (vm.unOrRedoing_sketchPoint) {
+                            // Don't run below undo stack logic while executing an undo/redo of sketch points
                             return geometry;
                         }
-                        // Set new sketch coordinates
-                        vm.sketchCoordinates = sketchCoordinates;
 
-                        // Add to undo stack
-                        vm.undoredo_forSketch.push('add polygon point', {
-                            before: before,
-                            after: vm.sketchCoordinates,
-                        });
-                    }
+                        // Current feature id list for undo stack
+                        let before = [...vm.sketchCoordinates];
+                        // Ignore the last coordinate that is the movable cursor point
+                        let drawnVertexCoords = coordinates[0].toSpliced(-1);
+                        if (before.length != drawnVertexCoords.length) {
+                            // Sort out back-to-back duplicate coordinates
+                            let sketchCoordinates = drawnVertexCoords
+                                .slice()
+                                .reduce((acc, cur) => {
+                                    let prev = acc.slice(-1)[0] || [];
+                                    if (
+                                        prev[0] !== cur[0] &&
+                                        prev[1] !== cur[1]
+                                    ) {
+                                        acc.push(cur);
+                                    }
+                                    return acc;
+                                }, []);
 
-                    return geometry;
-                },
-                condition: function (evt) {
-                    if (evt.originalEvent.buttons === 1) {
-                        // Only allow drawing when the left mouse button is pressed
+                            // Return from calculation if the new sketch coordinates are the same as the previous
+                            if (
+                                before.length === sketchCoordinates.length &&
+                                before
+                                    .flat(1)
+                                    .every(
+                                        (coord, index) =>
+                                            coord ===
+                                            sketchCoordinates.flat(1)[index]
+                                    )
+                            ) {
+                                return geometry;
+                            }
+                            // Set new sketch coordinates
+                            vm.sketchCoordinates = sketchCoordinates;
+
+                            // Add to undo stack
+                            vm.undoredo_forSketch.push('add polygon point', {
+                                before: before,
+                                after: vm.sketchCoordinates,
+                            });
+                        }
+
+                        return geometry;
+                    },
+                    condition: function (evt) {
+                        if (evt.originalEvent.buttons === 1) {
+                            // Only allow drawing when the left mouse button is pressed
+                            return true;
+                        } else if (evt.originalEvent.buttons === 2) {
+                            // If the right mouse button is pressed, undo the last point
+                            if (vm.canUndoDrawnVertex) {
+                                vm.undoredo_forSketch.undo();
+                            } else {
+                                vm.callSetMode('layer');
+                            }
+                        } else {
+                            return false;
+                        }
+                    },
+                    finishCondition: function () {
+                        if (vm.lastPoint) {
+                            if (vm.validateFeatureBeforeSave) {
+                                const coordinates =
+                                    vm.sketchCoordinates.slice();
+                                coordinates.push(coordinates[0]);
+                                const feature = new Feature({
+                                    id: -1,
+                                    geometry: new Polygon([coordinates]),
+                                    label: 'validation',
+                                    color: vm.defaultColor,
+                                    geometry_source: 'validation',
+                                });
+                                vm.emitValidateFeature(feature);
+                            } else {
+                                console.log('Skipping feature validation');
+                                vm.finishDrawing();
+                            }
+                        }
+                        return false;
+                    },
+                })
+            );
+
+            vm.drawPointsForModel = markRaw(
+                new Draw({
+                    source: vm.layerSources[vm.defaultQueryLayerName],
+                    type: 'Point',
+                    condition: function () {
+                        if (!vm.canAddMorePoints) {
+                            if (vm.mode === 'draw' && vm.subMode === 'Point') {
+                                swal.fire({
+                                    title: 'Point Limit Reached',
+                                    text: `You cannot add more than ${vm.pointLimit} points.`,
+                                    icon: 'warning',
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary',
+                                    },
+                                });
+                            }
+                            return false;
+                        }
                         return true;
-                    } else if (evt.originalEvent.buttons === 2) {
-                        // If the right mouse button is pressed, undo the last point
-                        if (vm.canUndoDrawnVertex) {
-                            vm.undoredo_forSketch.undo();
-                        } else {
-                            vm.callSetMode('layer');
-                        }
-                    } else {
-                        return false;
-                    }
-                },
-                finishCondition: function () {
-                    if (vm.lastPoint) {
-                        if (vm.validateFeatureBeforeSave) {
-                            const coordinates = vm.sketchCoordinates.slice();
-                            coordinates.push(coordinates[0]);
-                            const feature = new Feature({
-                                id: -1,
-                                geometry: new Polygon([coordinates]),
-                                label: 'validation',
-                                color: vm.defaultColor,
-                                geometry_source: 'validation',
-                            });
-                            vm.emitValidateFeature(feature);
-                        } else {
-                            console.log('Skipping feature validation');
-                            vm.finishDrawing();
-                        }
-                    }
-                    return false;
-                },
-            });
-
-            vm.drawPointsForModel = new Draw({
-                source: vm.layerSources[vm.defaultQueryLayerName],
-                type: 'Point',
-                condition: function () {
-                    if (!vm.canAddMorePoints) {
-                        if (vm.mode === 'draw' && vm.subMode === 'Point') {
-                            swal.fire({
-                                title: 'Point Limit Reached',
-                                text: `You cannot add more than ${vm.pointLimit} points.`,
-                                icon: 'warning',
-                                customClass: {
-                                    confirmButton: 'btn btn-primary',
-                                },
-                            });
-                        }
-                        return false;
-                    }
-                    return true;
-                },
-            });
+                    },
+                })
+            );
 
             vm.drawPolygonsForModel.set('escKey', '');
             vm.drawPolygonsForModel.on('change:escKey', function () {
@@ -3313,26 +3349,30 @@ export default {
             return proposals;
         },
         initialiseBaseLayers: function (tileLayers) {
-            this.tileLayerMapbox = new TileLayer({
-                title: 'Mapbox Streets',
-                type: 'base',
-                visible: true,
-                // source: new OSM(),
-            });
-            this.tileLayerSat = new TileLayer({
-                title: 'Satellite Map',
-                type: 'base',
-                visible: false,
-                // source: new OSM(),
-            });
+            this.tileLayerMapbox = markRaw(
+                new TileLayer({
+                    title: 'Mapbox Streets',
+                    type: 'base',
+                    visible: true,
+                    // source: new OSM(),
+                })
+            );
+            this.tileLayerSat = markRaw(
+                new TileLayer({
+                    title: 'Satellite Map',
+                    type: 'base',
+                    visible: false,
+                    // source: new OSM(),
+                })
+            );
 
             for (let tileLayer of tileLayers) {
                 if (tileLayer.get('is_streets_background')) {
-                    this.tileLayerMapbox = tileLayer;
+                    this.tileLayerMapbox = markRaw(tileLayer);
                 } else if (tileLayer.get('is_satellite_background')) {
-                    this.tileLayerSat = tileLayer;
+                    this.tileLayerSat = markRaw(tileLayer);
                 } else {
-                    this.optionalLayers.push(tileLayer);
+                    this.optionalLayers.push(markRaw(tileLayer));
                 }
             }
 
@@ -3408,7 +3448,7 @@ export default {
                 // props['layerGroup'] = layerGroup;
             }
 
-            this.layerSwitcher = new LayerSwitcher(props);
+            this.layerSwitcher = markRaw(new LayerSwitcher(props));
 
             if (this.editable || this.drawable) {
                 // Add a new button to the list if the component allows for editing or drawing
@@ -3582,9 +3622,11 @@ export default {
         initialiseUndoRedos: function () {
             let vm = this;
             // Add undo/redo AFTER proposal geometries have been added to the map
-            vm.undoredo = new UndoRedo({
-                layers: vm.vectorLayersArray,
-            });
+            vm.undoredo = markRaw(
+                new UndoRedo({
+                    layers: vm.vectorLayersArray,
+                })
+            );
             vm.undoredo.clear();
 
             // Somehow passing the parameter has no effect, so we set it here
@@ -3651,9 +3693,11 @@ export default {
             );
 
             // Setup a dedicated undo/redo for sketch points on the draw layer
-            vm.undoredo_forSketch = new UndoRedo({
-                layers: vm.vectorLayersArray,
-            });
+            vm.undoredo_forSketch = markRaw(
+                new UndoRedo({
+                    layers: vm.vectorLayersArray,
+                })
+            );
             vm.undoredo_forSketch.clear();
 
             vm.undoredo_forSketch.setMaxLength(vm.undoStackMaxLength);
@@ -3733,27 +3777,29 @@ export default {
                 className: 'custom-mouse-position',
                 placeholder: 'Mouse Coordinates',
             });
-            this.map = new Map({
-                controls: defaultControls({
-                    rotate: false,
-                }).extend([
-                    new ScaleLine({
-                        bar: true,
-                        text: true,
-                        minWidth: 140,
+            this.map = markRaw(
+                new Map({
+                    controls: defaultControls({
+                        rotate: false,
+                    }).extend([
+                        new ScaleLine({
+                            bar: true,
+                            text: true,
+                            minWidth: 140,
+                        }),
+                        mousePositionControl,
+                    ]),
+                    layers: [baseLayers],
+                    overlays: [overlay],
+                    target: this.elem_id,
+                    view: new View({
+                        center: [115.95, -31.95],
+                        zoom: 7,
+                        projection: `EPSG:${this.mapSrid}`,
+                        enableRotation: false,
                     }),
-                    mousePositionControl,
-                ]),
-                layers: [baseLayers],
-                overlays: [overlay],
-                target: this.elem_id,
-                view: new View({
-                    center: [115.95, -31.95],
-                    zoom: 7,
-                    projection: `EPSG:${this.mapSrid}`,
-                    enableRotation: false,
-                }),
-            });
+                })
+            );
         },
         initialisePointerMoveEvent: function () {
             let vm = this;
@@ -6126,7 +6172,7 @@ export default {
                 btn.addClass('btn-danger');
                 $(toggleButton).attr('title', 'Layer Editing: On');
                 layer.set('editing', true);
-                this.activeEditLayer = layer;
+                this.activeEditLayer = markRaw(layer);
             } else {
                 btn.removeClass('btn-danger');
                 btn.removeClass('btn-success');
