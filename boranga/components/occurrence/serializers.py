@@ -1577,6 +1577,7 @@ class InternalOccurrenceReportSerializer(OccurrenceReportSerializer):
     can_add_log = serializers.SerializerMethodField()
     user_is_assessor = serializers.SerializerMethodField()
     current_assessor = serializers.SerializerMethodField(read_only=True)
+    approved_by_name = serializers.SerializerMethodField(read_only=True)
     approval_details = OccurrenceReportApprovalDetailsSerializer(read_only=True, allow_null=True)
     declined_details = OccurrenceReportDeclinedDetailsSerializer(read_only=True, allow_null=True)
     assessor_mode = serializers.SerializerMethodField()
@@ -1667,7 +1668,14 @@ class InternalOccurrenceReportSerializer(OccurrenceReportSerializer):
             "record_source",
             "comments",
             "common_names",
+            "approved_by_name",
         )
+
+    def get_approved_by_name(self, obj):
+        if obj.approved_by:
+            email_user = retrieve_email_user(obj.approved_by)
+            return email_user.get_full_name()
+        return None
 
     def get_readonly(self, obj):
         # Assessor can edit the report in appropriate statuses

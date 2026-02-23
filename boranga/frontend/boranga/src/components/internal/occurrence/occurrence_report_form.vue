@@ -84,6 +84,23 @@
                     :is_new_contributor="occurrence_report.is_new_contributor"
                     class="mb-3"
                 />
+
+                <div
+                    v-if="
+                        occurrence_report.approved_by_name &&
+                        ['Approved', 'Unlocked'].includes(
+                            occurrence_report.processing_status
+                        )
+                    "
+                    class="card card-default mb-3"
+                >
+                    <div class="card-header">Approval</div>
+                    <div class="card-body py-2">
+                        <strong>Approved by</strong><br />
+                        {{ occurrence_report.approved_by_name }}
+                    </div>
+                </div>
+
                 <div
                     v-if="show_reassign_draft_panel"
                     class="card card-default mb-3"
