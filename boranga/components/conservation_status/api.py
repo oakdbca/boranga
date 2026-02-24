@@ -346,6 +346,8 @@ class SpeciesConservationStatusFilterBackend(DatatablesFilterBackend):
                     queryset = queryset.filter(
                         processing_status__in=ConservationStatus.PROCESSING_STATUSES_AWAITING_APPROVER_ACTION
                     )
+                elif filter_application_status == ConservationStatus.PROCESSING_STATUS_ACTIVE:
+                    queryset = queryset.filter(processing_status__in=ConservationStatus.PROCESSING_STATUSES_ACTIVE)
                 elif filter_application_status == ConservationStatus.PROCESSING_STATUS_INACTIVE:
                     queryset = queryset.filter(processing_status__in=ConservationStatus.PROCESSING_STATUSES_INACTIVE)
                 else:
@@ -621,6 +623,8 @@ class CommunityConservationStatusFilterBackend(DatatablesFilterBackend):
                     queryset = queryset.filter(
                         processing_status__in=ConservationStatus.PROCESSING_STATUSES_AWAITING_APPROVER_ACTION
                     )
+                elif filter_application_status == ConservationStatus.PROCESSING_STATUS_ACTIVE:
+                    queryset = queryset.filter(processing_status__in=ConservationStatus.PROCESSING_STATUSES_ACTIVE)
                 elif filter_application_status == ConservationStatus.PROCESSING_STATUS_INACTIVE:
                     queryset = queryset.filter(processing_status__in=ConservationStatus.PROCESSING_STATUSES_INACTIVE)
                 else:

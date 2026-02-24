@@ -458,6 +458,7 @@ class ConservationStatus(LockableModel, SubmitterInformationModelMixin, Revision
     PROCESSING_STATUS_DISCARDED_BY_ME = "discarded_by_me"
     PROCESSING_STATUS_AWAITING_ASSESSOR_ACTION = "awaiting_assessor_action"
     PROCESSING_STATUS_AWAITING_APPROVER_ACTION = "awaiting_approver_action"
+    PROCESSING_STATUS_ACTIVE = "active"
     PROCESSING_STATUS_INACTIVE = "inactive"
 
     customer_status = models.CharField(
