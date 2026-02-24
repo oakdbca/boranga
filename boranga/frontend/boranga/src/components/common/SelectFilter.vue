@@ -1,6 +1,6 @@
 <!-- A single dropdown with selectable items as a component -->
 <template>
-    <div :class="classes">
+    <div class="select-filter-wrapper" :class="classes">
         <label
             v-if="showTitle"
             :for="`select-filter-${id}`"
@@ -248,5 +248,25 @@ export default {
 
 .multiselect-dropdown {
     z-index: 9001 !important;
+}
+
+/* Fill the parent input-group-text container completely */
+.select-filter-wrapper {
+    width: 100%;
+}
+
+/* Override default green with project primary blue (#226fbb).
+   margin:0 removes the theme's margin:0 auto which fights flex layout. */
+.multiselect {
+    width: 100%;
+    margin: 0;
+    --ms-tag-bg: #226fbb;
+    --ms-tag-color: #fff;
+    --ms-option-bg-selected: #226fbb;
+    --ms-option-bg-selected-pointed: #5393d2;
+    --ms-option-color-selected: #fff;
+    --ms-option-color-selected-pointed: #fff;
+    --ms-border-color-active: #226fbb;
+    --ms-ring-color: rgba(34, 111, 187, 0.2);
 }
 </style>
