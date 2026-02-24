@@ -1006,6 +1006,12 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
         if not self.location or not self.location.location_accuracy:
             missing_values.append("Location Accuracy")
 
+        if not self.location or not self.location.region_id:
+            missing_values.append("Region")
+
+        if not self.location or not self.location.district_id:
+            missing_values.append("District")
+
         if missing_values:
             raise ValidationError("Cannot submit this report due to missing values: " + ", ".join(missing_values))
 

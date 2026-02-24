@@ -60,7 +60,18 @@
             </div>
 
             <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label">Region:</label>
+                <label for="" class="col-sm-3 control-label"
+                    >Region:<span
+                        v-if="
+                            occurrence_report_obj.processing_status ==
+                                constants.PROPOSAL_STATUS.WITH_ASSESSOR.TEXT ||
+                            occurrence_report_obj.processing_status ==
+                                constants.PROPOSAL_STATUS.WITH_REFERRAL.TEXT
+                        "
+                        class="text-danger ms-1"
+                        >*</span
+                    ></label
+                >
                 <div class="col-sm-9">
                     <select
                         v-model="occurrence_report_obj.location.region_id"
@@ -79,7 +90,18 @@
                 </div>
             </div>
             <div class="row mb-3">
-                <label for="" class="col-sm-3 control-label">District:</label>
+                <label for="" class="col-sm-3 control-label"
+                    >District:<span
+                        v-if="
+                            occurrence_report_obj.processing_status ==
+                                constants.PROPOSAL_STATUS.WITH_ASSESSOR.TEXT ||
+                            occurrence_report_obj.processing_status ==
+                                constants.PROPOSAL_STATUS.WITH_REFERRAL.TEXT
+                        "
+                        class="text-danger ms-1"
+                        >*</span
+                    ></label
+                >
                 <div class="col-sm-9">
                     <template v-if="!isReadOnly">
                         <template
