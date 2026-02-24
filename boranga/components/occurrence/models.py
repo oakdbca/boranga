@@ -245,7 +245,7 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
         (CUSTOMER_STATUS_APPROVED, "Approved"),
         (CUSTOMER_STATUS_DECLINED, "Declined"),
         (CUSTOMER_STATUS_DISCARDED, "Discarded"),
-        (CUSTOMER_STATUS_CLOSED, "DeListed"),
+        (CUSTOMER_STATUS_CLOSED, "Delisted"),
     )
 
     # List of statuses from above that allow a customer to edit an occurrence report.
@@ -283,7 +283,7 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
         (PROCESSING_STATUS_DECLINED, "Declined"),
         (PROCESSING_STATUS_UNLOCKED, "Unlocked"),
         (PROCESSING_STATUS_DISCARDED, "Discarded"),
-        (PROCESSING_STATUS_CLOSED, "DeListed"),
+        (PROCESSING_STATUS_CLOSED, "Delisted"),
     )
 
     VALID_BULK_IMPORT_PROCESSING_STATUSES = [

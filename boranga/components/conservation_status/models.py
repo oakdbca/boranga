@@ -378,7 +378,7 @@ class ConservationStatus(LockableModel, SubmitterInformationModelMixin, Revision
         (CUSTOMER_STATUS_APPROVED, "Approved"),
         (CUSTOMER_STATUS_DECLINED, "Declined"),
         (CUSTOMER_STATUS_DISCARDED, "Discarded"),
-        (CUSTOMER_STATUS_CLOSED, "DeListed"),
+        (CUSTOMER_STATUS_CLOSED, "Delisted"),
     )
 
     # List of statuses from above that allow a customer to edit an application.
@@ -421,10 +421,10 @@ class ConservationStatus(LockableModel, SubmitterInformationModelMixin, Revision
         (PROCESSING_STATUS_PROPOSED_FOR_AGENDA, "Proposed For Agenda"),
         (PROCESSING_STATUS_READY_FOR_AGENDA, "Ready For Agenda"),
         (PROCESSING_STATUS_ON_AGENDA, "On Agenda"),
-        (PROCESSING_STATUS_WITH_APPROVER, "Proposed DeListed"),
+        (PROCESSING_STATUS_WITH_APPROVER, "Proposed Delisted"),
         (PROCESSING_STATUS_APPROVED, "Approved"),
         (PROCESSING_STATUS_DECLINED, "Declined"),
-        (PROCESSING_STATUS_DELISTED, "DeListed"),
+        (PROCESSING_STATUS_DELISTED, "Delisted"),
         (PROCESSING_STATUS_CLOSED, "Closed"),
     )
 

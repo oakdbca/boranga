@@ -222,7 +222,7 @@ export default {
                 { value: 'ready_for_agenda', name: 'In Meeting' },
                 { value: 'approved', name: 'Approved' },
                 { value: 'closed', name: 'Closed' },
-                { value: 'delisted', name: 'DeListed' },
+                { value: 'delisted', name: 'Delisted' },
                 { value: 'declined', name: 'Declined' },
             ],
         };
