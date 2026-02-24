@@ -653,6 +653,18 @@ def t_smart_date_parse(value, ctx):
         except ValueError:
             pass
 
+    # TEC / legacy format: "26-May-23", "18-Jul-96" (day-MonthAbbr-2digitYear)
+    # and "26-May-2023" (day-MonthAbbr-4digitYear)
+    for fmt in (
+        "%d-%b-%y",  # 2-digit year (e.g. 26-May-23, 18-Jul-96)
+        "%d-%b-%Y",  # 4-digit year (e.g. 26-May-2023)
+    ):
+        try:
+            dt = datetime.strptime(value_str, fmt)
+            return _result(dt.date())
+        except ValueError:
+            pass
+
     # If nothing worked, warning
     return _result(None, TransformIssue("warning", f"Could not parse date value: {value!r}"))
 
