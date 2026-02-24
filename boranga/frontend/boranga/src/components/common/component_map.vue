@@ -946,7 +946,7 @@
                             >
                                 <!-- Spatial Operations Dropdown -->
                                 <div
-                                    class="input-group-text form-floating flex-grow-1"
+                                    class="input-group-text form-floating flex-grow-1 min-width-150"
                                 >
                                     <SelectFilter
                                         id="features-spatial-operation-select"
@@ -974,7 +974,6 @@
                                         :pre-selected-filter-item="
                                             selectedSpatialOperation
                                         "
-                                        classes="min-width-150"
                                         @option:selected="
                                             (selected) => {
                                                 selectedSpatialOperation =
@@ -1032,7 +1031,7 @@
                                                 selectedSpatialOperation
                                         )?.number_params > 0
                                     "
-                                    class="input-group-text form-floating flex-grow-1"
+                                    class="input-group-text form-floating flex-grow-1 min-width-150"
                                 >
                                     <SelectFilter
                                         id="features-unit-select"
@@ -1058,7 +1057,6 @@
                                         :pre-selected-filter-item="
                                             selectedSpatialUnit
                                         "
-                                        classes="min-width-150"
                                         @option:selected="
                                             (selected) => {
                                                 selectedSpatialUnit =
@@ -3510,12 +3508,61 @@ export default {
                                         this.editableFeatureCollection.push(f);
                                     });
 
-                                // A bit clunky but this makes it so when switching editing modes the feature selection styles get properly set
-                                const mode = this.mode;
-                                const subMode = this.subMode;
+                                // Restore the mode that was active before editing was
+                                // toggled off (saved below). Falls back to this.mode if
+                                // there was no prior toggle-off (first activation).
+                                const mode =
+                                    this._modeBeforeEditToggle ?? this.mode;
+                                const subMode =
+                                    this._subModeBeforeEditToggle ??
+                                    this.subMode;
+                                this._modeBeforeEditToggle = null;
+                                this._subModeBeforeEditToggle = null;
+                                // Cycle through 'layer' first so set_mode's toggle-off
+                                // guard doesn't cancel the mode restoration.
                                 this.callSetMode('layer');
                                 this.callSetMode(mode, subMode);
+                                // Belt-and-suspenders: if we restored draw mode and
+                                // features are still selected, explicitly reapply the
+                                // vertex-handle style and re-enable the modify
+                                // interaction. The modeChanged event chain can miss
+                                // this when editableFeatureCollection was just
+                                // repopulated and the reference-equality checks in
+                                // editableSelectedFeatures() haven't settled.
+                                if (
+                                    this.mode === 'draw' &&
+                                    this.selectedFeatureCollection.getLength() >
+                                        0
+                                ) {
+                                    this.modifySetActive(true);
+                                    this.selectedFeatureCollection
+                                        .getArray()
+                                        .forEach((f) => {
+                                            f.setStyle(this.modifySelectStyle);
+                                        });
+                                    if (
+                                        this.drawPolygonsForModel &&
+                                        this.subMode === 'Polygon'
+                                    ) {
+                                        this.drawPolygonsForModel.setActive(
+                                            false
+                                        );
+                                    }
+                                    if (
+                                        this.drawPointsForModel &&
+                                        this.subMode === 'Point'
+                                    ) {
+                                        this.drawPointsForModel.setActive(
+                                            false
+                                        );
+                                    }
+                                }
                             } else {
+                                // Save the current mode so toggling back on can restore it.
+                                // Without this, this.mode would already be 'layer' by the
+                                // time toggle-on runs, losing the draw/transform state.
+                                this._modeBeforeEditToggle = this.mode;
+                                this._subModeBeforeEditToggle = this.subMode;
                                 this.callSetMode('layer');
                             }
 
@@ -3525,6 +3572,10 @@ export default {
                                 target,
                                 toggle_editing
                             );
+
+                            // Toggling editing is not a geometry change — reset the
+                            // dirty state so the toggle itself doesn't mark unsaved changes
+                            this.takeSnapshot();
                         });
 
                         divWrapper.appendTo(
@@ -3902,18 +3953,21 @@ export default {
                 const now = Date.now();
                 if (now - lastPointerMove < 50) return; // 20 FPS max
                 lastPointerMove = now;
-                function isSelectedFeature(selected) {
-                    if (!selected) {
+                function isSelectedFeature(feature) {
+                    if (!feature) {
                         return false;
                     }
-                    return vm.selectedFeatureIds.includes(
-                        selected.getProperties().id
-                    );
+                    // selectedFeatureCollection is markRaw, so the selectedFeatureIds
+                    // computed is never invalidated by Vue. Check the OL Collection
+                    // directly by object reference instead.
+                    return vm.selectedFeatureCollection
+                        .getArray()
+                        .includes(feature);
                 }
                 if (selected !== null) {
                     if (isSelectedFeature(selected)) {
-                        // Don't alter style of click-selected features
-                        console.log('ignoring hover on selected feature');
+                        // Feature is click-selected — keep its selection style intact.
+                        // (Do not call setStyle(undefined), which would erase the red border.)
                     } else {
                         // Turn off hover styling -> reverts to undefined, which falls back to Layer style or Feature style function (if set)
                         // Note: If feature.setStyle(undefined) is called, it removes any feature-level style.
@@ -4475,9 +4529,17 @@ export default {
             const transformEndCallback = function (evt) {
                 evt.features.forEach((feature) => {
                     vm.emitValidateFeature(feature);
-                    const original_srid =
-                        feature.getProperties().original_geometry.properties
-                            .srid;
+                    const origGeom = feature.getProperties().original_geometry;
+                    const origType = origGeom && origGeom.type;
+
+                    // For Point/MultiPoint features (buffer-radius circles),
+                    // the original_geometry stores the source point and must
+                    // not be overwritten with polygon ring coordinates.
+                    if (origType === 'Point' || origType === 'MultiPoint') {
+                        return;
+                    }
+
+                    const original_srid = origGeom.properties.srid;
                     let coordinates = feature.getGeometry().getCoordinates();
                     if (original_srid != vm.mapSrid) {
                         // Transform the coordinates from the map crs to the user input crs
@@ -5216,7 +5278,12 @@ export default {
             // eslint-disable-next-line no-unused-vars
             const feature = this.drawPolygonsForModel.finishDrawing();
             this.setLoadingMap(false);
-            if (this.mode == 'draw' && this.selectedFeatureIds.length == 0) {
+            // selectedFeatureIds is stale (markRaw collection) — use the live
+            // OL Collection directly to avoid always calling setMode('layer').
+            if (
+                this.mode == 'draw' &&
+                this.selectedFeatureCollection.getLength() == 0
+            ) {
                 this.callSetMode('layer');
             }
         },
@@ -5385,14 +5452,9 @@ export default {
          * Returns the selected features
          */
         selectedFeatures: function () {
-            let vm = this;
-            const features = vm.getMapFeatures();
-            console.log('features:', features);
-            return features.filter((feature) => {
-                return vm.selectedFeatureIds.includes(
-                    feature.getProperties().id
-                );
-            });
+            // selectedFeatureCollection is markRaw so selectedFeatureIds computed
+            // is stale — use the live OL Collection by object reference.
+            return this.selectedFeatureCollection.getArray().slice();
         },
         /**
          * Returns features that are both selectable and editable
@@ -5657,8 +5719,13 @@ export default {
                 if (interaction instanceof Select) {
                     let selected = [];
                     let deselected = [];
-                    let feature_id = feature.get('id');
-                    if (this.selectedFeatureIds.includes(feature_id)) {
+                    // selectedFeatureCollection is markRaw so selectedFeatureIds computed
+                    // is stale — check the OL Collection directly by object reference.
+                    if (
+                        this.selectedFeatureCollection
+                            .getArray()
+                            .includes(feature)
+                    ) {
                         // already selected, so deselect
                         deselected.push(feature);
                     } else {
@@ -6410,6 +6477,27 @@ export default {
 .custom-mouse-position:empty {
     display: none;
 }
+
+/* Utility min-width classes — must be unscoped so they apply inside child
+   components (e.g. SelectFilter wrapper div) */
+.min-width-60 {
+    min-width: 60px !important;
+}
+.min-width-90 {
+    min-width: 90px !important;
+}
+.min-width-120 {
+    min-width: 120px !important;
+}
+.min-width-150 {
+    min-width: 150px !important;
+}
+.min-width-180 {
+    min-width: 180px !important;
+}
+.min-width-210 {
+    min-width: 210px !important;
+}
 </style>
 <style scoped>
 #featureToast {
@@ -6490,24 +6578,6 @@ export default {
     width: 100%;
 }
 
-.min-width-60 {
-    min-width: 60px !important;
-}
-.min-width-90 {
-    min-width: 90px !important;
-}
-.min-width-120 {
-    min-width: 120px !important;
-}
-.min-width-150 {
-    min-width: 150px !important;
-}
-.min-width-180 {
-    min-width: 180px !important;
-}
-.min-width-210 {
-    min-width: 210px !important;
-}
 .svg-green {
     filter: invert(42%) sepia(93%) saturate(1352%) hue-rotate(87deg)
         brightness(119%) contrast(119%);
