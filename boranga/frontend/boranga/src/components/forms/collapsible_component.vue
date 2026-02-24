@@ -12,7 +12,7 @@
                 <i
                     :id="warning_icon_id"
                     :title="warning_icon_title"
-                    class="bi bi-exclamation-circle fa-2x filter_warning_icon"
+                    class="bi bi-exclamation-circle fs-2 filter_warning_icon"
                 ></i>
             </div>
             <div class="me-2">
