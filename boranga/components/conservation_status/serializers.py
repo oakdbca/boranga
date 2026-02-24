@@ -76,6 +76,7 @@ class BasicConservationStatusSerializer(BaseModelSerializer):
         fields = (
             "id",
             "conservation_status_number",
+            "processing_status",
             "wa_legislative_list_code",
             "wa_legislative_list_label",
             "wa_legislative_category_code",
