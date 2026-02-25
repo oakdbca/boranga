@@ -440,7 +440,7 @@ class OccurrenceTpflAdapter(SourceAdapter):
 
             # Set TPFL-specific location fields (static default, not from raw column)
             canonical_row["OCCLocation__boundary_description"] = (
-                "Boundary not mapped, migrated point coordinate has had a " "1 metre buffer applied"
+                "Boundary not mapped, migrated point coordinate has had a 1 metre buffer applied"
             )
 
             # Compute occurrence_name from raw row (raw column names)
