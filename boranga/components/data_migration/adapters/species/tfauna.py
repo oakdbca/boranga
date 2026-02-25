@@ -126,6 +126,37 @@ class SpeciesTfaunaAdapter(SourceAdapter):
         except Exception:
             logger.exception("TFAUNA: failed to preload FaunaSubGroup parent map")
 
+        # Task 11854: processing_status — determine from approved ConservationStatus.
+        # Pre-load NameID → taxonomy_id from LegacyTaxonomyMapping, then build a
+        # set of taxonomy_ids that have a current approved CS.
+        from boranga.components.data_migration.registry import _load_legacy_taxonomy_id_mappings
+
+        ltm_table = _load_legacy_taxonomy_id_mappings("TFAUNA")
+        # Build NameID → taxonomy_id lookup for quick resolution in the row loop.
+        name_id_to_taxonomy_id: dict[str, int] = {}
+        for legacy_id, entry in ltm_table.items():
+            tid = entry.get("taxonomy_id")
+            if tid:
+                name_id_to_taxonomy_id[legacy_id] = tid
+
+        # Taxonomy IDs with at least one approved ConservationStatus.
+        taxonomy_ids_with_approved_cs: set[int] = set()
+        try:
+            from boranga.components.conservation_status.models import ConservationStatus
+
+            taxonomy_ids_with_approved_cs = set(
+                ConservationStatus.objects.filter(
+                    processing_status=ConservationStatus.PROCESSING_STATUS_APPROVED,
+                    species_taxonomy_id__isnull=False,
+                ).values_list("species_taxonomy_id", flat=True)
+            )
+            logger.info(
+                "TFAUNA: loaded %d taxonomy_ids with an approved ConservationStatus",
+                len(taxonomy_ids_with_approved_cs),
+            )
+        except Exception:
+            logger.exception("TFAUNA: failed to preload approved ConservationStatus taxonomy_ids")
+
         rows = []
 
         for raw in raw_rows:
@@ -168,15 +199,14 @@ class SpeciesTfaunaAdapter(SourceAdapter):
             canonical["department_file_numbers"] = "; ".join(file_nos)
 
             # Task 11854: processing_status
-            # Mapped Legacy Field: CS.  IF CS = TRUE → Active, IF CS = FALSE → Historical.
-            # The CS column may not be present in the provided CSV; default
-            # to "historical" when missing or unrecognised (safest assumption).
-            cs_val = raw.get("CS", "")
-            cs_upper = str(cs_val).strip().upper() if cs_val else ""
-            if cs_upper in ("TRUE", "YES", "1", "T"):
+            # IF the species has a current Approved ConservationStatus → Active
+            # (and all SpeciesPublishingStatus sections → Public).
+            # ELSE → Historical (and all SpeciesPublishingStatus sections → Private).
+            # Resolve NameID → taxonomy_id, then check the pre-loaded approved CS set.
+            resolved_tax_id = name_id_to_taxonomy_id.get(name_id_raw) if name_id_raw else None
+            if resolved_tax_id and resolved_tax_id in taxonomy_ids_with_approved_cs:
                 canonical["processing_status"] = "active"
             else:
-                # FALSE / NO / 0 / F / missing / unrecognised → historical
                 canonical["processing_status"] = "historical"
 
             # Task 11853: lodgement_date — use migration date rather than NULL
