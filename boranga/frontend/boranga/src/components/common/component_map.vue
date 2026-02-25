@@ -2620,13 +2620,13 @@ export default {
                             ].getExtent();
                     }
 
-                    let centre = [
-                        (ext[0] + ext[2]) / 2.0,
-                        (ext[1] + ext[3]) / 2.0,
-                    ];
-                    let resolution = view.getResolutionForExtent(ext);
-                    let z = view.getZoomForResolution(resolution) - 1;
-                    view.animate({ zoom: z, center: centre });
+                    ext = vm.ensureMinimumExtent(ext);
+
+                    view.fit(ext, {
+                        duration: 1000,
+                        size: vm.map.getSize(),
+                        padding: [50, 50, 50, 50],
+                    });
                 }
             }
         },
@@ -2681,6 +2681,31 @@ export default {
             ];
         },
         /**
+         * Ensures an extent is at least a minimum size so that very small
+         * features (e.g. 1 m buffered points) are visible as shapes rather
+         * than sub-pixel dots.  Returns the extent unchanged when it is
+         * already large enough.
+         *
+         * The minimum size is expressed in the map's native units.
+         * For EPSG:4326 0.0005° ≈ 55 m at mid-latitudes — tight enough to
+         * see the feature's shape with surrounding map-tile context.
+         *
+         * @param {Array<number>} ext  [minX, minY, maxX, maxY]
+         * @returns {Array<number>}    padded extent
+         */
+        ensureMinimumExtent: function (ext) {
+            const minSize = 0.0005; // degrees – ≈ 55 m at −32° lat
+            const w = ext[2] - ext[0];
+            const h = ext[3] - ext[1];
+            if (w >= minSize && h >= minSize) {
+                return ext;
+            }
+            const cx = (ext[0] + ext[2]) / 2;
+            const cy = (ext[1] + ext[3]) / 2;
+            const half = minSize / 2;
+            return [cx - half, cy - half, cx + half, cy + half];
+        },
+        /**
          * Centers the map based on its size on a feature's geometry extent.
          * The map size is pixel dimensions of the box to fit the extent into.
          * @param {Feature} feature The feature to center on
@@ -2693,10 +2718,12 @@ export default {
                 extPol.scale(1.5);
                 ext = new Feature(extPol).getGeometry().getExtent();
             }
+            // Ensure a minimum visible extent so small features are
+            // rendered as shapes rather than invisible sub-pixel dots.
+            ext = this.ensureMinimumExtent(ext);
             this.map.getView().fit(ext, {
                 duration: 1000,
                 size: this.map.getSize(),
-                maxZoom: maxZoom,
             });
         },
         /**
