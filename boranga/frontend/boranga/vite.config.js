@@ -19,6 +19,7 @@ export default defineConfig(() => {
             port: port,
             strictPort: true,
             open: false,
+            origin: `http://localhost:${port}`,
             headers: {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers':
