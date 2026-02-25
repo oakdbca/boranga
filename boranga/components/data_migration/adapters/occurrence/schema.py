@@ -83,6 +83,85 @@ COLUMN_MAP = {
     "ADD_USERNAME": "OccurrenceDocument__uploaded_by",
     # OccurrenceGeometry
     "OCC_BUFFER_RADIUS": "OccurrenceGeometry__buffer_radius",
+    # ── TPFL Population-level fields (DRF_POPULATION.csv) ──
+    # OCCLocation
+    "LOCATION": "OCCLocation__location_description",
+    "CO_ORD_SOURCE_CODE": "OCCLocation__coordinate_source_id",
+    "LOCALITY": "OCCLocation__locality",
+    "DISTRICT": "OCCLocation__district_id",
+    "REGION": "OCCLocation__region_id",
+    "LOCATION_ACCURACY": "OCCLocation__location_accuracy_id",
+    "LGA_CODE": "OCCLocation__lga_code",
+    # Comment composition parts (adapter composes these)
+    "REASON_DEACTIVATED": "REASON_DEACTIVATED",
+    "DEACTIVATED_DATE": "DEACTIVATED_DATE",
+    # Contact composition parts (LAND_MGR_ADDRESS + LAND_MGR_PHONE → OCCContactDetail__contact)
+    "LAND_MGR_ADDRESS": "LAND_MGR_ADDRESS",
+    "LAND_MGR_PHONE": "LAND_MGR_PHONE",
+    # OCCHabitatComposition
+    "DRAINAGE": "OCCHabitatComposition__drainage_id",
+    "LAND_FORM": "OCCHabitatComposition__land_form",
+    "GRAVEL": "OCCHabitatComposition__loose_rock_percent",
+    "ROCK_TYPE": "OCCHabitatComposition__rock_type_id",
+    "SOIL_COLOUR": "OCCHabitatComposition__soil_colour_id",
+    "SOIL_CONDITION": "OCCHabitatComposition__soil_condition_id",
+    "SOIL_TYPE": "OCCHabitatComposition__soil_type",
+    # Habitat notes composition parts (HABITAT_NOTES + "ASPECT: " + ASPECT)
+    "HABITAT_NOTES": "HABITAT_NOTES",
+    "ASPECT": "ASPECT",
+    # OCCFireHistory
+    "FIRE_SEASON": "OCCFireHistory__fire_season",
+    "FIRE_YEAR": "OCCFireHistory__fire_year",
+    "FIRE_INTENSITY": "OCCFireHistory__intensity_id",
+    # OCCIdentification
+    "BARCODE_NUMBER": "OCCIdentification__barcode_number",
+    "COLLECTOR_NUMBER": "OCCIdentification__collector_number",
+    "PERMIT_ID": "OCCIdentification__permit_id",
+    "SAMPLE_DESTINATION": "OCCIdentification__sample_destination_id",
+    "VCHR_STATUS_CODE": "OCCIdentification__vchr_status_code",
+    "DUPVOUCH_LOCATION": "OCCIdentification__dupvouch_location",
+    # OCCObservationDetail
+    "AREA_ASSESSMENT": "OCCObservationDetail__area_assessment_id",
+    "AREA_SURVEYED": "OCCObservationDetail__area_surveyed",
+    "SURVEY_DURATION": "OCCObservationDetail__survey_duration",
+    # OCCAssociatedSpecies
+    "ASSOCIATED_SPECIES": "OCCAssociatedSpecies__comment",
+    # OCCPlantCount
+    "COUNTED_SUBJECT": "OCCPlantCount__counted_subject_id",
+    "PLANT_CONDITION": "OCCPlantCount__plant_condition_id",
+    "PLANT_COUNT_METHOD": "OCCPlantCount__plant_count_method_id",
+    "CLONAL": "OCCPlantCount__clonal_reproduction_present",
+    "VEGETATIVE_STATE": "OCCPlantCount__vegetative_state_present",
+    "FLOWER_BUD": "OCCPlantCount__flower_bud_present",
+    "FLOWER": "OCCPlantCount__flower_present",
+    "IMMATURE_FRUIT": "OCCPlantCount__immature_fruit_present",
+    "RIPE_FRUIT": "OCCPlantCount__ripe_fruit_present",
+    "DEHISCED_FRUIT": "OCCPlantCount__dehisced_fruit_present",
+    "ALIVE_MATURE": "OCCPlantCount__detailed_alive_mature",
+    "DEAD_MATURE": "OCCPlantCount__detailed_dead_mature",
+    "ALIVE_JUVENILE": "OCCPlantCount__detailed_alive_juvenile",
+    "DEAD_JUVENILE": "OCCPlantCount__detailed_dead_juvenile",
+    "ALIVE_SEEDLING": "OCCPlantCount__detailed_alive_seedling",
+    "DEAD_SEEDLING": "OCCPlantCount__detailed_dead_seedling",
+    "SIMPLE_ALIVE": "OCCPlantCount__simple_alive",
+    "SIMPLE_DEAD": "OCCPlantCount__simple_dead",
+    "QUADRATS_SURVEYED": "OCCPlantCount__quadrats_surveyed",
+    "ESTIMATED_POPULATION_AREA": "OCCPlantCount__estimated_population_area",
+    "FLOWERING_PLANTS_PER": "OCCPlantCount__flowering_plants_per",
+    "TOTAL_QUADRAT_AREA": "OCCPlantCount__total_quadrat_area",
+    "POLLINATOR_OBSERVATION": "OCCPlantCount__pollinator_observation",
+    "AREA_OCCUPIED_METHOD": "OCCPlantCount__area_occupied_method",
+    "QUAD_SIZE": "OCCPlantCount__quad_size",
+    "QUAD_NUM_TOTAL": "OCCPlantCount__quad_num_total",
+    "QUAD_NUM_MATURE": "OCCPlantCount__quad_num_mature",
+    "QUAD_NUM_JUVENILE": "OCCPlantCount__quad_num_juvenile",
+    "QUAD_NUM_SEEDLINGS": "OCCPlantCount__quad_num_seedlings",
+    "POPULATION_NOTES": "OCCPlantCount__population_notes",
+    # OCCHabitatCondition (adapter dispatches to 6 fields from single code)
+    "HABITAT_CONDITION": "HABITAT_CONDITION",
+    # OccurrenceGeometry (lat/long for 1m circle generation in handler)
+    "GDA94LAT": "OccurrenceGeometry__latitude",
+    "GDA94LONG": "OccurrenceGeometry__longitude",
 }
 
 REQUIRED_COLUMNS = [

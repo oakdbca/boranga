@@ -438,17 +438,10 @@ class OccurrenceTpflAdapter(SourceAdapter):
                 if k.startswith("_"):
                     canonical_row[k] = v
 
-            # Set TPFL-specific location fields
-            canonical_row["OCCLocation__location_description"] = raw.get("LOCATION")
-            canonical_row["OCCLocation__coordinate_source_id"] = raw.get("CO_ORD_SOURCE_CODE")
+            # Set TPFL-specific location fields (static default, not from raw column)
             canonical_row["OCCLocation__boundary_description"] = (
                 "Boundary not mapped, migrated point coordinate has had a " "1 metre buffer applied"
             )
-            canonical_row["OCCLocation__locality"] = raw.get("LOCALITY")
-            canonical_row["OCCLocation__district_id"] = raw.get("DISTRICT")
-            canonical_row["OCCLocation__region_id"] = raw.get("REGION")
-            canonical_row["OCCLocation__location_accuracy_id"] = raw.get("LOCATION_ACCURACY")
-            canonical_row["OCCLocation__lga_code"] = raw.get("LGA_CODE")
 
             # Compute occurrence_name from raw row (raw column names)
             pop = str(raw.get("POP_NUMBER", "") or "").strip()
@@ -490,14 +483,7 @@ class OccurrenceTpflAdapter(SourceAdapter):
             canonical_row["OCCContactDetail__contact"] = contact if contact else None
 
             # --- OCCHabitatComposition ---
-            canonical_row["OCCHabitatComposition__drainage_id"] = raw.get("DRAINAGE")
-            canonical_row["OCCHabitatComposition__land_form"] = raw.get("LAND_FORM")
-            canonical_row["OCCHabitatComposition__loose_rock_percent"] = raw.get("GRAVEL")
-            canonical_row["OCCHabitatComposition__rock_type_id"] = raw.get("ROCK_TYPE")
-            canonical_row["OCCHabitatComposition__soil_colour_id"] = raw.get("SOIL_COLOUR")
-            canonical_row["OCCHabitatComposition__soil_condition_id"] = raw.get("SOIL_CONDITION")
-            canonical_row["OCCHabitatComposition__soil_type"] = raw.get("SOIL_TYPE")
-            # habitat_notes: HABITAT_NOTES + "ASPECT: " + ASPECT
+            # habitat_notes: composed from HABITAT_NOTES + "ASPECT: " + ASPECT
             _hab_notes = str(raw.get("HABITAT_NOTES", "") or "").strip()
             _aspect = str(raw.get("ASPECT", "") or "").strip()
             _hn_parts: list[str] = []
@@ -506,59 +492,6 @@ class OccurrenceTpflAdapter(SourceAdapter):
             if _aspect:
                 _hn_parts.append(f"ASPECT: {_aspect}")
             canonical_row["OCCHabitatComposition__habitat_notes"] = "; ".join(_hn_parts) if _hn_parts else None
-
-            # --- OCCFireHistory ---
-            canonical_row["OCCFireHistory__fire_season"] = raw.get("FIRE_SEASON")
-            canonical_row["OCCFireHistory__fire_year"] = raw.get("FIRE_YEAR")
-            canonical_row["OCCFireHistory__intensity_id"] = raw.get("FIRE_INTENSITY")
-
-            # --- OCCIdentification ---
-            canonical_row["OCCIdentification__barcode_number"] = raw.get("BARCODE_NUMBER")
-            canonical_row["OCCIdentification__collector_number"] = raw.get("COLLECTOR_NUMBER")
-            canonical_row["OCCIdentification__permit_id"] = raw.get("PERMIT_ID")
-            canonical_row["OCCIdentification__sample_destination_id"] = raw.get("SAMPLE_DESTINATION")
-            canonical_row["OCCIdentification__vchr_status_code"] = raw.get("VCHR_STATUS_CODE")
-            canonical_row["OCCIdentification__dupvouch_location"] = raw.get("DUPVOUCH_LOCATION")
-
-            # --- OCCObservationDetail ---
-            canonical_row["OCCObservationDetail__area_assessment_id"] = raw.get("AREA_ASSESSMENT")
-            canonical_row["OCCObservationDetail__area_surveyed"] = raw.get("AREA_SURVEYED")
-            canonical_row["OCCObservationDetail__survey_duration"] = raw.get("SURVEY_DURATION")
-
-            # --- OCCAssociatedSpecies ---
-            canonical_row["OCCAssociatedSpecies__comment"] = raw.get("ASSOCIATED_SPECIES")
-
-            # --- OCCPlantCount ---
-            canonical_row["OCCPlantCount__counted_subject_id"] = raw.get("COUNTED_SUBJECT")
-            canonical_row["OCCPlantCount__plant_condition_id"] = raw.get("PLANT_CONDITION")
-            canonical_row["OCCPlantCount__plant_count_method_id"] = raw.get("PLANT_COUNT_METHOD")
-            canonical_row["OCCPlantCount__clonal_reproduction_present"] = raw.get("CLONAL")
-            canonical_row["OCCPlantCount__vegetative_state_present"] = raw.get("VEGETATIVE_STATE")
-            canonical_row["OCCPlantCount__flower_bud_present"] = raw.get("FLOWER_BUD")
-            canonical_row["OCCPlantCount__flower_present"] = raw.get("FLOWER")
-            canonical_row["OCCPlantCount__immature_fruit_present"] = raw.get("IMMATURE_FRUIT")
-            canonical_row["OCCPlantCount__ripe_fruit_present"] = raw.get("RIPE_FRUIT")
-            canonical_row["OCCPlantCount__dehisced_fruit_present"] = raw.get("DEHISCED_FRUIT")
-            canonical_row["OCCPlantCount__detailed_alive_mature"] = raw.get("ALIVE_MATURE")
-            canonical_row["OCCPlantCount__detailed_dead_mature"] = raw.get("DEAD_MATURE")
-            canonical_row["OCCPlantCount__detailed_alive_juvenile"] = raw.get("ALIVE_JUVENILE")
-            canonical_row["OCCPlantCount__detailed_dead_juvenile"] = raw.get("DEAD_JUVENILE")
-            canonical_row["OCCPlantCount__detailed_alive_seedling"] = raw.get("ALIVE_SEEDLING")
-            canonical_row["OCCPlantCount__detailed_dead_seedling"] = raw.get("DEAD_SEEDLING")
-            canonical_row["OCCPlantCount__simple_alive"] = raw.get("SIMPLE_ALIVE")
-            canonical_row["OCCPlantCount__simple_dead"] = raw.get("SIMPLE_DEAD")
-            canonical_row["OCCPlantCount__quadrats_surveyed"] = raw.get("QUADRATS_SURVEYED")
-            canonical_row["OCCPlantCount__estimated_population_area"] = raw.get("ESTIMATED_POPULATION_AREA")
-            canonical_row["OCCPlantCount__flowering_plants_per"] = raw.get("FLOWERING_PLANTS_PER")
-            canonical_row["OCCPlantCount__total_quadrat_area"] = raw.get("TOTAL_QUADRAT_AREA")
-            canonical_row["OCCPlantCount__pollinator_observation"] = raw.get("POLLINATOR_OBSERVATION")
-            canonical_row["OCCPlantCount__area_occupied_method"] = raw.get("AREA_OCCUPIED_METHOD")
-            canonical_row["OCCPlantCount__quad_size"] = raw.get("QUAD_SIZE")
-            canonical_row["OCCPlantCount__quad_num_total"] = raw.get("QUAD_NUM_TOTAL")
-            canonical_row["OCCPlantCount__quad_num_mature"] = raw.get("QUAD_NUM_MATURE")
-            canonical_row["OCCPlantCount__quad_num_juvenile"] = raw.get("QUAD_NUM_JUVENILE")
-            canonical_row["OCCPlantCount__quad_num_seedlings"] = raw.get("QUAD_NUM_SEEDLINGS")
-            canonical_row["OCCPlantCount__population_notes"] = raw.get("POPULATION_NOTES")
 
             # --- OCCHabitatCondition ---
             # Dispatch HABITAT_CONDITION code to 6 individual percentage fields
@@ -586,10 +519,6 @@ class OccurrenceTpflAdapter(SourceAdapter):
             else:
                 for _hc_f in _hc_fields:
                     canonical_row[f"OCCHabitatCondition__{_hc_f}"] = None
-
-            # --- OccurrenceGeometry (lat/long for geometry creation in handler) ---
-            canonical_row["OccurrenceGeometry__latitude"] = raw.get("GDA94LAT")
-            canonical_row["OccurrenceGeometry__longitude"] = raw.get("GDA94LONG")
 
             rows.append(canonical_row)
         return ExtractionResult(rows=rows, warnings=warnings)
