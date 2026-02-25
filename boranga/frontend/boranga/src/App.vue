@@ -17,7 +17,6 @@ export default {
 
 textarea {
     field-sizing: content;
-    min-height: 2lh;
     resize: none;
 }
 .select2-container--disabled,
