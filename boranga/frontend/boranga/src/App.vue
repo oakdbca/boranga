@@ -14,6 +14,12 @@ export default {
 .popover {
     max-width: 100% !important;
 }
+
+textarea {
+    field-sizing: content;
+    min-height: 2lh;
+    resize: none;
+}
 .select2-container--disabled,
 .select2-container--focus {
     z-index: 1;
