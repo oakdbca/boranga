@@ -159,6 +159,25 @@ class SpeciesTfaunaAdapter(SourceAdapter):
 
         rows = []
 
+        # Tasks 11849+11850: check once whether the Conservation Plan columns
+        # are present.  S&C will add them to the CSV; until then we warn once
+        # and leave the fields at their defaults (False / None).
+        _sample_headers = set(raw_rows[0].keys()) if raw_rows else set()
+        has_conservation_plan_col = "Conservation Plan" in _sample_headers
+        has_conservation_plan_notes_col = "Conservation Plan Notes" in _sample_headers
+        if not has_conservation_plan_col:
+            logger.warning(
+                "TFAUNA: 'Conservation Plan' column not found in CSV – "
+                "conservation_plan_exists will default to False for all rows. "
+                "(Task 11849: S&C to add this column.)"
+            )
+        if not has_conservation_plan_notes_col:
+            logger.warning(
+                "TFAUNA: 'Conservation Plan Notes' column not found in CSV – "
+                "conservation_plan_reference will be empty for all rows. "
+                "(Task 11850: S&C to add this column.)"
+            )
+
         for raw in raw_rows:
             canonical = {}
 
@@ -197,6 +216,19 @@ class SpeciesTfaunaAdapter(SourceAdapter):
             if raw.get("CALMFileNum"):
                 file_nos.append(f"CALM: {raw['CALMFileNum']}")
             canonical["department_file_numbers"] = "; ".join(file_nos)
+
+            # Task 11849: conservation_plan_exists
+            # Column "Conservation Plan" contains Y/N. Map to boolean.
+            if has_conservation_plan_col:
+                cp_val = (raw.get("Conservation Plan") or "").strip().upper()
+                canonical["conservation_plan_exists"] = cp_val in ("Y", "YES", "TRUE", "1")
+
+            # Task 11850: conservation_plan_reference
+            # Column "Conservation Plan Notes" contains free-text reference string.
+            if has_conservation_plan_notes_col:
+                cp_notes = (raw.get("Conservation Plan Notes") or "").strip()
+                if cp_notes:
+                    canonical["conservation_plan_reference"] = cp_notes
 
             # Task 11854: processing_status
             # IF the species has a current Approved ConservationStatus → Active
