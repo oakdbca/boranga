@@ -783,8 +783,6 @@
                     id="pollinator_obs"
                     v-model="plant_count.pollinator_observation"
                     :disabled="isReadOnly"
-                    type="text"
-                    row="2"
                     class="form-control"
                     placeholder=""
                 />
@@ -799,8 +797,6 @@
                     id="plant_count_comment"
                     v-model="plant_count.comment"
                     :disabled="isReadOnly"
-                    type="text"
-                    row="2"
                     class="form-control"
                     placeholder=""
                 />

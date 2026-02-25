@@ -200,8 +200,6 @@
                         :disabled="isReadOnly"
                         class="form-control"
                         placeholder=""
-                        min="0"
-                        rows="6"
                     />
                 </div>
             </div>
@@ -629,8 +627,6 @@
                                 .collector_number
                         "
                         :disabled="isReadOnly"
-                        type="text"
-                        row="2"
                         class="form-control"
                         placeholder=""
                     />
@@ -647,8 +643,6 @@
                             occurrence_report_obj.identification.barcode_number
                         "
                         :disabled="isReadOnly"
-                        type="text"
-                        row="2"
                         class="form-control"
                         placeholder=""
                     />
@@ -666,8 +660,6 @@
                                 .identification_comment
                         "
                         :disabled="isReadOnly"
-                        type="text"
-                        row="2"
                         class="form-control"
                         placeholder=""
                     />

@@ -255,8 +255,6 @@
                         id="distinct_features"
                         v-model="animal_observation.distinctive_feature"
                         :disabled="isReadOnly"
-                        type="text"
-                        row="2"
                         class="form-control"
                         placeholder=""
                     />
@@ -272,8 +270,6 @@
                         id="distinct_features"
                         v-model="animal_observation.action_taken"
                         :disabled="isReadOnly"
-                        type="text"
-                        row="2"
                         class="form-control"
                         placeholder=""
                     />
@@ -289,8 +285,6 @@
                         id="distinct_features"
                         v-model="animal_observation.action_required"
                         :disabled="isReadOnly"
-                        type="text"
-                        row="2"
                         class="form-control"
                         placeholder=""
                     />
@@ -308,8 +302,6 @@
                             animal_observation.animal_observation_detail_comment
                         "
                         :disabled="isReadOnly"
-                        type="text"
-                        row="2"
                         class="form-control"
                         placeholder=""
                     />

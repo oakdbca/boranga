@@ -171,7 +171,6 @@
                         "
                         :disabled="isReadOnly"
                         class="form-control"
-                        rows="2"
                         placeholder=""
                     />
                 </div>
@@ -184,7 +183,6 @@
                         v-model="occurrence_report_obj.location.locality"
                         :disabled="isReadOnly"
                         class="form-control"
-                        rows="1"
                         placeholder=""
                     />
                 </div>
@@ -203,7 +201,6 @@
                         "
                         :disabled="isReadOnly"
                         class="form-control"
-                        rows="2"
                         placeholder=""
                     />
                 </div>
