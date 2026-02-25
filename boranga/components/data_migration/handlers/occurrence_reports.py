@@ -1790,11 +1790,12 @@ class OccurrenceReportImporter(BaseSheetImporter):
                             if not occ_assoc:
                                 continue
 
-                            # Update OCCAssociatedSpecies fields (comment and link)
+                            # Update OCCAssociatedSpecies link (traceability)
+                            # NOTE: Comment copy removed per Task #11604.
+                            # OCCAssociatedSpecies.comment is now populated directly
+                            # in the occurrence_legacy handler from DRF_POPULATION
+                            # ASSOCIATED_SPECIES field.
                             updated = False
-                            if ocr_assoc.comment and occ_assoc.comment != ocr_assoc.comment:
-                                occ_assoc.comment = ocr_assoc.comment
-                                updated = True
                             if occ_assoc.copied_ocr_associated_species_id != ocr_assoc.pk:
                                 occ_assoc.copied_ocr_associated_species = ocr_assoc
                                 updated = True
@@ -1814,7 +1815,7 @@ class OccurrenceReportImporter(BaseSheetImporter):
                             try:
                                 OCCAssociatedSpecies.objects.bulk_update(
                                     occ_assoc_to_update,
-                                    ["comment", "copied_ocr_associated_species"],
+                                    ["copied_ocr_associated_species"],
                                     batch_size=BATCH,
                                 )
                             except Exception:
@@ -4280,11 +4281,10 @@ class OccurrenceReportImporter(BaseSheetImporter):
             section_config = {
                 "LOCATION": [
                     (OCRLocation, OCCLocation, "copied_ocr_location"),
-                    (
-                        OccurrenceReportGeometry,
-                        OccurrenceGeometry,
-                        "copied_ocr_geometry",
-                    ),
+                    # NOTE: OccurrenceReportGeometry → OccurrenceGeometry copy
+                    # removed per Task #11569. Geometry is now populated directly
+                    # in the occurrence_legacy handler from DRF_POPULATION
+                    # coordinates (GDA94LAT/GDA94LONG).
                 ],
                 "PLNT_CNT": [
                     (OCRPlantCount, OCCPlantCount, "copied_ocr_plant_count"),
