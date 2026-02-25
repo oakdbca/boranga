@@ -12,6 +12,9 @@ from boranga.components.data_migration.adapters.conservation_status import schem
 from boranga.components.data_migration.adapters.conservation_status.tec import (
     ConservationStatusTecAdapter,
 )
+from boranga.components.data_migration.adapters.conservation_status.tfauna import (
+    ConservationStatusTfaunaAdapter,
+)
 from boranga.components.data_migration.adapters.conservation_status.tpfl import (
     ConservationStatusTpflAdapter,
 )
@@ -29,6 +32,7 @@ logger = logging.getLogger(__name__)
 SOURCE_ADAPTERS = {
     Source.TPFL.value: ConservationStatusTpflAdapter(),
     Source.TEC.value: ConservationStatusTecAdapter(),
+    Source.TFAUNA.value: ConservationStatusTfaunaAdapter(),
 }
 
 
@@ -273,8 +277,8 @@ class ConservationStatusImporter(BaseSheetImporter):
                     )
                     continue
 
-                # Resolve Species PK (for TPFL)
-                # row["species_id"] now holds the canonical Taxonomy PK (from SPECIES_LOOKUP pipeline)
+                # Resolve Species PK
+                # row["species_id"] now holds the canonical Taxonomy PK
                 # We need to map this Taxonomy PK to the Species internal PK
                 species_pk = None
                 species_taxonomy_id = None
@@ -282,6 +286,12 @@ class ConservationStatusImporter(BaseSheetImporter):
                 if row.get("species_id"):
                     # Pipeline transformed species_id to Taxonomy PK
                     species_taxonomy_id = row["species_id"]
+                    # Ensure integer type for map lookup (CSV/pipeline may yield strings)
+                    if isinstance(species_taxonomy_id, str):
+                        try:
+                            species_taxonomy_id = int(species_taxonomy_id)
+                        except (ValueError, TypeError):
+                            pass
                     species_pk = tax_to_species_pk_map.get(species_taxonomy_id)
 
                 # community_migrated_from_id pipeline should return Community PK or None
@@ -314,6 +324,7 @@ class ConservationStatusImporter(BaseSheetImporter):
                     commonwealth_conservation_category_id=row.get("commonwealth_conservation_category"),
                     iucn_version_id=row.get("iucn_version"),
                     change_code_id=row.get("change_code"),
+                    other_conservation_assessment_id=row.get("other_conservation_assessment"),
                     conservation_criteria=row.get("conservation_criteria"),
                     review_due_date=row.get("review_due_date"),
                     effective_from=row.get("effective_from_date"),
@@ -572,8 +583,7 @@ class ConservationStatusImporter(BaseSheetImporter):
             SpeciesPublishingStatus.objects.bulk_create(to_create_pubs, batch_size=BATCH)
 
         logger.info(
-            "CS post-persist: updated %d / created %d SpeciesPublishingStatus records "
-            "(%d activated, %d deactivated)",
+            "CS post-persist: updated %d / created %d SpeciesPublishingStatus records (%d activated, %d deactivated)",
             len(to_update_pubs),
             len(to_create_pubs),
             len(species_to_activate),
