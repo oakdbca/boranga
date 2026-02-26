@@ -4211,6 +4211,7 @@ class OccurrenceReportImporter(BaseSheetImporter):
                     "group_type_id": ocr.group_type_id,
                     "species_id": ocr.species_id,
                     "processing_status": Occurrence.PROCESSING_STATUS_ACTIVE,
+                    "comment": f"This Occurrence was auto-generated from a migrated Occurrence Report Form: ORF{ocr.pk} (migrated_from_id: {ocr.migrated_from_id})",
                     "locked": True,
                 }
                 if getattr(ctx, "migration_run", None) is not None:
