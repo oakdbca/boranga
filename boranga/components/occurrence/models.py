@@ -4760,6 +4760,11 @@ class OccurrenceUserAction(UserAction):
     ACTION_DISCARD_THREAT = "Threat {} discarded for occurrence {}"
     ACTION_REINSTATE_THREAT = "Threat {} reinstated for occurrence {}"
 
+    # Geometry
+    ACTION_ADD_GEOMETRY = "Occurrence Geometry Created for occurrence {}"
+    ACTION_UPDATE_GEOMETRY = "Occurrence Geometry Updated for occurrence {}"
+    ACTION_DELETE_GEOMETRY = "Occurrence Geometry Deleted for occurrence {}"
+
     class Meta:
         app_label = "boranga"
         ordering = ("-when",)
