@@ -6414,7 +6414,7 @@ export default {
          * @param {Object} layer A layer object
          */
         featureGetDisplayProperties: function (selected, layer) {
-            const properties = {};
+            const unordered = {};
             const layerName = layer.getProperties().name;
             const layerDef = this.getLayerDefinitionByName(layerName);
             const propertyMap = layerDef.property_display_map || null;
@@ -6427,7 +6427,7 @@ export default {
                     key,
                     value,
                     selected,
-                    properties,
+                    unordered,
                     propertyMap,
                     propertyOverwrite
                 );
@@ -6443,14 +6443,32 @@ export default {
                         key,
                         value,
                         selected,
-                        properties,
+                        unordered,
                         propertyMap,
                         propertyOverwrite
                     );
                 }
             }
 
-            return properties;
+            // Re-order properties to match the property_display_map key order
+            // so the popup displays fields in the intended sequence.
+            if (propertyMap) {
+                const ordered = {};
+                for (const displayLabel of Object.values(propertyMap)) {
+                    if (displayLabel in unordered) {
+                        ordered[displayLabel] = unordered[displayLabel];
+                    }
+                }
+                // Append any remaining properties not in the display map
+                for (const [key, value] of Object.entries(unordered)) {
+                    if (!(key in ordered)) {
+                        ordered[key] = value;
+                    }
+                }
+                return ordered;
+            }
+
+            return unordered;
         },
         filterFeaturesShowOnMap: function (features, what, not = false) {
             if (not) {

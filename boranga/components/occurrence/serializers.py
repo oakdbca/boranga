@@ -194,6 +194,7 @@ class BufferGeometrySerializer(BaseTypeSerializer, GeoFeatureModelSerializer):
 
 class OccurrenceGeometrySerializer(BaseTypeSerializer, GeoFeatureModelSerializer):
     occurrence_id = serializers.IntegerField(write_only=True, required=False)
+    geometry_id = serializers.IntegerField(source="id", read_only=True)
     geometry_source = serializers.SerializerMethodField()
     created_from = serializers.SerializerMethodField(read_only=True)
     source_of = serializers.SerializerMethodField(read_only=True)
@@ -210,6 +211,7 @@ class OccurrenceGeometrySerializer(BaseTypeSerializer, GeoFeatureModelSerializer
         fields = [
             "id",
             "occurrence_id",
+            "geometry_id",
             "geometry",
             "original_geometry",
             "srid",
@@ -1038,6 +1040,7 @@ class OCRLocationSerializer(BaseModelSerializer):
 
 class OccurrenceReportGeometrySerializer(BaseTypeSerializer, GeoFeatureModelSerializer):
     occurrence_report_id = serializers.IntegerField(write_only=True, required=False)
+    geometry_id = serializers.IntegerField(source="id", read_only=True)
     geometry_source = serializers.SerializerMethodField()
     report_copied_from = serializers.SerializerMethodField(read_only=True)
     srid = serializers.SerializerMethodField(read_only=True)
@@ -1052,6 +1055,7 @@ class OccurrenceReportGeometrySerializer(BaseTypeSerializer, GeoFeatureModelSeri
         fields = [
             "id",
             "occurrence_report_id",
+            "geometry_id",
             "geometry",
             "original_geometry",
             "srid",
