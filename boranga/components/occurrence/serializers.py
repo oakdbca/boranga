@@ -1834,6 +1834,13 @@ class OccurrenceReportReferralProposalSerializer(InternalOccurrenceReportSeriali
             "assessor_box_view": obj.assessor_comments_view(request),
         }
 
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        # Strip PII fields from the referral view — referees should not
+        # see the submitter's free-text comments as they may contain PII.
+        ret.pop("comments", None)
+        return ret
+
 
 class OccurrenceReportReferralSerializer(BaseModelSerializer):
     processing_status = serializers.CharField(source="get_processing_status_display")

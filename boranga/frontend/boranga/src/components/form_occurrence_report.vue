@@ -9,6 +9,7 @@
                 :show_observer_contact_information="
                     show_observer_contact_information
                 "
+                :show_comments="show_comments"
                 :occurrence_report_obj="occurrence_report_obj"
                 @refresh-occurrence-report="refreshOccurrenceReport()"
                 @save-occurrence-report="saveOccurrenceReport()"
@@ -251,6 +252,10 @@ export default {
             default: true,
         },
         show_observer_contact_information: {
+            type: Boolean,
+            default: true,
+        },
+        show_comments: {
             type: Boolean,
             default: true,
         },
