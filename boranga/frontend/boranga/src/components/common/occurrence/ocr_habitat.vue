@@ -1191,6 +1191,18 @@ export default {
                 this.$emit('dirty', false);
             }
         },
+        // obs_date is automatically synced from the observation_date field
+        // on the profile tab (for Community type) — update the snapshot so
+        // this auto-propagation does not trigger a false "unsaved changes"
+        // warning.
+        'occurrence_report_obj.habitat_condition.obs_date': function () {
+            if (this.originalHabitatCondition !== null) {
+                let original = JSON.parse(this.originalHabitatCondition);
+                original.obs_date =
+                    this.occurrence_report_obj.habitat_condition.obs_date;
+                this.originalHabitatCondition = JSON.stringify(original);
+            }
+        },
     },
     created: async function () {
         let vm = this;

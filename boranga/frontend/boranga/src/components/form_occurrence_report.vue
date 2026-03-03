@@ -293,6 +293,15 @@ export default {
             },
             deep: true,
         },
+        // When the parent replaces occurrence_report_obj (e.g. after
+        // refreshOccurrenceReport), the nested objects are fresh from the
+        // API.  Reset every section's dirty snapshot so stale baselines
+        // don't cause false "unsaved changes" warnings.
+        occurrence_report_obj: function () {
+            this.$nextTick(() => {
+                this.resetDirtyState();
+            });
+        },
     },
     computed: {
         show_submitter_contact_details: function () {

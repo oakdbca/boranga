@@ -913,6 +913,14 @@ export default {
                 vm.$emit('dirty', false);
             }
         },
+        // obs_date is automatically synced from the observation_date field
+        // on the profile tab — update the snapshot so this auto-propagation
+        // does not trigger a false "unsaved changes" warning.
+        'plant_count.obs_date': function () {
+            let original = JSON.parse(this.originalPlantCount);
+            original.obs_date = this.plant_count.obs_date;
+            this.originalPlantCount = JSON.stringify(original);
+        },
     },
     created: async function () {
         let vm = this;

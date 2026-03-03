@@ -865,6 +865,14 @@ export default {
                 vm.$emit('dirty', false);
             }
         },
+        // obs_date is automatically synced from the observation_date field
+        // on the profile tab — update the snapshot so this auto-propagation
+        // does not trigger a false "unsaved changes" warning.
+        'animal_observation.obs_date': function () {
+            let original = JSON.parse(this.originalAnimalObservation);
+            original.obs_date = this.animal_observation.obs_date;
+            this.originalAnimalObservation = JSON.stringify(original);
+        },
     },
     created: async function () {
         let vm = this;
