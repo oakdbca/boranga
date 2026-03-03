@@ -419,10 +419,17 @@ class SpeciesConservationStatusPaginatedViewSet(viewsets.ReadOnlyModelViewSet):
             or self.request.user.is_superuser
         ):
             return qs
+
+        active_referral_cs_ids = (
+            ConservationStatusReferral.objects.filter(referral=self.request.user.id)
+            .exclude(processing_status=ConservationStatusReferral.PROCESSING_STATUS_RECALLED)
+            .values("conservation_status_id")
+        )
+
         if is_conservation_status_referee(self.request) and is_contributor(self.request):
-            return qs.filter(Q(submitter=self.request.user.id) | Q(referrals__referral=self.request.user.id)).distinct()
+            return qs.filter(Q(submitter=self.request.user.id) | Q(id__in=active_referral_cs_ids)).distinct()
         elif is_conservation_status_referee(self.request):
-            qs = qs.filter(referrals__referral=self.request.user.id).distinct()
+            qs = qs.filter(id__in=active_referral_cs_ids).distinct()
         elif is_contributor(self.request):
             qs = qs.filter(submitter=self.request.user.id)
         return qs
@@ -697,10 +704,16 @@ class CommunityConservationStatusPaginatedViewSet(viewsets.ReadOnlyModelViewSet)
         ):
             return qs
 
+        active_referral_cs_ids = (
+            ConservationStatusReferral.objects.filter(referral=self.request.user.id)
+            .exclude(processing_status=ConservationStatusReferral.PROCESSING_STATUS_RECALLED)
+            .values("conservation_status_id")
+        )
+
         if is_conservation_status_referee(self.request) and is_contributor(self.request):
-            return qs.filter(Q(submitter=self.request.user.id) | Q(referrals__referral=self.request.user.id)).distinct()
+            return qs.filter(Q(submitter=self.request.user.id) | Q(id__in=active_referral_cs_ids)).distinct()
         elif is_conservation_status_referee(self.request):
-            qs = qs.filter(referrals__referral=self.request.user.id).distinct()
+            qs = qs.filter(id__in=active_referral_cs_ids).distinct()
         elif is_contributor(self.request):
             qs = qs.filter(submitter=self.request.user.id)
         return qs
@@ -973,12 +986,19 @@ class ConservationStatusViewSet(CheckUpdatedActionMixin, viewsets.GenericViewSet
             or self.request.user.is_superuser
         ):
             return qs
+
+        active_referral_cs_ids = (
+            ConservationStatusReferral.objects.filter(referral=self.request.user.id)
+            .exclude(processing_status=ConservationStatusReferral.PROCESSING_STATUS_RECALLED)
+            .values("conservation_status_id")
+        )
+
         if is_contributor(self.request) and is_conservation_status_referee(self.request):
-            return qs.filter(Q(submitter=self.request.user.id) | Q(referrals__referral=self.request.user.id)).distinct()
+            return qs.filter(Q(submitter=self.request.user.id) | Q(id__in=active_referral_cs_ids)).distinct()
         if is_contributor(self.request):
             qs = qs.filter(submitter=self.request.user.id)
         if is_conservation_status_referee(self.request):
-            qs = qs.filter(referrals__referral=self.request.user.id).distinct()
+            qs = qs.filter(id__in=active_referral_cs_ids).distinct()
         return qs
 
     def get_serializer_class(self):
@@ -1551,7 +1571,9 @@ class ConservationStatusReferralViewSet(viewsets.GenericViewSet, mixins.Retrieve
         ):
             return qs
         if is_conservation_status_referee(self.request):
-            qs = qs.filter(referral=self.request.user.id)
+            qs = qs.filter(referral=self.request.user.id).exclude(
+                processing_status=ConservationStatusReferral.PROCESSING_STATUS_RECALLED
+            )
         return qs
 
     @list_route(
