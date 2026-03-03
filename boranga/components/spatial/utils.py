@@ -34,7 +34,7 @@ from boranga.components.occurrence.models import (
     OccurrenceUserAction,
 )
 from boranga.components.spatial.models import PlausibilityGeometry, Proxy, TileLayer
-from boranga.helpers import is_internal
+from boranga.helpers import is_internal, is_occurrence_assessor
 
 logger = logging.getLogger(__name__)
 
@@ -651,7 +651,22 @@ def save_geometry(
     # For non-occurrence geometries, respect the drawn_by constraint
     # For occurrence geometries, only users who can edit the occurrence can delete geometries
     if instance_fk_field_name != "occurrence":
-        to_delete_qs = to_delete_qs.exclude(~Q(drawn_by=request.user.id))
+        # OccurrenceReport geometries: allow assessors to delete any geometry
+        # when the ORF is With Assessor or With Referral, otherwise restrict
+        # to the user's own geometries.
+        from boranga.components.occurrence.models import OccurrenceReport
+
+        assessor_can_delete_any = (
+            is_occurrence_assessor(request)
+            and hasattr(instance, "processing_status")
+            and instance.processing_status
+            in [
+                OccurrenceReport.PROCESSING_STATUS_WITH_ASSESSOR,
+                OccurrenceReport.PROCESSING_STATUS_WITH_REFERRAL,
+            ]
+        )
+        if not assessor_can_delete_any:
+            to_delete_qs = to_delete_qs.exclude(~Q(drawn_by=request.user.id))
     elif not instance.can_user_edit:
         # User cannot edit this occurrence, so restrict to only their own geometries
         to_delete_qs = to_delete_qs.exclude(~Q(drawn_by=request.user.id))
