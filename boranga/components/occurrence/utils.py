@@ -244,14 +244,34 @@ def validate_map_files(request, instance, foreign_key_field=None):
                 instance.shapefile_documents.exclude(name__endswith=".zip").delete()
             raise ValidationError(f"Geometry in {shp_file_obj.name} has no coordinate reference system (CRS)")
 
-        # spatial reference identifier of the original uploaded geometry
-        original_srid = SpatialReference(gdf.geometry.crs.srs).srid
+        # Determine the SRID of the original uploaded geometry
+        # Use pyproj's to_epsg() first as it handles Esri WKT .prj formats
+        # (e.g. GDA94/EPSG:4283, GDA2020/EPSG:7844) more reliably than
+        # Django's SpatialReference
+        original_srid = gdf.geometry.crs.to_epsg()
+        if original_srid is None:
+            try:
+                original_srid = SpatialReference(gdf.geometry.crs.to_wkt()).srid
+            except Exception:
+                pass
+        if original_srid is None:
+            logger.warning(
+                "Could not determine SRID for %s (CRS: %s), defaulting to 4326",
+                shp_file_obj.name,
+                gdf.geometry.crs,
+            )
+            original_srid = 4326
 
-        # If no prj file assume WGS-84 datum
-        if not gdf.crs:
-            gdf_transform = gdf.set_crs("epsg:4326", inplace=True)
-        else:
+        # Transform to WGS-84 (EPSG:4326)
+        try:
             gdf_transform = gdf.to_crs("epsg:4326")
+        except Exception as e:
+            if archive_files_qs:
+                instance.shapefile_documents.exclude(name__endswith=".zip").delete()
+            raise ValidationError(
+                f"Unable to transform coordinates in {shp_file_obj.name} "
+                f"from SRID {original_srid} to WGS-84 (EPSG:4326): {e}"
+            )
 
         geometries = gdf_transform.geometry  # GeoSeries
 
