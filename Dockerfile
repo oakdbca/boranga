@@ -16,7 +16,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     OSCAR_SHOP_NAME='Parks & Wildlife' \
     BPAY_ALLOWED=False \
     NODE_MAJOR=24 \
-    NODE_OPTIONS=--max_old_space_size=4096
+    NODE_OPTIONS=--max_old_space_size=4096 \
+    PROJ_NETWORK=ON
 
 FROM builder_base_boranga AS apt_packages_boranga
 
