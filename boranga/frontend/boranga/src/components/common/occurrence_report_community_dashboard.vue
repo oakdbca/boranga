@@ -1194,8 +1194,7 @@ export default {
                                     text: 'The occurrence report has been copied.',
                                     icon: 'success',
                                 });
-                                vm.$refs.community_ocr_datatable.vmDataTable
-                                    .ajax.reload();
+                                vm.$refs.community_ocr_datatable.vmDataTable.ajax.reload();
                                 window.open(
                                     '/internal/occurrence-report/' +
                                         response.body.id +

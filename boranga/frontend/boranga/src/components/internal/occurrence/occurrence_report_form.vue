@@ -485,7 +485,10 @@
                         </div>
                         <div class="text-center">
                             <button
-                                v-if="with_assessor && occurrence_report.user_is_assessor"
+                                v-if="
+                                    with_assessor &&
+                                    occurrence_report.user_is_assessor
+                                "
                                 style="width: 80%"
                                 class="btn btn-primary mb-2"
                                 @click.prevent="amendmentRequest()"
@@ -504,7 +507,10 @@
                             </button>
 
                             <button
-                                v-if="with_assessor && occurrence_report.user_is_assessor"
+                                v-if="
+                                    with_assessor &&
+                                    occurrence_report.user_is_assessor
+                                "
                                 style="width: 80%"
                                 class="btn btn-primary mb-2"
                                 @click.prevent="proposeApprove"
@@ -513,7 +519,10 @@
                                 Propose Approve
                             </button>
                             <button
-                                v-if="with_assessor && occurrence_report.user_is_assessor"
+                                v-if="
+                                    with_assessor &&
+                                    occurrence_report.user_is_assessor
+                                "
                                 style="width: 80%"
                                 class="btn btn-primary mb-2"
                                 @click.prevent="proposeDecline"

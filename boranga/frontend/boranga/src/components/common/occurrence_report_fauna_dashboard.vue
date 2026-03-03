@@ -1090,7 +1090,10 @@ export default {
                                 },
                                 didClose: () => {
                                     vm.$refs.fauna_ocr_datatable.vmDataTable.ajax.reload();
-                                    window.open(`/internal/occurrence-report/${ocr_copy.id}?action=edit`, '_blank');
+                                    window.open(
+                                        `/internal/occurrence-report/${ocr_copy.id}?action=edit`,
+                                        '_blank'
+                                    );
                                 },
                             });
                         },
