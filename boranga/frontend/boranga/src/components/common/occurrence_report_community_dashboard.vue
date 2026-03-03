@@ -597,6 +597,9 @@ export default {
                         }
                         links += `<a href='#' data-history-occurrence-report='${full.id}'>History</a><br>`;
                     }
+                    if (full.can_user_copy) {
+                        links += `<a href='#${full.id}' data-copy-ocr-proposal='${full.id}'>Copy</a><br/>`;
+                    }
                     return links;
                 },
             };
@@ -1168,6 +1171,50 @@ export default {
                 }
             );
         },
+        copyOCRProposal: function (id) {
+            let vm = this;
+            swal.fire({
+                title: 'Copy Occurrence Report',
+                text: 'Are you sure you want to copy this occurrence report?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Copy',
+                preConfirm: () => {
+                    return vm.$http
+                        .post(
+                            helpers.add_endpoint_json(
+                                api_endpoints.occurrence_report,
+                                id + '/copy'
+                            )
+                        )
+                        .then(
+                            (response) => {
+                                swal.fire({
+                                    title: 'Copied',
+                                    text: 'The occurrence report has been copied.',
+                                    icon: 'success',
+                                });
+                                vm.$refs.community_ocr_datatable.vmDataTable
+                                    .ajax.reload();
+                                window.open(
+                                    '/internal/occurrence-report/' +
+                                        response.body.id +
+                                        '?action=edit',
+                                    '_blank'
+                                );
+                            },
+                            (error) => {
+                                console.log(error);
+                                swal.fire({
+                                    title: 'Error',
+                                    text: 'There was an error copying the occurrence report.',
+                                    icon: 'error',
+                                });
+                            }
+                        );
+                },
+            });
+        },
         createCommunityOccurrenceReport: async function () {
             swal.fire({
                 title: `Add ${this.group_type_name} Occurrence Report`,
@@ -1361,6 +1408,15 @@ export default {
                     e.preventDefault();
                     var id = $(this).attr('data-history-occurrence-report');
                     vm.historyDocument(id);
+                }
+            );
+            vm.$refs.community_ocr_datatable.vmDataTable.on(
+                'click',
+                'a[data-copy-ocr-proposal]',
+                function (e) {
+                    e.preventDefault();
+                    var id = $(this).attr('data-copy-ocr-proposal');
+                    vm.copyOCRProposal(id);
                 }
             );
             vm.$refs.community_ocr_datatable.vmDataTable.on(

@@ -519,6 +519,7 @@ class ListInternalOccurrenceReportSerializer(BaseModelSerializer):
     internal_user_edit = serializers.SerializerMethodField()
     can_user_approve = serializers.SerializerMethodField()
     can_user_assess = serializers.SerializerMethodField()
+    can_user_copy = serializers.SerializerMethodField()
     occurrence = serializers.IntegerField(source="occurrence.id", allow_null=True)
     occurrence_name = serializers.CharField(source="occurrence.occurrence_number", allow_null=True)
     is_new_contributor = serializers.SerializerMethodField()
@@ -551,6 +552,7 @@ class ListInternalOccurrenceReportSerializer(BaseModelSerializer):
             "can_user_view",
             "can_user_assess",
             "can_user_approve",
+            "can_user_copy",
             "assessor_edit",
             "internal_user_edit",
             "occurrence",
@@ -583,6 +585,7 @@ class ListInternalOccurrenceReportSerializer(BaseModelSerializer):
             "can_user_view",
             "can_user_approve",
             "can_user_assess",
+            "can_user_copy",
             "internal_user_edit",
             "is_new_contributor",
             "copied_to_occurrence",
@@ -639,6 +642,10 @@ class ListInternalOccurrenceReportSerializer(BaseModelSerializer):
     def get_can_user_edit(self, obj):
         request = self.context["request"]
         return obj.can_user_edit(request)
+
+    def get_can_user_copy(self, obj):
+        request = self.context["request"]
+        return obj.submitter == request.user.id or is_occurrence_assessor(request)
 
     def get_is_new_contributor(self, obj):
         return is_new_external_contributor(obj.submitter)
@@ -1669,6 +1676,7 @@ class InternalOccurrenceReportSerializer(OccurrenceReportSerializer):
             "is_submitter",
             "migrated_from_id",
             "user_is_assessor",
+            "can_user_copy",
             "record_source",
             "comments",
             "common_names",
@@ -1714,6 +1722,10 @@ class InternalOccurrenceReportSerializer(OccurrenceReportSerializer):
     def get_user_is_assessor(self, obj):
         request = self.context["request"]
         return is_occurrence_assessor(request)
+
+    def get_can_user_copy(self, obj):
+        request = self.context["request"]
+        return obj.submitter == request.user.id or is_occurrence_assessor(request)
 
     def get_can_user_approve(self, obj):
         request = self.context["request"]

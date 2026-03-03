@@ -562,7 +562,7 @@
                         </div>
                     </div>
                     <div
-                        v-if="occurrence_report.user_is_assessor"
+                        v-if="occurrence_report.can_user_copy"
                         class="card-body border-top text-center"
                     >
                         <button

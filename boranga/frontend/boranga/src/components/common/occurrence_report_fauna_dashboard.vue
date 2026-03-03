@@ -553,6 +553,9 @@ export default {
                         }
                         links += `<a href='#' data-history-occurrence-report='${full.id}'>History</a><br>`;
                     }
+                    if (full.can_user_copy) {
+                        links += `<a href='#${full.id}' data-copy-ocr-proposal='${full.id}'>Copy</a><br/>`;
+                    }
                     return links;
                 },
             };
@@ -1051,6 +1054,53 @@ export default {
                 }
             );
         },
+        copyOCRProposal: function (occurrence_report_id) {
+            let vm = this;
+            swal.fire({
+                title: 'Copy Occurrence Report',
+                text: `Are you sure you want to make a copy of occurrence report ${constants.MODELS.OCCURRENCE_REPORT.MODEL_PREFIX}${occurrence_report_id}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Copy Occurrence Report',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-secondary',
+                },
+                reverseButtons: true,
+            }).then((swalresult) => {
+                if (swalresult.isConfirmed) {
+                    fetch(
+                        helpers.add_endpoint_json(
+                            api_endpoints.occurrence_report,
+                            occurrence_report_id + '/copy'
+                        ),
+                        {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                        }
+                    ).then(
+                        async (response) => {
+                            const ocr_copy = await response.json();
+                            swal.fire({
+                                title: 'Copied',
+                                text: `The occurrence report has been copied to ${ocr_copy.occurrence_report_number}. When you click OK, the new occurrence report will open in a new window.`,
+                                icon: 'success',
+                                customClass: {
+                                    confirmButton: 'btn btn-primary',
+                                },
+                                didClose: () => {
+                                    vm.$refs.fauna_ocr_datatable.vmDataTable.ajax.reload();
+                                    window.open(`/internal/occurrence-report/${ocr_copy.id}?action=edit`, '_blank');
+                                },
+                            });
+                        },
+                        (error) => {
+                            console.log(error);
+                        }
+                    );
+                }
+            });
+        },
         createFaunaOccurrenceReport: async function () {
             swal.fire({
                 title: `Add ${this.group_type_name} Occurrence Report`,
@@ -1244,6 +1294,15 @@ export default {
                     e.preventDefault();
                     var id = $(this).attr('data-history-occurrence-report');
                     vm.historyDocument(id);
+                }
+            );
+            vm.$refs.fauna_ocr_datatable.vmDataTable.on(
+                'click',
+                'a[data-copy-ocr-proposal]',
+                function (e) {
+                    e.preventDefault();
+                    var id = $(this).attr('data-copy-ocr-proposal');
+                    vm.copyOCRProposal(id);
                 }
             );
             vm.$refs.fauna_ocr_datatable.vmDataTable.on(
