@@ -178,7 +178,6 @@ CACHES = {
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS.append(os.path.join(os.path.join(BASE_DIR, "boranga", "static")))
 STATICFILES_DIRS.append(os.path.join(os.path.join(BASE_DIR, "boranga", "static", "boranga_vue")))
-DATA_UPLOAD_MAX_NUMBER_FIELDS = None
 DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024  # 20 MB
 FILE_UPLOAD_MAX_MEMORY_SIZE = env("FILE_UPLOAD_MAX_MEMORY_SIZE", 2621440)
 MAX_UPLOAD_SIZE_BYTES = env("MAX_UPLOAD_SIZE_BYTES", 20 * 1024 * 1024)  # 20 MB
