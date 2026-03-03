@@ -1585,6 +1585,7 @@ class InternalOccurrenceReportSerializer(OccurrenceReportSerializer):
     can_user_approve = serializers.SerializerMethodField()
     can_user_assess = serializers.SerializerMethodField()
     can_user_action = serializers.SerializerMethodField()
+    can_user_copy = serializers.SerializerMethodField()
     can_add_log = serializers.SerializerMethodField()
     user_is_assessor = serializers.SerializerMethodField()
     current_assessor = serializers.SerializerMethodField(read_only=True)
