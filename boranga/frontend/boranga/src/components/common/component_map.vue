@@ -2071,6 +2071,14 @@ export default {
             mapMarker: null,
             geojsonSnapshot: null, // A snapshot of the geojson feature collection
             isDirty: false, // Whether the map has unsaved changes
+            // Reactive counter incremented whenever selectedFeatureCollection
+            // changes (add/remove). Used to invalidate the selectedFeatureIds
+            // computed, which cannot track markRaw Collections directly.
+            selectedRevision: 0,
+            // Reactive counter incremented whenever editableFeatureCollection
+            // changes. Used to invalidate featureCount and canAddMorePoints,
+            // which call .getFeatures()/.getArray() on markRaw sources.
+            editableRevision: 0,
         };
     },
     computed: {
@@ -2124,6 +2132,7 @@ export default {
         featureCount: function () {
             this.defaultQueryLayerName;
             this.defaultProcessedGeometryLayerName;
+            this.editableRevision; // invalidated when editable features change (markRaw sources)
             const features = [];
 
             for (let layerName in this.layerSources) {
@@ -2154,6 +2163,7 @@ export default {
             if (!vm.undoredo) {
                 return [];
             } else {
+                vm.modifiedFeaturesStack; // reactive trigger (undoredo is markRaw)
                 return vm.undoredo.getStack('undo');
             }
         },
@@ -2165,6 +2175,7 @@ export default {
             if (!vm.undoredo) {
                 return [];
             } else {
+                vm.modifiedFeaturesStack; // reactive trigger (undoredo is markRaw)
                 return vm.undoredo.getStack('redo');
             }
         },
@@ -2351,6 +2362,7 @@ export default {
             return this.selectedSpatialUnit === 'deg' ? 0.0001 : 1;
         },
         selectedFeatureIds: function () {
+            this.selectedRevision; // reactive dependency — invalidated on add/remove
             return this.selectedFeatureCollection.getArray().map((feature) => {
                 return feature.getProperties().id;
             });
@@ -2371,6 +2383,7 @@ export default {
             if (!this.pointFeaturesSupported) {
                 return false;
             }
+            this.editableRevision; // invalidated when editable features change (markRaw collection)
             if (this.pointLimit && this.pointLimit > 0) {
                 // Only count Point and MultiPoint features in the editableFeatureCollection
                 const pointCount = this.editableFeatureCollection
@@ -2486,6 +2499,17 @@ export default {
             $('#map-spinner').css('zIndex', 9999);
             vm.featureToast = new bootstrap.Toast(toastEl, { autohide: false });
             document.addEventListener('keydown', vm.handleKeyDown);
+            // Wire up selectedFeatureCollection events so that the
+            // selectedFeatureIds computed is invalidated on add/remove
+            // (the OL Collection is markRaw and not tracked by Vue).
+            vm.selectedFeatureCollection.on(
+                'add',
+                vm.onSelectedFeatureCollectionChanged
+            );
+            vm.selectedFeatureCollection.on(
+                'remove',
+                vm.onSelectedFeatureCollectionChanged
+            );
             if (vm.refreshMapOnMounted) {
                 vm.forceToRefreshMap();
             } else {
@@ -2501,6 +2525,14 @@ export default {
         this.editableFeatureCollection.forEach((feature) => {
             feature.un('change', this.onFeatureChanged);
         });
+        this.selectedFeatureCollection.un(
+            'add',
+            this.onSelectedFeatureCollectionChanged
+        );
+        this.selectedFeatureCollection.un(
+            'remove',
+            this.onSelectedFeatureCollectionChanged
+        );
     },
     methods: {
         handleKeyDown(evt) {
@@ -2546,6 +2578,14 @@ export default {
                 JSON.stringify(currentGeoJSON) !==
                 JSON.stringify(this.geojsonSnapshot);
             this.$emit('dirty', this.isDirty);
+            // Invalidate featureCount / canAddMorePoints (editableFeatureCollection
+            // is markRaw so Vue cannot track it directly).
+            this.editableRevision++;
+        },
+        // Increments the reactive revision counter so Vue re-evaluates
+        // selectedFeatureIds (selectedFeatureCollection is markRaw).
+        onSelectedFeatureCollectionChanged() {
+            this.selectedRevision++;
         },
         // Call this after saving to reset the dirty state
         markClean() {
