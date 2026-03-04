@@ -516,9 +516,9 @@ class CommunityConservationStatusFilterBackend(DatatablesFilterBackend):
         filter_community_name = request.POST.get("filter_community_name")
         if filter_community_name and not filter_community_name.lower() == "all":
             if queryset.model is ConservationStatus:
-                queryset = queryset.filter(community__taxonomy__id=filter_community_name)
+                queryset = queryset.filter(community_id=filter_community_name)
             elif queryset.model is ConservationStatusReferral:
-                queryset = queryset.filter(conservation_status__community__taxonomy__id=filter_community_name)
+                queryset = queryset.filter(conservation_status__community_id=filter_community_name)
 
         filter_region = request.POST.get("filter_region")
         if filter_region and not filter_region.lower() == "all":

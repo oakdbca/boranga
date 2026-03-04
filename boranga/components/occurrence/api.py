@@ -278,7 +278,7 @@ class OccurrenceReportFilterBackend(DatatablesFilterBackend):
 
             filter_community_name = request.GET.get("filter_community_name")
             if filter_community_name and not filter_community_name.lower() == "all":
-                queryset = queryset.filter(community__taxonomy__id=filter_community_name)
+                queryset = queryset.filter(community_id=filter_community_name)
 
             filter_community_common_id = request.GET.get("filter_community_common_id")
             if filter_community_common_id and not filter_community_common_id.lower() == "all":
@@ -2543,7 +2543,7 @@ class OccurrenceFilterBackend(DatatablesFilterBackend):
 
         filter_community_name = request.GET.get("filter_community_name")
         if filter_community_name and not filter_community_name.lower() == "all":
-            queryset = queryset.filter(community__taxonomy__id=filter_community_name)
+            queryset = queryset.filter(community_id=filter_community_name)
 
         filter_status = request.GET.get("filter_status")
         if filter_status and not filter_status.lower() == "all":
