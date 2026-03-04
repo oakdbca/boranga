@@ -17,23 +17,22 @@
             </p>
             <p></p>
             <p>
-            Species and Communities Program, Biodiversity and Conservation Science<br>
-            Department of Biodiversity, Conservation and Attractions
+            {{settings.BRANCH_NAME}}<br>
+            {{settings.DEP_NAME}}
             </p>
         {% endblock %}
         {% block reply_statement %}
             <p>
                 <strong><em>
-                    Please do not reply directly to this email. Should you need to contact the Species and Communities Program regarding Boranga, please email <a href="mailto:boranga@dbca.wa.gov.au">boranga@dbca.wa.gov.au</a>.
+                    Please do not reply directly to this email. Should you need to contact the {{settings.BRANCH_NAME}} regarding Boranga, please email <a href="mailto:{{settings.EMAIL_SUPPORT_ADDRESS}}">{{settings.EMAIL_SUPPORT_ADDRESS}}</a>.
                 </em></strong>
             </p>
             <p>
                 <em style="font-size: 9pt; color: #242424;">
-                    The department acknowledges all Aboriginal people as the traditional owners of the land and waters it manages throughout Western Australia. We pay our respects to them, their culture and to their Elders past and present. Our office is located on the lands of the Whadjuk Noongar People.
+                    {{settings.EMAIL_ACKNOWLEDGEMENT}}
                 </em>
             </p>
             <p>
-                <!-- TODO: Replace CBS.png with the actual image from SharePoint once available -->
                 <img src="{{settings.PUBLIC_URL}}/static/boranga/img/CBS.png" title="Conservation and Biodiversity Science" width="625" style="height: auto;">
             </p>
         {% endblock %}

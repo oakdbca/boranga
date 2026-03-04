@@ -209,9 +209,18 @@ DEP_FAX = env("DEP_FAX", "(08) 9423 8242")
 DEP_POSTAL = env("DEP_POSTAL", "Locked Bag 104, Bentley Delivery Centre, Western Australia 6983")
 DEP_NAME = env("DEP_NAME", "Department of Biodiversity, Conservation and Attractions")
 DEP_NAME_SHORT = env("DEP_NAME_SHORT", "DBCA")
-BRANCH_NAME = env("BRANCH_NAME", "Tourism and Concessions Branch")
+BRANCH_NAME = env("BRANCH_NAME", "Species and Communities Program, Biodiversity and Conservation Science")
 DEP_ADDRESS = env("DEP_ADDRESS", "17 Dick Perry Avenue, Kensington WA 6151")
 SITE_URL = env("SITE_URL", "https://" + SITE_PREFIX + "." + SITE_DOMAIN)
+EMAIL_SUPPORT_ADDRESS = env("EMAIL_SUPPORT_ADDRESS", "boranga@dbca.wa.gov.au")
+EMAIL_DO_NOT_REPLY_MSG = env(
+    "EMAIL_DO_NOT_REPLY_MSG",
+    "Please do not reply directly to this email. Should you need to contact the {branch}, please email {email}.",
+)
+EMAIL_ACKNOWLEDGEMENT = env(
+    "EMAIL_ACKNOWLEDGEMENT",
+    "The department acknowledges all Aboriginal people as the traditional owners of the land and waters it manages throughout Western Australia. We pay our respects to them, their culture and to their Elders past and present. Our office is located on the lands of the Whadjuk Noongar People.",
+)
 PUBLIC_URL = env("PUBLIC_URL", SITE_URL)
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "no-reply@" + SITE_DOMAIN).lower()
 MEDIA_APP_DIR = env("MEDIA_APP_DIR", "boranga")
