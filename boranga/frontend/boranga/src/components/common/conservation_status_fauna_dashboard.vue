@@ -33,9 +33,7 @@
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label for="cs_fauna_group"
-                            >Fauna Group:</label
-                        >
+                        <label for="cs_fauna_group">Fauna Group:</label>
                         <select
                             id="cs_fauna_group"
                             v-model="filterCSFaunaGroup"
@@ -566,9 +564,7 @@ export default {
             filterCSFaunaGroup: sessionStorage.getItem(
                 this.filterCSFaunaGroup_cache
             )
-                ? sessionStorage.getItem(
-                      this.filterCSFaunaGroup_cache
-                  )
+                ? sessionStorage.getItem(this.filterCSFaunaGroup_cache)
                 : 'all',
 
             filterCSFaunaFamily: sessionStorage.getItem(
@@ -1302,8 +1298,7 @@ export default {
                         d.filter_scientific_name =
                             vm.filterCSFaunaScientificName;
                         d.filter_common_name = vm.filterCSFaunaCommonName;
-                        d.filter_fauna_group =
-                            vm.filterCSFaunaGroup;
+                        d.filter_fauna_group = vm.filterCSFaunaGroup;
                         d.filter_family = vm.filterCSFaunaFamily;
                         d.filter_genus = vm.filterCSFaunaGenus;
                         d.filter_change_code = vm.filterCSFaunaChangeCode;
