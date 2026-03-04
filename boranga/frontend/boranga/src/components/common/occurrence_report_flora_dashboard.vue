@@ -9,7 +9,7 @@
             <div class="row">
                 <div class="col-md-3">
                     <div id="select_occurrence" class="form-group">
-                        <label for="ocr_occurrence_lookup">Occurrence:</label>
+                        <label for="ocr_occurrence_lookup">Occurrence Number:</label>
                         <select
                             id="ocr_occurrence_lookup"
                             ref="ocr_occurrence_lookup"
