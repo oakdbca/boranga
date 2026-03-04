@@ -1,9 +1,11 @@
 import logging
+import math
 import os
 from zipfile import ZipFile
 
 import geopandas as gpd
 from django.apps import apps
+from django.conf import settings
 from django.contrib.gis.gdal import SpatialReference
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.exceptions import ValidationError
@@ -11,6 +13,9 @@ from django.core.files import File
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
+from pyproj.aoi import AreaOfInterest
+from pyproj.transformer import TransformerGroup
+from shapely.ops import transform as shapely_transform
 
 from boranga.components.occurrence.email import (
     send_submit_email_notification,
@@ -139,6 +144,134 @@ def process_shapefile_document(request, instance, *args, **kwargs):
     return {"filedata": returned_file_data}
 
 
+def _to_wgs84(gdf):
+    """Transform a GeoDataFrame to WGS84 (EPSG:4326), bypassing the PROJ 8+
+    datum-ensemble behaviour that silently selects a noop (identity) transform
+    for datums it considers close to WGS84.
+
+    Why this matters: GDA94 (EPSG:4283) has a genuine ~1.8 m offset from WGS84,
+    but PROJ 8+ treats it as a member of the WGS84 datum ensemble and applies no
+    shift.  GDA2020 (EPSG:7844) is genuinely equivalent to WGS84 (both based on
+    ITRF2014), so the noop is correct there.
+
+    Strategy:
+    1. Build a ``TransformerGroup`` for ``src_crs`` → EPSG:4326 using the
+       application's configured ``GIS_EXTENT`` as area of interest.
+    2. Skip noop/ballpark transforms and look for a *direct* parametric Helmert
+       (Coordinate Frame rotation, Position Vector, or Geocentric translations)
+       that produces a shift greater than ~0.5 m from the noop baseline.
+       "Inverse of …" sub-operations and grid-based methods (NTv2/hgridshift)
+       are rejected — inverse static Helmerts can be low-accuracy approximations
+       and grid methods fail silently when grid files are absent.
+    3. Fall back to ``gdf.to_crs("epsg:4326")`` if no better option is found.
+    """
+    src_crs = gdf.crs
+    if src_crs is None:
+        return gdf.to_crs("epsg:4326")
+
+    # Use GIS_EXTENT as the area of interest so PROJ selects transforms
+    # appropriate for the application's actual coverage area
+    west, south, east, north = settings.GIS_EXTENT
+    aoi = AreaOfInterest(west, south, east, north)
+
+    try:
+        grp = TransformerGroup(src_crs, "EPSG:4326", always_xy=True, area_of_interest=aoi)
+    except Exception:
+        return gdf.to_crs("epsg:4326")
+
+    if not grp.transformers:
+        return gdf.to_crs("epsg:4326")
+
+    # Use the centroid of the first geometry as a representative test point
+    test_geom = next(iter(gdf.geometry))
+    c = test_geom.centroid
+    test_x, test_y = c.x, c.y
+
+    # Threshold: ~0.5 m in decimal degrees
+    THRESHOLD_DEG = 0.000005
+
+    # Evaluate the noop (datum-ensemble) result as a baseline
+    noop_transformer = grp.transformers[0]
+    noop_x, noop_y = noop_transformer.transform(test_x, test_y)
+
+    # Direct parametric Helmert methods (no grid files needed)
+    DIRECT_HELMERT_METHODS = {
+        "coordinate frame rotation (geog2d domain)",
+        "position vector transformation (geog2d domain)",
+        "geocentric translations (geog2d domain)",
+    }
+
+    def _is_direct_helmert(transformer):
+        """Return True if the transformer contains at least one direct
+        (non-inverse) Helmert sub-operation and no grid-based methods.
+
+        Inverse map projections (e.g. "Inverse of Transverse Mercator") are
+        allowed — they simply un-project from Easting/Northing to geographic
+        coordinates, which is a normal part of any projected-CRS pipeline.
+        Only inverse *Helmert* operations are rejected (they are often
+        low-accuracy approximations that produce misleading shifts).
+        """
+        if not hasattr(transformer, "operations") or not transformer.operations:
+            return False
+
+        has_helmert = False
+        for op in transformer.operations:
+            name_lower = op.name.lower()
+            method_lower = getattr(op, "method_name", "").lower()
+
+            # Reject grid-based methods
+            if any(g in method_lower or g in name_lower for g in ("ntv2", "hgridshift", "vgridshift")):
+                return False
+
+            # Check if this operation uses a Helmert-type method
+            is_helmert = method_lower in DIRECT_HELMERT_METHODS
+
+            # Also detect inverse Helmert via method name prefix
+            if not is_helmert and method_lower.startswith("inverse of "):
+                if method_lower[len("inverse of ") :] in DIRECT_HELMERT_METHODS:
+                    return False  # Inverse Helmert method
+
+            if is_helmert:
+                # Reject if the operation name marks it as an inverse
+                # (e.g. "Inverse of GDA2020 to WGS 84 (2)")
+                if name_lower.startswith("inverse of"):
+                    return False
+                has_helmert = True
+
+        return has_helmert
+
+    best_transformer = None
+    best_delta = 0.0
+
+    for t in grp.transformers:
+        name_lower = t.name.lower()
+        if "noop" in name_lower or "ballpark" in name_lower:
+            continue
+        if not _is_direct_helmert(t):
+            continue
+        try:
+            tx, ty = t.transform(test_x, test_y)
+        except Exception:
+            continue
+        if not (math.isfinite(tx) and math.isfinite(ty)):
+            continue
+        delta = ((tx - noop_x) ** 2 + (ty - noop_y) ** 2) ** 0.5
+        if delta > THRESHOLD_DEG and delta > best_delta:
+            best_transformer = t
+            best_delta = delta
+
+    if best_transformer is None:
+        return gdf.to_crs("epsg:4326")
+
+    # Apply the chosen transformer geometry-by-geometry via shapely
+    transformed_geoms = [shapely_transform(best_transformer.transform, geom) for geom in gdf.geometry]
+    return gpd.GeoDataFrame(
+        gdf.drop(columns=["geometry"]),
+        geometry=transformed_geoms,
+        crs="EPSG:4326",
+    )
+
+
 def extract_attached_archives(instance, foreign_key_field=None):
     """Extracts shapefiles from attached zip archives and saves them as shapefile documents."""
 
@@ -263,8 +396,11 @@ def validate_map_files(request, instance, foreign_key_field=None):
             original_srid = 4326
 
         # Transform to WGS-84 (EPSG:4326)
+        # Use _to_wgs84() rather than gdf.to_crs() directly: PROJ 8+ silently
+        # picks a noop/ballpark transform for datums within its WGS84 datum
+        # ensemble tolerance (e.g. GDA94 ~1.5m shift is otherwise dropped).
         try:
-            gdf_transform = gdf.to_crs("epsg:4326")
+            gdf_transform = _to_wgs84(gdf)
         except Exception as e:
             if archive_files_qs:
                 instance.shapefile_documents.exclude(name__endswith=".zip").delete()
