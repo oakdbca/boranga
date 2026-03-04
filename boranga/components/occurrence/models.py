@@ -3581,12 +3581,11 @@ class OccurrenceReportDocument(Document):
     def add_documents(self, request, *args, **kwargs):
         # save the files
         data = json.loads(request.data.get("data"))
-        # if not data.get('update'):
-        #     documents_qs = self.filter(input_name='species_doc', visible=True)
-        #     documents_qs.delete()
         for idx in range(data["num_files"]):
-            self.check_file(request.data.get("file-" + str(idx)))
             _file = request.data.get("file-" + str(idx))
+            if not _file:
+                raise ValidationError("The file upload did not complete successfully. Please try again.")
+            self.check_file(_file)
             self._file = _file
             self.name = _file.name
             self.input_name = data["input_name"]
@@ -4810,12 +4809,11 @@ class OccurrenceDocument(Document):
     def add_documents(self, request, *args, **kwargs):
         # save the files
         data = json.loads(request.data.get("data"))
-        # if not data.get('update'):
-        #     documents_qs = self.filter(input_name='species_doc', visible=True)
-        #     documents_qs.delete()
         for idx in range(data["num_files"]):
-            self.check_file(request.data.get("file-" + str(idx)))
             _file = request.data.get("file-" + str(idx))
+            if not _file:
+                raise ValidationError("The file upload did not complete successfully. Please try again.")
+            self.check_file(_file)
             self._file = _file
             self.name = _file.name
             self.input_name = data["input_name"]
