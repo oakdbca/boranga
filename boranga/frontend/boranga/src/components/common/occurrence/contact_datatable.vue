@@ -171,9 +171,9 @@ export default {
                                     30,
                                     'hover'
                                 );
-                                return '<s>' + type == 'export'
+                                return type == 'export'
                                     ? value
-                                    : result + '</s>';
+                                    : '<s>' + result + '</s>';
                             }
                         },
                     },
@@ -195,6 +195,9 @@ export default {
                         searchable: true,
                         mRender: function (data, type, full) {
                             let value = full.notes;
+                            if (type == 'export') {
+                                return value;
+                            }
                             let result = helpers.dtPopover(value, 60, 'hover');
                             if (full.visible) {
                                 return result;
