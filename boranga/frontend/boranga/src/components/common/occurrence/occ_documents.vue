@@ -186,9 +186,12 @@ export default {
                         orderable: true,
                         searchable: true,
                         mRender: function (data, type, full) {
+                            let value = full.name;
+                            if (type == 'export') {
+                                return value;
+                            }
                             let links = '';
                             if (full.active) {
-                                let value = full.name;
                                 let result = helpers.dtPopoverSplit(
                                     value,
                                     30,
@@ -203,16 +206,12 @@ export default {
                                     result.link +
                                     '</span>';
                             } else {
-                                let value = full.name;
                                 let result = helpers.dtPopover(
                                     value,
                                     30,
                                     'hover'
                                 );
-                                links +=
-                                    type == 'export'
-                                        ? value
-                                        : '<s>' + result + '</s>';
+                                links += '<s>' + result + '</s>';
                             }
                             return links;
                         },
