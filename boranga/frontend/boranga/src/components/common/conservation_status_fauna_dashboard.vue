@@ -32,16 +32,24 @@
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div id="select_phylo_group" class="form-group">
-                        <label for="cs_phylo_group_lookup"
-                            >Informal Group:</label
+                    <div class="form-group">
+                        <label for="cs_fauna_group"
+                            >Fauna Group:</label
                         >
                         <select
-                            id="cs_phylo_group_lookup"
-                            ref="cs_phylo_group_lookup"
-                            name="cs_phylo_group_lookup"
-                            class="form-control"
-                        />
+                            id="cs_fauna_group"
+                            v-model="filterCSFaunaGroup"
+                            class="form-select"
+                        >
+                            <option value="all">All</option>
+                            <option
+                                v-for="fauna_group in fauna_groups"
+                                :value="fauna_group.id"
+                                :key="fauna_group.id"
+                            >
+                                {{ fauna_group.name }}
+                            </option>
+                        </select>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -434,10 +442,10 @@ export default {
             required: false,
             default: 'filterCSFaunaCommonName',
         },
-        filterCSFaunaPhylogeneticGroup_cache: {
+        filterCSFaunaGroup_cache: {
             type: String,
             required: false,
-            default: 'filterCSFaunaPhylogeneticGroup',
+            default: 'filterCSFaunaGroup',
         },
         filterCSFaunaFamily_cache: {
             type: String,
@@ -555,11 +563,11 @@ export default {
                 ? sessionStorage.getItem(this.filterCSFaunaCommonName_cache)
                 : 'all',
 
-            filterCSFaunaPhylogeneticGroup: sessionStorage.getItem(
-                this.filterCSFaunaPhylogeneticGroup_cache
+            filterCSFaunaGroup: sessionStorage.getItem(
+                this.filterCSFaunaGroup_cache
             )
                 ? sessionStorage.getItem(
-                      this.filterCSFaunaPhylogeneticGroup_cache
+                      this.filterCSFaunaGroup_cache
                   )
                 : 'all',
 
@@ -714,6 +722,7 @@ export default {
             wa_legislative_lists: [],
             wa_legislative_categories: [],
             wa_priority_categories: [],
+            fauna_groups: [],
 
             // filtering options
             external_status: [
@@ -809,7 +818,7 @@ export default {
             if (
                 this.filterCSFaunaScientificName === 'all' &&
                 this.filterCSFaunaCommonName === 'all' &&
-                this.filterCSFaunaPhylogeneticGroup === 'all' &&
+                this.filterCSFaunaGroup === 'all' &&
                 this.filterCSFaunaFamily === 'all' &&
                 this.filterCSFaunaGenus === 'all' &&
                 this.filterCSFaunaChangeCode === 'all' &&
@@ -853,24 +862,25 @@ export default {
                 'Species',
                 'Scientific Name',
                 'Common Name',
-                'Family',
-                'Genus',
-                'Informal Group(s)',
-                'Change Type',
-                'WA Priority List',
-                'WA Priority Category',
-                'WA Legislative List',
                 'WA Legislative Category',
-                'Commonwealth Conservation Category',
-                'Other Conservation Assessment',
+                'WA Priority Category',
+                'Change Type',
+                'Fauna Group',
+                'WA Priority List',
+                'WA Legislative List',
                 'Conservation Criteria',
+                'Commonwealth Conservation Category',
+                'Effective From Date',
+                'Effective To Date',
+                'Review Due Date',
                 'Submitter Name',
                 'Submitter Category',
                 'Submitter Organisation',
                 'Assessor Name',
-                'Effective From Date',
-                'Effective To Date',
-                'Review Due Date',
+                'Other Conservation Assessment',
+                'Family',
+                'Genus',
+                'Informal Group(s)',
                 'Status',
                 'Action',
             ];
@@ -984,6 +994,15 @@ export default {
                     }
                     return html;
                 },
+            };
+        },
+        column_fauna_group: function () {
+            return {
+                data: 'fauna_group',
+                orderable: true,
+                searchable: true,
+                visible: true,
+                name: 'species__fauna_group__name',
             };
         },
         column_change_code: function () {
@@ -1223,24 +1242,25 @@ export default {
                 vm.column_species_number,
                 vm.column_scientific_name,
                 vm.column_common_name,
-                vm.column_family,
-                vm.column_genera,
-                vm.column_phylo_group,
-                vm.column_change_code,
-                vm.column_wa_priority_list,
-                vm.column_wa_priority_category,
-                vm.column_wa_legislative_list,
                 vm.column_wa_legislative_category,
-                vm.column_commonwealth_conservation_category,
-                vm.column_other_conservation_assessment,
+                vm.column_wa_priority_category,
+                vm.column_change_code,
+                vm.column_fauna_group,
+                vm.column_wa_priority_list,
+                vm.column_wa_legislative_list,
                 vm.column_conservation_criteria,
+                vm.column_commonwealth_conservation_category,
+                vm.column_effective_from,
+                vm.column_effective_to,
+                vm.column_review_due_date,
                 vm.column_submitter_name,
                 vm.column_submitter_category,
                 vm.column_submitter_organisation,
                 vm.column_assessor_name,
-                vm.column_effective_from,
-                vm.column_effective_to,
-                vm.column_review_due_date,
+                vm.column_other_conservation_assessment,
+                vm.column_family,
+                vm.column_genera,
+                vm.column_phylo_group,
                 vm.column_status,
                 vm.column_action,
             ];
@@ -1282,8 +1302,8 @@ export default {
                         d.filter_scientific_name =
                             vm.filterCSFaunaScientificName;
                         d.filter_common_name = vm.filterCSFaunaCommonName;
-                        d.filter_informal_group =
-                            vm.filterCSFaunaPhylogeneticGroup;
+                        d.filter_fauna_group =
+                            vm.filterCSFaunaGroup;
                         d.filter_family = vm.filterCSFaunaFamily;
                         d.filter_genus = vm.filterCSFaunaGenus;
                         d.filter_change_code = vm.filterCSFaunaChangeCode;
@@ -1358,15 +1378,15 @@ export default {
                 vm.filterCSFaunaCommonName
             );
         },
-        filterCSFaunaPhylogeneticGroup: function () {
+        filterCSFaunaGroup: function () {
             let vm = this;
             vm.$refs.fauna_cs_datatable.vmDataTable.ajax.reload(
                 helpers.enablePopovers,
                 true
             ); // This calls ajax() backend call.
             sessionStorage.setItem(
-                vm.filterCSFaunaPhylogeneticGroup_cache,
-                vm.filterCSFaunaPhylogeneticGroup
+                vm.filterCSFaunaGroup_cache,
+                vm.filterCSFaunaGroup
             );
         },
         filterCSFaunaFamily: function () {
@@ -1605,7 +1625,6 @@ export default {
         this.$nextTick(() => {
             vm.initialiseScientificNameLookup();
             vm.initialiseCommonNameLookup();
-            vm.initialisePhyloGroupLookup();
             vm.initialiseFamilyLookup();
             vm.initialiseGeneraLookup();
             vm.initialiseAssessorLookup();
@@ -1637,21 +1656,6 @@ export default {
                     true
                 );
                 $('#cs_common_name_lookup').append(newOption);
-            }
-            if (
-                sessionStorage.getItem('filterCSFaunaPhylogeneticGroup') !=
-                    'all' &&
-                sessionStorage.getItem('filterCSFaunaPhylogeneticGroup') != null
-            ) {
-                newOption = new Option(
-                    sessionStorage.getItem(
-                        'filterCSFaunaPhylogeneticGroupText'
-                    ),
-                    vm.filterCSFaunaPhylogeneticGroup,
-                    false,
-                    true
-                );
-                $('#cs_phylo_group_lookup').append(newOption);
             }
             if (
                 sessionStorage.getItem('filterCSFaunaFamily') != 'all' &&
@@ -1797,50 +1801,6 @@ export default {
                         '[aria-controls="select2-cs_common_name_lookup-results"]'
                     );
                     // move focus to select2 field
-                    searchField[0].focus();
-                });
-        },
-        initialisePhyloGroupLookup: function () {
-            let vm = this;
-            $(vm.$refs.cs_phylo_group_lookup)
-                .select2({
-                    minimumInputLength: 2,
-                    dropdownParent: $('#select_phylo_group'),
-                    theme: 'bootstrap-5',
-                    allowClear: true,
-                    placeholder: 'Select Informal Group',
-                    ajax: {
-                        url: api_endpoints.phylo_group_lookup,
-                        dataType: 'json',
-                        data: function (params) {
-                            var query = {
-                                term: params.term,
-                                type: 'public',
-                                group_type_id: vm.group_type_id,
-                            };
-                            return query;
-                        },
-                    },
-                })
-                .on('select2:select', function (e) {
-                    let data = e.params.data.id;
-                    vm.filterCSFaunaPhylogeneticGroup = data;
-                    sessionStorage.setItem(
-                        'filterCSFaunaPhylogeneticGroupText',
-                        e.params.data.text
-                    );
-                })
-                .on('select2:unselect', function () {
-                    vm.filterCSFaunaPhylogeneticGroup = 'all';
-                    sessionStorage.setItem(
-                        'filterCSFaunaPhylogeneticGroupText',
-                        ''
-                    );
-                })
-                .on('select2:open', function () {
-                    const searchField = $(
-                        '[aria-controls="select2-cs_phylo_group_lookup-results"]'
-                    );
                     searchField[0].focus();
                 });
         },
@@ -2033,6 +1993,22 @@ export default {
                     vm.change_codes = vm.filterListsSpecies.change_codes;
                     vm.submitter_categories =
                         vm.filterListsSpecies.submitter_categories;
+                },
+                (error) => {
+                    console.log(error);
+                }
+            );
+            fetch('/api/fauna_group_dict').then(
+                async (response) => {
+                    const data = await response.json();
+                    if (!response.ok) {
+                        console.log(
+                            'Error fetching fauna groups:',
+                            JSON.stringify(data)
+                        );
+                        return;
+                    }
+                    vm.fauna_groups = data.fauna_group_list;
                 },
                 (error) => {
                     console.log(error);

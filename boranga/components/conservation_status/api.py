@@ -237,6 +237,14 @@ class SpeciesConservationStatusFilterBackend(DatatablesFilterBackend):
             if filter_genus and not filter_genus.lower() == "all":
                 queryset = queryset.filter(conservation_status__species__taxonomy__genera_id=filter_genus)
 
+        filter_fauna_group = request.POST.get("filter_fauna_group")
+        if queryset.model is ConservationStatus:
+            if filter_fauna_group and not filter_fauna_group.lower() == "all":
+                queryset = queryset.filter(species__fauna_group__id=filter_fauna_group)
+        elif queryset.model is ConservationStatusReferral:
+            if filter_fauna_group and not filter_fauna_group.lower() == "all":
+                queryset = queryset.filter(conservation_status__species__fauna_group__id=filter_fauna_group)
+
         filter_change_code = request.POST.get("filter_change_code")
         if queryset.model is ConservationStatus:
             if filter_change_code and not filter_change_code.lower() == "all":
