@@ -1,5 +1,3 @@
-# syntax = docker/dockerfile:1.2
-
 # Prepare the base environment.
 FROM ghcr.io/dbca-wa/docker-apps-dev:ubuntu_2510_base_python AS builder_base_boranga
 
@@ -43,7 +41,7 @@ RUN apt-get update && \
 RUN update-ca-certificates
 
 
-FROM apt_packages_boranga AS gdal_boranga
+# FROM apt_packages_boranga AS gdal_boranga
 
 # Install newer gdal version that is secure
 # Doesn't work with ubuntu 25.10 yet
@@ -53,7 +51,7 @@ FROM apt_packages_boranga AS gdal_boranga
 #     gdal-bin \
 #     python3-gdal
 
-FROM gdal_boranga AS node_boranga
+FROM apt_packages_boranga AS node_boranga
 
 # install node
 RUN mkdir -p /etc/apt/keyrings && \
@@ -63,6 +61,7 @@ RUN mkdir -p /etc/apt/keyrings && \
     apt-get update && \
     apt-get install -y nodejs
 RUN apt clean
+
 FROM node_boranga AS configure_boranga
 
 COPY startup.sh /
