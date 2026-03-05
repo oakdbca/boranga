@@ -97,8 +97,10 @@ COPY --chown=oim:oim boranga ./boranga
 
 FROM python_dependencies_boranga AS build_vue_boranga
 
-RUN cd /app/boranga/frontend/boranga; npm ci --omit=dev && \
-    cd /app/boranga/frontend/boranga; npm run build
+# Separate npm ci (cached by package-lock.json) from the build step.
+RUN cd /app/boranga/frontend/boranga && npm ci --omit=dev
+
+RUN cd /app/boranga/frontend/boranga && npm run build
 
 FROM build_vue_boranga AS collectstatic_boranga
 
