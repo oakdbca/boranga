@@ -68,7 +68,6 @@ FROM node_boranga AS configure_boranga
 COPY startup.sh /
 
 RUN chmod 755 /startup.sh && \
-    chmod +s /startup.sh && \
     groupadd -g 5000 oim && \
     useradd -g 5000 -u 5000 oim -s /bin/bash -d /app && \
     usermod -a -G sudo oim && \
