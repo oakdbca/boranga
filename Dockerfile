@@ -19,7 +19,6 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 FROM builder_base_boranga AS apt_packages_boranga
 
-# Install system packages and clean apt cache in the same layer to avoid bloat.
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install --no-install-recommends -y \
