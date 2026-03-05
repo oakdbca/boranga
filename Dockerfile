@@ -4,9 +4,11 @@ FROM ghcr.io/dbca-wa/docker-apps-dev:ubuntu_2510_base_python AS builder_base_bor
 LABEL maintainer="asi@dbca.wa.gov.au"
 LABEL org.opencontainers.image.source="https://github.com/dbca-wa/boranga"
 
-# Build-time only defaults. Supply SECRET_KEY and DEBUG at runtime (docker run -e).
 ENV DEBIAN_FRONTEND=noninteractive \
+    DEBUG=True \
     TZ=Australia/Perth \
+    PRODUCTION_EMAIL=True \
+    SECRET_KEY="ThisisNotRealKey" \
     SITE_PREFIX='qml-dev' \
     SITE_DOMAIN='dbca.wa.gov.au' \
     OSCAR_SHOP_NAME='Parks & Wildlife' \
@@ -104,15 +106,8 @@ RUN cd /app/boranga/frontend/boranga && npm run build
 
 FROM build_vue_boranga AS collectstatic_boranga
 
-# Provide a build-time-only secret key for collectstatic (not baked into the final image ENV).
-ARG SECRET_KEY_BUILDTIME="build-only-placeholder-key"
-ENV SECRET_KEY=$SECRET_KEY_BUILDTIME
-
 RUN touch /app/.env && \
     $VIRTUAL_ENV_PATH/bin/python manage.py collectstatic --noinput
-
-# Unset the build-time secret so it does not persist in the final image.
-ENV SECRET_KEY=""
 
 FROM collectstatic_boranga AS launch_boranga
 
