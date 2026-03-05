@@ -4,11 +4,9 @@ FROM ghcr.io/dbca-wa/docker-apps-dev:ubuntu_2510_base_python AS builder_base_bor
 LABEL maintainer="asi@dbca.wa.gov.au"
 LABEL org.opencontainers.image.source="https://github.com/dbca-wa/boranga"
 
+# Build-time only defaults. Supply SECRET_KEY and DEBUG at runtime (docker run -e).
 ENV DEBIAN_FRONTEND=noninteractive \
-    DEBUG=True \
     TZ=Australia/Perth \
-    PRODUCTION_EMAIL=True \
-    SECRET_KEY="ThisisNotRealKey" \
     SITE_PREFIX='qml-dev' \
     SITE_DOMAIN='dbca.wa.gov.au' \
     OSCAR_SHOP_NAME='Parks & Wildlife' \
