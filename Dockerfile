@@ -84,13 +84,16 @@ USER oim
 ENV VIRTUAL_ENV_PATH=/app/venv
 ENV PATH=$VIRTUAL_ENV_PATH/bin:$PATH
 
-COPY --chown=oim:oim requirements.txt gunicorn.ini.py manage.py python-cron ./
-COPY --chown=oim:oim boranga ./boranga
-
-RUN python3 -m venv $VIRTUAL_ENV_PATH
-RUN $VIRTUAL_ENV_PATH/bin/pip3 install --upgrade pip && \
+# 1) Copy only requirements first so pip install is cached independently of code changes.
+COPY --chown=oim:oim requirements.txt ./
+RUN python3 -m venv $VIRTUAL_ENV_PATH && \
+    $VIRTUAL_ENV_PATH/bin/pip3 install --upgrade pip && \
     $VIRTUAL_ENV_PATH/bin/pip3 install --no-cache-dir -r requirements.txt && \
-    rm -rf /var/lib/{apt,dpkg,cache,log}/ /tmp/* /var/tmp/*
+    rm -rf /tmp/* /var/tmp/*
+
+# 2) Now copy the rest of the application code (changes here won't bust the pip cache).
+COPY --chown=oim:oim gunicorn.ini.py manage.py python-cron ./
+COPY --chown=oim:oim boranga ./boranga
 
 FROM python_dependencies_boranga AS build_vue_boranga
 
