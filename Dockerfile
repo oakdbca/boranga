@@ -1,7 +1,7 @@
 # syntax = docker/dockerfile:1.2
 
 # Prepare the base environment.
-FROM ubuntu:24.04 AS builder_base_boranga
+FROM ghcr.io/dbca-wa/docker-apps-dev:ubuntu_2510_base_python AS builder_base_boranga
 
 LABEL maintainer="asi@dbca.wa.gov.au"
 LABEL org.opencontainers.image.source="https://github.com/dbca-wa/boranga"
@@ -21,55 +21,37 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 FROM builder_base_boranga AS apt_packages_boranga
 
-# Use Australian Mirrors
-RUN sed 's/archive.ubuntu.com/au.archive.ubuntu.com/g' /etc/apt/sources.list > /etc/apt/sourcesau.list && \
-    mv /etc/apt/sourcesau.list /etc/apt/sources.list
-
-RUN --mount=type=cache,target=/var/cache/apt apt-get update && \
+RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install --no-install-recommends -y \
-    binutils \
     bzip2 \
     ca-certificates \
     curl \
     g++ \
-    gcc \
-    git \
     graphviz \
-    htop \
     ipython3 \
     libgraphviz-dev \
-    libmagic-dev \
-    libpq-dev \
-    libproj-dev \
-    libreoffice \
-    mtr \
-    patch \
-    postgresql-client \
-    python3-dev \
-    python3-pil \
-    python3-pip \
-    python3-setuptools \
     python3-venv \
     software-properties-common \
-    sqlite3 \
     ssh \
-    sudo \
-    systemd \
-    tzdata \
-    vim \
-    wget && \
-    rm -rf /var/lib/apt/lists/* && \
-    update-ca-certificates
+    git \
+    zlib1g-dev \
+    libbz2-dev \
+    build-essential \
+    sudo
+
+RUN update-ca-certificates
+
 
 FROM apt_packages_boranga AS gdal_boranga
 
 # Install newer gdal version that is secure
-RUN add-apt-repository ppa:ubuntugis/ubuntugis-unstable && \
-    apt-get update && \
-    apt-get install --no-install-recommends -y \
-    gdal-bin \
-    python3-gdal
+# Doesn't work with ubuntu 25.10 yet
+# RUN add-apt-repository ppa:ubuntugis/ubuntugis-unstable && \
+#     apt-get update && \
+#     apt-get install --no-install-recommends -y \
+#     gdal-bin \
+#     python3-gdal
 
 FROM gdal_boranga AS node_boranga
 
@@ -80,7 +62,7 @@ RUN mkdir -p /etc/apt/keyrings && \
     | tee /etc/apt/sources.list.d/nodesource.list && \
     apt-get update && \
     apt-get install -y nodejs
-
+RUN apt clean
 FROM node_boranga AS configure_boranga
 
 COPY startup.sh /
@@ -94,9 +76,6 @@ RUN chmod 755 /startup.sh && \
     mkdir /app && \
     chown -R oim.oim /app && \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
-    wget https://raw.githubusercontent.com/dbca-wa/wagov_utils/main/wagov_utils/bin/default_script_installer.sh -O /tmp/default_script_installer.sh && \
-    chmod 755 /tmp/default_script_installer.sh && \
-    /tmp/default_script_installer.sh && \
     rm -rf /tmp/*
 
 FROM configure_boranga AS python_dependencies_boranga
@@ -109,7 +88,7 @@ ENV PATH=$VIRTUAL_ENV_PATH/bin:$PATH
 COPY --chown=oim:oim requirements.txt gunicorn.ini.py manage.py python-cron ./
 COPY --chown=oim:oim boranga ./boranga
 
-RUN python3.12 -m venv $VIRTUAL_ENV_PATH
+RUN python3 -m venv $VIRTUAL_ENV_PATH
 RUN $VIRTUAL_ENV_PATH/bin/pip3 install --upgrade pip && \
     $VIRTUAL_ENV_PATH/bin/pip3 install --no-cache-dir -r requirements.txt && \
     rm -rf /var/lib/{apt,dpkg,cache,log}/ /tmp/* /var/tmp/*
