@@ -1339,6 +1339,7 @@ class OccurrenceReport(SubmitterInformationModelMixin, RevisionedMixin):
         ocr_copy.assigned_officer = None
         ocr_copy.assigned_approver = None
         ocr_copy.approved_by = None
+        ocr_copy.occurrence = None
         ocr_copy.submitter_information = None
         if request_user_id != self.submitter:
             ocr_copy.submitter = request_user_id
