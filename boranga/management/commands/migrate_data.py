@@ -64,6 +64,26 @@ class Command(BaseCommand):
             help="Optional limit of rows to process (for testing)",
         )
 
+        # Seed initial reversion history for migrated records after the import
+        p_run.add_argument(
+            "--seed-history",
+            action="store_true",
+            help=(
+                "After the import completes, create initial django-reversion history "
+                "for every migrated record that does not already have one. "
+                "No-op in dry-run mode."
+            ),
+        )
+        p_multi.add_argument(
+            "--seed-history",
+            action="store_true",
+            help=(
+                "After all importers complete, create initial django-reversion history "
+                "for every migrated record that does not already have one. "
+                "No-op in dry-run mode."
+            ),
+        )
+
         # Manually add --sources to allow any value (avoid conflicts between importers)
         p_run.add_argument(
             "--sources",
@@ -161,6 +181,11 @@ class Command(BaseCommand):
                 except Exception:
                     pass
             self.stdout.write(f"{imp_cls.slug} stats: {stats}")
+            if opts.get("seed_history"):
+                if ctx.dry_run:
+                    self.stdout.write(self.style.WARNING("dry-run: would seed migrated history (skipped)."))
+                else:
+                    self._run_history_seeder()
             self.stdout.write(self.style.SUCCESS("Done."))
             return
 
@@ -232,7 +257,26 @@ class Command(BaseCommand):
                     del os.environ["DATA_MIGRATION_LIMIT"]
                 except Exception:
                     pass
+            if opts.get("seed_history"):
+                if ctx.dry_run:
+                    self.stdout.write(self.style.WARNING("dry-run: would seed migrated history (skipped)."))
+                else:
+                    self._run_history_seeder()
             self.stdout.write(self.style.SUCCESS(f"All done: {ctx.stats}"))
             return
 
         raise CommandError("Unknown action")
+
+    def _run_history_seeder(self) -> None:
+        """Invoke the MigratedHistorySeeder and report results to stdout."""
+        from boranga.components.data_migration.history_seeding.reversion_seeder import (
+            MigratedHistorySeeder,
+        )
+
+        self.stdout.write("Seeding initial reversion history for all migrated records…")
+        seeder = MigratedHistorySeeder()
+        stats = seeder.seed_all()
+        total = sum(stats.values())
+        self.stdout.write(
+            self.style.SUCCESS(f"History seeding complete: {total} version(s) created. Breakdown: {stats}")
+        )
