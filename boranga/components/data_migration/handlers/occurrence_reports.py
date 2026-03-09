@@ -786,6 +786,9 @@ class OccurrenceReportImporter(BaseSheetImporter):
             str(transform_duration),
         )
 
+        # Free all_rows — no longer needed after ops is built.
+        del all_rows
+
         # Pre-fetch Occurrences for linking
         def get_occ_lookup_id(report_mig_id, raw_occ_id):
             if not raw_occ_id:
@@ -1437,6 +1440,9 @@ class OccurrenceReportImporter(BaseSheetImporter):
                         "Generated %d row-specific warnings for associated species",
                         assoc_warnings_count,
                     )
+
+            # Free groups — last use was in the loops above.
+            del groups
 
             # Load existing AssociatedSpeciesTaxonomy rows for all resolved taxonomy ids
             tax_ids = {t.pk for t in name_to_tax.values()}
