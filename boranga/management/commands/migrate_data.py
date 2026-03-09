@@ -3,6 +3,7 @@ import os
 
 from django.core.management.base import BaseCommand, CommandError
 
+from boranga.components.data_migration.adapters.sources import ALL_SOURCES, get_locked_sources
 from boranga.components.data_migration.registry import ImportContext, all_importers, get
 from boranga.components.main.models import MigrationRun
 
@@ -122,6 +123,17 @@ class Command(BaseCommand):
             path = opts["path"]
             if not os.path.exists(path):
                 raise CommandError(f"Path not found: {path}")
+            # Check source locks before doing any work.
+            specified_sources = opts.get("sources")
+            sources_to_check = specified_sources if specified_sources else ALL_SOURCES
+            locked = get_locked_sources(sources_to_check)
+            if locked:
+                locked_str = ", ".join(locked)
+                raise CommandError(
+                    f"The following source(s) are locked and cannot be migrated: {locked_str}. "
+                    f"To unlock, unset (or set to False) the corresponding "
+                    f"MIGRATED_LOCKED_<SOURCE> environment variable(s)."
+                )
             slug = opts["slug"]
             try:
                 imp_cls = get(slug)
@@ -193,6 +205,17 @@ class Command(BaseCommand):
             path = opts["path"]
             if not os.path.exists(path):
                 raise CommandError(f"Path not found: {path}")
+            # Check source locks before doing any work.
+            specified_sources = opts.get("sources")
+            sources_to_check = specified_sources if specified_sources else ALL_SOURCES
+            locked = get_locked_sources(sources_to_check)
+            if locked:
+                locked_str = ", ".join(locked)
+                raise CommandError(
+                    f"The following source(s) are locked and cannot be migrated: {locked_str}. "
+                    f"To unlock, unset (or set to False) the corresponding "
+                    f"MIGRATED_LOCKED_<SOURCE> environment variable(s)."
+                )
             wanted = opts.get("only")
             if wanted:
                 # Validate slugs early
