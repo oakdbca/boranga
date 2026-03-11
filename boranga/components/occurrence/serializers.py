@@ -547,6 +547,7 @@ class ListInternalOccurrenceReportSerializer(BaseModelSerializer):
     can_user_copy = serializers.SerializerMethodField()
     occurrence = serializers.IntegerField(source="occurrence.id", allow_null=True)
     occurrence_name = serializers.CharField(source="occurrence.occurrence_number", allow_null=True)
+    occurrence_name_text = serializers.CharField(source="occurrence.occurrence_name", allow_null=True)
     is_new_contributor = serializers.SerializerMethodField()
     observation_date = serializers.DateField(format="%d/%m/%Y", allow_null=True)
     location_accuracy = serializers.SerializerMethodField()
@@ -555,6 +556,15 @@ class ListInternalOccurrenceReportSerializer(BaseModelSerializer):
     copied_to_occurrence = serializers.SerializerMethodField()
     geometry_show_on_map = serializers.SerializerMethodField()
     can_user_edit = serializers.SerializerMethodField()
+    region = serializers.CharField(source="location.region.name", allow_null=True, read_only=True)
+    district = serializers.CharField(source="location.district.name", allow_null=True, read_only=True)
+    datetime_approved = serializers.DateTimeField(format="%d/%m/%Y", allow_null=True)
+    datetime_updated = serializers.DateTimeField(format="%d/%m/%Y", allow_null=True)
+    last_modified_by_name = serializers.SerializerMethodField()
+    family = serializers.SerializerMethodField()
+    common_name = serializers.SerializerMethodField()
+    fauna_group = serializers.CharField(source="species.fauna_group.name", allow_null=True, read_only=True)
+    fauna_sub_group = serializers.CharField(source="species.fauna_sub_group.name", allow_null=True, read_only=True)
 
     class Meta:
         model = OccurrenceReport
@@ -582,6 +592,7 @@ class ListInternalOccurrenceReportSerializer(BaseModelSerializer):
             "internal_user_edit",
             "occurrence",
             "occurrence_name",
+            "occurrence_name_text",
             "is_new_contributor",
             "observation_date",
             "location_accuracy",
@@ -591,6 +602,15 @@ class ListInternalOccurrenceReportSerializer(BaseModelSerializer):
             "copied_to_occurrence",
             "geometry_show_on_map",
             "migrated_from_id",
+            "region",
+            "district",
+            "datetime_approved",
+            "datetime_updated",
+            "last_modified_by_name",
+            "family",
+            "common_name",
+            "fauna_group",
+            "fauna_sub_group",
         )
         datatables_always_serialize = (
             "id",
@@ -711,6 +731,27 @@ class ListInternalOccurrenceReportSerializer(BaseModelSerializer):
         if obj.assigned_officer:
             email_user = retrieve_email_user(obj.assigned_officer)
             return EmailUserSerializer(email_user).data.get("fullname", None)
+        return ""
+
+    def get_last_modified_by_name(self, obj):
+        if obj.last_modified_by:
+            try:
+                email_user = retrieve_email_user(obj.last_modified_by)
+                return email_user.get_full_name()
+            except Exception:
+                pass
+        return ""
+
+    def get_family(self, obj):
+        if obj.species and obj.species.taxonomy:
+            return obj.species.taxonomy.family_name
+        return ""
+
+    def get_common_name(self, obj):
+        if obj.species and obj.species.taxonomy:
+            vernacular = obj.species.taxonomy.vernaculars.first()
+            if vernacular:
+                return vernacular.vernacular_name
         return ""
 
 

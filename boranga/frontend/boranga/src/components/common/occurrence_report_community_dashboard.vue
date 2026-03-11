@@ -640,14 +640,20 @@ export default {
                 'ID',
                 'Number',
                 'Occurrence',
+                'Occurrence Name',
                 'Community Name',
                 'Community ID',
                 'Observation Date',
                 'Main Observer',
                 'Migrated From ID',
+                'Region',
+                'District',
                 'Submitted on',
                 'Submitter',
+                'Approved Date',
                 'Assessor',
+                'Last Modified By',
+                'Last Modified Date',
                 'Status',
                 'Action',
             ];
@@ -782,6 +788,60 @@ export default {
                 name: 'assessor__first_name, assessor__last_name',
             };
         },
+        column_occurrence_name_text: function () {
+            return {
+                data: 'occurrence_name_text',
+                orderable: true,
+                searchable: false,
+                visible: true,
+                name: 'occurrence__occurrence_name',
+            };
+        },
+        column_region: function () {
+            return {
+                data: 'region',
+                orderable: false,
+                searchable: false,
+                visible: true,
+                name: 'location__region__name',
+            };
+        },
+        column_district: function () {
+            return {
+                data: 'district',
+                orderable: false,
+                searchable: false,
+                visible: true,
+                name: 'location__district__name',
+            };
+        },
+        column_approved_date: function () {
+            return {
+                data: 'datetime_approved',
+                orderable: true,
+                searchable: false,
+                visible: true,
+                name: 'datetime_approved',
+            };
+        },
+        column_last_modified_by: function () {
+            return {
+                data: 'last_modified_by_name',
+                orderable: false,
+                searchable: false,
+                visible: true,
+                name: 'last_modified_by_name',
+            };
+        },
+        column_last_modified_date: function () {
+            return {
+                data: 'datetime_updated',
+                orderable: true,
+                searchable: false,
+                visible: true,
+                name: 'datetime_updated',
+            };
+        },
         column_status: function () {
             return {
                 data: 'processing_status_display',
@@ -849,14 +909,20 @@ export default {
                 vm.column_id,
                 vm.column_number,
                 vm.column_occurrence,
+                vm.column_occurrence_name_text,
                 vm.column_community_name,
                 vm.column_community_common_id,
                 vm.column_observation_date_time,
                 vm.column_main_observer,
                 vm.column_migrated_from_id,
+                vm.column_region,
+                vm.column_district,
                 vm.column_lodgement_date,
                 vm.column_submitter,
+                vm.column_approved_date,
                 vm.column_assessor,
+                vm.column_last_modified_by,
+                vm.column_last_modified_date,
                 vm.column_status,
                 vm.column_action,
             ];
@@ -872,7 +938,33 @@ export default {
                     [10, 25, 50, 100, 100000000],
                     [10, 25, 50, 100, 'All'],
                 ],
-                responsive: true,
+                responsive: {
+                    details: {
+                        renderer: function (api, rowIdx, columns) {
+                            var hidden = columns.filter(function (col) {
+                                return col.hidden;
+                            });
+                            if (!hidden.length) return false;
+                            var cells = hidden
+                                .map(function (col) {
+                                    return (
+                                        '<span class="me-3"><strong>' +
+                                        col.title +
+                                        ':</strong> ' +
+                                        (col.data !== null &&
+                                        col.data !== undefined
+                                            ? col.data
+                                            : '') +
+                                        '</span>'
+                                    );
+                                })
+                                .join('');
+                            return $(
+                                '<div class="p-2 d-flex flex-wrap"/>'
+                            ).append(cells);
+                        },
+                    },
+                },
                 serverSide: true,
                 searching: search,
                 //  to show the "workflow Status","Action" columns always in the last position
