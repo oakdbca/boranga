@@ -12,14 +12,14 @@
 -- =============================================================================
 
 WITH
--- ── Group Type ──────────────────────────────────────────────────────────────
+-- -- Group Type --------------------------------------------------------------
 gt AS (
     SELECT id, name
     FROM boranga_grouptype
     WHERE name = 'flora'
 ),
 
--- ── Occurrence Reports (all statuses) ───────────────────────────────────────
+-- -- Occurrence Reports (all statuses) ---------------------------------------
 ocr AS (
     SELECT
         o.id,
@@ -37,13 +37,13 @@ ocr AS (
     INNER JOIN gt ON o.group_type_id = gt.id
 ),
 
--- ── Parent Occurrence (if linked) ───────────────────────────────────────────
+-- -- Parent Occurrence (if linked) -------------------------------------------
 occ AS (
     SELECT id, occurrence_number, occurrence_name
     FROM boranga_occurrence
 ),
 
--- ── Species + Taxonomy ──────────────────────────────────────────────────────
+-- -- Species + Taxonomy ------------------------------------------------------
 species AS (
     SELECT
         s.id,
@@ -56,7 +56,7 @@ species AS (
     GROUP BY s.id, t.scientific_name
 ),
 
--- ── Active Conservation Status (approved + delisted) ────────────────────────
+-- -- Active Conservation Status (approved + delisted) ------------------------
 -- Business rule: one active CS per species at a time.
 active_cs AS (
     SELECT
@@ -72,7 +72,7 @@ active_cs AS (
       AND cs.species_id IS NOT NULL
 ),
 
--- ── Approved-only Conservation Status (exclude delisted) ────────────────────
+-- -- Approved-only Conservation Status (exclude delisted) --------------------
 approved_cs AS (
     SELECT
         cs.species_id,
@@ -87,7 +87,7 @@ approved_cs AS (
       AND cs.species_id IS NOT NULL
 ),
 
--- ── OCR Location ────────────────────────────────────────────────────────────
+-- -- OCR Location ------------------------------------------------------------
 loc AS (
     SELECT
         l.occurrence_report_id,
@@ -105,7 +105,7 @@ loc AS (
     LEFT JOIN boranga_district d ON l.district_id = d.id
 ),
 
--- ── Observer (main observer only) ───────────────────────────────────────────
+-- -- Observer (main observer only) -------------------------------------------
 observer AS (
     SELECT
         od.occurrence_report_id,
@@ -116,7 +116,7 @@ observer AS (
       AND od.visible = TRUE
 ),
 
--- ── Observation Detail ──────────────────────────────────────────────────────
+-- -- Observation Detail ------------------------------------------------------
 obs_detail AS (
     SELECT
         obd.occurrence_report_id,
@@ -126,7 +126,7 @@ obs_detail AS (
     LEFT JOIN boranga_areaassessment aa ON obd.area_assessment_id = aa.id
 ),
 
--- ── Plant Count ─────────────────────────────────────────────────────────────
+-- -- Plant Count -------------------------------------------------------------
 plant_count AS (
     SELECT
         pc.occurrence_report_id,
@@ -146,7 +146,7 @@ plant_count AS (
     LEFT JOIN boranga_plantcondition pcond ON pc.plant_condition_id = pcond.id
 ),
 
--- ── Identification ──────────────────────────────────────────────────────────
+-- -- Identification ----------------------------------------------------------
 identification AS (
     SELECT
         i.occurrence_report_id,
@@ -158,7 +158,7 @@ identification AS (
     LEFT JOIN boranga_identificationcertainty ic ON i.identification_certainty_id = ic.id
 ),
 
--- ── Most recent User Action per OCR ─────────────────────────────────────────
+-- -- Most recent User Action per OCR -----------------------------------------
 latest_action AS (
     SELECT DISTINCT ON (ua.occurrence_report_id)
         ua.occurrence_report_id,
@@ -168,7 +168,7 @@ latest_action AS (
     ORDER BY ua.occurrence_report_id, ua."when" DESC
 ),
 
--- ── Habitat Condition ───────────────────────────────────────────────────────
+-- -- Habitat Condition -------------------------------------------------------
 habitat AS (
     SELECT
         hc.occurrence_report_id,
@@ -181,7 +181,7 @@ habitat AS (
     FROM boranga_ocrhabitatcondition hc
 ),
 
--- ── Geometry (Polygons only) ────────────────────────────────────────────────
+-- -- Geometry (Polygons only) ------------------------------------------------
 geom AS (
     SELECT
         g.id              AS geom_id,
@@ -198,9 +198,9 @@ geom AS (
     WHERE ST_GeometryType(g.geometry) IN ('ST_Polygon', 'ST_MultiPolygon')
 )
 
--- ═══════════════════════════════════════════════════════════════════════════
+-- ===========================================================================
 -- Final SELECT
--- ═══════════════════════════════════════════════════════════════════════════
+-- ===========================================================================
 SELECT
     -- OCR core
     ocr.occurrence_report_number                   AS ORF_NUM,
