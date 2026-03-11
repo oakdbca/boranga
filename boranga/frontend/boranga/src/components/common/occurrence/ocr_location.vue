@@ -248,7 +248,10 @@
                     <label for="newOccurrenceNo">No</label>
                 </div>
             </div>-->
-            <div v-if="canAssess" class="row mb-3">
+            <div
+                v-if="!is_external && (canAssess || isReadOnly)"
+                class="row mb-3"
+            >
                 <label for="" class="col-sm-3 control-label"
                     >Map Data Type</label
                 >
@@ -334,7 +337,7 @@
                     </template>
                 </div>
             </div>
-            <div class="row mb-3">
+            <div v-if="!is_external" class="row mb-3">
                 <label
                     for=""
                     class="col-sm-3 control-label"
