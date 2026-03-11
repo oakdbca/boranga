@@ -3303,7 +3303,6 @@ class OCRAnimalObservation(BaseModel):
     animal_health = models.ForeignKey(AnimalHealth, on_delete=models.SET_NULL, null=True, blank=True)
     death_injury_reason = models.ForeignKey(DeathReason, on_delete=models.SET_NULL, null=True, blank=True)
 
-    distinctive_feature = models.CharField(max_length=1000, blank=True, default="")
     action_taken = models.CharField(max_length=1000, blank=True, default="")
     action_required = models.CharField(max_length=1000, blank=True, default="")
     animal_observation_detail_comment = models.CharField(max_length=1000, blank=True, default="")
@@ -5437,7 +5436,6 @@ class OCCAnimalObservation(BaseModel):
     animal_health = models.ForeignKey(AnimalHealth, on_delete=models.SET_NULL, null=True, blank=True)
     death_injury_reason = models.ForeignKey(DeathReason, on_delete=models.SET_NULL, null=True, blank=True)
 
-    distinctive_feature = models.CharField(max_length=1000, blank=True, default="")
     action_taken = models.CharField(max_length=1000, blank=True, default="")
     action_required = models.CharField(max_length=1000, blank=True, default="")
     animal_observation_detail_comment = models.CharField(max_length=1000, blank=True, default="")

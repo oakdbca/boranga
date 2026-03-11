@@ -381,7 +381,6 @@ PIPELINES = {
     "OCRIdentification__id_confirmed_by": ["strip", "blank_to_none"],
     "OCRIdentification__identification_comment": ["strip", "blank_to_none"],
     # OCRAnimalObservation fields — integers
-    "OCRAnimalObservation__distinctive_feature": ["strip", "blank_to_none"],
     "OCRAnimalObservation__animal_observation_detail_comment": ["strip", "blank_to_none"],
     "OCRAnimalObservation__count_status": ["strip", "blank_to_none"],
     "OCRAnimalObservation__alive_adult_male": ["strip", "blank_to_none", "to_int"],
