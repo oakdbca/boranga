@@ -453,6 +453,18 @@ class OccurrenceReportTfaunaAdapter(SourceAdapter):
             if mid and not str(mid).startswith("tfauna-"):
                 canonical["migrated_from_id"] = f"tfauna-{mid}"
 
+            # ── identification_comment: SpHeld + ". Features: " + Features ─
+            sp_held = (raw.get("SpHeld") or "").strip()
+            features = (raw.get("Features") or "").strip()
+            if sp_held and features:
+                canonical["OCRIdentification__identification_comment"] = f"{sp_held}. Features: {features}"
+            elif sp_held:
+                canonical["OCRIdentification__identification_comment"] = sp_held
+            elif features:
+                canonical["OCRIdentification__identification_comment"] = f"Features: {features}"
+            else:
+                canonical["OCRIdentification__identification_comment"] = None
+
             # ── ocr_for_occ_name: "SpCode ###" sequential ──────
             sp_code = raw.get("SpCode", "").strip()
             if sp_code:
