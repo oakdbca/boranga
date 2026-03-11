@@ -129,11 +129,15 @@ class BaseTypeSerializer(BaseSerializer):
 
 
 class BufferGeometrySerializer(BaseTypeSerializer, GeoFeatureModelSerializer):
+    geometry_id = serializers.IntegerField(source="id", read_only=True)
     geometry_source = serializers.SerializerMethodField()
     srid = serializers.SerializerMethodField(read_only=True)
     original_geometry = serializers.SerializerMethodField(read_only=True)
     label = serializers.SerializerMethodField(read_only=True)
+    occurrence_number = serializers.SerializerMethodField(read_only=True)
     buffer_radius = serializers.SerializerMethodField(read_only=True)
+    drawn_by = serializers.SerializerMethodField(read_only=True)
+    last_updated_by = serializers.SerializerMethodField(read_only=True)
     updated_date = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", read_only=True)
 
     class Meta:
@@ -141,6 +145,7 @@ class BufferGeometrySerializer(BaseTypeSerializer, GeoFeatureModelSerializer):
         geo_field = "geometry"
         fields = [
             "id",
+            "geometry_id",
             "buffered_from_geometry",
             "geometry",
             "original_geometry",
@@ -149,6 +154,7 @@ class BufferGeometrySerializer(BaseTypeSerializer, GeoFeatureModelSerializer):
             "area_sqhm",
             "geometry_source",
             "label",
+            "occurrence_number",
             "object_id",
             "content_type",
             "buffer_radius",
@@ -158,6 +164,8 @@ class BufferGeometrySerializer(BaseTypeSerializer, GeoFeatureModelSerializer):
             "stroke",
             "opacity",
             "updated_date",
+            "drawn_by",
+            "last_updated_by",
         ] + BaseTypeSerializer.Meta.fields
 
     def get_srid(self, obj):
@@ -186,7 +194,24 @@ class BufferGeometrySerializer(BaseTypeSerializer, GeoFeatureModelSerializer):
         return None
 
     def get_label(self, obj):
-        return f"{obj.buffered_from_geometry.occurrence.occurrence_number} [Buffer]"
+        return "Buffer"
+
+    def get_occurrence_number(self, obj):
+        return obj.buffered_from_geometry.occurrence.occurrence_number
+
+    def get_drawn_by(self, obj):
+        drawn_by = obj.buffered_from_geometry.drawn_by
+        if drawn_by:
+            email_user = retrieve_email_user(drawn_by)
+            return EmailUserSerializer(email_user).data.get("fullname", None)
+        return None
+
+    def get_last_updated_by(self, obj):
+        last_updated_by = obj.buffered_from_geometry.last_updated_by
+        if last_updated_by:
+            email_user = retrieve_email_user(last_updated_by)
+            return EmailUserSerializer(email_user).data.get("fullname", None)
+        return None
 
     def get_buffer_radius(self, obj):
         return obj.buffered_from_geometry.buffer_radius
@@ -3917,11 +3942,13 @@ class SaveOccurrenceSiteSerializer(BaseModelSerializer):
 
 
 class SiteGeometrySerializer(GeoFeatureModelSerializer):
+    geometry_id = serializers.IntegerField(source="id", read_only=True)
     srid = serializers.SerializerMethodField(read_only=True)
     geometry_source = serializers.SerializerMethodField()
     original_geometry = serializers.SerializerMethodField(read_only=True)
     drawn_by = serializers.SerializerMethodField(read_only=True)
     last_updated_by = serializers.SerializerMethodField(read_only=True)
+    occurrence_number = serializers.SerializerMethodField(read_only=True)
     updated_date = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", read_only=True)
 
     class Meta:
@@ -3929,9 +3956,11 @@ class SiteGeometrySerializer(GeoFeatureModelSerializer):
         geo_field = "geometry"
         fields = [
             "id",
+            "geometry_id",
             "occurrence",
             "site_name",
             "site_number",
+            "occurrence_number",
             "related_occurrence_reports",
             "geometry",
             "srid",
@@ -3970,6 +3999,11 @@ class SiteGeometrySerializer(GeoFeatureModelSerializer):
         if obj.last_updated_by:
             email_user = retrieve_email_user(obj.last_updated_by)
             return EmailUserSerializer(email_user).data.get("fullname", None)
+        return None
+
+    def get_occurrence_number(self, obj):
+        if obj.occurrence:
+            return obj.occurrence.occurrence_number
         return None
 
 
