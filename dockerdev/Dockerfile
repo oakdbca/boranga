@@ -23,7 +23,8 @@ RUN apt-get update && \
     screen \
     ssh \
     sudo \
-    virtualenv
+    virtualenv \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Node.js and clean up in the same layer.
 RUN mkdir -p /etc/apt/keyrings && \
