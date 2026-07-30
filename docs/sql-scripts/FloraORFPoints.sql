@@ -188,6 +188,8 @@ geom AS (
         g.id              AS geom_id,
         g.occurrence_report_id,
         g.geometry,
+        ST_X(g.geometry)  AS longitude,
+        ST_Y(g.geometry)  AS latitude,
         g.updated_date
     FROM boranga_occurrencereportgeometry g
     WHERE ST_GeometryType(g.geometry) IN ('ST_Point')
@@ -212,6 +214,8 @@ SELECT
 
     -- Geometry (ST_Transform to SRID 7844 is a no-op — Boranga is already GDA2020 throughout)
     ST_Transform(geom.geometry, 7844)              AS GEOMETRY,
+    geom.latitude                                  AS LAT,
+    geom.longitude                                 AS LON,
     TO_CHAR(geom.updated_date, 'YYYY-MM-DD HH24:MI:SS') AS GEO_MODIFY,
     geom.geom_id                                   AS GEOM_ID,
     -- No area fields for Points
