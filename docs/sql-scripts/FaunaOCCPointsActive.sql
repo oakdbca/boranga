@@ -158,7 +158,6 @@ animal_obs AS (
         ao.simple_alive,
         ao.simple_dead,
         ab.name                                         AS animal_behaviour,
-        ao.animal_observation_detail_comment,
 
         -- MultiSelectField: primary_detection_method (comma-separated IDs -> names)
         (
@@ -273,7 +272,6 @@ SELECT
     animal_obs.primary_detection_method            AS DET_METHOD,
     animal_obs.secondary_sign                      AS SEC_SIGN,
     animal_obs.reproductive_state                  AS BREEDING,
-    animal_obs.animal_observation_detail_comment   AS AN_OBS_COM,
 
     -- Identification
     identification.identification_certainty        AS IDENT_CRTY,
