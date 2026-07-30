@@ -166,7 +166,7 @@ geom AS (
         g.geometry,
         g.updated_date
     FROM boranga_occurrencereportgeometry g
-    WHERE ST_GeometryType(g.geometry) IN ('ST_Point', 'ST_MultiPoint')
+    WHERE ST_GeometryType(g.geometry) IN ('ST_Point')
       AND g.visible = TRUE
 )
 
