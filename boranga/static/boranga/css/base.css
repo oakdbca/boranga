@@ -244,6 +244,60 @@ table.dataTable a:hover {
     color: #505050 !important;
 }
 
+/* Override the selected items inside the Bootstrap 5 dropdown menu */
+.select2-container--bootstrap-5 .select2-dropdown .select2-results__options .select2-results__option.select2-results__option--selected,
+.select2-container--bootstrap-5 .select2-dropdown .select2-results__options .select2-results__option[aria-selected=true]:not(.select2-results__option--highlighted) {
+    background-color: #226fbb !important;
+    color: #ffffff !important;
+}
+
+/* Also override the multi-select choice tags inside the input field for Bootstrap 5 */
+.select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
+    background-color: #226fbb !important;
+    border-color: #1a5692 !important;
+    color: #ffffff !important;
+}
+
+/* Fix the 'X' delete button inside the input tags for Bootstrap 5 */
+.select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove {
+    color: rgba(255, 255, 255, 0.8) !important;
+    background: transparent !important;
+}
+
+.select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove:hover {
+    color: #ffffff !important;
+    background-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Force the Bootstrap 5 close button to display a white SVG icon */
+.select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove {
+    /* 1. Reset text-indent so background rules don't push things out of view */
+    text-indent: 0 !important;
+
+    /* 2. Inject the native white Bootstrap close SVG icon */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: 0.75rem !important;
+
+    /* 3. Give it explicit layout parameters so it isn't squeezed out */
+    width: 0.75rem !important;
+    height: 0.75rem !important;
+    padding: 0.25em !important;
+    margin-right: 0.25rem !important;
+    opacity: 0.75 !important;
+    border: none !important;
+}
+
+/* Brighten the button on hover */
+.select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove:hover {
+    opacity: 1 !important;
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+
+
+
 /* Styles for mini referrals tables */
 
 .table-referrals {
