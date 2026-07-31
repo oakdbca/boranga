@@ -385,9 +385,13 @@ export default {
     watch: {
         isModalOpen: function (newVal) {
             if (newVal) {
-                this.$nextTick(() => {
-                    this.$refs.site_name.focus();
-                });
+                // Pushes the focus execution to the next event loop cycle
+                setTimeout(() => {
+                    // Next tick not working here due to the way the modal is implemented, so using setTimeout as a workaround
+                    if (this.$refs.site_name) {
+                        this.$refs.site_name.focus();
+                    }
+                }, 150);
                 this.originalSiteObj = JSON.parse(JSON.stringify(this.siteObj));
             }
         },
@@ -473,13 +477,19 @@ export default {
         reinitialiseOCRLookup: function () {
             let vm = this;
             vm.$nextTick(() => {
-                $(vm.$refs.occurrence_report_select).select2('destroy');
+                if (
+                    $(vm.$refs.occurrence_report_select).hasClass(
+                        'select2-hidden-accessible'
+                    )
+                ) {
+                    $(vm.$refs.occurrence_report_select).select2('destroy');
+                }
                 vm.initialiseOCRSelect();
             });
         },
         initialiseOCRSelect: function () {
             let vm = this;
-            // Initialise select2 for proposed Conservation Criteria
+            // Initialise select2 for selected occurrence reports
             $(vm.$refs.occurrence_report_select)
                 .select2({
                     theme: 'bootstrap-5',
@@ -496,6 +506,13 @@ export default {
                     var selected = $(e.currentTarget);
                     vm.siteObj.related_occurrence_reports = selected.val();
                 });
+
+            if (vm.siteObj.related_occurrence_reports) {
+                $(vm.$refs.occurrence_report_select).val(
+                    vm.siteObj.related_occurrence_reports
+                );
+                $(vm.$refs.occurrence_report_select).trigger('change');
+            }
         },
         prepareNewSiteAtCoordinates: function (coordinates) {
             this.siteObj.point_coord1 = coordinates[0];
