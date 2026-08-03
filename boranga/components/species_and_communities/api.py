@@ -263,7 +263,7 @@ class GetScientificName(views.APIView):
 
         # Allow internal users to perform wildcard search
         if is_internal(request):
-            search_term = search_term.replace("%", "%%")
+            search_term = search_term.replace("\\", "\\\\").replace("%", "%%")
             taxonomies = taxonomies.extra(
                 where=['UPPER("boranga_taxonomy"."scientific_name"::text) LIKE UPPER(%s)'],
                 params=[search_term],
@@ -325,7 +325,7 @@ class GetCommonName(views.APIView):
 
         # Allow internal users to perform wildcard search
         if is_internal(request):
-            search_term = search_term.replace("%", "%%")
+            search_term = search_term.replace("\\", "\\\\").replace("%", "%%")
             queryset = queryset.extra(
                 where=['UPPER("boranga_taxonvernacular"."vernacular_name"::text) LIKE UPPER(%s)'],
                 params=[search_term],
@@ -370,7 +370,7 @@ class GetCommonNameOCRSelect(views.APIView):
 
         # Allow internal users to perform wildcard search
         if is_internal(request):
-            search_term = search_term.replace("%", "%%")
+            search_term = search_term.replace("\\", "\\\\").replace("%", "%%")
             taxonomy_vernaculars = taxonomy_vernaculars.extra(
                 where=["UPPER(vernacular_name) LIKE UPPER(%s)"],
                 params=[search_term],
@@ -522,7 +522,7 @@ class GetCommunityName(views.APIView):
 
         # Allow internal users to perform wildcard search
         if is_internal(request):
-            search_term = search_term.replace("%", "%%")
+            search_term = search_term.replace("\\", "\\\\").replace("%", "%%")
             community_taxonomies = community_taxonomies.extra(
                 where=["UPPER(community_name) LIKE UPPER(%s)"],
                 params=[search_term],
