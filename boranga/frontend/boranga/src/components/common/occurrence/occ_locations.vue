@@ -1537,9 +1537,15 @@ export default {
             const occ_geometry = JSON.parse(
                 this.$refs.component_map.getJSONFeatures()
             );
-            const buffer_opacity = this.$refs.component_map
-                .getLayerByName(this.bufferLayerName)
-                .getProperties().opacity;
+            const bufferLayer = this.$refs.component_map.getLayerByName(
+                this.bufferLayerName
+            );
+            // Default to 0.5 if the layer isn't ready yet — matches the
+            // save_geometry default and prevents a silent TypeError crash that
+            // would abort the save without showing any error to the user.
+            const buffer_opacity = bufferLayer
+                ? bufferLayer.getProperties().opacity
+                : 0.5;
             // Set buffer opacity to the features
             occ_geometry.features.forEach((f) => {
                 f.properties.buffer_opacity = buffer_opacity;
