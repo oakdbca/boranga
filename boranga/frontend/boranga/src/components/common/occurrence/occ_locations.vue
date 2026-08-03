@@ -1067,6 +1067,12 @@ export default {
                         }
                     });
                     vm.$refs.component_map.forceToRefreshMap();
+                    // Reload the query layer so that newly saved features get
+                    // their backend-assigned IDs.  Without this, features drawn
+                    // by the user and saved for the first time remain in the
+                    // source without an ID, causing subsequent saves to treat
+                    // them as brand-new records and create duplicate geometries.
+                    vm.$refs.component_map.reloadQueryLayer();
                     vm.refreshDatatables();
                     vm.fetchDiscardedGeometries();
                     vm.$nextTick(() => {

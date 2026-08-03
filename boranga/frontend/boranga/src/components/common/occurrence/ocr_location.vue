@@ -967,11 +967,18 @@ export default {
                         }
                     });
                     vm.$refs.component_map.forceToRefreshMap();
-                    vm.fetchDiscardedGeometries();
-                    vm.$nextTick(() => {
-                        vm.$refs.component_map.takeSnapshot();
-                        vm.mapIsDirty = false;
+                    // Reload the query layer so that newly saved features get
+                    // their backend-assigned IDs.  Without this, features drawn
+                    // by the user and saved for the first time remain in the
+                    // source without an ID, causing subsequent saves to treat
+                    // them as brand-new records and create duplicate geometries.
+                    vm.$refs.component_map.reloadQueryLayer().then(() => {
+                        vm.$nextTick(() => {
+                            vm.$refs.component_map.takeSnapshot();
+                            vm.mapIsDirty = false;
+                        });
                     });
+                    vm.fetchDiscardedGeometries();
                 },
                 (error) => {
                     var text = helpers.apiVueResourceError(error);
