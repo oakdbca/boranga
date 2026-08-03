@@ -2803,7 +2803,10 @@ export default {
                 vm.dragbox.on('boxend', function () {
                     const extent = vm.dragbox.getGeometry().getExtent();
 
-                    const layers = vm.getLayersWithFeatures();
+                    // Only select from editable layers so that read-only
+                    // layers (e.g. buffer_layer, related-OCR layer) are not
+                    // included in the drag-box selection.
+                    const layers = vm.editableLayers();
                     layers.forEach((layer) => {
                         layer
                             .getSource()
