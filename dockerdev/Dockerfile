@@ -6,23 +6,25 @@ ENV NODE_MAJOR=24
 USER root
 
 RUN apt-get update && \
-    apt-get install --no-install-recommends -y build-essential && \
-    apt-get install --no-install-recommends -y git && \
-    apt-get install --no-install-recommends -y gdal-bin && \
-    apt-get install --no-install-recommends -y graphviz && \
-    apt-get install --no-install-recommends -y libffi-dev && \
-    apt-get install --no-install-recommends -y libpq-dev && \
-    apt-get install --no-install-recommends -y libssl-dev && \
-    apt-get install --no-install-recommends -y patch && \
-    apt-get install --no-install-recommends -y pkg-config && \
-    apt-get install --no-install-recommends -y postgresql-client && \
-    apt-get install --no-install-recommends -y python3-dev && \
-    apt-get install --no-install-recommends -y python3-pip && \
-    apt-get install --no-install-recommends -y python3-pydot && \
-    apt-get install --no-install-recommends -y screen && \
-    apt-get install --no-install-recommends -y ssh && \
-    apt-get install --no-install-recommends -y sudo && \
-    apt-get install --no-install-recommends -y virtualenv
+    apt-get install --no-install-recommends -y \
+    build-essential \
+    git \
+    gdal-bin \
+    graphviz \
+    libffi-dev \
+    libpq-dev \
+    libssl-dev \
+    patch \
+    pkg-config \
+    postgresql-client \
+    python3-dev \
+    python3-pip \
+    python3-pydot \
+    screen \
+    ssh \
+    sudo \
+    virtualenv \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Node.js and clean up in the same layer.
 RUN mkdir -p /etc/apt/keyrings && \

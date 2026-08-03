@@ -1408,6 +1408,7 @@ export default {
                     false
                 );
                 vm.$refs.occurrence_report.$refs.ocr_location.$refs.component_map.forceToRefreshMap();
+                vm.$refs.occurrence_report.$refs.ocr_location.$refs.component_map.reloadQueryLayer();
                 vm.$nextTick(() => {
                     vm.resetDirtyState();
                 });
@@ -1496,6 +1497,7 @@ export default {
                         false
                     );
                     vm.$refs.occurrence_report.$refs.ocr_location.$refs.component_map.forceToRefreshMap();
+                    vm.$refs.occurrence_report.$refs.ocr_location.$refs.component_map.reloadQueryLayer();
                 });
             return result;
         },

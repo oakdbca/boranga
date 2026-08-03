@@ -129,9 +129,11 @@ obs_detail AS (
     SELECT
         obd.occurrence_report_id,
         aa.name  AS area_assessment,
-        obd.area_surveyed
+        obd.area_surveyed,
+        om.name  AS observation_method
     FROM boranga_ocrobservationdetail obd
     LEFT JOIN boranga_areaassessment aa ON obd.area_assessment_id = aa.id
+    LEFT JOIN boranga_observationmethod om ON obd.observation_method_id = om.id
 ),
 
 -- -- Identification ----------------------------------------------------------
@@ -222,6 +224,7 @@ SELECT
     -- Observation Detail
     obs_detail.area_assessment                     AS AREA_ASSES,
     obs_detail.area_surveyed                       AS SURVEY_SQM,
+    obs_detail.observation_method                  AS OBS_METHOD,
 
     -- Identification
     identification.identification_certainty        AS IDENT_CRTY,

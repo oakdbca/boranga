@@ -130,9 +130,11 @@ obs_detail AS (
     SELECT
         obd.occurrence_report_id,
         aa.name  AS area_assessment,
-        obd.area_surveyed
+        obd.area_surveyed,
+        om.name  AS observation_method
     FROM boranga_ocrobservationdetail obd
     LEFT JOIN boranga_areaassessment aa ON obd.area_assessment_id = aa.id
+    LEFT JOIN boranga_observationmethod om ON obd.observation_method_id = om.id
 ),
 
 -- -- Plant Count -------------------------------------------------------------
@@ -186,9 +188,11 @@ geom AS (
         g.id              AS geom_id,
         g.occurrence_report_id,
         g.geometry,
+        ST_X(g.geometry)  AS longitude,
+        ST_Y(g.geometry)  AS latitude,
         g.updated_date
     FROM boranga_occurrencereportgeometry g
-    WHERE ST_GeometryType(g.geometry) IN ('ST_Point', 'ST_MultiPoint')
+    WHERE ST_GeometryType(g.geometry) IN ('ST_Point')
       AND g.visible = TRUE
 )
 
@@ -210,6 +214,8 @@ SELECT
 
     -- Geometry (ST_Transform to SRID 7844 is a no-op — Boranga is already GDA2020 throughout)
     ST_Transform(geom.geometry, 7844)              AS GEOMETRY,
+    geom.latitude                                  AS LAT,
+    geom.longitude                                 AS LON,
     TO_CHAR(geom.updated_date, 'YYYY-MM-DD HH24:MI:SS') AS GEO_MODIFY,
     geom.geom_id                                   AS GEOM_ID,
     -- No area fields for Points
@@ -236,6 +242,7 @@ SELECT
     -- Observation Detail
     obs_detail.area_assessment                     AS AREA_ASSES,
     obs_detail.area_surveyed                       AS SURVEY_SQM,
+    obs_detail.observation_method                  AS OBS_METHOD,
 
     -- Plant Count (Flora-specific)
     plant_count.plant_count_method                 AS CNT_MTHD,

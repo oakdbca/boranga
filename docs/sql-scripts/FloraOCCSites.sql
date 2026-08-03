@@ -111,12 +111,15 @@ site AS (
         s.site_number,
         s.site_name,
         s.geometry,
+        ST_X(s.geometry)  AS longitude,
+        ST_Y(s.geometry)  AS latitude,
         s.updated_date,
         s.comments,
         st.name           AS site_type
     FROM boranga_occurrencesite s
     LEFT JOIN boranga_sitetype st ON s.site_type_id = st.id
     WHERE s.visible = TRUE
+      AND ST_GeometryType(s.geometry) = 'ST_Point'
 )
 
 -- ===========================================================================
@@ -137,6 +140,8 @@ SELECT
 
     -- Site Geometry (ST_Transform to SRID 7844 is a no-op — Boranga is already GDA2020 throughout)
     ST_Transform(site.geometry, 7844)              AS GEOMETRY,
+    site.latitude                                  AS LAT,
+    site.longitude                                 AS LON,
     site.site_id                                   AS GEOM_ID,
 
     -- Conservation Status
