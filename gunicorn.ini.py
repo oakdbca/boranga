@@ -9,6 +9,7 @@ max_requests = 2048
 max_requests_jitter = 256
 preload_app = True
 timeout = 600
+graceful_timeout = 600
 
 # Disable access logging.
 accesslog = None
