@@ -1734,54 +1734,110 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             if original_taxonomy_occurrence_count != len(occurrence_assignments_dict):
                 raise serializers.ValidationError("Invalid number of occurrence assignments.")
 
+            user_id = request.user.id if hasattr(request.user, "id") else int(request.user)
+            now = timezone.now()
+
+            # Phase 1: validate all assignments and build a mapping of occurrences
+            # that actually need to move (excluding same-species no-ops).
+            moving = {}  # occurrence_id (int) -> target taxonomy_id
             for occurrence_id, taxonomy_id in occurrence_assignments_dict.items():
-                # Process each assignment
                 if not occurrence_id:
                     raise serializers.ValidationError("Occurrence ID is missing in the assignment")
                 if not occurrence_id.isdigit():
                     raise serializers.ValidationError(f"Occurrence ID {occurrence_id} must be an integer")
-                occurrence = Occurrence.objects.filter(id=occurrence_id).first()
-                if not occurrence:
-                    raise serializers.ValidationError(f"Occurrence with ID {occurrence_id} does not exist")
-                # Get the taxonomy id from the assignment
                 if not taxonomy_id:
                     raise serializers.ValidationError(f"Taxonomy ID is missing for occurrence {occurrence_id}")
                 if not isinstance(taxonomy_id, int):
                     raise serializers.ValidationError(f"Taxonomy ID for occurrence {occurrence_id} must be an integer")
                 if taxonomy_id == instance.taxonomy_id:
-                    # No need to reassign the occurrence to the same species
-                    continue
+                    continue  # No change needed
+                moving[int(occurrence_id)] = taxonomy_id
 
-                taxonomy = Taxonomy.objects.filter(id=taxonomy_id).first()
-                if not taxonomy:
-                    raise serializers.ValidationError(f"Taxonomy with ID {taxonomy_id} does not exist")
-                species = Species.objects.filter(taxonomy_id=taxonomy_id).first()
-                if not species:
-                    raise serializers.ValidationError(f"Species with taxonomy ID {taxonomy_id} does not exist")
-                current_scientific_name = occurrence.species.taxonomy.scientific_name
-                # Assign the occurrence to the new species
-                occurrence.species = species
-                # When the occurrence is saved, the custom save method will
-                # reassign all OCRs to also point to the new species as well
-                occurrence.save(version_user=request.user)
+            if moving:
+                # Batch-validate occurrence existence (1 query instead of N)
+                existing_ids = set(Occurrence.objects.filter(id__in=moving.keys()).values_list("id", flat=True))
+                for occ_id in moving:
+                    if occ_id not in existing_ids:
+                        raise serializers.ValidationError(f"Occurrence with ID {occ_id} does not exist")
 
-                # Log the action
-                occurrence.log_user_action(
-                    OccurrenceUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_SPLIT.format(
-                        occurrence.occurrence_number,
-                        current_scientific_name,
-                        species.taxonomy.scientific_name,
-                    ),
-                    request,
+                # Batch-validate species existence (1 query per unique taxonomy)
+                unique_tids = set(moving.values())
+                species_map = {
+                    s.taxonomy_id: s
+                    for s in Species.objects.filter(taxonomy_id__in=unique_tids).select_related("taxonomy")
+                }
+                for tid in unique_tids:
+                    if tid not in species_map:
+                        raise serializers.ValidationError(f"Species with taxonomy ID {tid} does not exist")
+
+                # Phase 2: bulk UPDATE grouped by target species.
+                # Bulk UPDATE instead of per-occurrence .save() loop — same reasoning as rename_species.
+                occurrence_ct = ContentType.objects.get_for_model(Occurrence)
+                revision = Revision.objects.create(
+                    date_created=now,
+                    user=request.user,
+                    comment=f"Bulk split from {instance}",
                 )
-                request.user.log_user_action(
-                    OccurrenceUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_SPLIT.format(
-                        occurrence.occurrence_number,
-                        current_scientific_name,
-                        species.taxonomy.scientific_name,
-                    ),
-                    request,
-                )
+
+                by_species = {}
+                for occ_id, tid in moving.items():
+                    by_species.setdefault(tid, []).append(occ_id)
+
+                for tid, occ_ids in by_species.items():
+                    target_species = species_map[tid]
+
+                    # Update OCRs first (before occurrence update, to match update_child_ocrs logic)
+                    OccurrenceReport.objects.filter(
+                        occurrence_id__in=occ_ids,
+                    ).exclude(species=target_species).update(
+                        species=target_species,
+                        datetime_updated=now,
+                        last_modified_by=user_id,
+                    )
+
+                    # Bulk update occurrences
+                    Occurrence.objects.filter(id__in=occ_ids).update(
+                        species=target_species,
+                        datetime_updated=now,
+                        last_modified_by=user_id,
+                    )
+
+                    # Bulk-create reversion versions and per-occurrence action logs.
+                    old_name = instance.taxonomy.scientific_name if instance.taxonomy else str(instance)
+                    new_name = target_species.taxonomy.scientific_name
+                    version_batch, log_batch = [], []
+                    for occ in Occurrence.objects.filter(id__in=occ_ids).iterator():
+                        version_batch.append(
+                            Version(
+                                revision=revision,
+                                object_id=str(occ.pk),
+                                content_type=occurrence_ct,
+                                db="default",
+                                format="json",
+                                serialized_data=dj_serializers.serialize("json", [occ]),
+                                object_repr=str(occ),
+                            )
+                        )
+                        log_batch.append(
+                            OccurrenceUserAction(
+                                occurrence=occ,
+                                who=user_id,
+                                what=OccurrenceUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_SPLIT.format(
+                                    occ.occurrence_number,
+                                    old_name,
+                                    new_name,
+                                ),
+                                when=now,
+                            )
+                        )
+                        if len(version_batch) >= 500:
+                            Version.objects.bulk_create(version_batch)
+                            OccurrenceUserAction.objects.bulk_create(log_batch)
+                            version_batch.clear()
+                            log_batch.clear()
+                    if version_batch:
+                        Version.objects.bulk_create(version_batch)
+                        OccurrenceUserAction.objects.bulk_create(log_batch)
 
         if not split_of_species_retains_original:
             # Set the original species from the split to historical and its conservation status to 'closed'
