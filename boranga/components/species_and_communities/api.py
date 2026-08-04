@@ -2018,34 +2018,80 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 request,
             )
 
-        # Reassign all occurrences for all the species being combined to the resulting species
-        occurrences = Occurrence.objects.filter(species__in=combine_species_qs)
+        # Reassign all occurrences for all the species being combined to the resulting species.
+        # Bulk UPDATE instead of a per-occurrence .save() loop — same reasoning as rename_species.
+        user_id = request.user.id if hasattr(request.user, "id") else int(request.user)
+        now = timezone.now()
+        occurrence_ct = ContentType.objects.get_for_model(Occurrence)
 
-        # Deliberately using a loop with .save here instead of a single .update
-        # so that custom code runs that reassigns all related OCRs to also point to the new species
-        for occurrence in occurrences:
-            current_scientific_name = occurrence.species.taxonomy.scientific_name
-            new_scientific_name = resulting_species_instance.taxonomy.scientific_name
-            occurrence.species = resulting_species_instance
-            occurrence.save(version_user=request.user)
+        # Capture pre-update data (IDs and old species names) for action log creation.
+        occ_pre_update = list(
+            Occurrence.objects.filter(species__in=combine_species_qs).values("id", "species__taxonomy__scientific_name")
+        )
+        moved_occ_ids = [row["id"] for row in occ_pre_update]
+        occ_old_species_map = {row["id"]: (row["species__taxonomy__scientific_name"] or "") for row in occ_pre_update}
+        new_combine_species_name = (
+            resulting_species_instance.taxonomy.scientific_name
+            if resulting_species_instance.taxonomy
+            else str(resulting_species_instance)
+        )
 
-            # Log the action
-            occurrence.log_user_action(
-                OccurrenceUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_COMBINE.format(
-                    occurrence.occurrence_number,
-                    current_scientific_name,
-                    new_scientific_name,
-                ),
-                request,
+        if moved_occ_ids:
+            # 1. Update OCRs first (occurrences still point to old species — enables clean filter).
+            OccurrenceReport.objects.filter(
+                occurrence_id__in=moved_occ_ids,
+            ).exclude(species=resulting_species_instance).update(
+                species=resulting_species_instance,
+                datetime_updated=now,
+                last_modified_by=user_id,
             )
-            request.user.log_user_action(
-                OccurrenceUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_COMBINE.format(
-                    occurrence.occurrence_number,
-                    current_scientific_name,
-                    new_scientific_name,
-                ),
-                request,
+
+            # 2. Bulk update occurrences.
+            Occurrence.objects.filter(id__in=moved_occ_ids).update(
+                species=resulting_species_instance,
+                datetime_updated=now,
+                last_modified_by=user_id,
             )
+
+            # 3. Bulk-create reversion versions and per-occurrence action logs.
+            revision = Revision.objects.create(
+                date_created=now,
+                user=request.user,
+                comment=f"Bulk combine into {resulting_species_instance}",
+            )
+            version_batch, log_batch = [], []
+            for occ in Occurrence.objects.filter(id__in=moved_occ_ids).iterator():
+                version_batch.append(
+                    Version(
+                        revision=revision,
+                        object_id=str(occ.pk),
+                        content_type=occurrence_ct,
+                        db="default",
+                        format="json",
+                        serialized_data=dj_serializers.serialize("json", [occ]),
+                        object_repr=str(occ),
+                    )
+                )
+                log_batch.append(
+                    OccurrenceUserAction(
+                        occurrence=occ,
+                        who=user_id,
+                        what=OccurrenceUserAction.ACTION_CHANGE_OCCURRENCE_SPECIES_DUE_TO_COMBINE.format(
+                            occ.occurrence_number,
+                            occ_old_species_map.get(occ.pk, ""),
+                            new_combine_species_name,
+                        ),
+                        when=now,
+                    )
+                )
+                if len(version_batch) >= 500:
+                    Version.objects.bulk_create(version_batch)
+                    OccurrenceUserAction.objects.bulk_create(log_batch)
+                    version_batch.clear()
+                    log_batch.clear()
+            if version_batch:
+                Version.objects.bulk_create(version_batch)
+                OccurrenceUserAction.objects.bulk_create(log_batch)
 
         #  send the combine species email notification
         send_species_combine_email_notification(request, combine_species_qs, resulting_species_instance, actions)
