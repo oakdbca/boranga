@@ -3955,8 +3955,6 @@ class Occurrence(DirtyFieldsMixin, LockableModel, RevisionedMixin):
         app_label = "boranga"
 
     def save(self, *args, version_user=None, **kwargs):
-        # Clear the cache
-        cache.delete(settings.CACHE_KEY_MAP_OCCURRENCES)
         if version_user is not None:
             user_id = version_user.id if hasattr(version_user, "id") else int(version_user)
             self.last_modified_by = user_id
