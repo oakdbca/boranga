@@ -500,6 +500,7 @@
                     <button
                         type="button"
                         class="btn btn-secondary me-2"
+                        :disabled="finalise_split_loading"
                         @click="cancel"
                     >
                         Cancel
@@ -785,7 +786,7 @@ export default {
                 occurrence_assignments: vm.assignmentCheckedState,
             };
             vm.submitSpeciesSplit = true;
-            swal.fire({
+            const swalresult = await swal.fire({
                 title: 'Split Species',
                 text: 'Are you sure you want to split this species?',
                 icon: 'question',
@@ -796,56 +797,43 @@ export default {
                     cancelButton: 'btn btn-secondary',
                 },
                 reverseButtons: true,
-            })
-                .then(async (swalresult) => {
-                    if (swalresult.isConfirmed) {
-                        vm.finalise_split_loading = true;
-                        let submit_url = helpers.add_endpoint_json(
-                            api_endpoints.species,
-                            vm.species_community_original.id + '/split_species'
-                        );
-                        fetch(submit_url, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(payload),
-                        }).then(
-                            async (response) => {
-                                const data = await response.json();
-                                if (!response.ok) {
-                                    swal.fire({
-                                        title: 'Error',
-                                        text: JSON.stringify(data),
-                                        icon: 'error',
-                                        customClass: {
-                                            confirmButton: 'btn btn-primary',
-                                        },
-                                    });
-                                    return;
-                                }
-                                vm.$router.push({
-                                    name: 'internal-species-communities-dash',
-                                });
-                            },
-                            (err) => {
-                                swal.fire({
-                                    title: 'Submit Error',
-                                    text: helpers.apiVueResourceError(err),
-                                    icon: 'error',
-                                    customClass: {
-                                        confirmButton: 'btn btn-primary',
-                                    },
-                                });
-                                vm.saveError = true;
-                            }
-                        );
-                    }
-                })
-                .finally(() => {
-                    vm.finalise_split_loading = false;
-                    vm.submitSpeciesSplit = false;
+            });
+            vm.submitSpeciesSplit = false;
+            if (!swalresult.isConfirmed) return;
+
+            vm.finalise_split_loading = true;
+            try {
+                const submit_url = helpers.add_endpoint_json(
+                    api_endpoints.species,
+                    vm.species_community_original.id + '/split_species'
+                );
+                const response = await fetch(submit_url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
                 });
+                const data = await response.json();
+                if (!response.ok) {
+                    swal.fire({
+                        title: 'Error',
+                        text: JSON.stringify(data),
+                        icon: 'error',
+                        customClass: { confirmButton: 'btn btn-primary' },
+                    });
+                    return;
+                }
+                vm.$router.push({ name: 'internal-species-communities-dash' });
+            } catch (err) {
+                swal.fire({
+                    title: 'Submit Error',
+                    text: helpers.apiVueResourceError(err),
+                    icon: 'error',
+                    customClass: { confirmButton: 'btn btn-primary' },
+                });
+                vm.saveError = true;
+            } finally {
+                vm.finalise_split_loading = false;
+            }
         },
         addSpeciesTab: function () {
             let vm = this;
