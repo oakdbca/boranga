@@ -359,6 +359,17 @@ def _process_geodataframe(gdf, file_name, instance, request, foreign_key_field, 
             f"from SRID {original_srid} to EPSG:{settings.DEFAULT_SRID}: {e}"
         )
 
+    # Drop rows with null/missing geometry before any further processing
+    null_mask = gdf_transform.geometry.isna()
+    if null_mask.any():
+        null_count = int(null_mask.sum())
+        logger.warning("Skipping %d row(s) with null geometry in %s", null_count, file_name)
+        gdf_transform = gdf_transform[~null_mask]
+        if gdf_transform.empty:
+            if archive_files_qs:
+                instance.shapefile_documents.exclude(name__endswith=".zip").delete()
+            raise ValidationError(f"No valid geometries found in {file_name}")
+
     geometries = gdf_transform.geometry  # GeoSeries
 
     # Only accept points or polygons

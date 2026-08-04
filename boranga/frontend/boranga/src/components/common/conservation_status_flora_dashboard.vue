@@ -2259,6 +2259,20 @@ export default {
                 body: JSON.stringify(payload),
             }).then(
                 async (response) => {
+                    if (!response.ok) {
+                        const data = await response.json();
+                        swal.fire({
+                            title: 'Error',
+                            text: Array.isArray(data)
+                                ? data.join(' ')
+                                : data.detail || JSON.stringify(data),
+                            icon: 'error',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            },
+                        });
+                        return;
+                    }
                     vm.meeting_obj.agenda_items_arr = await response.json();
                     vm.$refs.flora_cs_datatable.vmDataTable.ajax.reload(
                         helpers.enablePopovers,
