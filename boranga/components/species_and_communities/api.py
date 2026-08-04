@@ -2117,10 +2117,16 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
 
         # Change all occurrence records to point to the new species.
         # Bulk UPDATE instead of a per-object save loop — at scale (10k+ occurrences)
-        # the loop causes gunicorn worker timeouts. The rename action is logged at
-        # the species level, so per-occurrence revisions are not needed here.
+        # the loop causes gunicorn worker timeouts.
         user_id = request.user.id if hasattr(request.user, "id") else int(request.user)
         now = timezone.now()
+
+        # Capture occurrence data before update for precise version/log creation.
+        occ_log_data = list(Occurrence.objects.filter(species=instance).values_list("id", "occurrence_number"))
+        old_species_name = instance.taxonomy.scientific_name if instance.taxonomy else str(instance)
+        new_species_name = (
+            rename_instance.taxonomy.scientific_name if rename_instance.taxonomy else str(rename_instance)
+        )
 
         # 1. Update OCRs first, while occurrences still point to `instance` (enables clean JOIN filter).
         OccurrenceReport.objects.filter(
@@ -2139,18 +2145,19 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             last_modified_by=user_id,
         )
 
-        # 3. Bulk-create reversion Version rows for the updated occurrences.
+        # 3. Bulk-create reversion Version rows and per-occurrence action logs.
         #    We bypass add_to_revision() to avoid _follow_relations fetching all
         #    child objects per occurrence (which is what caused the original timeout).
         #    Only the occurrence's own fields changed, so child versions are not needed.
+        moved_occ_ids = [occ_id for occ_id, _ in occ_log_data]
         occurrence_ct = ContentType.objects.get_for_model(Occurrence)
         revision = Revision.objects.create(
             date_created=now,
             user=request.user,
             comment=(f"Bulk rename: species changed from {instance} to {rename_instance}"),
         )
-        version_batch, BATCH_SIZE = [], 500
-        for occ in Occurrence.objects.filter(species=rename_instance).iterator():
+        version_batch, log_batch, BATCH_SIZE = [], [], 500
+        for occ in Occurrence.objects.filter(id__in=moved_occ_ids).iterator():
             version_batch.append(
                 Version(
                     revision=revision,
@@ -2162,11 +2169,27 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                     object_repr=str(occ),
                 )
             )
+            log_batch.append(
+                OccurrenceUserAction(
+                    occurrence=occ,
+                    who=user_id,
+                    what=OccurrenceUserAction.ACTION_CHANGE_SPECIES_COMMUNITY.format(
+                        occ.occurrence_number,
+                        "species",
+                        old_species_name,
+                        new_species_name,
+                    ),
+                    when=now,
+                )
+            )
             if len(version_batch) >= BATCH_SIZE:
                 Version.objects.bulk_create(version_batch)
+                OccurrenceUserAction.objects.bulk_create(log_batch)
                 version_batch.clear()
+                log_batch.clear()
         if version_batch:
             Version.objects.bulk_create(version_batch)
+            OccurrenceUserAction.objects.bulk_create(log_batch)
 
         # Log action
         instance.log_user_action(
