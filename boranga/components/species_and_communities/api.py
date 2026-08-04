@@ -4,10 +4,13 @@ import mimetypes
 from datetime import datetime, timedelta
 
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
+from django.core import serializers as dj_serializers
 from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Exists, OuterRef, Q
 from django.http import HttpResponse
+from django.utils import timezone
 from rest_framework import mixins, serializers, status, views, viewsets
 from rest_framework.decorators import action as detail_route
 from rest_framework.decorators import action as list_route
@@ -17,6 +20,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework_datatables.filters import DatatablesFilterBackend
 from rest_framework_datatables.pagination import DatatablesPageNumberPagination
+from reversion.models import Revision, Version
 
 from boranga.components.conservation_status.models import (
     CommonwealthConservationList,
@@ -36,6 +40,7 @@ from boranga.components.occurrence.api import OCCConservationThreatFilterBackend
 from boranga.components.occurrence.models import (
     OCCConservationThreat,
     Occurrence,
+    OccurrenceReport,
     OccurrenceUserAction,
 )
 from boranga.components.occurrence.serializers import OCCConservationThreatSerializer
@@ -2110,13 +2115,58 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         # set the original species from the rename to historical
         rename_species_original_submit(instance, rename_instance, request)
 
-        # Change all occurrence records to point to the new species
-        occurrences = Occurrence.objects.filter(species=instance)
-        # Using a loop with .save here instead of a single .update so custom code runs that reassigns all
-        # OCRs to also point to the new species
-        for occurrence in occurrences:
-            occurrence.species = rename_instance
-            occurrence.save(version_user=request.user)
+        # Change all occurrence records to point to the new species.
+        # Bulk UPDATE instead of a per-object save loop — at scale (10k+ occurrences)
+        # the loop causes gunicorn worker timeouts. The rename action is logged at
+        # the species level, so per-occurrence revisions are not needed here.
+        user_id = request.user.id if hasattr(request.user, "id") else int(request.user)
+        now = timezone.now()
+
+        # 1. Update OCRs first, while occurrences still point to `instance` (enables clean JOIN filter).
+        OccurrenceReport.objects.filter(
+            occurrence__species=instance,
+            species=instance,
+        ).update(
+            species=rename_instance,
+            datetime_updated=now,
+            last_modified_by=user_id,
+        )
+
+        # 2. Bulk update occurrences.
+        Occurrence.objects.filter(species=instance).update(
+            species=rename_instance,
+            datetime_updated=now,
+            last_modified_by=user_id,
+        )
+
+        # 3. Bulk-create reversion Version rows for the updated occurrences.
+        #    We bypass add_to_revision() to avoid _follow_relations fetching all
+        #    child objects per occurrence (which is what caused the original timeout).
+        #    Only the occurrence's own fields changed, so child versions are not needed.
+        occurrence_ct = ContentType.objects.get_for_model(Occurrence)
+        revision = Revision.objects.create(
+            date_created=now,
+            user=request.user,
+            comment=(f"Bulk rename: species changed from {instance} to {rename_instance}"),
+        )
+        version_batch, BATCH_SIZE = [], 500
+        for occ in Occurrence.objects.filter(species=rename_instance).iterator():
+            version_batch.append(
+                Version(
+                    revision=revision,
+                    object_id=str(occ.pk),
+                    content_type=occurrence_ct,
+                    db="default",
+                    format="json",
+                    serialized_data=dj_serializers.serialize("json", [occ]),
+                    object_repr=str(occ),
+                )
+            )
+            if len(version_batch) >= BATCH_SIZE:
+                Version.objects.bulk_create(version_batch)
+                version_batch.clear()
+        if version_batch:
+            Version.objects.bulk_create(version_batch)
 
         # Log action
         instance.log_user_action(
