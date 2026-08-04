@@ -431,6 +431,8 @@ class MeetingViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 cs = ConservationStatus.objects.get(id=cs_id)
             except ConservationStatus.DoesNotExist:
                 raise serializers.ValidationError("Conservation status not found")
+            if instance.agenda_items.filter(conservation_status=cs).exists():
+                raise serializers.ValidationError("This conservation status is already on the agenda for this meeting")
             instance.agenda_items.create(conservation_status=cs)
             cs.processing_status = ConservationStatus.PROCESSING_STATUS_ON_AGENDA
             cs.save()
