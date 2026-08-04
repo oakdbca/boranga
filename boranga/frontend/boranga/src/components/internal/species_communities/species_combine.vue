@@ -277,6 +277,7 @@
                     <button
                         type="button"
                         class="btn btn-secondary me-2"
+                        :disabled="submittingSpeciesCombine"
                         @click="cancel"
                     >
                         Cancel
