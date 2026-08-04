@@ -72,7 +72,7 @@ COPY --chown=oim:oim scripts/combine_csvs.py \
                       scripts/dedupe_errors.py \
                       scripts/generate_uat_fixtures.sh \
                       scripts/partition_migration_data.py \
-                      scripts/repport_duplicate_geometries.py \
+                      scripts/report_duplicate_geometries.py \
                       scripts/split_csv.py \
                       scripts/split_tfauna_csv.py \
                       ./scripts/
