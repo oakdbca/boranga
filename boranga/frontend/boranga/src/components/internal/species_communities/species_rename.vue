@@ -239,7 +239,7 @@ export default {
 
             const swalresult = await swal.fire({
                 title: 'Rename Species',
-                text: 'Are you sure you want to rename this species?',
+                html: '<p>Are you sure you want to rename this species?</p><p class="small text-muted">Note: Renaming a species that has many occurrences can take up to a minute</p>',
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: 'Rename Species',
