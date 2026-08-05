@@ -46,7 +46,7 @@
                 </div>
                 <div v-if="loading" class="text-center py-4">
                     <span
-                        class="spinner-border spinner-border-sm me-2"
+                        class="spinner-border spinner-border-sm text-primary me-2"
                         role="status"
                         aria-hidden="true"
                     ></span>
