@@ -41,6 +41,7 @@ from boranga.components.occurrence.models import (
     OCCConservationThreat,
     Occurrence,
     OccurrenceReport,
+    OccurrenceReportUserAction,
     OccurrenceUserAction,
 )
 from boranga.components.occurrence.serializers import OCCConservationThreatSerializer
@@ -1781,6 +1782,15 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 for tid, occ_ids in by_species.items():
                     target_species = species_map[tid]
 
+                    # Capture OCR IDs before update for version/log creation.
+                    updated_ocr_ids = list(
+                        OccurrenceReport.objects.filter(
+                            occurrence_id__in=occ_ids,
+                        )
+                        .exclude(species=target_species)
+                        .values_list("id", flat=True)
+                    )
+
                     # Update OCRs first (before occurrence update, to match update_child_ocrs logic)
                     OccurrenceReport.objects.filter(
                         occurrence_id__in=occ_ids,
@@ -1812,6 +1822,9 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                     # Bulk-create reversion versions and per-occurrence action logs.
                     old_name = instance.taxonomy.scientific_name if instance.taxonomy else str(instance)
                     new_name = target_species.taxonomy.scientific_name
+                    occ_number_map = dict(
+                        Occurrence.objects.filter(id__in=occ_ids).values_list("id", "occurrence_number")
+                    )
                     version_batch, log_batch = [], []
                     for occ, revision in zip(Occurrence.objects.filter(id__in=occ_ids).iterator(), revision_list):
                         version_batch.append(
@@ -1845,6 +1858,55 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                     if version_batch:
                         Version.objects.bulk_create(version_batch)
                         OccurrenceUserAction.objects.bulk_create(log_batch)
+
+                    # Bulk-create reversion versions and action logs for the updated OCRs.
+                    if updated_ocr_ids:
+                        ocr_ct = ContentType.objects.get_for_model(OccurrenceReport)
+                        ocr_revision_list = Revision.objects.bulk_create(
+                            [
+                                Revision(
+                                    date_created=now,
+                                    user=request.user,
+                                    comment=f"Split from {instance}",
+                                )
+                                for _ in updated_ocr_ids
+                            ]
+                        )
+                        version_batch, log_batch = [], []
+                        for ocr, revision in zip(
+                            OccurrenceReport.objects.filter(id__in=updated_ocr_ids).iterator(), ocr_revision_list
+                        ):
+                            version_batch.append(
+                                Version(
+                                    revision=revision,
+                                    object_id=str(ocr.pk),
+                                    content_type=ocr_ct,
+                                    db="default",
+                                    format="json",
+                                    serialized_data=dj_serializers.serialize("json", [ocr]),
+                                    object_repr=str(ocr),
+                                )
+                            )
+                            log_batch.append(
+                                OccurrenceReportUserAction(
+                                    occurrence_report=ocr,
+                                    who=user_id,
+                                    what=OccurrenceReportUserAction.ACTION_UPDATE_SPECIES_FROM_OCCURRENCE.format(
+                                        old_name,
+                                        new_name,
+                                        occ_number_map.get(ocr.occurrence_id, ocr.occurrence_id),
+                                    ),
+                                    when=now,
+                                )
+                            )
+                            if len(version_batch) >= 500:
+                                Version.objects.bulk_create(version_batch)
+                                OccurrenceReportUserAction.objects.bulk_create(log_batch)
+                                version_batch.clear()
+                                log_batch.clear()
+                        if version_batch:
+                            Version.objects.bulk_create(version_batch)
+                            OccurrenceReportUserAction.objects.bulk_create(log_batch)
 
         if not split_of_species_retains_original:
             # Set the original species from the split to historical and its conservation status to 'closed'
@@ -2089,9 +2151,12 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
 
         # Capture pre-update data (IDs and old species names) for action log creation.
         occ_pre_update = list(
-            Occurrence.objects.filter(species__in=combine_species_qs).values("id", "species__taxonomy__scientific_name")
+            Occurrence.objects.filter(species__in=combine_species_qs).values(
+                "id", "occurrence_number", "species__taxonomy__scientific_name"
+            )
         )
         moved_occ_ids = [row["id"] for row in occ_pre_update]
+        occ_number_map = {row["id"]: row["occurrence_number"] for row in occ_pre_update}
         occ_old_species_map = {row["id"]: (row["species__taxonomy__scientific_name"] or "") for row in occ_pre_update}
         new_combine_species_name = (
             resulting_species_instance.taxonomy.scientific_name
@@ -2101,6 +2166,14 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
 
         if moved_occ_ids:
             # 1. Update OCRs first (occurrences still point to old species — enables clean filter).
+            # Capture OCR IDs before update for version/log creation.
+            updated_ocr_ids = list(
+                OccurrenceReport.objects.filter(
+                    occurrence_id__in=moved_occ_ids,
+                )
+                .exclude(species=resulting_species_instance)
+                .values_list("id", flat=True)
+            )
             OccurrenceReport.objects.filter(
                 occurrence_id__in=moved_occ_ids,
             ).exclude(species=resulting_species_instance).update(
@@ -2161,6 +2234,55 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             if version_batch:
                 Version.objects.bulk_create(version_batch)
                 OccurrenceUserAction.objects.bulk_create(log_batch)
+
+            # 4. Bulk-create reversion versions and action logs for the updated OCRs.
+            if updated_ocr_ids:
+                ocr_ct = ContentType.objects.get_for_model(OccurrenceReport)
+                ocr_revision_list = Revision.objects.bulk_create(
+                    [
+                        Revision(
+                            date_created=now,
+                            user=request.user,
+                            comment=f"Combine into {resulting_species_instance}",
+                        )
+                        for _ in updated_ocr_ids
+                    ]
+                )
+                version_batch, log_batch = [], []
+                for ocr, revision in zip(
+                    OccurrenceReport.objects.filter(id__in=updated_ocr_ids).iterator(), ocr_revision_list
+                ):
+                    version_batch.append(
+                        Version(
+                            revision=revision,
+                            object_id=str(ocr.pk),
+                            content_type=ocr_ct,
+                            db="default",
+                            format="json",
+                            serialized_data=dj_serializers.serialize("json", [ocr]),
+                            object_repr=str(ocr),
+                        )
+                    )
+                    log_batch.append(
+                        OccurrenceReportUserAction(
+                            occurrence_report=ocr,
+                            who=user_id,
+                            what=OccurrenceReportUserAction.ACTION_UPDATE_SPECIES_FROM_OCCURRENCE.format(
+                                occ_old_species_map.get(ocr.occurrence_id, ""),
+                                new_combine_species_name,
+                                occ_number_map.get(ocr.occurrence_id, ocr.occurrence_id),
+                            ),
+                            when=now,
+                        )
+                    )
+                    if len(version_batch) >= 500:
+                        Version.objects.bulk_create(version_batch)
+                        OccurrenceReportUserAction.objects.bulk_create(log_batch)
+                        version_batch.clear()
+                        log_batch.clear()
+                if version_batch:
+                    Version.objects.bulk_create(version_batch)
+                    OccurrenceReportUserAction.objects.bulk_create(log_batch)
 
         #  send the combine species email notification
         send_species_combine_email_notification(request, combine_species_qs, resulting_species_instance, actions)
@@ -2238,12 +2360,21 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
 
         # Capture occurrence data before update for precise version/log creation.
         occ_log_data = list(Occurrence.objects.filter(species=instance).values_list("id", "occurrence_number"))
+        moved_occ_ids = [occ_id for occ_id, _ in occ_log_data]
+        occ_number_map = dict(occ_log_data)
         old_species_name = instance.taxonomy.scientific_name if instance.taxonomy else str(instance)
         new_species_name = (
             rename_instance.taxonomy.scientific_name if rename_instance.taxonomy else str(rename_instance)
         )
 
         # 1. Update OCRs first, while occurrences still point to `instance` (enables clean JOIN filter).
+        # Capture OCR IDs before the update for version/log creation.
+        updated_ocr_ids = list(
+            OccurrenceReport.objects.filter(
+                occurrence__species=instance,
+                species=instance,
+            ).values_list("id", flat=True)
+        )
         OccurrenceReport.objects.filter(
             occurrence__species=instance,
             species=instance,
@@ -2266,7 +2397,6 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         #    Only the occurrence's own fields changed, so child versions are not needed.
         #    One Revision per occurrence — a shared Revision causes GetRevisionVersionsView
         #    to return all N occurrences when viewing any single occurrence's history entry.
-        moved_occ_ids = [occ_id for occ_id, _ in occ_log_data]
         occurrence_ct = ContentType.objects.get_for_model(Occurrence)
         revision_list = Revision.objects.bulk_create(
             [
@@ -2312,6 +2442,55 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         if version_batch:
             Version.objects.bulk_create(version_batch)
             OccurrenceUserAction.objects.bulk_create(log_batch)
+
+        # 4. Bulk-create reversion Version rows and action logs for the updated OCRs.
+        if updated_ocr_ids:
+            ocr_ct = ContentType.objects.get_for_model(OccurrenceReport)
+            ocr_revision_list = Revision.objects.bulk_create(
+                [
+                    Revision(
+                        date_created=now,
+                        user=request.user,
+                        comment=f"Rename: species changed from {instance} to {rename_instance}",
+                    )
+                    for _ in updated_ocr_ids
+                ]
+            )
+            version_batch, log_batch = [], []
+            for ocr, revision in zip(
+                OccurrenceReport.objects.filter(id__in=updated_ocr_ids).iterator(), ocr_revision_list
+            ):
+                version_batch.append(
+                    Version(
+                        revision=revision,
+                        object_id=str(ocr.pk),
+                        content_type=ocr_ct,
+                        db="default",
+                        format="json",
+                        serialized_data=dj_serializers.serialize("json", [ocr]),
+                        object_repr=str(ocr),
+                    )
+                )
+                log_batch.append(
+                    OccurrenceReportUserAction(
+                        occurrence_report=ocr,
+                        who=user_id,
+                        what=OccurrenceReportUserAction.ACTION_UPDATE_SPECIES_FROM_OCCURRENCE.format(
+                            old_species_name,
+                            new_species_name,
+                            occ_number_map.get(ocr.occurrence_id, ocr.occurrence_id),
+                        ),
+                        when=now,
+                    )
+                )
+                if len(version_batch) >= BATCH_SIZE:
+                    Version.objects.bulk_create(version_batch)
+                    OccurrenceReportUserAction.objects.bulk_create(log_batch)
+                    version_batch.clear()
+                    log_batch.clear()
+            if version_batch:
+                Version.objects.bulk_create(version_batch)
+                OccurrenceReportUserAction.objects.bulk_create(log_batch)
 
         # Log action
         instance.log_user_action(
