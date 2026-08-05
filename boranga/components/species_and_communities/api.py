@@ -1825,6 +1825,11 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                     occ_number_map = dict(
                         Occurrence.objects.filter(id__in=occ_ids).values_list("id", "occurrence_number")
                     )
+                    # Pre-compute taxonomy version data for this target species.
+                    new_taxonomy = target_species.taxonomy
+                    taxonomy_ct = ContentType.objects.get_for_model(Taxonomy) if new_taxonomy else None
+                    taxonomy_data = dj_serializers.serialize("json", [new_taxonomy]) if new_taxonomy else None
+                    taxonomy_repr = str(new_taxonomy) if new_taxonomy else ""
                     version_batch, log_batch = [], []
                     for occ, revision in zip(Occurrence.objects.filter(id__in=occ_ids).iterator(), revision_list):
                         version_batch.append(
@@ -1858,6 +1863,24 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                     if version_batch:
                         Version.objects.bulk_create(version_batch)
                         OccurrenceUserAction.objects.bulk_create(log_batch)
+
+                    # Add taxonomy version to each occurrence revision.
+                    if taxonomy_ct and revision_list:
+                        Version.objects.bulk_create(
+                            [
+                                Version(
+                                    revision=rev,
+                                    object_id=str(new_taxonomy.pk),
+                                    content_type=taxonomy_ct,
+                                    db="default",
+                                    format="json",
+                                    serialized_data=taxonomy_data,
+                                    object_repr=taxonomy_repr,
+                                )
+                                for rev in revision_list
+                            ],
+                            batch_size=500,
+                        )
 
                     # Bulk-create reversion versions and action logs for the updated OCRs.
                     if updated_ocr_ids:
@@ -1907,6 +1930,24 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                         if version_batch:
                             Version.objects.bulk_create(version_batch)
                             OccurrenceReportUserAction.objects.bulk_create(log_batch)
+
+                        # Add taxonomy version to each OCR revision.
+                        if taxonomy_ct and ocr_revision_list:
+                            Version.objects.bulk_create(
+                                [
+                                    Version(
+                                        revision=rev,
+                                        object_id=str(new_taxonomy.pk),
+                                        content_type=taxonomy_ct,
+                                        db="default",
+                                        format="json",
+                                        serialized_data=taxonomy_data,
+                                        object_repr=taxonomy_repr,
+                                    )
+                                    for rev in ocr_revision_list
+                                ],
+                                batch_size=500,
+                            )
 
         if not split_of_species_retains_original:
             # Set the original species from the split to historical and its conservation status to 'closed'
@@ -2148,6 +2189,11 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         user_id = request.user.id if hasattr(request.user, "id") else int(request.user)
         now = timezone.now()
         occurrence_ct = ContentType.objects.get_for_model(Occurrence)
+        # Pre-compute taxonomy version data for the resulting species.
+        new_taxonomy = resulting_species_instance.taxonomy
+        taxonomy_ct = ContentType.objects.get_for_model(Taxonomy) if new_taxonomy else None
+        taxonomy_data = dj_serializers.serialize("json", [new_taxonomy]) if new_taxonomy else None
+        taxonomy_repr = str(new_taxonomy) if new_taxonomy else ""
 
         # Capture pre-update data (IDs and old species names) for action log creation.
         occ_pre_update = list(
@@ -2235,6 +2281,24 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 Version.objects.bulk_create(version_batch)
                 OccurrenceUserAction.objects.bulk_create(log_batch)
 
+            # Add taxonomy version to each occurrence revision.
+            if taxonomy_ct and revision_list:
+                Version.objects.bulk_create(
+                    [
+                        Version(
+                            revision=rev,
+                            object_id=str(new_taxonomy.pk),
+                            content_type=taxonomy_ct,
+                            db="default",
+                            format="json",
+                            serialized_data=taxonomy_data,
+                            object_repr=taxonomy_repr,
+                        )
+                        for rev in revision_list
+                    ],
+                    batch_size=500,
+                )
+
             # 4. Bulk-create reversion versions and action logs for the updated OCRs.
             if updated_ocr_ids:
                 ocr_ct = ContentType.objects.get_for_model(OccurrenceReport)
@@ -2283,6 +2347,24 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 if version_batch:
                     Version.objects.bulk_create(version_batch)
                     OccurrenceReportUserAction.objects.bulk_create(log_batch)
+
+                # Add taxonomy version to each OCR revision.
+                if taxonomy_ct and ocr_revision_list:
+                    Version.objects.bulk_create(
+                        [
+                            Version(
+                                revision=rev,
+                                object_id=str(new_taxonomy.pk),
+                                content_type=taxonomy_ct,
+                                db="default",
+                                format="json",
+                                serialized_data=taxonomy_data,
+                                object_repr=taxonomy_repr,
+                            )
+                            for rev in ocr_revision_list
+                        ],
+                        batch_size=500,
+                    )
 
         #  send the combine species email notification
         send_species_combine_email_notification(request, combine_species_qs, resulting_species_instance, actions)
@@ -2398,6 +2480,13 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         #    One Revision per occurrence — a shared Revision causes GetRevisionVersionsView
         #    to return all N occurrences when viewing any single occurrence's history entry.
         occurrence_ct = ContentType.objects.get_for_model(Occurrence)
+        # Pre-compute taxonomy version data (same for all occurrences in this rename).
+        # Adding a taxonomy Version to each revision populates data.data.taxonomy.fields.scientific_name
+        # in the history datatable without running _follow_relations per occurrence.
+        new_taxonomy = rename_instance.taxonomy
+        taxonomy_ct = ContentType.objects.get_for_model(Taxonomy) if new_taxonomy else None
+        taxonomy_data = dj_serializers.serialize("json", [new_taxonomy]) if new_taxonomy else None
+        taxonomy_repr = str(new_taxonomy) if new_taxonomy else ""
         revision_list = Revision.objects.bulk_create(
             [
                 Revision(
@@ -2442,6 +2531,24 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         if version_batch:
             Version.objects.bulk_create(version_batch)
             OccurrenceUserAction.objects.bulk_create(log_batch)
+
+        # Add taxonomy version to each occurrence revision (needed for scientific_name column in history).
+        if taxonomy_ct and revision_list:
+            Version.objects.bulk_create(
+                [
+                    Version(
+                        revision=rev,
+                        object_id=str(new_taxonomy.pk),
+                        content_type=taxonomy_ct,
+                        db="default",
+                        format="json",
+                        serialized_data=taxonomy_data,
+                        object_repr=taxonomy_repr,
+                    )
+                    for rev in revision_list
+                ],
+                batch_size=500,
+            )
 
         # 4. Bulk-create reversion Version rows and action logs for the updated OCRs.
         if updated_ocr_ids:
@@ -2491,6 +2598,24 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             if version_batch:
                 Version.objects.bulk_create(version_batch)
                 OccurrenceReportUserAction.objects.bulk_create(log_batch)
+
+            # Add taxonomy version to each OCR revision.
+            if taxonomy_ct and ocr_revision_list:
+                Version.objects.bulk_create(
+                    [
+                        Version(
+                            revision=rev,
+                            object_id=str(new_taxonomy.pk),
+                            content_type=taxonomy_ct,
+                            db="default",
+                            format="json",
+                            serialized_data=taxonomy_data,
+                            object_repr=taxonomy_repr,
+                        )
+                        for rev in ocr_revision_list
+                    ],
+                    batch_size=500,
+                )
 
         # Log action
         instance.log_user_action(
