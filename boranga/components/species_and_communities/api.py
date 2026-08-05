@@ -1773,11 +1773,6 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                 # Phase 2: bulk UPDATE grouped by target species.
                 # Bulk UPDATE instead of per-occurrence .save() loop — same reasoning as rename_species.
                 occurrence_ct = ContentType.objects.get_for_model(Occurrence)
-                revision = Revision.objects.create(
-                    date_created=now,
-                    user=request.user,
-                    comment=f"Bulk split from {instance}",
-                )
 
                 by_species = {}
                 for occ_id, tid in moving.items():
@@ -1802,11 +1797,23 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                         last_modified_by=user_id,
                     )
 
+                    # One Revision per occurrence — see rename_species for explanation.
+                    revision_list = Revision.objects.bulk_create(
+                        [
+                            Revision(
+                                date_created=now,
+                                user=request.user,
+                                comment=f"Split from {instance}",
+                            )
+                            for _ in occ_ids
+                        ]
+                    )
+
                     # Bulk-create reversion versions and per-occurrence action logs.
                     old_name = instance.taxonomy.scientific_name if instance.taxonomy else str(instance)
                     new_name = target_species.taxonomy.scientific_name
                     version_batch, log_batch = [], []
-                    for occ in Occurrence.objects.filter(id__in=occ_ids).iterator():
+                    for occ, revision in zip(Occurrence.objects.filter(id__in=occ_ids).iterator(), revision_list):
                         version_batch.append(
                             Version(
                                 revision=revision,
@@ -2110,13 +2117,19 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
             )
 
             # 3. Bulk-create reversion versions and per-occurrence action logs.
-            revision = Revision.objects.create(
-                date_created=now,
-                user=request.user,
-                comment=f"Bulk combine into {resulting_species_instance}",
+            # One Revision per occurrence — see rename_species for explanation.
+            revision_list = Revision.objects.bulk_create(
+                [
+                    Revision(
+                        date_created=now,
+                        user=request.user,
+                        comment=f"Combine into {resulting_species_instance}",
+                    )
+                    for _ in moved_occ_ids
+                ]
             )
             version_batch, log_batch = [], []
-            for occ in Occurrence.objects.filter(id__in=moved_occ_ids).iterator():
+            for occ, revision in zip(Occurrence.objects.filter(id__in=moved_occ_ids).iterator(), revision_list):
                 version_batch.append(
                     Version(
                         revision=revision,
@@ -2251,15 +2264,22 @@ class SpeciesViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         #    We bypass add_to_revision() to avoid _follow_relations fetching all
         #    child objects per occurrence (which is what caused the original timeout).
         #    Only the occurrence's own fields changed, so child versions are not needed.
+        #    One Revision per occurrence — a shared Revision causes GetRevisionVersionsView
+        #    to return all N occurrences when viewing any single occurrence's history entry.
         moved_occ_ids = [occ_id for occ_id, _ in occ_log_data]
         occurrence_ct = ContentType.objects.get_for_model(Occurrence)
-        revision = Revision.objects.create(
-            date_created=now,
-            user=request.user,
-            comment=(f"Bulk rename: species changed from {instance} to {rename_instance}"),
+        revision_list = Revision.objects.bulk_create(
+            [
+                Revision(
+                    date_created=now,
+                    user=request.user,
+                    comment=f"Rename: species changed from {instance} to {rename_instance}",
+                )
+                for _ in moved_occ_ids
+            ]
         )
         version_batch, log_batch, BATCH_SIZE = [], [], 500
-        for occ in Occurrence.objects.filter(id__in=moved_occ_ids).iterator():
+        for occ, revision in zip(Occurrence.objects.filter(id__in=moved_occ_ids).iterator(), revision_list):
             version_batch.append(
                 Version(
                     revision=revision,
