@@ -73,6 +73,15 @@ approved_cs AS (
     AND cs.species_id IS NOT NULL
 ),
 
+-- -- Animal Observation (Fauna-specific) -------------------------------------
+animal_obs AS (
+    SELECT
+        ao.occurrence_id,
+        ao.obs_date
+    FROM boranga_occanimalobservation ao
+),
+
+
 -- -- OCC Location Accuracy --------------------------------------------------
 loc AS (
     SELECT
@@ -137,7 +146,7 @@ SELECT
     active_cs.commonwealth_conservation_code AS COMWLTH_CS,
     
     -- Administrative metadata
-    NULL::date AS OBS_DATE,
+    animal_obs.obs_date AS OBS_DATE,
     loc.location_accuracy AS LOC_ACC,
     identification.identification_certainty AS IDENT_CRTY,
     obs_detail.observation_method AS DET_METHOD,
@@ -148,6 +157,7 @@ INNER JOIN geom ON occ.id = geom.occurrence_id
 LEFT JOIN species ON occ.species_id = species.id
 LEFT JOIN active_cs ON species.id = active_cs.species_id
 LEFT JOIN approved_cs ON species.id = approved_cs.species_id
+LEFT JOIN animal_obs ON occ.id = animal_obs.occurrence_id
 LEFT JOIN loc ON occ.id = loc.occurrence_id
 LEFT JOIN identification ON occ.id = identification.occurrence_id
 LEFT JOIN obs_detail ON occ.id = obs_detail.occurrence_id

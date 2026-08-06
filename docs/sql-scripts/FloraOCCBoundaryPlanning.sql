@@ -70,6 +70,14 @@ approved_cs AS (
     AND cs.species_id IS NOT NULL
 ),
 
+-- -- Plant Count (Flora-specific) --------------------------------------------
+plant_count AS (
+    SELECT
+        pc.occurrence_id,
+        pc.obs_date
+    FROM boranga_occplantcount pc
+),
+
 -- -- OCC Location Accuracy --------------------------------------------------
 loc AS (
     SELECT
@@ -122,7 +130,7 @@ SELECT
     active_cs.commonwealth_conservation_code AS COMWLTH_CS,
     
     -- Administrative metadata (Null placeholders used if OCC tracks date via reports only)
-    NULL::date AS OBS_DATE, 
+    plant_count.obs_date AS OBS_DATE,
     loc.location_accuracy AS LOC_ACC,
     identification.identification_certainty AS IDENT_CRTY,
     gt.name AS GROUP_TYPE
@@ -132,6 +140,7 @@ INNER JOIN geom ON occ.id = geom.occurrence_id
 LEFT JOIN species ON occ.species_id = species.id
 LEFT JOIN active_cs ON species.id = active_cs.species_id
 LEFT JOIN approved_cs ON species.id = approved_cs.species_id
+LEFT JOIN plant_count ON occ.id = plant_count.occurrence_id
 LEFT JOIN loc ON occ.id = loc.occurrence_id
 LEFT JOIN identification ON occ.id = identification.occurrence_id
 ORDER BY occ.occurrence_number, geom.geom_id;
