@@ -104,6 +104,8 @@ geom AS (
         g.id AS geom_id,
         g.occurrence_id,
         g.geometry,
+        ST_X(g.geometry)  AS longitude,
+        ST_Y(g.geometry)  AS latitude,        
         g.updated_date
     FROM boranga_occurrencegeometry g
     WHERE ST_GeometryType(g.geometry) IN ('ST_Point')
