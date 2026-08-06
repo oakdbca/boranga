@@ -123,6 +123,8 @@ SELECT
     
     -- Spatial layers (ST_Transform to 7844 is a supervisor mandated no-op)
     ST_Transform(geom.geometry, 7844) AS GEOMETRY,
+    geom.latitude AS LAT,
+    geom.longitude AS LONG,
     TO_CHAR(geom.updated_date, 'YYYY-MM-DD HH24:MI:SS') AS GEO_MODIFY,
     
     -- Legislative tracking
