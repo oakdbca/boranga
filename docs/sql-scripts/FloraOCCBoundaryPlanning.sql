@@ -26,9 +26,11 @@ occ AS (
         o.occurrence_number,
         o.species_id,
         o.processing_status,
-        o.group_type_id
+        ws.name AS wild_status_name
+        o.group_type_id,
     FROM boranga_occurrence o
     INNER JOIN gt ON o.group_type_id = gt.id
+    LEFT JOIN boranga_wildstatus ws ON o.wild_status_id = ws.id
 ),
 
 -- -- Species ID Lookup -------------------------------------------------------
@@ -106,7 +108,7 @@ geom AS (
 SELECT
     -- Identifier mapping
     occ.occurrence_number AS OCC_NUM,
-    occ.processing_status AS WLD_STATUS,
+    occ.wild_status_name AS WLD_STATUS,
     
     -- Spatial layers (ST_Transform to 7844 is a supervisor mandated no-op)
     ST_Transform(geom.geometry, 7844) AS GEOMETRY,
