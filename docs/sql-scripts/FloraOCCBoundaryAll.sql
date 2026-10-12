@@ -128,6 +128,7 @@ plant_count AS (
         pcm.name AS plant_count_method,
         csb.name AS counted_subject,
         pc.simple_alive,
+        pc.simple_dead,
         pc.detailed_alive_mature,
         pc.comment,
         CASE WHEN pc.flower_present = TRUE THEN 'Yes'
@@ -278,6 +279,7 @@ SELECT
     plant_count.plant_count_method                 AS CNT_MTHD,
     plant_count.counted_subject                    AS CNT_SUBJ,
     plant_count.simple_alive                       AS PL_SMP_ALV,
+    plant_count.simple_dead                        AS PL_SMP_DEA,
     plant_count.detailed_alive_mature              AS PL_ALV_MAT,
     plant_count.comment                            AS PLCNT_COMM,
     plant_count.flower_present                     AS IN_FLOWER,
