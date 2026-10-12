@@ -7203,16 +7203,29 @@ class OccurrenceReportBulkImportTask(ArchivableModel):
                         if not occ_is_new:
                             current_model_instance = Occurrence.objects.get(migrated_from_id=occ_migrated_from_id)
                         else:
-                            current_model_instance = Occurrence.objects.create(
-                                migrated_from_id=occ_migrated_from_id,
-                                group_type=self.schema.group_type,
-                                occurrence_source=Occurrence.OCCURRENCE_CHOICE_OCR,
-                            )
                             ocr_instance = model_instances[OccurrenceReport._meta.model_name]
-                            if ocr_instance.species:
-                                current_model_instance.species = ocr_instance.species
-                            else:
-                                current_model_instance.community = ocr_instance.community
+                            occ_name_from_cols = model_data.pop("occurrence_name", None)
+                            
+                            # Check for new_occurrence_name from approval details if present
+                            _orfapp_data_for_name = dict(
+                                zip(
+                                    models.get(OccurrenceReportApprovalDetails._meta.model_name, {}).get(
+                                        "field_names", []
+                                    ),
+                                    models.get(OccurrenceReportApprovalDetails._meta.model_name, {}).get("values", []),
+                                )
+                            )
+                            _new_name = _orfapp_data_for_name.get("new_occurrence_name")
+                            if _new_name:
+                                occ_name_from_cols = _new_name
+
+                            current_model_instance = Occurrence.clone_from_occurrence_report(
+                                ocr_instance,
+                                occurrence_name=occ_name_from_cols,
+                                migrated_from_id=occ_migrated_from_id,
+                                extra_fields=model_data
+                            )
+
                         if not current_model_instance.group_type == self.schema.group_type:
                             error_message = (
                                 "The group type of the occurrence does not match the group type of the schema"
@@ -7261,25 +7274,6 @@ class OccurrenceReportBulkImportTask(ArchivableModel):
                                 }
                             )
                             return
-
-                        # Only apply extra fields (e.g. wild_status, comment) when the
-                        # OCC was newly created — not when linking to an existing one.
-                        if occ_is_new:
-                            for field, value in model_data.items():
-                                setattr(current_model_instance, field, value)
-                            # Apply new_occurrence_name from ORFAPP data after model_data
-                            # fields so it always wins over an empty 'Occurrence Name' column.
-                            _orfapp_data_for_name = dict(
-                                zip(
-                                    models.get(OccurrenceReportApprovalDetails._meta.model_name, {}).get(
-                                        "field_names", []
-                                    ),
-                                    models.get(OccurrenceReportApprovalDetails._meta.model_name, {}).get("values", []),
-                                )
-                            )
-                            _new_name = _orfapp_data_for_name.get("new_occurrence_name")
-                            if _new_name:
-                                current_model_instance.occurrence_name = _new_name
 
             elif current_model_name == SubmitterInformation._meta.model_name:
                 # Submitter information is created automatically when an OccurrenceReport is created
