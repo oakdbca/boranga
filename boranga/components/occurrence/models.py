@@ -4667,7 +4667,7 @@ class Occurrence(DirtyFieldsMixin, LockableModel, RevisionedMixin):
 
     @classmethod
     @transaction.atomic
-    def clone_from_occurrence_report(cls, occurrence_report, occurrence_name=None):
+    def clone_from_occurrence_report(cls, occurrence_report, occurrence_name=None, migrated_from_id=None, extra_fields=None):
         occurrence = cls()
 
         occurrence.group_type = occurrence_report.group_type
@@ -4679,6 +4679,15 @@ class Occurrence(DirtyFieldsMixin, LockableModel, RevisionedMixin):
         
         if occurrence_name:
             occurrence.occurrence_name = occurrence_name
+
+        if migrated_from_id:
+            occurrence.migrated_from_id = migrated_from_id
+
+        # Apply any explicit column/extra data last so user-supplied inputs take precedence
+        if extra_fields:
+            for field, value in extra_fields.items():
+                if value is not None:
+                    setattr(occurrence, field, value)
 
         occurrence.save(no_revision=True)
 
