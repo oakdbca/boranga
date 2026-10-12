@@ -7605,20 +7605,14 @@ class OccurrenceReportBulkImportTask(ArchivableModel):
                     ocr_instance.occurrence = existing_occ_from_occ_columns
                     ocr_instance.save()
                 else:
-                    # Case 2b: pure ORFAPP path — create a new Occurrence from new_occurrence_name.
-                    new_occ = Occurrence(
-                        occurrence_name=approval_instance.new_occurrence_name,
-                        group_type=ocr_instance.group_type,
-                        occurrence_source=Occurrence.OCCURRENCE_CHOICE_OCR,
+                    # Case 2b: pure ORFAPP path — create a new Occurrence from new_occurrence_name
+                    # and clone all sub-models using the helper method.
+                    new_occ = Occurrence.clone_from_occurrence_report(
+                        ocr_instance, 
+                        occurrence_name=approval_instance.new_occurrence_name
                     )
-                    if ocr_instance.species_id:
-                        new_occ.species_id = ocr_instance.species_id
-                    elif ocr_instance.community_id:
-                        new_occ.community_id = ocr_instance.community_id
-                    new_occ.save()
                     ocr_instance.occurrence = new_occ
                     ocr_instance.save()
-
         return
 
     def ocr_bulk_import_generate_action_logs(self, mode, model_instance):
