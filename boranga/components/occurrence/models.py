@@ -7190,16 +7190,14 @@ class OccurrenceReportBulkImportTask(ArchivableModel):
                         return
 
                     if not occ_migrated_from_id:
-                        if not model_data.get("group_type"):
-                            model_data["group_type"] = self.schema.group_type
-
-                        current_model_instance = Occurrence(**model_data)
-                        current_model_instance.occurrence_source = Occurrence.OCCURRENCE_CHOICE_OCR
                         ocr_instance = model_instances[OccurrenceReport._meta.model_name]
-                        if ocr_instance.species:
-                            current_model_instance.species = ocr_instance.species
-                        else:
-                            current_model_instance.community = ocr_instance.community
+                        occ_name_from_cols = model_data.pop("occurrence_name", None)
+                        
+                        current_model_instance = Occurrence.clone_from_occurrence_report(
+                            ocr_instance,
+                            occurrence_name=occ_name_from_cols,
+                            extra_fields=model_data
+                        )
                     else:
                         occ_is_new = not Occurrence.objects.filter(migrated_from_id=occ_migrated_from_id).exists()
                         if not occ_is_new:
