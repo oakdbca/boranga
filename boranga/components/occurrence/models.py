@@ -4667,14 +4667,18 @@ class Occurrence(DirtyFieldsMixin, LockableModel, RevisionedMixin):
 
     @classmethod
     @transaction.atomic
-    def clone_from_occurrence_report(self, occurrence_report):
-        occurrence = Occurrence()
+    def clone_from_occurrence_report(cls, occurrence_report, occurrence_name=None):
+        occurrence = cls()
 
         occurrence.group_type = occurrence_report.group_type
+        occurrence.occurrence_source = cls.OCCURRENCE_CHOICE_OCR
 
         occurrence.species = occurrence_report.species
         occurrence.community = occurrence_report.community
         occurrence.comment = occurrence_report.comments
+        
+        if occurrence_name:
+            occurrence.occurrence_name = occurrence_name
 
         occurrence.save(no_revision=True)
 
