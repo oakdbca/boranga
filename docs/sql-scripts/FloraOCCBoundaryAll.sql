@@ -197,9 +197,12 @@ identification AS (
         ic.name AS identification_certainty,
         i.id_confirmed_by,
         i.identification_comment,
-        i.collector_number
+        i.collector_number,
+        i.barcode_number,
+        sd.name AS sample_destination
     FROM boranga_occidentification i
     LEFT JOIN boranga_identificationcertainty ic ON i.identification_certainty_id = ic.id
+    LEFT JOIN boranga_sampledestination sd ON i.sample_destination_id = sd.id
 ),
 
 -- -- Habitat Composition -------------------------------------------------------
@@ -373,7 +376,7 @@ SELECT
     plant_count.quadrats_present                   AS QUD_PRESEN,
     plant_count.individual_quadrat_area            AS QUD_INV_AR,
     plant_count.quadrats_surveyed                  AS NUM_QUD,
-    plant_count.total_quadrat_area                 AS TOT_QUD_AR
+    plant_count.total_quadrat_area                 AS TOT_QUD_AR,
 
 
     -- Identification
@@ -381,6 +384,8 @@ SELECT
     identification.id_confirmed_by                 AS ID_CONF_BY,
     identification.identification_comment          AS ID_COMMENT,
     identification.collector_number                AS COLL_NUM,
+    identification.barcode_number                  AS BARCODE,
+    identification.sample_destination              AS SAMP_DEST,
 
     -- Report metadata
     CASE
