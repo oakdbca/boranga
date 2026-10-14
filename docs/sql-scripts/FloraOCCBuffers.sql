@@ -310,6 +310,10 @@ SELECT
     associated_species.scientific_names            AS ASSOC_SPECIES,
     associated_species.comment                     AS AS_SP_COMM,
 
+    -- Region / District
+    loc.region_name                                AS REGION,
+    loc.district_name                              AS DISTRICT,
+
     -- Report metadata
     CASE
         WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
@@ -321,9 +325,6 @@ SELECT
     occ.processing_status                          AS OCC_STATUS,
     TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS') AS OCC_MOD_DA,
 
-    -- Region / District
-    loc.region_name                                AS REGION,
-    loc.district_name                              AS DISTRICT,
 
     -- WISH fields
     'Buffer Geometry'                              AS G_DATATYPE,
