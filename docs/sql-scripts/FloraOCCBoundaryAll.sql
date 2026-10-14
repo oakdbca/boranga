@@ -158,12 +158,15 @@ plant_count AS (
         obs.observers,
         obs.organisations,
         obs.roles,
-        obs.contacts
+        obs.contacts,
+        si.name as submitter,
+        si.organisation
     FROM boranga_occplantcount pc
     -- 1. Structural Chain Links (SAFELY CHANGED TO INNER JOIN)
     -- These bridge tables must exist for the record to be valid in the system
     INNER JOIN boranga_ocrplantcount ocr_pc ON pc.copied_ocr_plant_count_id = ocr_pc.id
     INNER JOIN boranga_occurrencereport ocr ON ocr_pc.occurrence_report_id = ocr.id
+    INNER JOIN boranga_submitterinformation si ON ocr.submitter_information_id = si.id
 
     -- 2. Standard lookups on 'pc' (KEPT AS LEFT JOIN)
     -- Keeps the row even if an observer left these specific fields blank on the form
@@ -423,6 +426,8 @@ SELECT
         ELSE NULL
     END                                            AS OCC_SOURCE,
     occ.processing_status                          AS OCC_STATUS,
+    plant_count.submitter                          AS SUBMITTER,
+    plant_count.organisation                       AS SUMM_ORG,
     TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS') AS OCC_MOD_DA,
     (u_mod.first_name || ' ' || u_mod.last_name)   AS OCC_MOD_BY,
     occ.lodgement_date                             AS LODG_DATE,
