@@ -272,7 +272,23 @@ fire_history AS (
         i.name AS intensity
     FROM boranga_occfirehistory fh
     INNER JOIN boranga_intensity i ON fh.intensity_id = i.id
-    GROUP BY fh.occurrence_id, fh.last_fire_estimate, i.name
+),
+
+tenure AS (
+    SELECT
+        g.occurrence_id,
+        STRING_AGG(DISTINCT p.label, ', ' ORDER BY p.label) AS purposes,
+        STRING_AGG(DISTINCT v.label, ', ' ORDER BY v.label) AS vestings,
+        STRING_AGG(DISTINCT t.owner_name, ', ' ORDER BY t.owner_name) AS owner_names,
+        STRING_AGG(
+            DISTINCT CASE WHEN t.significant_to_occurrence THEN 'Yes' ELSE 'No' END,
+            ', ' ORDER BY CASE WHEN t.significant_to_occurrence THEN 'Yes' ELSE 'No' END) AS significances,
+        STRING_AGG(DISTINCT t.comments, ', ' ORDER BY t.comments) AS comments
+    FROM boranga_occurrencetenure t
+    INNER JOIN boranga_occurrencetenurepurpose p ON t.purpose_id = p.id
+    INNER JOIN boranga_occurrencetenurevesting v ON t.vesting_id = v.id
+    LEFT JOIN boranga_occurrencegeometry g ON t.occurrence_geometry_id = g.id
+    GROUP BY g.occurrence_id
 ),
 
 first_occurrence_report AS (
@@ -415,6 +431,13 @@ SELECT
     loc.region_name                                AS REGION,
     loc.district_name                              AS DISTRICT,
 
+    -- Tenure
+    tenure.purposes                                AS PURPOSE,
+    tenure.vestings                                AS VESTING,
+    tenure.owner_names                             AS LD_OWNER,
+    tenure.significances                           AS SIGNIFICAN,
+    tenure.comments                                AS TEN_COMM,
+
     -- Habitat Composition
     habitat_composition.land_form                  AS LANDFORM,
     habitat_composition.rock_type                  AS ROCK_TYPE,
@@ -467,6 +490,7 @@ LEFT JOIN habitat        ON occ.id = habitat.occurrence_id
 LEFT JOIN vegetation_structure ON occ.id = vegetation_structure.occurrence_id
 LEFT JOIN associated_species ON occ.id = associated_species.occurrence_id
 LEFT JOIN fire_history ON occ.id = fire_history.occurrence_id
+LEFT JOIN tenure ON occ.id = tenure.occurrence_id
 LEFT JOIN first_occurrence_report ON occ.id = first_occurrence_report.occurrence_id AND first_occurrence_report.rn = 1
 LEFT JOIN accounts_emailuser u_mod ON occ.last_modified_by = u_mod.id
 ORDER BY occ.occurrence_number, geom.geom_id;
