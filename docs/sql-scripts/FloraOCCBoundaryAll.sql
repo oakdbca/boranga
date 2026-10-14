@@ -130,6 +130,11 @@ plant_count AS (
         pc.simple_alive,
         pc.simple_dead,
         pc.detailed_alive_mature,
+        pc.detailed_dead_mature,
+        pc.detailed_alive_juvenile,
+        pc.detailed_dead_juvenile,
+        pc.detailed_alive_seedling,
+        pc.detailed_dead_seedling,
         pc.comment,
         CASE WHEN pc.flower_present = TRUE THEN 'Yes'
              WHEN pc.flower_present = FALSE THEN 'No'
@@ -281,7 +286,13 @@ SELECT
     plant_count.simple_alive                       AS PL_SMP_ALV,
     plant_count.simple_dead                        AS PL_SMP_DEA,
     plant_count.detailed_alive_mature              AS PL_ALV_MAT,
+    plant_count.detailed_dead_mature               AS PL_DEA_MAT,
+    plant_count.detailed_alive_juvenile            AS PL_ALV_JUV,
+    plant_count.detailed_dead_juvenile             AS PL_DEA_JUV,
+    plant_count.detailed_alive_seedling            AS PL_ALV_SEE,
+    plant_count.detailed_dead_seedling             AS PL_DEA_SEE,
     plant_count.comment                            AS PLCNT_COMM,
+    plant_count.plant_condition                    AS PLNT_COND,
     plant_count.flower_present                     AS IN_FLOWER,
     plant_count.plant_condition                    AS PLNT_COND,
 
