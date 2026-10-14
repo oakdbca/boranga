@@ -219,6 +219,25 @@ associated_species AS (
     GROUP BY assoc.occurrence_id
 ),
 
+first_occurrence_report AS (
+    SELECT
+        pc.occurrence_id,
+        ocr.observation_date,
+        ROW_NUMBER() OVER (
+            PARTITION BY pc.occurrence_id 
+            ORDER BY 
+                CASE WHEN ocr.observation_date IS NULL THEN 1 ELSE 0 END,
+                ocr.id ASC
+        ) AS rn
+    FROM boranga_occurrencereport ocr
+    INNER JOIN boranga_ocrplantcount ocr_pc ON ocr.id = ocr_pc.occurrence_report_id
+    INNER JOIN boranga_occplantcount pc ON ocr_pc.id = pc.copied_ocr_plant_count_id
+    GROUP BY
+        pc.occurrence_id,
+        ocr.id,
+        ocr.observation_date
+),
+
 -- -- Geometry (Polygons only) ------------------------------------------------
 geom AS (
     SELECT
@@ -274,6 +293,8 @@ SELECT
     loc.coordinate_source                          AS COORD_SRC,
     loc.location_accuracy                          AS LOC_ACC,
 
+    first_occurrence_report.observation_date       AS "1_OBS_DATE",
+
     -- Observation Detail
     obs_detail.area_assessment                     AS AREA_ASSES,
     obs_detail.area_surveyed                       AS SURVEY_SQM,
@@ -294,7 +315,6 @@ SELECT
     plant_count.comment                            AS PLCNT_COMM,
     plant_count.plant_condition                    AS PLNT_COND,
     plant_count.flower_present                     AS IN_FLOWER,
-    plant_count.plant_condition                    AS PLNT_COND,
 
     -- Identification
     identification.identification_certainty        AS IDENT_CRTY,
@@ -366,5 +386,6 @@ LEFT JOIN habitat_composition   ON occ.id = habitat_composition.occurrence_id
 LEFT JOIN habitat        ON occ.id = habitat.occurrence_id
 LEFT JOIN vegetation_structure ON occ.id = vegetation_structure.occurrence_id
 LEFT JOIN associated_species ON occ.id = associated_species.occurrence_id
+LEFT JOIN first_occurrence_report ON occ.id = first_occurrence_report.occurrence_id AND first_occurrence_report.rn = 1
 LEFT JOIN accounts_emailuser u_mod ON occ.last_modified_by = u_mod.id
 ORDER BY occ.occurrence_number, geom.geom_id;
