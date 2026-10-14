@@ -39,7 +39,8 @@ occ AS (
         o.processing_status,
         o.lodgement_date,
         o.datetime_updated,
-        o.last_modified_by
+        o.last_modified_by,
+        o.comment
     FROM boranga_occurrence o
     INNER JOIN gt ON o.group_type_id = gt.id
 ),
@@ -417,31 +418,6 @@ SELECT
     identification.barcode_number                  AS BARCODE,
     identification.sample_destination              AS SAMP_DEST,
 
-    -- Report metadata
-    CASE
-        WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
-        WHEN occ.occurrence_source = 'ocr' THEN 'ORF'
-        WHEN occ.occurrence_source = 'non-ocr' THEN 'No ORF'
-        WHEN occ.occurrence_source = 'ocr,non-ocr' THEN 'ORF; No ORF'
-        ELSE NULL
-    END                                            AS OCC_SOURCE,
-    occ.processing_status                          AS OCC_STATUS,
-    plant_count.submitter                          AS SUBMITTER,
-    plant_count.organisation                       AS SUMM_ORG,
-    TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS') AS OCC_MOD_DA,
-    (u_mod.first_name || ' ' || u_mod.last_name)   AS OCC_MOD_BY,
-    occ.lodgement_date                             AS LODG_DATE,
-
-    -- Region / District
-    loc.region_name                                AS REGION,
-    loc.district_name                              AS DISTRICT,
-
-    -- Tenure
-    tenure.purposes                                AS PURPOSE,
-    tenure.vestings                                AS VESTING,
-    tenure.owner_names                             AS LD_OWNER,
-    tenure.significances                           AS SIGNIFICAN,
-    tenure.comments                                AS TEN_COMM,
 
     -- Habitat Composition
     habitat_composition.land_form                  AS LANDFORM,
@@ -472,10 +448,36 @@ SELECT
     associated_species.scientific_names            AS ASSOC_SPECIES,
     associated_species.comment                     AS AS_SP_COMM,
 
+    -- Fire History
     fire_history.last_fire_estimate                AS FIRE_EST,
     fire_history.intensity                         AS FIRE_INTEN,
 
-    -- WISH fields
+    -- Region / District
+    loc.region_name                                AS REGION,
+    loc.district_name                              AS DISTRICT,
+
+    -- Tenure
+    tenure.purposes                                AS PURPOSE,
+    tenure.vestings                                AS VESTING,
+    tenure.owner_names                             AS LD_OWNER,
+    tenure.significances                           AS SIGNIFICAN,
+    tenure.comments                                AS TEN_COMM,
+
+    -- Report metadata
+    occ.occurrence_source                          AS OCC_COMM,
+    CASE
+        WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
+        WHEN occ.occurrence_source = 'ocr' THEN 'ORF'
+        WHEN occ.occurrence_source = 'non-ocr' THEN 'No ORF'
+        WHEN occ.occurrence_source = 'ocr,non-ocr' THEN 'ORF; No ORF'
+        ELSE NULL
+    END                                            AS OCC_SOURCE,
+    occ.processing_status                          AS OCC_STATUS,
+    TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS') AS OCC_MOD_DA,
+    (u_mod.first_name || ' ' || u_mod.last_name)   AS OCC_MOD_BY,
+    occ.lodgement_date                             AS LODG_DATE,
+    plant_count.submitter                          AS SUBMITTER,
+    plant_count.organisation                       AS SUMM_ORG,
     'Occurrence Geometry'                          AS G_DATATYPE,
     gt.name                                        AS GROUP_TYPE
 
