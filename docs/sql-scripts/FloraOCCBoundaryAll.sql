@@ -136,16 +136,58 @@ plant_count AS (
         pc.detailed_alive_seedling,
         pc.detailed_dead_seedling,
         pc.comment,
-        CASE WHEN pc.flower_present = TRUE THEN 'Yes'
-             WHEN pc.flower_present = FALSE THEN 'No'
-             ELSE NULL
-        END AS flower_present,
         pcond.name AS plant_condition,
-        pc.obs_date
+        CASE WHEN pc.flower_present = TRUE THEN 'Yes'
+            WHEN pc.flower_present = FALSE THEN 'No'
+            ELSE NULL
+        END AS flower_present,
+        pc.flowering_plants_per,
+        pc.flower_bud_present,
+        pc.clonal_reproduction_present,
+        pc.immature_fruit_present,
+        pc.ripe_fruit_present,
+        pc.dehisced_fruit_present,
+        pc.vegetative_state_present,
+        pc.estimated_population_area,
+        pc.quadrats_present,
+        pc.individual_quadrat_area,
+        pc.quadrats_surveyed,
+        pc.total_quadrat_area,
+        pc.obs_date,
+        ot.name as observation_time,
+        obs.observers,
+        obs.organisations,
+        obs.roles,
+        obs.contacts
     FROM boranga_occplantcount pc
+    -- 1. Structural Chain Links (SAFELY CHANGED TO INNER JOIN)
+    -- These bridge tables must exist for the record to be valid in the system
+    INNER JOIN boranga_ocrplantcount ocr_pc ON pc.copied_ocr_plant_count_id = ocr_pc.id
+    INNER JOIN boranga_occurrencereport ocr ON ocr_pc.occurrence_report_id = ocr.id
+
+    -- 2. Standard lookups on 'pc' (KEPT AS LEFT JOIN)
+    -- Keeps the row even if an observer left these specific fields blank on the form
     LEFT JOIN boranga_plantcountmethod pcm ON pc.plant_count_method_id = pcm.id
     LEFT JOIN boranga_countedsubject csb ON pc.counted_subject_id = csb.id
     LEFT JOIN boranga_plantcondition pcond ON pc.plant_condition_id = pcond.id
+
+    -- 3. Lookup on 'ocr' (KEPT AS LEFT JOIN)
+    -- Keeps the row even if no observation time was selected
+    LEFT JOIN boranga_observationtime ot ON ocr.observation_time_id = ot.id    
+
+    -- 4. Observer Subquery (KEPT AS LEFT JOIN)
+    -- Essential so that reports with zero logged observers don't get deleted
+    LEFT JOIN (
+        SELECT 
+            ood.occurrence_report_id,
+            STRING_AGG(DISTINCT ood.observer_name, ', ' ORDER BY ood.observer_name) AS observers,
+            STRING_AGG(DISTINCT ood.organisation, ', ' ORDER BY ood.organisation) AS organisations,
+            STRING_AGG(DISTINCT obs_role.item, ', ' ORDER BY obs_role.item) AS roles,
+            STRING_AGG(DISTINCT ood.contact, ', ' ORDER BY ood.contact) AS contacts
+        FROM boranga_ocrobserverdetail ood
+        LEFT JOIN boranga_observerrole obs_role ON ood.role_id = obs_role.id
+        GROUP BY ood.occurrence_report_id
+    ) obs ON ocr.id = obs.occurrence_report_id
 ),
 
 -- -- Identification ----------------------------------------------------------
@@ -285,6 +327,11 @@ SELECT
 
     -- Dates & status
     plant_count.obs_date                           AS OBS_DATE,
+    plant_count.observation_time                   AS OBS_TIME,
+    plant_count.observers                          AS OBS_NAME,
+    plant_count.organisations                      AS OBS_ORG,
+    plant_count.roles                              AS OBS_ROLE,
+    plant_count.contacts                           AS OBS_CONTACT,
 
     -- Location
     loc.location_description                       AS LOC_DESC,
@@ -315,6 +362,19 @@ SELECT
     plant_count.comment                            AS PLCNT_COMM,
     plant_count.plant_condition                    AS PLNT_COND,
     plant_count.flower_present                     AS IN_FLOWER,
+    plant_count.flowering_plants_per               AS FLWR_PERCEN,
+    plant_count.flower_bud_present                 AS FLWR_BUDS,
+    plant_count.clonal_reproduction_present        AS CLO_REPROD,
+    plant_count.immature_fruit_present             AS IMM_FRU,
+    plant_count.ripe_fruit_present                 AS RIPE_FRU,
+    plant_count.dehisced_fruit_present             AS DEHIS_FRU,
+    plant_count.vegetative_state_present           AS VEGE_STATE,
+    plant_count.estimated_population_area          AS AREA_OCCUP,
+    plant_count.quadrats_present                   AS QUD_PRESEN,
+    plant_count.individual_quadrat_area            AS QUD_INV_AR,
+    plant_count.quadrats_surveyed                  AS NUM_QUD,
+    plant_count.total_quadrat_area                 AS TOT_QUD_AR
+
 
     -- Identification
     identification.identification_certainty        AS IDENT_CRTY,
