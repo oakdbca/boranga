@@ -253,7 +253,8 @@ vegetation_structure AS (
 associated_species AS (
     SELECT
         assoc.occurrence_id,
-        STRING_AGG(t.scientific_name, ', ' ORDER BY t.scientific_name) AS scientific_names
+        STRING_AGG(t.scientific_name, ', ' ORDER BY t.scientific_name) AS scientific_names,
+        assoc.comment
     FROM boranga_occassociatedspecies assoc
     INNER JOIN boranga_occassociatedspecies_related_species m2m 
         ON assoc.id = m2m.occassociatedspecies_id
@@ -261,7 +262,7 @@ associated_species AS (
         ON m2m.associatedspeciestaxonomy_id = ast.id
     INNER JOIN boranga_taxonomy t 
         ON ast.taxonomy_id = t.id
-    GROUP BY assoc.occurrence_id
+    GROUP BY assoc.occurrence_id, assoc.comment
 ),
 
 first_occurrence_report AS (
@@ -431,6 +432,7 @@ SELECT
 
     -- Associated Species
     associated_species.scientific_names            AS ASSOC_SPECIES,
+    associated_species.comment                     AS AS_SP_COMM,
 
     -- WISH fields
     'Occurrence Geometry'                          AS G_DATATYPE,
