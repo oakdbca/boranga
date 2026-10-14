@@ -265,6 +265,16 @@ associated_species AS (
     GROUP BY assoc.occurrence_id, assoc.comment
 ),
 
+fire_history AS (
+    SELECT
+        fh.occurrence_id,
+        fh.last_fire_estimate,
+        i.name AS intensity
+    FROM boranga_occfirehistory fh
+    INNER JOIN boranga_intensity i ON fh.intensity_id = i.id
+    GROUP BY fh.occurrence_id, fh.last_fire_estimate, i.name
+),
+
 first_occurrence_report AS (
     SELECT
         pc.occurrence_id,
@@ -434,6 +444,9 @@ SELECT
     associated_species.scientific_names            AS ASSOC_SPECIES,
     associated_species.comment                     AS AS_SP_COMM,
 
+    fire_history.last_fire_estimate                AS FIRE_EST,
+    fire_history.intensity                         AS FIRE_INTEN,
+
     -- WISH fields
     'Occurrence Geometry'                          AS G_DATATYPE,
     gt.name                                        AS GROUP_TYPE
@@ -453,6 +466,7 @@ LEFT JOIN habitat_composition   ON occ.id = habitat_composition.occurrence_id
 LEFT JOIN habitat        ON occ.id = habitat.occurrence_id
 LEFT JOIN vegetation_structure ON occ.id = vegetation_structure.occurrence_id
 LEFT JOIN associated_species ON occ.id = associated_species.occurrence_id
+LEFT JOIN fire_history ON occ.id = fire_history.occurrence_id
 LEFT JOIN first_occurrence_report ON occ.id = first_occurrence_report.occurrence_id AND first_occurrence_report.rn = 1
 LEFT JOIN accounts_emailuser u_mod ON occ.last_modified_by = u_mod.id
 ORDER BY occ.occurrence_number, geom.geom_id;
