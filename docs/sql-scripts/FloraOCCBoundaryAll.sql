@@ -155,7 +155,6 @@ plant_count AS (
         pc.quadrats_surveyed,
         pc.total_quadrat_area,
         pc.obs_date,
-        ot.name as observation_time,
         obs.observers,
         obs.organisations,
         obs.roles,
@@ -163,23 +162,19 @@ plant_count AS (
         si.name as submitter,
         si.organisation
     FROM boranga_occplantcount pc
-    -- 1. Structural Chain Links (SAFELY CHANGED TO INNER JOIN)
+    -- Structural Chain Links (SAFELY CHANGED TO INNER JOIN)
     -- These bridge tables must exist for the record to be valid in the system
     INNER JOIN boranga_ocrplantcount ocr_pc ON pc.copied_ocr_plant_count_id = ocr_pc.id
     INNER JOIN boranga_occurrencereport ocr ON ocr_pc.occurrence_report_id = ocr.id
     INNER JOIN boranga_submitterinformation si ON ocr.submitter_information_id = si.id
 
-    -- 2. Standard lookups on 'pc' (KEPT AS LEFT JOIN)
+    -- Standard lookups on 'pc' (KEPT AS LEFT JOIN)
     -- Keeps the row even if an observer left these specific fields blank on the form
     LEFT JOIN boranga_plantcountmethod pcm ON pc.plant_count_method_id = pcm.id
     LEFT JOIN boranga_countedsubject csb ON pc.counted_subject_id = csb.id
     LEFT JOIN boranga_plantcondition pcond ON pc.plant_condition_id = pcond.id
 
-    -- 3. Lookup on 'ocr' (KEPT AS LEFT JOIN)
-    -- Keeps the row even if no observation time was selected
-    LEFT JOIN boranga_observationtime ot ON ocr.observation_time_id = ot.id    
-
-    -- 4. Observer Subquery (KEPT AS LEFT JOIN)
+    -- Observer Subquery (KEPT AS LEFT JOIN)
     -- Essential so that reports with zero logged observers don't get deleted
     LEFT JOIN (
         SELECT 
@@ -361,7 +356,6 @@ SELECT
 
     -- Dates & status
     plant_count.obs_date                           AS OBS_DATE,
-    plant_count.observation_time                   AS OBS_TIME,
     plant_count.observers                          AS OBS_NAME,
     plant_count.organisations                      AS OBS_ORG,
     plant_count.roles                              AS OBS_ROLE,
