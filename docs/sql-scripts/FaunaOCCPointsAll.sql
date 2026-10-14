@@ -54,6 +54,7 @@ species AS (
         s.id,
         s.species_number,
         t.scientific_name,
+        t.taxon_name_id,
         string_agg(DISTINCT tv.vernacular_name, '; ') AS vernacular_names,
         fg.name  AS fauna_group,
         fsg.name AS fauna_sub_group
@@ -62,7 +63,7 @@ species AS (
     LEFT JOIN boranga_taxonvernacular tv ON t.id = tv.taxonomy_id
     LEFT JOIN boranga_faunagroup fg ON s.fauna_group_id = fg.id
     LEFT JOIN boranga_faunasubgroup fsg ON s.fauna_sub_group_id = fsg.id
-    GROUP BY s.id, t.scientific_name, fg.name, fsg.name
+    GROUP BY s.id, t.scientific_name, t.taxon_name_id, fg.name, fsg.name
 ),
 
 -- -- Active Conservation Status (approved + delisted) ------------------------
@@ -121,6 +122,7 @@ obs_detail AS (
         obd.occurrence_id,
         aa.name  AS area_assessment,
         obd.area_surveyed,
+        obd.survey_duration,
         om.name  AS observation_method
     FROM boranga_occobservationdetail obd
     LEFT JOIN boranga_areaassessment aa ON obd.area_assessment_id = aa.id
@@ -283,6 +285,7 @@ SELECT
     ws.name                                        AS WLD_STATUS,
 
     -- Species (Fauna-specific)
+    species.taxon_name_id                          AS NOMOS_ID,
     species.species_number                         AS SPECIE_NUM,
     species.scientific_name                        AS SPECIES,
     species.vernacular_names                       AS COMMON_NAM,
@@ -315,6 +318,7 @@ SELECT
     -- Observation Detail
     obs_detail.area_assessment                     AS AREA_ASSES,
     obs_detail.area_surveyed                       AS SURVEY_SQM,
+    obs_detail.survey_duration                     AS SURVEY_DUR,
     obs_detail.observation_method                  AS OBS_METHOD,
 
     -- Animal Observation (Fauna-specific)
