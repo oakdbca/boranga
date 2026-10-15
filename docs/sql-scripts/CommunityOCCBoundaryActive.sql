@@ -188,7 +188,8 @@ vegetation_structure AS (
 associated_species AS (
     SELECT
         assoc.occurrence_id,
-        STRING_AGG(t.scientific_name, ', ' ORDER BY t.scientific_name) AS scientific_names
+        STRING_AGG(t.scientific_name, ', ' ORDER BY t.scientific_name) AS scientific_names,
+        assoc.comment
     FROM boranga_occassociatedspecies assoc
     INNER JOIN boranga_occassociatedspecies_related_species m2m 
         ON assoc.id = m2m.occassociatedspecies_id
@@ -196,7 +197,7 @@ associated_species AS (
         ON m2m.associatedspeciestaxonomy_id = ast.id
     INNER JOIN boranga_taxonomy t 
         ON ast.taxonomy_id = t.id
-    GROUP BY assoc.occurrence_id
+    GROUP BY assoc.occurrence_id, assoc.comment
 ),
 
 -- -- Geometry (Polygons only) ------------------------------------------------
@@ -209,6 +210,9 @@ geom AS (
         ROUND(
             (ST_Area(ST_Transform(g.geometry, 7844)::geography) / 1000000.0)::numeric, 6
         ) AS area_sq_km,
+        ROUND(
+            ST_Area(ST_Transform(g.geometry, 7844)::geography)::numeric
+        ) AS area_sq_m,
         ROUND(
             (ST_Area(ST_Transform(g.geometry, 7844)::geography) / 10000.0)::numeric, 4
         ) AS area_ha
@@ -237,6 +241,7 @@ SELECT
     TO_CHAR(geom.updated_date, 'YYYY-MM-DD HH24:MI:SS') AS GEO_MODIFY,
     geom.geom_id                                   AS GEOM_ID,
     geom.area_sq_km                                AS G_AREA_SKM,
+    geom.area_sq_m                                AS G_AREA_SQM,
     geom.area_ha                                   AS G_AREA_HA,
 
     -- Conservation Status
@@ -261,21 +266,6 @@ SELECT
 
     -- Identification
     identification.identification_certainty        AS IDENT_CRTY,
-
-    -- Report metadata
-    CASE
-        WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
-        WHEN occ.occurrence_source = 'ocr' THEN 'ORF'
-        WHEN occ.occurrence_source = 'non-ocr' THEN 'No ORF'
-        WHEN occ.occurrence_source = 'ocr,non-ocr' THEN 'ORF; No ORF'
-        ELSE NULL
-    END                                            AS OCC_SOURCE,
-    occ.processing_status                          AS OCC_STATUS,
-    TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS') AS OCC_MOD_DA,
-
-    -- Region / District
-    loc.region_name                                AS REGION,
-    loc.district_name                              AS DISTRICT,
 
     -- Habitat Composition
     habitat_composition.land_form                  AS LANDFORM,
@@ -304,6 +294,22 @@ SELECT
 
     -- Associated Species
     associated_species.scientific_names            AS ASSOC_SPECIES,
+    associated_species.comment                     AS AS_SP_COMM,
+
+    -- Region / District
+    loc.region_name                                AS REGION,
+    loc.district_name                              AS DISTRICT,
+
+    -- Report metadata
+    CASE
+        WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
+        WHEN occ.occurrence_source = 'ocr' THEN 'ORF'
+        WHEN occ.occurrence_source = 'non-ocr' THEN 'No ORF'
+        WHEN occ.occurrence_source = 'ocr,non-ocr' THEN 'ORF; No ORF'
+        ELSE NULL
+    END                                                     AS OCC_SOURCE,
+    occ.processing_status                                   AS OCC_STATUS,
+    TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS')  AS OCC_MOD_DA,
 
     -- WISH fields
     'Occurrence Geometry'                          AS G_DATATYPE,

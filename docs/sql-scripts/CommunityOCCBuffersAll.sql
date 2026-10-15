@@ -38,8 +38,10 @@ occ AS (
         o.occurrence_source,
         o.processing_status,
         o.lodgement_date,
+        o.datetime_created,
         o.datetime_updated,
-        o.last_modified_by
+        o.last_modified_by,
+        o.comment
     FROM boranga_occurrence o
     INNER JOIN gt ON o.group_type_id = gt.id
 ),
@@ -135,8 +137,11 @@ identification AS (
         ic.name AS identification_certainty,
         i.id_confirmed_by,
         i.identification_comment,
-        i.collector_number
+        i.collector_number,
+        i.barcode_number,
+        sd.name AS sample_destination
     FROM boranga_occidentification i
+    INNER JOIN boranga_sampledestination sd ON i.sample_destination_id = sd.id
     LEFT JOIN boranga_identificationcertainty ic ON i.identification_certainty_id = ic.id
 ),
 
@@ -170,8 +175,33 @@ habitat AS (
         hc.very_good,
         hc.excellent,
         hc.pristine,
-        hc.obs_date
+        hc.obs_date,
+        obs.observers,
+        obs.organisations,
+        obs.roles,
+        obs.contacts,
+        si.name as submitter,
+        si.organisation
     FROM boranga_occhabitatcondition hc
+    -- Structural Chain Links (SAFELY CHANGED TO INNER JOIN)
+    -- These bridge tables must exist for the record to be valid in the system
+    INNER JOIN boranga_ocrhabitatcondition ocr_hc ON hc.copied_ocr_habitat_condition_id = ocr_hc.id
+    INNER JOIN boranga_occurrencereport ocr ON ocr_hc.occurrence_report_id = ocr.id
+    INNER JOIN boranga_submitterinformation si ON ocr.submitter_information_id = si.id
+
+    -- Observer Subquery (KEPT AS LEFT JOIN)
+    -- Essential so that reports with zero logged observers don't get deleted
+    LEFT JOIN (
+        SELECT 
+            ood.occurrence_report_id,
+            STRING_AGG(DISTINCT ood.observer_name, ', ' ORDER BY ood.observer_name) AS observers,
+            STRING_AGG(DISTINCT ood.organisation, ', ' ORDER BY ood.organisation) AS organisations,
+            STRING_AGG(DISTINCT obs_role.item, ', ' ORDER BY obs_role.item) AS roles,
+            STRING_AGG(DISTINCT ood.contact, ', ' ORDER BY ood.contact) AS contacts
+        FROM boranga_ocrobserverdetail ood
+        LEFT JOIN boranga_observerrole obs_role ON ood.role_id = obs_role.id
+        GROUP BY ood.occurrence_report_id
+    ) obs ON ocr.id = obs.occurrence_report_id
 ),
 
 -- -- Vegetation Structure -------------------------------------------------------
@@ -189,7 +219,8 @@ vegetation_structure AS (
 associated_species AS (
     SELECT
         assoc.occurrence_id,
-        STRING_AGG(t.scientific_name, ', ' ORDER BY t.scientific_name) AS scientific_names
+        STRING_AGG(t.scientific_name, ', ' ORDER BY t.scientific_name) AS scientific_names,
+        comment
     FROM boranga_occassociatedspecies assoc
     INNER JOIN boranga_occassociatedspecies_related_species m2m 
         ON assoc.id = m2m.occassociatedspecies_id
@@ -197,7 +228,35 @@ associated_species AS (
         ON m2m.associatedspeciestaxonomy_id = ast.id
     INNER JOIN boranga_taxonomy t 
         ON ast.taxonomy_id = t.id
-    GROUP BY assoc.occurrence_id
+    GROUP BY assoc.occurrence_id, assoc.comment
+),
+
+fire_history AS (
+    SELECT
+        fh.occurrence_id,
+        fh.last_fire_estimate,
+        i.name AS intensity
+    FROM boranga_occfirehistory fh
+    INNER JOIN boranga_intensity i ON fh.intensity_id = i.id
+),
+
+first_occurrence_report AS (
+    SELECT
+        hc.occurrence_id,
+        ocr.observation_date,
+        ROW_NUMBER() OVER (
+            PARTITION BY hc.occurrence_id 
+            ORDER BY 
+                CASE WHEN ocr.observation_date IS NULL THEN 1 ELSE 0 END,
+                ocr.id ASC
+        ) AS rn
+    FROM boranga_occurrencereport ocr
+    INNER JOIN boranga_ocrhabitatcondition ocr_hc ON ocr.id = ocr_hc.occurrence_report_id
+    INNER JOIN boranga_occhabitatcondition hc ON ocr_hc.id = hc.copied_ocr_habitat_condition_id
+    GROUP BY
+        hc.occurrence_id,
+        ocr.id,
+        ocr.observation_date
 ),
 
 -- -- Buffer Geometry (via OccurrenceGeometry) --------------------------------
@@ -212,6 +271,9 @@ buf AS (
         ROUND(
             (ST_Area(ST_Transform(bg.geometry, 4326)::geography) / 1000000.0)::numeric, 6
         ) AS area_sq_km,
+        ROUND(
+            ST_Area(ST_Transform(bg.geometry, 4326)::geography)::numeric
+        ) AS area_sq_m,        
         ROUND(
             (ST_Area(ST_Transform(bg.geometry, 4326)::geography) / 10000.0)::numeric, 4
         ) AS area_ha
@@ -240,6 +302,7 @@ SELECT
     TO_CHAR(buf.updated_date, 'YYYY-MM-DD HH24:MI:SS') AS GEO_MODIFY,
     buf.occ_geom_id                                AS GEOM_ID,
     buf.area_sq_km                                 AS G_AREA_SKM,
+    buf.area_sq_m                                  AS G_AREA_SQM,
     buf.area_ha                                    AS G_AREA_HA,
 
     -- Conservation Status
@@ -249,6 +312,10 @@ SELECT
 
     -- Dates & status
     habitat.obs_date                               AS OBS_DATE,
+    habitat.observers                              AS OBS_NAME,
+    habitat.organisations                          AS OBS_ORG,
+    habitat.roles                                  AS OBS_ROLE,
+    habitat.contacts                               AS OBS_CONTACT,
 
     -- Location
     loc.location_description                       AS LOC_DESC,
@@ -256,6 +323,8 @@ SELECT
     loc.boundary_description                       AS BOUND_DESC,
     loc.coordinate_source                          AS COORD_SRC,
     loc.location_accuracy                          AS LOC_ACC,
+
+    first_occurrence_report.observation_date       AS "1_OBS_DATE",
 
     -- Observation Detail
     obs_detail.area_assessment                     AS AREA_ASSES,
@@ -268,23 +337,8 @@ SELECT
     identification.id_confirmed_by                 AS ID_CONF_BY,
     identification.identification_comment          AS ID_COMMENT,
     identification.collector_number                AS COLL_NUM,
-
-    -- Report metadata
-    CASE
-        WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
-        WHEN occ.occurrence_source = 'ocr' THEN 'ORF'
-        WHEN occ.occurrence_source = 'non-ocr' THEN 'No ORF'
-        WHEN occ.occurrence_source = 'ocr,non-ocr' THEN 'ORF; No ORF'
-        ELSE NULL
-    END                                            AS OCC_SOURCE,
-    occ.processing_status                          AS OCC_STATUS,
-    TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS') AS OCC_MOD_DA,
-    (u_mod.first_name || ' ' || u_mod.last_name)   AS OCC_MOD_BY,
-    occ.lodgement_date                             AS LODG_DATE,
-
-    -- Region / District
-    loc.region_name                                AS REGION,
-    loc.district_name                              AS DISTRICT,
+    identification.barcode_number                  AS BARCODE,
+    identification.sample_destination              AS SAMP_DEST,
 
     -- Habitat Composition
     habitat_composition.land_form                  AS LANDFORM,
@@ -313,6 +367,32 @@ SELECT
 
     -- Associated Species
     associated_species.scientific_names            AS ASSOC_SPECIES,
+    associated_species.comment                     AS AS_SP_COMM,
+
+    -- Fire History
+    fire_history.last_fire_estimate                AS FIRE_EST,
+    fire_history.intensity                         AS FIRE_INTEN,
+
+    -- Region / District
+    loc.region_name                                AS REGION,
+    loc.district_name                              AS DISTRICT,
+
+    -- Report metadata
+    occ.comment                                             AS OCC_COMM,
+    CASE
+        WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
+        WHEN occ.occurrence_source = 'ocr' THEN 'ORF'
+        WHEN occ.occurrence_source = 'non-ocr' THEN 'No ORF'
+        WHEN occ.occurrence_source = 'ocr,non-ocr' THEN 'ORF; No ORF'
+        ELSE NULL
+    END                                                     AS OCC_SOURCE,
+    occ.processing_status                                   AS OCC_STATUS,
+    TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS')  AS OCC_MOD_DA,
+    (u_mod.first_name || ' ' || u_mod.last_name)            AS OCC_MOD_BY,
+    occ.lodgement_date                                      AS LODG_DATE,
+    habitat.submitter                                       AS SUBMITTER,
+    habitat.organisation                                    AS SUMM_ORG,
+    TO_CHAR(occ.datetime_created, 'YYYY-MM-DD HH24:MI:SS')  AS OCC_CRE_DA,
 
     -- WISH fields
     'Buffer Geometry'                              AS G_DATATYPE,
@@ -333,5 +413,7 @@ LEFT JOIN habitat_composition   ON occ.id = habitat_composition.occurrence_id
 LEFT JOIN habitat        ON occ.id = habitat.occurrence_id
 LEFT JOIN vegetation_structure ON occ.id = vegetation_structure.occurrence_id
 LEFT JOIN associated_species ON occ.id = associated_species.occurrence_id
+LEFT JOIN fire_history ON occ.id = fire_history.occurrence_id
+LEFT JOIN first_occurrence_report ON occ.id = first_occurrence_report.occurrence_id AND first_occurrence_report.rn = 1
 LEFT JOIN accounts_emailuser u_mod ON occ.last_modified_by = u_mod.id
 ORDER BY occ.occurrence_number, buf.occ_geom_id;

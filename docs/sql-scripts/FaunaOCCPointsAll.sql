@@ -42,8 +42,10 @@ occ AS (
         o.occurrence_source,
         o.processing_status,
         o.lodgement_date,
+        o.datetime_created,
         o.datetime_updated,
-        o.last_modified_by
+        o.last_modified_by,
+        comment
     FROM boranga_occurrence o
     INNER JOIN gt ON o.group_type_id = gt.id
 ),
@@ -158,6 +160,24 @@ animal_obs AS (
 
         ao.simple_alive,
         ao.simple_dead,
+        ao.alive_adult_female,
+        ao.alive_adult_male,
+        ao.alive_adult_unknown,
+        ao.alive_juvenile_female,
+        ao.alive_juvenile_male,
+        ao.alive_juvenile_unknown,
+        ao.alive_unsure_female,
+        ao.alive_unsure_male,
+        ao.alive_unsure_unknown,
+        ao.dead_adult_female,
+        ao.dead_adult_male,
+        ao.dead_adult_unknown,
+        ao.dead_juvenile_female,
+        ao.dead_juvenile_male,
+        ao.dead_juvenile_unknown,
+        ao.dead_unsure_female,
+        ao.dead_unsure_male,
+        ao.dead_unsure_unknown,
         ab.name                                         AS animal_behaviour,
         ao.animal_observation_detail_comment,
 
@@ -184,10 +204,43 @@ animal_obs AS (
             INNER JOIN boranga_reproductivestate rs
                 ON rs.id = NULLIF(trim(val.id_str), '')::integer
         ) AS reproductive_state,
-        ao.obs_date
+
+        ah.name AS animal_health,
+        dr.name AS death_injury_reason,
+        ao.action_required,
+        ao.action_taken,
+        ao.obs_date,
+        ot.name as observation_time,
+        obs.observers,
+        obs.organisations,
+        obs.roles,
+        obs.contacts,
+        si.name as submitter,
+        si.organisation
 
     FROM boranga_occanimalobservation ao
     LEFT JOIN boranga_animalbehaviour ab ON ao.animal_behaviour_id = ab.id
+    
+    INNER JOIN boranga_ocrplantcount ocr_pc ON ao.copied_ocr_animal_observation_id = ocr_pc.id
+    INNER JOIN boranga_occurrencereport ocr ON ocr_pc.occurrence_report_id = ocr.id
+    INNER JOIN boranga_observationtime ot ON ocr.observation_time_id = ot.id
+    INNER JOIN boranga_submitterinformation si ON ocr.submitter_information_id = si.id
+    INNER JOIN boranga_animalhealth ah ON ao.animal_health_id = ah.id
+    INNER JOIN boranga_deathreason dr ON ao.death_injury_reason_id = dr.id
+
+    -- Observer Subquery (KEPT AS LEFT JOIN)
+    -- Essential so that reports with zero logged observers don't get deleted
+    LEFT JOIN (
+        SELECT 
+            ood.occurrence_report_id,
+            STRING_AGG(DISTINCT ood.observer_name, ', ' ORDER BY ood.observer_name) AS observers,
+            STRING_AGG(DISTINCT ood.organisation, ', ' ORDER BY ood.organisation) AS organisations,
+            STRING_AGG(DISTINCT obs_role.item, ', ' ORDER BY obs_role.item) AS roles,
+            STRING_AGG(DISTINCT ood.contact, ', ' ORDER BY ood.contact) AS contacts
+        FROM boranga_ocrobserverdetail ood
+        LEFT JOIN boranga_observerrole obs_role ON ood.role_id = obs_role.id
+        GROUP BY ood.occurrence_report_id
+    ) obs ON ocr.id = obs.occurrence_report_id
 ),
 
 -- -- Identification ----------------------------------------------------------
@@ -197,8 +250,11 @@ identification AS (
         ic.name AS identification_certainty,
         i.id_confirmed_by,
         i.identification_comment,
-        i.collector_number
+        i.collector_number,
+        i.barcode_number,
+        sd.name AS sample_destination
     FROM boranga_occidentification i
+    INNER JOIN boranga_sampledestination sd ON i.sample_destination_id = sd.id
     LEFT JOIN boranga_identificationcertainty ic ON i.identification_certainty_id = ic.id
 ),
 
@@ -250,7 +306,8 @@ vegetation_structure AS (
 associated_species AS (
     SELECT
         assoc.occurrence_id,
-        STRING_AGG(t.scientific_name, ', ' ORDER BY t.scientific_name) AS scientific_names
+        STRING_AGG(t.scientific_name, ', ' ORDER BY t.scientific_name) AS scientific_names,
+        assoc.comment
     FROM boranga_occassociatedspecies assoc
     INNER JOIN boranga_occassociatedspecies_related_species m2m 
         ON assoc.id = m2m.occassociatedspecies_id
@@ -258,7 +315,52 @@ associated_species AS (
         ON m2m.associatedspeciestaxonomy_id = ast.id
     INNER JOIN boranga_taxonomy t 
         ON ast.taxonomy_id = t.id
-    GROUP BY assoc.occurrence_id
+    GROUP BY assoc.occurrence_id, assoc.comment
+),
+
+fire_history AS (
+    SELECT
+        fh.occurrence_id,
+        fh.last_fire_estimate,
+        i.name AS intensity
+    FROM boranga_occfirehistory fh
+    INNER JOIN boranga_intensity i ON fh.intensity_id = i.id
+),
+
+tenure AS (
+    SELECT
+        g.occurrence_id,
+        STRING_AGG(DISTINCT p.label, ', ' ORDER BY p.label) AS purposes,
+        STRING_AGG(DISTINCT v.label, ', ' ORDER BY v.label) AS vestings,
+        STRING_AGG(DISTINCT t.owner_name, ', ' ORDER BY t.owner_name) AS owner_names,
+        STRING_AGG(
+            DISTINCT CASE WHEN t.significant_to_occurrence THEN 'Yes' ELSE 'No' END,
+            ', ' ORDER BY CASE WHEN t.significant_to_occurrence THEN 'Yes' ELSE 'No' END) AS significances,
+        STRING_AGG(DISTINCT t.comments, ', ' ORDER BY t.comments) AS comments
+    FROM boranga_occurrencetenure t
+    INNER JOIN boranga_occurrencetenurepurpose p ON t.purpose_id = p.id
+    INNER JOIN boranga_occurrencetenurevesting v ON t.vesting_id = v.id
+    LEFT JOIN boranga_occurrencegeometry g ON t.occurrence_geometry_id = g.id
+    GROUP BY g.occurrence_id
+),
+
+first_occurrence_report AS (
+    SELECT
+        ao.occurrence_id,
+        ocr.observation_date,
+        ROW_NUMBER() OVER (
+            PARTITION BY ao.occurrence_id 
+            ORDER BY 
+                CASE WHEN ocr.observation_date IS NULL THEN 1 ELSE 0 END,
+                ocr.id ASC
+        ) AS rn
+    FROM boranga_occurrencereport ocr
+    INNER JOIN boranga_ocranimalobservation ocr_ao ON ocr.id = ocr_ao.occurrence_report_id
+    INNER JOIN boranga_occanimalobservation ao ON ocr_ao.id = ao.copied_ocr_animal_observation_id
+    GROUP BY
+        ao.occurrence_id,
+        ocr.id,
+        ocr.observation_date
 ),
 
 -- -- Geometry (Points only) --------------------------------------------------
@@ -307,6 +409,11 @@ SELECT
 
     -- Dates & status
     animal_obs.obs_date                            AS OBS_DATE,
+    animal_obs.observation_time                    AS OBS_TIME,
+    animal_obs.observers                           AS OBS_NAME,
+    animal_obs.organisations                       AS OBS_ORG,
+    animal_obs.roles                               AS OBS_ROLE,
+    animal_obs.contacts                            AS OBS_CONTACT,
 
     -- Location
     loc.location_description                       AS LOC_DESC,
@@ -314,6 +421,8 @@ SELECT
     loc.boundary_description                       AS BOUND_DESC,
     loc.coordinate_source                          AS COORD_SRC,
     loc.location_accuracy                          AS LOC_ACC,
+
+    first_occurrence_report.observation_date       AS "1_OBS_DATE",
 
     -- Observation Detail
     obs_detail.area_assessment                     AS AREA_ASSES,
@@ -326,10 +435,39 @@ SELECT
     animal_obs.total_dead                          AS AN_DEAD,
     animal_obs.simple_alive                        AS SIMP_ALIVE,
     animal_obs.simple_dead                         AS SIMP_DEAD,
+
+    animal_obs.alive_adult_female                  AS AL_AD_FEMA,
+    animal_obs.alive_adult_male                    AS AL_AD_MALE,
+    animal_obs.alive_adult_unknown                 AS AL_AD_UNKN,
+
+    animal_obs.alive_juvenile_female               AS AL_JV_FEMA,
+    animal_obs.alive_juvenile_male                 AS AL_JV_MALE,
+    animal_obs.alive_juvenile_unknown              AS AL_JV_UNKN,
+
+    animal_obs.alive_unsure_female                 AS AL_UN_FEMA,
+    animal_obs.alive_unsure_male                   AS AL_UN_MALE,
+    animal_obs.alive_unsure_unknown                AS AL_UN_UNKN,
+
+    animal_obs.dead_adult_female                   AS DE_AD_FEMA,
+    animal_obs.dead_adult_male                     AS DE_AD_MALE,
+    animal_obs.dead_adult_unknown                  AS DE_AD_UNKN,
+
+    animal_obs.dead_juvenile_female                AS DE_JV_FEMA,
+    animal_obs.dead_juvenile_male                  AS DE_JV_MALE,
+    animal_obs.dead_juvenile_unknown               AS DE_JV_UNKN,
+
+    animal_obs.dead_unsure_female                  AS DE_UN_FEMA,
+    animal_obs.dead_unsure_male                    AS DE_UN_MALE,
+    animal_obs.dead_unsure_unknown                 AS DE_UN_UNKN,
+
     animal_obs.animal_behaviour                    AS AN_BEHAV,
     animal_obs.primary_detection_method            AS DET_METHOD,
     animal_obs.secondary_sign                      AS SEC_SIGN,
     animal_obs.reproductive_state                  AS BREEDING,
+    animal_obs.animal_health	                   AS AN_HEALTH,
+    animal_obs.death_injury_reason	               AS HARM_CAUSE,
+    animal_obs.action_required	                   AS ACT_REQUIR,
+    animal_obs.action_taken	                       AS ACT_TAKEN,
     animal_obs.animal_observation_detail_comment   AS AN_OBS_COM,
 
     -- Identification
@@ -337,23 +475,8 @@ SELECT
     identification.id_confirmed_by                 AS ID_CONF_BY,
     identification.identification_comment          AS ID_COMMENT,
     identification.collector_number                AS COLL_NUM,
-
-    -- Report metadata
-    CASE
-        WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
-        WHEN occ.occurrence_source = 'ocr' THEN 'ORF'
-        WHEN occ.occurrence_source = 'non-ocr' THEN 'No ORF'
-        WHEN occ.occurrence_source = 'ocr,non-ocr' THEN 'ORF; No ORF'
-        ELSE NULL
-    END                                            AS OCC_SOURCE,
-    occ.processing_status                          AS OCC_STATUS,
-    TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS') AS OCC_MOD_DA,
-    (u_mod.first_name || ' ' || u_mod.last_name)   AS OCC_MOD_BY,
-    occ.lodgement_date                             AS LODG_DATE,
-
-    -- Region / District
-    loc.region_name                                AS REGION,
-    loc.district_name                              AS DISTRICT,
+    identification.barcode_number                  AS BARCODE,
+    identification.sample_destination              AS SAMP_DEST,
 
     -- Habitat Composition
     habitat_composition.land_form                  AS LANDFORM,
@@ -382,10 +505,41 @@ SELECT
 
     -- Associated Species
     associated_species.scientific_names            AS ASSOC_SPECIES,
+    associated_species.comment                     AS AS_SP_COMM,
 
-    -- WISH fields
-    'Occurrence Geometry'                          AS G_DATATYPE,
-    gt.name                                        AS GROUP_TYPE
+    -- Fire History
+    fire_history.last_fire_estimate                AS FIRE_EST,
+    fire_history.intensity                         AS FIRE_INTEN,
+
+    -- Region / District
+    loc.region_name                                AS REGION,
+    loc.district_name                              AS DISTRICT,
+
+    -- Tenure
+    tenure.purposes                                AS PURPOSE,
+    tenure.vestings                                AS VESTING,
+    tenure.owner_names                             AS LD_OWNER,
+    tenure.significances                           AS SIGNIFICAN,
+    tenure.comments                                AS TEN_COMM,
+
+    -- Report metadata
+    occ.comment                                             AS OCC_COMM,
+    CASE
+        WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
+        WHEN occ.occurrence_source = 'ocr' THEN 'ORF'
+        WHEN occ.occurrence_source = 'non-ocr' THEN 'No ORF'
+        WHEN occ.occurrence_source = 'ocr,non-ocr' THEN 'ORF; No ORF'
+        ELSE NULL
+    END                                                     AS OCC_SOURCE,
+    occ.processing_status                                   AS OCC_STATUS,
+    TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS')  AS OCC_MOD_DA,
+    (u_mod.first_name || ' ' || u_mod.last_name)            AS OCC_MOD_BY,
+    occ.lodgement_date                                      AS LODG_DATE,
+    animal_obs.submitter                                    AS SUBMITTER,
+    animal_obs.organisation                                 AS SUMM_ORG,
+    TO_CHAR(occ.datetime_created, 'YYYY-MM-DD HH24:MI:SS')  AS OCC_CRE_DA,
+    'Occurrence Geometry'                                   AS G_DATATYPE,
+    gt.name                                                 AS GROUP_TYPE
 
 FROM occ
 INNER JOIN gt            ON occ.group_type_id = gt.id
@@ -402,5 +556,8 @@ LEFT JOIN habitat_composition   ON occ.id = habitat_composition.occurrence_id
 LEFT JOIN habitat        ON occ.id = habitat.occurrence_id
 LEFT JOIN vegetation_structure ON occ.id = vegetation_structure.occurrence_id
 LEFT JOIN associated_species ON occ.id = associated_species.occurrence_id
+LEFT JOIN fire_history ON occ.id = fire_history.occurrence_id
+LEFT JOIN tenure ON occ.id = tenure.occurrence_id
+LEFT JOIN first_occurrence_report ON occ.id = first_occurrence_report.occurrence_id AND first_occurrence_report.rn = 1
 LEFT JOIN accounts_emailuser u_mod ON occ.last_modified_by = u_mod.id
 ORDER BY occ.occurrence_number, geom.geom_id;

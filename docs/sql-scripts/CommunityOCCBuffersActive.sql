@@ -104,11 +104,16 @@ sites_concat AS (
 loc AS (
     SELECT
         l.occurrence_id,
+        l.location_description,
+        l.locality,
+        l.boundary_description,
         cs.name  AS coordinate_source,
+        la.name  AS location_accuracy,
         r.name   AS region_name,
         d.name   AS district_name
     FROM boranga_occlocation l
     LEFT JOIN boranga_coordinatesource cs ON l.coordinate_source_id = cs.id
+    LEFT JOIN boranga_locationaccuracy la ON l.location_accuracy_id = la.id
     LEFT JOIN boranga_region r ON l.region_id = r.id
     LEFT JOIN boranga_district d ON l.district_id = d.id
 ),
@@ -118,6 +123,7 @@ obs_detail AS (
     SELECT
         obd.occurrence_id,
         aa.name  AS area_assessment,
+        obd.area_surveyed,
         om.name  AS observation_method
     FROM boranga_occobservationdetail obd
     LEFT JOIN boranga_areaassessment aa ON obd.area_assessment_id = aa.id
@@ -182,7 +188,8 @@ vegetation_structure AS (
 associated_species AS (
     SELECT
         assoc.occurrence_id,
-        STRING_AGG(t.scientific_name, ', ' ORDER BY t.scientific_name) AS scientific_names
+        STRING_AGG(t.scientific_name, ', ' ORDER BY t.scientific_name) AS scientific_names,
+        assoc.comment
     FROM boranga_occassociatedspecies assoc
     INNER JOIN boranga_occassociatedspecies_related_species m2m 
         ON assoc.id = m2m.occassociatedspecies_id
@@ -190,7 +197,7 @@ associated_species AS (
         ON m2m.associatedspeciestaxonomy_id = ast.id
     INNER JOIN boranga_taxonomy t 
         ON ast.taxonomy_id = t.id
-    GROUP BY assoc.occurrence_id
+    GROUP BY assoc.occurrence_id, assoc.comment
 ),
 
 -- -- Buffer Geometry (via OccurrenceGeometry) --------------------------------
@@ -205,6 +212,9 @@ buf AS (
         ROUND(
             (ST_Area(ST_Transform(bg.geometry, 4326)::geography) / 1000000.0)::numeric, 6
         ) AS area_sq_km,
+        ROUND(
+            ST_Area(ST_Transform(bg.geometry, 7844)::geography)::numeric
+        ) AS area_sq_m,        
         ROUND(
             (ST_Area(ST_Transform(bg.geometry, 4326)::geography) / 10000.0)::numeric, 4
         ) AS area_ha
@@ -233,6 +243,7 @@ SELECT
     TO_CHAR(buf.updated_date, 'YYYY-MM-DD HH24:MI:SS') AS GEO_MODIFY,
     buf.occ_geom_id                                AS GEOM_ID,
     buf.area_sq_km                                 AS G_AREA_SKM,
+    buf.area_sq_m                                 AS G_AREA_SQM,
     buf.area_ha                                    AS G_AREA_HA,
 
     -- Conservation Status
@@ -244,29 +255,19 @@ SELECT
     habitat.obs_date                               AS OBS_DATE,
 
     -- Location (coordinate_source only for this report)
+    loc.location_description                       AS LOC_DESC,
+    loc.locality                                   AS LOCALITY,
+    loc.boundary_description                       AS BOUND_DESC,    
     loc.coordinate_source                          AS COORD_SRC,
+    loc.location_accuracy                          AS LOC_ACC,
 
     -- Observation Detail
     obs_detail.area_assessment                     AS AREA_ASSES,
+    obs_detail.area_surveyed                       AS SURVEY_SQM,
     obs_detail.observation_method                  AS OBS_METHOD,
 
     -- Identification
     identification.identification_certainty        AS IDENT_CRTY,
-
-    -- Report metadata
-    CASE
-        WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
-        WHEN occ.occurrence_source = 'ocr' THEN 'ORF'
-        WHEN occ.occurrence_source = 'non-ocr' THEN 'No ORF'
-        WHEN occ.occurrence_source = 'ocr,non-ocr' THEN 'ORF; No ORF'
-        ELSE NULL
-    END                                            AS OCC_SOURCE,
-    occ.processing_status                          AS OCC_STATUS,
-    TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS') AS OCC_MOD_DA,
-
-    -- Region / District
-    loc.region_name                                AS REGION,
-    loc.district_name                              AS DISTRICT,
 
     -- Habitat Composition
     habitat_composition.land_form                  AS LANDFORM,
@@ -295,6 +296,22 @@ SELECT
 
     -- Associated Species
     associated_species.scientific_names            AS ASSOC_SPECIES,
+    associated_species.comment                     AS AS_SP_COMM,
+
+    -- Region / District
+    loc.region_name                                AS REGION,
+    loc.district_name                              AS DISTRICT,
+
+    -- Report metadata
+    CASE
+        WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
+        WHEN occ.occurrence_source = 'ocr' THEN 'ORF'
+        WHEN occ.occurrence_source = 'non-ocr' THEN 'No ORF'
+        WHEN occ.occurrence_source = 'ocr,non-ocr' THEN 'ORF; No ORF'
+        ELSE NULL
+    END                                            AS OCC_SOURCE,
+    occ.processing_status                          AS OCC_STATUS,
+    TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS') AS OCC_MOD_DA,
 
     -- WISH fields
     'Buffer Geometry'                              AS G_DATATYPE,
