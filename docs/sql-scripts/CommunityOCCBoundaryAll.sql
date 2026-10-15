@@ -412,6 +412,8 @@ SELECT
     TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS')  AS OCC_MOD_DA,
     (u_mod.first_name || ' ' || u_mod.last_name)            AS OCC_MOD_BY,
     occ.lodgement_date                                      AS LODG_DATE,
+    habitat.submitter                                       AS SUBMITTER,
+    habitat.organisation                                    AS SUMM_ORG,
     TO_CHAR(occ.datetime_created, 'YYYY-MM-DD HH24:MI:SS')  AS OCC_CRE_DA,
 
     -- WISH fields
