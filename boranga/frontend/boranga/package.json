@@ -67,5 +67,8 @@
     "overrides": {
         "minimatch": "^10.2.2",
         "svgo": "^4.0.0"
+    },
+    "allowScripts": {
+        "es5-ext@0.10.64": true
     }
 }
