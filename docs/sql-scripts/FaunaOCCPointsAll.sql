@@ -184,10 +184,34 @@ animal_obs AS (
             INNER JOIN boranga_reproductivestate rs
                 ON rs.id = NULLIF(trim(val.id_str), '')::integer
         ) AS reproductive_state,
-        ao.obs_date
+        ao.obs_date,
+        obs.observers,
+        obs.organisations,
+        obs.roles,
+        obs.contacts,
+        si.name as submitter,
+        si.organisation
 
     FROM boranga_occanimalobservation ao
     LEFT JOIN boranga_animalbehaviour ab ON ao.animal_behaviour_id = ab.id
+    
+    INNER JOIN boranga_ocrplantcount ocr_pc ON ao.copied_ocr_animal_observation_id = ocr_pc.id
+    INNER JOIN boranga_occurrencereport ocr ON ocr_pc.occurrence_report_id = ocr.id
+    INNER JOIN boranga_submitterinformation si ON ocr.submitter_information_id = si.id
+
+    -- Observer Subquery (KEPT AS LEFT JOIN)
+    -- Essential so that reports with zero logged observers don't get deleted
+    LEFT JOIN (
+        SELECT 
+            ood.occurrence_report_id,
+            STRING_AGG(DISTINCT ood.observer_name, ', ' ORDER BY ood.observer_name) AS observers,
+            STRING_AGG(DISTINCT ood.organisation, ', ' ORDER BY ood.organisation) AS organisations,
+            STRING_AGG(DISTINCT obs_role.item, ', ' ORDER BY obs_role.item) AS roles,
+            STRING_AGG(DISTINCT ood.contact, ', ' ORDER BY ood.contact) AS contacts
+        FROM boranga_ocrobserverdetail ood
+        LEFT JOIN boranga_observerrole obs_role ON ood.role_id = obs_role.id
+        GROUP BY ood.occurrence_report_id
+    ) obs ON ocr.id = obs.occurrence_report_id
 ),
 
 -- -- Identification ----------------------------------------------------------
@@ -307,6 +331,10 @@ SELECT
 
     -- Dates & status
     animal_obs.obs_date                            AS OBS_DATE,
+    animal_obs.observers                           AS OBS_NAME,
+    animal_obs.organisations                       AS OBS_ORG,
+    animal_obs.roles                               AS OBS_ROLE,
+    animal_obs.contacts                            AS OBS_CONTACT,
 
     -- Location
     loc.location_description                       AS LOC_DESC,
