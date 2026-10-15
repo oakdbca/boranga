@@ -211,6 +211,9 @@ geom AS (
             (ST_Area(ST_Transform(g.geometry, 7844)::geography) / 1000000.0)::numeric, 6
         ) AS area_sq_km,
         ROUND(
+            ST_Area(ST_Transform(g.geometry, 7844)::geography)::numeric
+        ) AS area_sq_m,
+        ROUND(
             (ST_Area(ST_Transform(g.geometry, 7844)::geography) / 10000.0)::numeric, 4
         ) AS area_ha
     FROM boranga_occurrencegeometry g
@@ -238,6 +241,7 @@ SELECT
     TO_CHAR(geom.updated_date, 'YYYY-MM-DD HH24:MI:SS') AS GEO_MODIFY,
     geom.geom_id                                   AS GEOM_ID,
     geom.area_sq_km                                AS G_AREA_SKM,
+    geom.area_sq_m                                AS G_AREA_SQM,
     geom.area_ha                                   AS G_AREA_HA,
 
     -- Conservation Status
