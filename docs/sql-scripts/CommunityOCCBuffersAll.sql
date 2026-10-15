@@ -213,6 +213,9 @@ buf AS (
             (ST_Area(ST_Transform(bg.geometry, 4326)::geography) / 1000000.0)::numeric, 6
         ) AS area_sq_km,
         ROUND(
+            ST_Area(ST_Transform(bg.geometry, 4326)::geography)::numeric
+        ) AS area_sq_m,        
+        ROUND(
             (ST_Area(ST_Transform(bg.geometry, 4326)::geography) / 10000.0)::numeric, 4
         ) AS area_ha
     FROM boranga_buffergeometry bg
@@ -240,6 +243,7 @@ SELECT
     TO_CHAR(buf.updated_date, 'YYYY-MM-DD HH24:MI:SS') AS GEO_MODIFY,
     buf.occ_geom_id                                AS GEOM_ID,
     buf.area_sq_km                                 AS G_AREA_SKM,
+    buf.area_sq_m                                  AS G_AREA_SQM,
     buf.area_ha                                    AS G_AREA_HA,
 
     -- Conservation Status
