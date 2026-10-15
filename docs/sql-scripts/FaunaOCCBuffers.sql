@@ -263,7 +263,7 @@ buf AS (
         og.updated_date,
         ROUND(
             (ST_Area(ST_Transform(bg.geometry, 4326)::geography) / 1000000.0)::numeric, 6
-        ) AS area_sq_km
+        ) AS area_sq_km,
         ROUND(
             ST_Area(ST_Transform(g.geometry, 7844)::geography)::numeric
         ) AS area_sq_m        
