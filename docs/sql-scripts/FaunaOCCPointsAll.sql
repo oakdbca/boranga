@@ -185,6 +185,7 @@ animal_obs AS (
                 ON rs.id = NULLIF(trim(val.id_str), '')::integer
         ) AS reproductive_state,
         ao.obs_date,
+        ot.name as observation_time,
         obs.observers,
         obs.organisations,
         obs.roles,
@@ -197,6 +198,7 @@ animal_obs AS (
     
     INNER JOIN boranga_ocrplantcount ocr_pc ON ao.copied_ocr_animal_observation_id = ocr_pc.id
     INNER JOIN boranga_occurrencereport ocr ON ocr_pc.occurrence_report_id = ocr.id
+    INNER JOIN boranga_observationtime ot ON ocr.observation_time_id = ot.id
     INNER JOIN boranga_submitterinformation si ON ocr.submitter_information_id = si.id
 
     -- Observer Subquery (KEPT AS LEFT JOIN)
@@ -350,6 +352,7 @@ SELECT
 
     -- Dates & status
     animal_obs.obs_date                            AS OBS_DATE,
+    animal_obs.observation_time                    AS OBS_TIME,
     animal_obs.observers                           AS OBS_NAME,
     animal_obs.organisations                       AS OBS_ORG,
     animal_obs.roles                               AS OBS_ROLE,
