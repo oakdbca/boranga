@@ -264,7 +264,7 @@ buf AS (
             (ST_Area(ST_Transform(bg.geometry, 4326)::geography) / 1000000.0)::numeric, 6
         ) AS area_sq_km,
         ROUND(
-            ST_Area(ST_Transform(g.geometry, 7844)::geography)::numeric
+            ST_Area(ST_Transform(bg.geometry, 7844)::geography)::numeric
         ) AS area_sq_m        
     FROM boranga_buffergeometry bg
     INNER JOIN boranga_occurrencegeometry og ON bg.buffered_from_geometry_id = og.id
