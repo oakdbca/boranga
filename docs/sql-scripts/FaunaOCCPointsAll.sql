@@ -304,7 +304,8 @@ vegetation_structure AS (
 associated_species AS (
     SELECT
         assoc.occurrence_id,
-        STRING_AGG(t.scientific_name, ', ' ORDER BY t.scientific_name) AS scientific_names
+        STRING_AGG(t.scientific_name, ', ' ORDER BY t.scientific_name) AS scientific_names,
+        assoc.comment
     FROM boranga_occassociatedspecies assoc
     INNER JOIN boranga_occassociatedspecies_related_species m2m 
         ON assoc.id = m2m.occassociatedspecies_id
@@ -312,7 +313,33 @@ associated_species AS (
         ON m2m.associatedspeciestaxonomy_id = ast.id
     INNER JOIN boranga_taxonomy t 
         ON ast.taxonomy_id = t.id
-    GROUP BY assoc.occurrence_id
+    GROUP BY assoc.occurrence_id, assoc.comment
+),
+
+fire_history AS (
+    SELECT
+        fh.occurrence_id,
+        fh.last_fire_estimate,
+        i.name AS intensity
+    FROM boranga_occfirehistory fh
+    INNER JOIN boranga_intensity i ON fh.intensity_id = i.id
+),
+
+tenure AS (
+    SELECT
+        g.occurrence_id,
+        STRING_AGG(DISTINCT p.label, ', ' ORDER BY p.label) AS purposes,
+        STRING_AGG(DISTINCT v.label, ', ' ORDER BY v.label) AS vestings,
+        STRING_AGG(DISTINCT t.owner_name, ', ' ORDER BY t.owner_name) AS owner_names,
+        STRING_AGG(
+            DISTINCT CASE WHEN t.significant_to_occurrence THEN 'Yes' ELSE 'No' END,
+            ', ' ORDER BY CASE WHEN t.significant_to_occurrence THEN 'Yes' ELSE 'No' END) AS significances,
+        STRING_AGG(DISTINCT t.comments, ', ' ORDER BY t.comments) AS comments
+    FROM boranga_occurrencetenure t
+    INNER JOIN boranga_occurrencetenurepurpose p ON t.purpose_id = p.id
+    INNER JOIN boranga_occurrencetenurevesting v ON t.vesting_id = v.id
+    LEFT JOIN boranga_occurrencegeometry g ON t.occurrence_geometry_id = g.id
+    GROUP BY g.occurrence_id
 ),
 
 first_occurrence_report AS (
@@ -449,23 +476,6 @@ SELECT
     identification.barcode_number                  AS BARCODE,
     identification.sample_destination              AS SAMP_DEST,
 
-    -- Report metadata
-    CASE
-        WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
-        WHEN occ.occurrence_source = 'ocr' THEN 'ORF'
-        WHEN occ.occurrence_source = 'non-ocr' THEN 'No ORF'
-        WHEN occ.occurrence_source = 'ocr,non-ocr' THEN 'ORF; No ORF'
-        ELSE NULL
-    END                                            AS OCC_SOURCE,
-    occ.processing_status                          AS OCC_STATUS,
-    TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS') AS OCC_MOD_DA,
-    (u_mod.first_name || ' ' || u_mod.last_name)   AS OCC_MOD_BY,
-    occ.lodgement_date                             AS LODG_DATE,
-
-    -- Region / District
-    loc.region_name                                AS REGION,
-    loc.district_name                              AS DISTRICT,
-
     -- Habitat Composition
     habitat_composition.land_form                  AS LANDFORM,
     habitat_composition.rock_type                  AS ROCK_TYPE,
@@ -493,8 +503,45 @@ SELECT
 
     -- Associated Species
     associated_species.scientific_names            AS ASSOC_SPECIES,
+    associated_species.comment                     AS AS_SP_COMM,
 
-    -- WISH fields
+    -- Fire History
+    fire_history.last_fire_estimate                AS FIRE_EST,
+    fire_history.intensity                         AS FIRE_INTEN,
+
+    -- Region / District
+    loc.region_name                                AS REGION,
+    loc.district_name                              AS DISTRICT,
+
+    -- Tenure
+    tenure.purposes                                AS PURPOSE,
+    tenure.vestings                                AS VESTING,
+    tenure.owner_names                             AS LD_OWNER,
+    tenure.significances                           AS SIGNIFICAN,
+    tenure.comments                                AS TEN_COMM,
+
+    -- Tenure
+    tenure.purposes                                AS PURPOSE,
+    tenure.vestings                                AS VESTING,
+    tenure.owner_names                             AS LD_OWNER,
+    tenure.significances                           AS SIGNIFICAN,
+    tenure.comments                                AS TEN_COMM,
+
+    -- Report metadata
+    occ.occurrence_source                          AS OCC_COMM,
+    CASE
+        WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
+        WHEN occ.occurrence_source = 'ocr' THEN 'ORF'
+        WHEN occ.occurrence_source = 'non-ocr' THEN 'No ORF'
+        WHEN occ.occurrence_source = 'ocr,non-ocr' THEN 'ORF; No ORF'
+        ELSE NULL
+    END                                            AS OCC_SOURCE,
+    occ.processing_status                          AS OCC_STATUS,
+    TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS') AS OCC_MOD_DA,
+    (u_mod.first_name || ' ' || u_mod.last_name)   AS OCC_MOD_BY,
+    occ.lodgement_date                             AS LODG_DATE,
+    animal_obs.submitter                          AS SUBMITTER,
+    animal_obs.organisation                       AS SUMM_ORG,
     'Occurrence Geometry'                          AS G_DATATYPE,
     gt.name                                        AS GROUP_TYPE
 
@@ -513,6 +560,8 @@ LEFT JOIN habitat_composition   ON occ.id = habitat_composition.occurrence_id
 LEFT JOIN habitat        ON occ.id = habitat.occurrence_id
 LEFT JOIN vegetation_structure ON occ.id = vegetation_structure.occurrence_id
 LEFT JOIN associated_species ON occ.id = associated_species.occurrence_id
+LEFT JOIN fire_history ON occ.id = fire_history.occurrence_id
+LEFT JOIN tenure ON occ.id = tenure.occurrence_id
 LEFT JOIN first_occurrence_report ON occ.id = first_occurrence_report.occurrence_id AND first_occurrence_report.rn = 1
 LEFT JOIN accounts_emailuser u_mod ON occ.last_modified_by = u_mod.id
 ORDER BY occ.occurrence_number, geom.geom_id;
