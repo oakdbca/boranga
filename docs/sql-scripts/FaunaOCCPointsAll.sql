@@ -44,7 +44,8 @@ occ AS (
         o.lodgement_date,
         o.datetime_created,
         o.datetime_updated,
-        o.last_modified_by
+        o.last_modified_by,
+        comment
     FROM boranga_occurrence o
     INNER JOIN gt ON o.group_type_id = gt.id
 ),
@@ -529,7 +530,7 @@ SELECT
     tenure.comments                                AS TEN_COMM,
 
     -- Report metadata
-    occ.occurrence_source                                   AS OCC_COMM,
+    occ.comment                                             AS OCC_COMM,
     CASE
         WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
         WHEN occ.occurrence_source = 'ocr' THEN 'ORF'
