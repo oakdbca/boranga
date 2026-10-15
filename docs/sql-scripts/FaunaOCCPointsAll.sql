@@ -158,6 +158,24 @@ animal_obs AS (
 
         ao.simple_alive,
         ao.simple_dead,
+        ao.alive_adult_female,
+        ao.alive_adult_male,
+        ao.alive_adult_unknown,
+        ao.alive_juvenile_female,
+        ao.alive_juvenile_male,
+        ao.alive_juvenile_unknown,
+        ao.alive_unsure_female,
+        ao.alive_unsure_male,
+        ao.alive_unsure_unknown,
+        ao.dead_adult_female,
+        ao.dead_adult_male,
+        ao.dead_adult_unknown,
+        ao.dead_juvenile_female,
+        ao.dead_juvenile_male,
+        ao.dead_juvenile_unknown,
+        ao.dead_unsure_female,
+        ao.dead_unsure_male,
+        ao.dead_unsure_unknown,
         ab.name                                         AS animal_behaviour,
         ao.animal_observation_detail_comment,
 
@@ -184,6 +202,11 @@ animal_obs AS (
             INNER JOIN boranga_reproductivestate rs
                 ON rs.id = NULLIF(trim(val.id_str), '')::integer
         ) AS reproductive_state,
+
+        ah.name AS animal_health,
+        dr.name AS death_injury_reason,
+        ao.action_required,
+        ao.action_taken,
         ao.obs_date,
         ot.name as observation_time,
         obs.observers,
@@ -200,6 +223,8 @@ animal_obs AS (
     INNER JOIN boranga_occurrencereport ocr ON ocr_pc.occurrence_report_id = ocr.id
     INNER JOIN boranga_observationtime ot ON ocr.observation_time_id = ot.id
     INNER JOIN boranga_submitterinformation si ON ocr.submitter_information_id = si.id
+    INNER JOIN boranga_animalhealth ah ON ao.animal_health_id = ah.id
+    INNER JOIN boranga_deathreason dr ON ao.death_injury_reason_id = dr.id
 
     -- Observer Subquery (KEPT AS LEFT JOIN)
     -- Essential so that reports with zero logged observers don't get deleted
@@ -378,10 +403,39 @@ SELECT
     animal_obs.total_dead                          AS AN_DEAD,
     animal_obs.simple_alive                        AS SIMP_ALIVE,
     animal_obs.simple_dead                         AS SIMP_DEAD,
+
+    animal_obs.alive_adult_female                  AS AL_AD_FEMA,
+    animal_obs.alive_adult_male                    AS AL_AD_MALE,
+    animal_obs.alive_adult_unknown                 AS AL_AD_UNKN,
+
+    animal_obs.alive_juvenile_female               AS AL_JV_FEMA,
+    animal_obs.alive_juvenile_male                 AS AL_JV_MALE,
+    animal_obs.alive_juvenile_unknown              AS AL_JV_UNKN,
+
+    animal_obs.alive_unsure_female                 AS AL_UN_FEMA,
+    animal_obs.alive_unsure_male                   AS AL_UN_MALE,
+    animal_obs.alive_unsure_unknown                AS AL_UN_UNKN,
+
+    animal_obs.dead_adult_female                   AS DE_AD_FEMA,
+    animal_obs.dead_adult_male                     AS DE_AD_MALE,
+    animal_obs.dead_adult_unknown                  AS DE_AD_UNKN,
+
+    animal_obs.dead_juvenile_female                AS DE_JV_FEMA,
+    animal_obs.dead_juvenile_male                  AS DE_JV_MALE,
+    animal_obs.dead_juvenile_unknown               AS DE_JV_UNKN,
+
+    animal_obs.dead_unsure_female                  AS DE_UN_FEMA,
+    animal_obs.dead_unsure_male                    AS DE_UN_MALE,
+    animal_obs.dead_unsure_unknown                 AS DE_UN_UNKN,
+
     animal_obs.animal_behaviour                    AS AN_BEHAV,
     animal_obs.primary_detection_method            AS DET_METHOD,
     animal_obs.secondary_sign                      AS SEC_SIGN,
     animal_obs.reproductive_state                  AS BREEDING,
+    animal_obs.animal_health	                   AS AN_HEALTH,
+    animal_obs.death_injury_reason	               AS HARM_CAUSE,
+    animal_obs.action_required	                   AS ACT_REQUIR,
+    animal_obs.action_taken	                       AS ACT_TAKEN,
     animal_obs.animal_observation_detail_comment   AS AN_OBS_COM,
 
     -- Identification
