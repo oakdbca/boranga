@@ -522,13 +522,6 @@ SELECT
     tenure.significances                           AS SIGNIFICAN,
     tenure.comments                                AS TEN_COMM,
 
-    -- Tenure
-    tenure.purposes                                AS PURPOSE,
-    tenure.vestings                                AS VESTING,
-    tenure.owner_names                             AS LD_OWNER,
-    tenure.significances                           AS SIGNIFICAN,
-    tenure.comments                                AS TEN_COMM,
-
     -- Report metadata
     occ.comment                                             AS OCC_COMM,
     CASE
