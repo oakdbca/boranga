@@ -104,11 +104,16 @@ sites_concat AS (
 loc AS (
     SELECT
         l.occurrence_id,
+        l.location_description,
+        l.locality,
+        l.boundary_description,
         cs.name  AS coordinate_source,
+        la.name  AS location_accuracy,
         r.name   AS region_name,
         d.name   AS district_name
     FROM boranga_occlocation l
     LEFT JOIN boranga_coordinatesource cs ON l.coordinate_source_id = cs.id
+    LEFT JOIN boranga_locationaccuracy la ON l.location_accuracy_id = la.id
     LEFT JOIN boranga_region r ON l.region_id = r.id
     LEFT JOIN boranga_district d ON l.district_id = d.id
 ),
@@ -250,7 +255,11 @@ SELECT
     habitat.obs_date                               AS OBS_DATE,
 
     -- Location (coordinate_source only for this report)
+    loc.location_description                       AS LOC_DESC,
+    loc.locality                                   AS LOCALITY,
+    loc.boundary_description                       AS BOUND_DESC,    
     loc.coordinate_source                          AS COORD_SRC,
+    loc.location_accuracy                          AS LOC_ACC,
 
     -- Observation Detail
     obs_detail.area_assessment                     AS AREA_ASSES,
