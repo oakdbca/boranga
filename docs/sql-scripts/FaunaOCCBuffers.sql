@@ -264,6 +264,9 @@ buf AS (
         ROUND(
             (ST_Area(ST_Transform(bg.geometry, 4326)::geography) / 1000000.0)::numeric, 6
         ) AS area_sq_km
+        ROUND(
+            ST_Area(ST_Transform(g.geometry, 7844)::geography)::numeric
+        ) AS area_sq_m        
     FROM boranga_buffergeometry bg
     INNER JOIN boranga_occurrencegeometry og ON bg.buffered_from_geometry_id = og.id
 )
@@ -286,11 +289,12 @@ SELECT
     species.fauna_sub_group                        AS FA_SUB_GRP,
 
     -- Buffer Geometry (ST_Transform to SRID 7844 is a no-op — Boranga is already GDA2020 throughout)
-    ST_Transform(buf.buffer_geometry, 7844)        AS GEOMETRY,
-    buf.buffer_radius                              AS BUFF_VALUE,
-    TO_CHAR(buf.updated_date, 'YYYY-MM-DD HH24:MI:SS') AS GEO_MODIFY,
-    buf.occ_geom_id                                AS GEOM_ID,
-    buf.area_sq_km                                 AS G_AREA_SKM,
+    ST_Transform(buf.buffer_geometry, 7844)             AS GEOMETRY,
+    buf.buffer_radius                                   AS BUFF_VALUE,
+    TO_CHAR(buf.updated_date, 'YYYY-MM-DD HH24:MI:SS')  AS GEO_MODIFY,
+    buf.occ_geom_id                                     AS GEOM_ID,
+    buf.area_sq_km                                      AS G_AREA_SKM,
+    buf.area_sq_m                                       AS G_AREA_SQM,
 
     -- Conservation Status
     active_cs.wa_legislative_list_code             AS WA_LEG_CS,
