@@ -459,7 +459,7 @@ SELECT
     tenure.comments                                AS TEN_COMM,
 
     -- Report metadata
-    occ.occurrence_source                                   AS OCC_COMM,
+    occ.comment                                   AS OCC_COMM,
     CASE
         WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
         WHEN occ.occurrence_source = 'ocr' THEN 'ORF'
