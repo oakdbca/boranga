@@ -38,6 +38,7 @@ occ AS (
         o.occurrence_source,
         o.processing_status,
         o.lodgement_date,
+        O.datetime_created,
         o.datetime_updated,
         o.last_modified_by,
         o.comment
@@ -458,22 +459,23 @@ SELECT
     tenure.comments                                AS TEN_COMM,
 
     -- Report metadata
-    occ.occurrence_source                          AS OCC_COMM,
+    occ.occurrence_source                                   AS OCC_COMM,
     CASE
         WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
         WHEN occ.occurrence_source = 'ocr' THEN 'ORF'
         WHEN occ.occurrence_source = 'non-ocr' THEN 'No ORF'
         WHEN occ.occurrence_source = 'ocr,non-ocr' THEN 'ORF; No ORF'
         ELSE NULL
-    END                                            AS OCC_SOURCE,
-    occ.processing_status                          AS OCC_STATUS,
-    TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS') AS OCC_MOD_DA,
-    (u_mod.first_name || ' ' || u_mod.last_name)   AS OCC_MOD_BY,
-    occ.lodgement_date                             AS LODG_DATE,
-    plant_count.submitter                          AS SUBMITTER,
-    plant_count.organisation                       AS SUMM_ORG,
-    'Occurrence Geometry'                          AS G_DATATYPE,
-    gt.name                                        AS GROUP_TYPE
+    END                                                     AS OCC_SOURCE,
+    occ.processing_status                                   AS OCC_STATUS,
+    TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS')  AS OCC_MOD_DA,
+    (u_mod.first_name || ' ' || u_mod.last_name)            AS OCC_MOD_BY,
+    occ.lodgement_date                                      AS LODG_DATE,
+    plant_count.submitter                                   AS SUBMITTER,
+    plant_count.organisation                                AS SUMM_ORG,
+    TO_CHAR(occ.datetime_created, 'YYYY-MM-DD HH24:MI:SS')  AS OCC_CRE_DA,
+    'Occurrence Geometry'                                   AS G_DATATYPE,
+    gt.name                                                 AS GROUP_TYPE
 
 FROM occ
 INNER JOIN gt            ON occ.group_type_id = gt.id
