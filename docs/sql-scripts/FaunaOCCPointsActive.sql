@@ -57,6 +57,7 @@ species AS (
         s.id,
         s.species_number,
         t.scientific_name,
+        t.taxon_name_id,
         string_agg(DISTINCT tv.vernacular_name, '; ') AS vernacular_names,
         fg.name  AS fauna_group,
         fsg.name AS fauna_sub_group
@@ -65,7 +66,7 @@ species AS (
     LEFT JOIN boranga_taxonvernacular tv ON t.id = tv.taxonomy_id
     LEFT JOIN boranga_faunagroup fg ON s.fauna_group_id = fg.id
     LEFT JOIN boranga_faunasubgroup fsg ON s.fauna_sub_group_id = fsg.id
-    GROUP BY s.id, t.scientific_name, fg.name, fsg.name
+    GROUP BY s.id, t.scientific_name, t.taxon_name_id, fg.name, fsg.name
 ),
 
 -- -- Active Conservation Status (approved + delisted) ------------------------
@@ -282,6 +283,7 @@ SELECT
     ws.name                                        AS WLD_STATUS,
 
     -- Species (Fauna-specific)
+    species.taxon_name_id                          AS NOMOS_ID,
     species.species_number                         AS SPECIE_NUM,
     species.scientific_name                        AS SPECIES,
     species.vernacular_names                       AS COMMON_NAM,
@@ -329,21 +331,6 @@ SELECT
     -- Identification
     identification.identification_certainty        AS IDENT_CRTY,
 
-    -- Report metadata
-    CASE
-        WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
-        WHEN occ.occurrence_source = 'ocr' THEN 'ORF'
-        WHEN occ.occurrence_source = 'non-ocr' THEN 'No ORF'
-        WHEN occ.occurrence_source = 'ocr,non-ocr' THEN 'ORF; No ORF'
-        ELSE NULL
-    END                                            AS OCC_SOURCE,
-    occ.processing_status                          AS OCC_STATUS,
-    TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS') AS OCC_MOD_DA,
-
-    -- Region / District
-    loc.region_name                                AS REGION,
-    loc.district_name                              AS DISTRICT,
-
     -- Habitat Composition
     habitat_composition.land_form                  AS LANDFORM,
     habitat_composition.rock_type                  AS ROCK_TYPE,
@@ -371,6 +358,22 @@ SELECT
 
     -- Associated Species
     associated_species.scientific_names            AS ASSOC_SPECIES,
+
+    -- Region / District
+    loc.region_name                                AS REGION,
+    loc.district_name                              AS DISTRICT,
+
+    -- Report metadata
+    CASE
+        WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
+        WHEN occ.occurrence_source = 'ocr' THEN 'ORF'
+        WHEN occ.occurrence_source = 'non-ocr' THEN 'No ORF'
+        WHEN occ.occurrence_source = 'ocr,non-ocr' THEN 'ORF; No ORF'
+        ELSE NULL
+    END                                            AS OCC_SOURCE,
+    occ.processing_status                          AS OCC_STATUS,
+    TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS') AS OCC_MOD_DA,
+
 
     -- WISH fields
     'Occurrence Geometry'                          AS G_DATATYPE,

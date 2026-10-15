@@ -4667,14 +4667,27 @@ class Occurrence(DirtyFieldsMixin, LockableModel, RevisionedMixin):
 
     @classmethod
     @transaction.atomic
-    def clone_from_occurrence_report(self, occurrence_report):
-        occurrence = Occurrence()
+    def clone_from_occurrence_report(cls, occurrence_report, occurrence_name=None, migrated_from_id=None, extra_fields=None):
+        occurrence = cls()
 
         occurrence.group_type = occurrence_report.group_type
+        occurrence.occurrence_source = cls.OCCURRENCE_CHOICE_OCR
 
         occurrence.species = occurrence_report.species
         occurrence.community = occurrence_report.community
         occurrence.comment = occurrence_report.comments
+        
+        if occurrence_name:
+            occurrence.occurrence_name = occurrence_name
+
+        if migrated_from_id:
+            occurrence.migrated_from_id = migrated_from_id
+
+        # Apply any explicit column/extra data last so user-supplied inputs take precedence
+        if extra_fields:
+            for field, value in extra_fields.items():
+                if value is not None:
+                    setattr(occurrence, field, value)
 
         occurrence.save(no_revision=True)
 
@@ -4883,7 +4896,8 @@ class OccurrenceUserAction(UserAction):
     # Geometry
     ACTION_ADD_GEOMETRY = "Occurrence Geometry {} Created for occurrence {}"
     ACTION_UPDATE_GEOMETRY = "Occurrence Geometry {} Updated for occurrence {}"
-    ACTION_DELETE_GEOMETRY = "Occurrence Geometry {} Deleted for occurrence {}"
+    ACTION_DISCARD_GEOMETRY = "Occurrence Geometry {} Discarded for occurrence {}"
+    ACTION_REINSTATE_GEOMETRY = "Occurrence Geometry {} Reinstated for occurrence {}"
 
     class Meta:
         app_label = "boranga"
@@ -7176,31 +7190,42 @@ class OccurrenceReportBulkImportTask(ArchivableModel):
                         return
 
                     if not occ_migrated_from_id:
-                        if not model_data.get("group_type"):
-                            model_data["group_type"] = self.schema.group_type
-
-                        current_model_instance = Occurrence(**model_data)
-                        current_model_instance.occurrence_source = Occurrence.OCCURRENCE_CHOICE_OCR
                         ocr_instance = model_instances[OccurrenceReport._meta.model_name]
-                        if ocr_instance.species:
-                            current_model_instance.species = ocr_instance.species
-                        else:
-                            current_model_instance.community = ocr_instance.community
+                        occ_name_from_cols = model_data.pop("occurrence_name", None)
+                        
+                        current_model_instance = Occurrence.clone_from_occurrence_report(
+                            ocr_instance,
+                            occurrence_name=occ_name_from_cols,
+                            extra_fields=model_data
+                        )
                     else:
                         occ_is_new = not Occurrence.objects.filter(migrated_from_id=occ_migrated_from_id).exists()
                         if not occ_is_new:
                             current_model_instance = Occurrence.objects.get(migrated_from_id=occ_migrated_from_id)
                         else:
-                            current_model_instance = Occurrence.objects.create(
-                                migrated_from_id=occ_migrated_from_id,
-                                group_type=self.schema.group_type,
-                                occurrence_source=Occurrence.OCCURRENCE_CHOICE_OCR,
-                            )
                             ocr_instance = model_instances[OccurrenceReport._meta.model_name]
-                            if ocr_instance.species:
-                                current_model_instance.species = ocr_instance.species
-                            else:
-                                current_model_instance.community = ocr_instance.community
+                            occ_name_from_cols = model_data.pop("occurrence_name", None)
+                            
+                            # Check for new_occurrence_name from approval details if present
+                            _orfapp_data_for_name = dict(
+                                zip(
+                                    models.get(OccurrenceReportApprovalDetails._meta.model_name, {}).get(
+                                        "field_names", []
+                                    ),
+                                    models.get(OccurrenceReportApprovalDetails._meta.model_name, {}).get("values", []),
+                                )
+                            )
+                            _new_name = _orfapp_data_for_name.get("new_occurrence_name")
+                            if _new_name:
+                                occ_name_from_cols = _new_name
+
+                            current_model_instance = Occurrence.clone_from_occurrence_report(
+                                ocr_instance,
+                                occurrence_name=occ_name_from_cols,
+                                migrated_from_id=occ_migrated_from_id,
+                                extra_fields=model_data
+                            )
+
                         if not current_model_instance.group_type == self.schema.group_type:
                             error_message = (
                                 "The group type of the occurrence does not match the group type of the schema"
@@ -7249,25 +7274,6 @@ class OccurrenceReportBulkImportTask(ArchivableModel):
                                 }
                             )
                             return
-
-                        # Only apply extra fields (e.g. wild_status, comment) when the
-                        # OCC was newly created — not when linking to an existing one.
-                        if occ_is_new:
-                            for field, value in model_data.items():
-                                setattr(current_model_instance, field, value)
-                            # Apply new_occurrence_name from ORFAPP data after model_data
-                            # fields so it always wins over an empty 'Occurrence Name' column.
-                            _orfapp_data_for_name = dict(
-                                zip(
-                                    models.get(OccurrenceReportApprovalDetails._meta.model_name, {}).get(
-                                        "field_names", []
-                                    ),
-                                    models.get(OccurrenceReportApprovalDetails._meta.model_name, {}).get("values", []),
-                                )
-                            )
-                            _new_name = _orfapp_data_for_name.get("new_occurrence_name")
-                            if _new_name:
-                                current_model_instance.occurrence_name = _new_name
 
             elif current_model_name == SubmitterInformation._meta.model_name:
                 # Submitter information is created automatically when an OccurrenceReport is created
@@ -7600,20 +7606,14 @@ class OccurrenceReportBulkImportTask(ArchivableModel):
                     ocr_instance.occurrence = existing_occ_from_occ_columns
                     ocr_instance.save()
                 else:
-                    # Case 2b: pure ORFAPP path — create a new Occurrence from new_occurrence_name.
-                    new_occ = Occurrence(
-                        occurrence_name=approval_instance.new_occurrence_name,
-                        group_type=ocr_instance.group_type,
-                        occurrence_source=Occurrence.OCCURRENCE_CHOICE_OCR,
+                    # Case 2b: pure ORFAPP path — create a new Occurrence from new_occurrence_name
+                    # and clone all sub-models using the helper method.
+                    new_occ = Occurrence.clone_from_occurrence_report(
+                        ocr_instance, 
+                        occurrence_name=approval_instance.new_occurrence_name
                     )
-                    if ocr_instance.species_id:
-                        new_occ.species_id = ocr_instance.species_id
-                    elif ocr_instance.community_id:
-                        new_occ.community_id = ocr_instance.community_id
-                    new_occ.save()
                     ocr_instance.occurrence = new_occ
                     ocr_instance.save()
-
         return
 
     def ocr_bulk_import_generate_action_logs(self, mode, model_instance):

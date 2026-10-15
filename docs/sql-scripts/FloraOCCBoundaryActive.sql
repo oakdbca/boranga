@@ -53,11 +53,12 @@ species AS (
         s.id,
         s.species_number,
         t.scientific_name,
+        t.taxon_name_id,
         string_agg(DISTINCT tv.vernacular_name, '; ') AS vernacular_names
     FROM boranga_species s
     LEFT JOIN boranga_taxonomy t ON s.taxonomy_id = t.id
     LEFT JOIN boranga_taxonvernacular tv ON t.id = tv.taxonomy_id
-    GROUP BY s.id, t.scientific_name
+    GROUP BY s.id, t.scientific_name, t.taxon_name_id
 ),
 
 -- -- Active Conservation Status (approved + delisted) ------------------------
@@ -130,7 +131,6 @@ plant_count AS (
         csb.name AS counted_subject,
         pc.simple_alive,
         pc.detailed_alive_mature,
-        pc.comment,
         CASE WHEN pc.flower_present = TRUE THEN 'Yes'
              WHEN pc.flower_present = FALSE THEN 'No'
              ELSE NULL
@@ -200,7 +200,8 @@ vegetation_structure AS (
 associated_species AS (
     SELECT
         assoc.occurrence_id,
-        STRING_AGG(t.scientific_name, ', ' ORDER BY t.scientific_name) AS scientific_names
+        STRING_AGG(t.scientific_name, ', ' ORDER BY t.scientific_name) AS scientific_names,
+        assoc.comment
     FROM boranga_occassociatedspecies assoc
     INNER JOIN boranga_occassociatedspecies_related_species m2m 
         ON assoc.id = m2m.occassociatedspecies_id
@@ -208,7 +209,7 @@ associated_species AS (
         ON m2m.associatedspeciestaxonomy_id = ast.id
     INNER JOIN boranga_taxonomy t 
         ON ast.taxonomy_id = t.id
-    GROUP BY assoc.occurrence_id
+    GROUP BY assoc.occurrence_id, assoc.comment
 ),
 
 -- -- Geometry (Polygons only) ------------------------------------------------
@@ -239,6 +240,7 @@ SELECT
     ws.name                                        AS WLD_STATUS,
 
     -- Species
+    species.taxon_name_id                          AS NOMOS_ID,                    
     species.species_number                         AS SPECIE_NUM,
     species.scientific_name                        AS SPECIES,
     species.vernacular_names                       AS COMMON_NAM,
@@ -275,27 +277,11 @@ SELECT
     plant_count.counted_subject                    AS CNT_SUBJ,
     plant_count.simple_alive                       AS PL_SMP_ALV,
     plant_count.detailed_alive_mature              AS PL_ALV_MAT,
-    plant_count.comment                            AS PLCNT_COMM,
-    plant_count.flower_present                     AS IN_FLOWER,
     plant_count.plant_condition                    AS PLNT_COND,
+    plant_count.flower_present                     AS IN_FLOWER,
 
     -- Identification
     identification.identification_certainty        AS IDENT_CRTY,
-
-    -- Report metadata
-    CASE
-        WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
-        WHEN occ.occurrence_source = 'ocr' THEN 'ORF'
-        WHEN occ.occurrence_source = 'non-ocr' THEN 'No ORF'
-        WHEN occ.occurrence_source = 'ocr,non-ocr' THEN 'ORF; No ORF'
-        ELSE NULL
-    END                                            AS OCC_SOURCE,
-    occ.processing_status                          AS OCC_STATUS,
-    TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS') AS OCC_MOD_DA,
-
-    -- Region / District
-    loc.region_name                                AS REGION,
-    loc.district_name                              AS DISTRICT,
 
     -- Habitat Composition
     habitat_composition.land_form                  AS LANDFORM,
@@ -324,6 +310,22 @@ SELECT
 
     -- Associated Species
     associated_species.scientific_names            AS ASSOC_SPECIES,
+    associated_species.comment                     AS AS_SP_COMM,
+
+    -- Region / District
+    loc.region_name                                AS REGION,
+    loc.district_name                              AS DISTRICT,
+
+    -- Report metadata
+    CASE
+        WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
+        WHEN occ.occurrence_source = 'ocr' THEN 'ORF'
+        WHEN occ.occurrence_source = 'non-ocr' THEN 'No ORF'
+        WHEN occ.occurrence_source = 'ocr,non-ocr' THEN 'ORF; No ORF'
+        ELSE NULL
+    END                                            AS OCC_SOURCE,
+    occ.processing_status                          AS OCC_STATUS,
+    TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS') AS OCC_MOD_DA,
 
     -- WISH fields
     'Occurrence Geometry'                          AS G_DATATYPE,

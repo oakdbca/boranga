@@ -3,6 +3,9 @@ import logging
 from django.conf import settings
 from django.contrib.auth.signals import user_logged_in
 from django.db import transaction
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
 from ledger_api_client.managed_models import SystemGroup, SystemGroupPermission
 
 from boranga.components.conservation_status.models import (
@@ -160,3 +163,27 @@ def add_external_user_to_external_contributors_group(sender, user, request, **kw
 
 user_logged_in.connect(add_external_user_to_external_contributors_group)
 user_logged_in.connect(process_external_referee_invites)
+
+@receiver(post_save, sender=SystemGroupPermission)
+def remove_external_contributor_when_added_to_internal(sender, instance, created, **kwargs):
+    """
+    Ensure internal users are immediately removed from External Contributors
+    without waiting for them to log in again.
+    """
+    if not created or not instance.system_group:
+        return
+
+    # Check if the group being assigned is internal
+    is_internal_group = (
+        instance.system_group.name in settings.GROUPS_THAT_ALLOW_INTERNAL_MEMBERS_ONLY
+        or instance.system_group.name == settings.GROUP_NAME_INTERNAL_CONTRIBUTOR
+    )
+
+    if is_internal_group:
+        external_group = SystemGroup.objects.filter(name=settings.GROUP_NAME_EXTERNAL_CONTRIBUTOR).first()
+        if external_group:
+            # Immediately delete their external contributor row if it exists
+            SystemGroupPermission.objects.filter(
+                system_group=external_group,
+                emailuser=instance.emailuser,
+            ).delete()
