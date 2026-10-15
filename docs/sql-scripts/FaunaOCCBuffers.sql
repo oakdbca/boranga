@@ -313,8 +313,8 @@ SELECT
 
     -- Observation Detail
     obs_detail.area_assessment                     AS AREA_ASSES,
-    obs_detail.observation_method                  AS OBS_METHOD,
     obs_detail.area_surveyed                       AS SURVEY_SQM,
+    obs_detail.observation_method                  AS OBS_METHOD,
 
     -- Animal Observation (Fauna-specific)
     animal_obs.total_alive                         AS AN_ALIVE,
