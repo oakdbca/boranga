@@ -38,8 +38,10 @@ occ AS (
         o.occurrence_source,
         o.processing_status,
         o.lodgement_date,
+        o.datetime_created,
         o.datetime_updated,
-        o.last_modified_by
+        o.last_modified_by,
+        o.comment
     FROM boranga_occurrence o
     INNER JOIN gt ON o.group_type_id = gt.id
 ),
@@ -338,17 +340,19 @@ SELECT
     loc.district_name                              AS DISTRICT,
 
     -- Report metadata
+    occ.comment                                             AS OCC_COMM,
     CASE
         WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
         WHEN occ.occurrence_source = 'ocr' THEN 'ORF'
         WHEN occ.occurrence_source = 'non-ocr' THEN 'No ORF'
         WHEN occ.occurrence_source = 'ocr,non-ocr' THEN 'ORF; No ORF'
         ELSE NULL
-    END                                            AS OCC_SOURCE,
-    occ.processing_status                          AS OCC_STATUS,
-    TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS') AS OCC_MOD_DA,
-    (u_mod.first_name || ' ' || u_mod.last_name)   AS OCC_MOD_BY,
-    occ.lodgement_date                             AS LODG_DATE,
+    END                                                     AS OCC_SOURCE,
+    occ.processing_status                                   AS OCC_STATUS,
+    TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS')  AS OCC_MOD_DA,
+    (u_mod.first_name || ' ' || u_mod.last_name)            AS OCC_MOD_BY,
+    occ.lodgement_date                                      AS LODG_DATE,
+    TO_CHAR(occ.datetime_created, 'YYYY-MM-DD HH24:MI:SS')  AS OCC_CRE_DA,
 
     -- WISH fields
     'Occurrence Geometry'                          AS G_DATATYPE,
