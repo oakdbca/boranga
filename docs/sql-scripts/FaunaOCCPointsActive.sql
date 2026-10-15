@@ -331,21 +331,6 @@ SELECT
     -- Identification
     identification.identification_certainty        AS IDENT_CRTY,
 
-    -- Report metadata
-    CASE
-        WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
-        WHEN occ.occurrence_source = 'ocr' THEN 'ORF'
-        WHEN occ.occurrence_source = 'non-ocr' THEN 'No ORF'
-        WHEN occ.occurrence_source = 'ocr,non-ocr' THEN 'ORF; No ORF'
-        ELSE NULL
-    END                                            AS OCC_SOURCE,
-    occ.processing_status                          AS OCC_STATUS,
-    TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS') AS OCC_MOD_DA,
-
-    -- Region / District
-    loc.region_name                                AS REGION,
-    loc.district_name                              AS DISTRICT,
-
     -- Habitat Composition
     habitat_composition.land_form                  AS LANDFORM,
     habitat_composition.rock_type                  AS ROCK_TYPE,
@@ -373,6 +358,22 @@ SELECT
 
     -- Associated Species
     associated_species.scientific_names            AS ASSOC_SPECIES,
+
+    -- Region / District
+    loc.region_name                                AS REGION,
+    loc.district_name                              AS DISTRICT,
+
+    -- Report metadata
+    CASE
+        WHEN occ.occurrence_source IS NULL OR occ.occurrence_source = '' THEN NULL
+        WHEN occ.occurrence_source = 'ocr' THEN 'ORF'
+        WHEN occ.occurrence_source = 'non-ocr' THEN 'No ORF'
+        WHEN occ.occurrence_source = 'ocr,non-ocr' THEN 'ORF; No ORF'
+        ELSE NULL
+    END                                            AS OCC_SOURCE,
+    occ.processing_status                          AS OCC_STATUS,
+    TO_CHAR(occ.datetime_updated, 'YYYY-MM-DD HH24:MI:SS') AS OCC_MOD_DA,
+
 
     -- WISH fields
     'Occurrence Geometry'                          AS G_DATATYPE,
