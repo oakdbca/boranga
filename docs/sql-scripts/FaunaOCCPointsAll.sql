@@ -285,6 +285,25 @@ associated_species AS (
     GROUP BY assoc.occurrence_id
 ),
 
+first_occurrence_report AS (
+    SELECT
+        ao.occurrence_id,
+        ocr.observation_date,
+        ROW_NUMBER() OVER (
+            PARTITION BY ao.occurrence_id 
+            ORDER BY 
+                CASE WHEN ocr.observation_date IS NULL THEN 1 ELSE 0 END,
+                ocr.id ASC
+        ) AS rn
+    FROM boranga_occurrencereport ocr
+    INNER JOIN boranga_ocranimalobservation ocr_ao ON ocr.id = ocr_ao.occurrence_report_id
+    INNER JOIN boranga_occanimalobservation ao ON ocr_ao.id = ao.copied_ocr_animal_observation_id
+    GROUP BY
+        ao.occurrence_id,
+        ocr.id,
+        ocr.observation_date
+),
+
 -- -- Geometry (Points only) --------------------------------------------------
 geom AS (
     SELECT
@@ -342,6 +361,8 @@ SELECT
     loc.boundary_description                       AS BOUND_DESC,
     loc.coordinate_source                          AS COORD_SRC,
     loc.location_accuracy                          AS LOC_ACC,
+
+    first_occurrence_report.observation_date       AS "1_OBS_DATE",
 
     -- Observation Detail
     obs_detail.area_assessment                     AS AREA_ASSES,
@@ -430,5 +451,6 @@ LEFT JOIN habitat_composition   ON occ.id = habitat_composition.occurrence_id
 LEFT JOIN habitat        ON occ.id = habitat.occurrence_id
 LEFT JOIN vegetation_structure ON occ.id = vegetation_structure.occurrence_id
 LEFT JOIN associated_species ON occ.id = associated_species.occurrence_id
+LEFT JOIN first_occurrence_report ON occ.id = first_occurrence_report.occurrence_id AND first_occurrence_report.rn = 1
 LEFT JOIN accounts_emailuser u_mod ON occ.last_modified_by = u_mod.id
 ORDER BY occ.occurrence_number, geom.geom_id;
