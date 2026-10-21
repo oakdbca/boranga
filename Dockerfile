@@ -1,6 +1,6 @@
-# syntax = docker/dockerfile:1.4
+# syntax = docker/dockerfile:1
 
-ARG BASE_IMAGE=ghcr.io/dbca-wa/docker-apps-dev:ubuntu_2604_base_python_node
+ARG BASE_IMAGE=ghcr.io/dbca-wa/docker-apps-dev:ubuntu_2604_base_python_node26
 
 # --- Builder: all build-time tools, Node.js, Python venv, Vue build, collectstatic ---
 FROM ${BASE_IMAGE} AS builder
