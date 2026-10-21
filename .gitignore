@@ -117,7 +117,8 @@ private-media/
 
 .db-backups/
 
-docs/sql-scripts/kb/
+docs/sql-scripts/kb/*
+!docs/sql-scripts/kb/.gitkeep
 
 # Ignore Subresource Integrity (SRI) manifest and files
 sri-manifest.json
