@@ -187,9 +187,12 @@ identification AS (
         ic.name AS identification_certainty,
         i.id_confirmed_by,
         i.identification_comment,
-        i.collector_number
+        i.collector_number,
+        i.barcode_number,
+        sd.name AS sample_destination        
     FROM boranga_ocridentification i
     LEFT JOIN boranga_identificationcertainty ic ON i.identification_certainty_id = ic.id
+    LEFT JOIN boranga_sampledestination sd ON i.sample_destination_id = sd.id
 ),
 
 -- -- Habitat Composition -------------------------------------------------------
@@ -350,7 +353,8 @@ SELECT
     identification.id_confirmed_by                 AS ID_CONF_BY,
     identification.identification_comment          AS ID_COMMENT,
     identification.collector_number                AS COLL_NUM,
-
+    identification.barcode_number                  AS BARCODE,
+    identification.sample_destination              AS SAMP_DEST,
     -- Report metadata
     ocr.record_source                              AS ORF_SOURCE,
     ocr.processing_status                          AS ORF_STATUS,
