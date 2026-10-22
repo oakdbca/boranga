@@ -286,10 +286,7 @@ geom AS (
         ) AS area_sq_km,
         ROUND(
             ST_Area(ST_Transform(g.geometry, 7844)::geography)::numeric
-        ) AS area_sq_m,
-        ROUND(
-            (ST_Area(ST_Transform(g.geometry, 7844)::geography) / 10000.0)::numeric, 4
-        ) AS area_ha
+        ) AS area_sq_m
     FROM boranga_occurrencereportgeometry g
     WHERE ST_GeometryType(g.geometry) IN ('ST_Polygon', 'ST_MultiPolygon')
       AND g.visible = TRUE
@@ -318,8 +315,6 @@ SELECT
     geom.geom_id                                   AS GEOM_ID,
     geom.area_sq_km                                AS G_AREA_SKM,
     geom.area_sq_m                                 AS G_AREA_SQM,
-    geom.area_ha                                   AS G_AREA_HA,
-
 
     -- Conservation Status
     active_cs.wa_legislative_list_code             AS WA_LEG_CS,
