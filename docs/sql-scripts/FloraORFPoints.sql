@@ -149,13 +149,31 @@ plant_count AS (
         pcm.name AS plant_count_method,
         csb.name AS counted_subject,
         pc.simple_alive,
+        pc.simple_dead,
         pc.detailed_alive_mature,
         pc.comment,
+        pcond.name AS plant_condition,
+        pc.detailed_dead_mature,
+        pc.detailed_alive_juvenile,
+        pc.detailed_dead_juvenile,
+        pc.detailed_alive_seedling,
+        pc.detailed_dead_seedling,        
         CASE WHEN pc.flower_present = TRUE THEN 'Yes'
              WHEN pc.flower_present = FALSE THEN 'No'
              ELSE NULL
         END AS flower_present,
-        pcond.name AS plant_condition
+        pc.flowering_plants_per,
+        pc.flower_bud_present,
+        pc.clonal_reproduction_present,
+        pc.immature_fruit_present,
+        pc.ripe_fruit_present,
+        pc.dehisced_fruit_present,
+        pc.vegetative_state_present,
+        pc.estimated_population_area,
+        pc.quadrats_present,
+        pc.individual_quadrat_area,
+        pc.quadrats_surveyed,
+        pc.total_quadrat_area        
     FROM boranga_ocrplantcount pc
     LEFT JOIN boranga_plantcountmethod pcm ON pc.plant_count_method_id = pcm.id
     LEFT JOIN boranga_countedsubject csb ON pc.counted_subject_id = csb.id
@@ -303,10 +321,29 @@ SELECT
     plant_count.plant_count_method                 AS CNT_MTHD,
     plant_count.counted_subject                    AS CNT_SUBJ,
     plant_count.simple_alive                       AS PL_SMP_ALV,
-    plant_count.detailed_alive_mature              AS PL_ALV_MAT,
+    plant_count.simple_dead                        AS PL_SMP_DEA,
+    plant_count.detailed_alive_mature              AS PL_ALV_MAT,    
     plant_count.comment                            AS PLCNT_COMM,
+    plant_count.detailed_dead_mature               AS PL_DEA_MAT,
+    plant_count.detailed_alive_juvenile            AS PL_ALV_JUV,
+    plant_count.detailed_dead_juvenile             AS PL_DEA_JUV,
+    plant_count.detailed_alive_seedling            AS PL_ALV_SEE,
+    plant_count.detailed_dead_seedling             AS PL_DEA_SEE,    
     plant_count.flower_present                     AS IN_FLOWER,
     plant_count.plant_condition                    AS PLNT_COND,
+    plant_count.flower_present                     AS IN_FLOWER,
+    plant_count.flowering_plants_per               AS FLWR_PERCEN,
+    plant_count.flower_bud_present                 AS FLWR_BUDS,
+    plant_count.clonal_reproduction_present        AS CLO_REPROD,
+    plant_count.immature_fruit_present             AS IMM_FRU,
+    plant_count.ripe_fruit_present                 AS RIPE_FRU,
+    plant_count.dehisced_fruit_present             AS DEHIS_FRU,
+    plant_count.vegetative_state_present           AS VEGE_STATE,
+    plant_count.estimated_population_area          AS AREA_OCCUP,
+    plant_count.quadrats_present                   AS QUD_PRESEN,
+    plant_count.individual_quadrat_area            AS QUD_INV_AR,
+    plant_count.quadrats_surveyed                  AS NUM_QUD,
+    plant_count.total_quadrat_area                 AS TOT_QUD_AR,
 
     -- Identification
     identification.identification_certainty        AS IDENT_CRTY,
