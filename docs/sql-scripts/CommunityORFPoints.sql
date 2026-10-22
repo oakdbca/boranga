@@ -291,7 +291,7 @@ SELECT
     -- Observation Detail
     obs_detail.area_assessment                     AS AREA_ASSES,
     obs_detail.area_surveyed                       AS SURVEY_SQM,
-    obs_detail.area_duration                       AS SURVEY_DUR,
+    obs_detail.survey_duration                     AS SURVEY_DUR,
     obs_detail.observation_method                  AS OBS_METHOD,
 
     -- Identification
