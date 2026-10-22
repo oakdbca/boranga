@@ -489,8 +489,8 @@ SELECT
     -- Report metadata
     ocr.record_source                                       AS ORF_SOURCE,
     ocr.processing_status                                   AS ORF_STATUS,
-    animal_obs.submitter                                   AS SUBMITTER,
-    animal_obs.organisation                                AS SUMM_ORG,
+    animal_obs.submitter                                    AS SUBMITTER,
+    animal_obs.organisation                                 AS SUMM_ORG,
     TO_CHAR(ocr.datetime_created, 'YYYY-MM-DD HH24:MI:SS')  AS ORF_CRE_DA,    
     TO_CHAR(ocr.datetime_updated, 'YYYY-MM-DD HH24:MI:SS')  AS ORF_MOD_DA,
     (u_mod.first_name || ' ' || u_mod.last_name)            AS ORF_MOD_BY,
