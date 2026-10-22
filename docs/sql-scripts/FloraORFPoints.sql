@@ -120,8 +120,11 @@ observer AS (
     SELECT
         od.occurrence_report_id,
         od.observer_name,
-        od.organisation
+        od.organisation,
+        obs_role.item as role,
+        od.contact
     FROM boranga_ocrobserverdetail od
+    INNER JOIN boranga_observerrole obs_role ON obs_role.id = od.role_id
     WHERE od.main_observer = TRUE
       AND od.visible = TRUE
 ),
@@ -286,6 +289,8 @@ SELECT
     -- Observer
     observer.observer_name                         AS OBS_NAME,
     observer.organisation                          AS ORGANISTN,
+    observer.role                                  AS OBS_ROLE,
+    observer.contact                               AS OBS_CONTACT,
 
     -- Observation Detail
     obs_detail.area_assessment                     AS AREA_ASSES,
