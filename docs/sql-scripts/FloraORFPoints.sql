@@ -38,8 +38,11 @@ ocr AS (
         o.processing_status,
         o.group_type_id,
         o.ocr_for_occ_name,
+        o.datetime_created,
         o.datetime_updated,
-        o.last_modified_by
+        o.datetime_approved,
+        o.last_modified_by,
+        o.approved_by
     FROM boranga_occurrencereport o
     INNER JOIN gt ON o.group_type_id = gt.id
 ),
@@ -173,8 +176,14 @@ plant_count AS (
         pc.quadrats_present,
         pc.individual_quadrat_area,
         pc.quadrats_surveyed,
-        pc.total_quadrat_area        
+        pc.total_quadrat_area,
+        si.name as submitter,
+        si.organisation
     FROM boranga_ocrplantcount pc
+    
+    INNER JOIN boranga_occurrencereport ocr ON pc.occurrence_report_id = ocr.id
+    INNER JOIN boranga_submitterinformation si ON ocr.submitter_information_id = si.id
+
     LEFT JOIN boranga_plantcountmethod pcm ON pc.plant_count_method_id = pcm.id
     LEFT JOIN boranga_countedsubject csb ON pc.counted_subject_id = csb.id
     LEFT JOIN boranga_plantcondition pcond ON pc.plant_condition_id = pcond.id
@@ -243,7 +252,8 @@ vegetation_structure AS (
 associated_species AS (
     SELECT
         assoc.occurrence_report_id,
-        STRING_AGG(t.scientific_name, ', ' ORDER BY t.scientific_name) AS scientific_names
+        STRING_AGG(t.scientific_name, ', ' ORDER BY t.scientific_name) AS scientific_names,
+        assoc.comment
     FROM boranga_ocrassociatedspecies assoc
     INNER JOIN boranga_ocrassociatedspecies_related_species m2m 
         ON assoc.id = m2m.ocrassociatedspecies_id
@@ -251,7 +261,16 @@ associated_species AS (
         ON m2m.associatedspeciestaxonomy_id = ast.id
     INNER JOIN boranga_taxonomy t 
         ON ast.taxonomy_id = t.id
-    GROUP BY assoc.occurrence_report_id
+    GROUP BY assoc.occurrence_report_id, assoc.comment
+),
+
+fire_history AS (
+    SELECT
+        fh.occurrence_report_id,
+        fh.last_fire_estimate,
+        i.name AS intensity
+    FROM boranga_ocrfirehistory fh
+    INNER JOIN boranga_intensity i ON fh.intensity_id = i.id
 ),
 
 -- -- Geometry (Points only) --------------------------------------------------
@@ -355,16 +374,6 @@ SELECT
     identification.collector_number                AS COLL_NUM,
     identification.barcode_number                  AS BARCODE,
     identification.sample_destination              AS SAMP_DEST,
-    -- Report metadata
-    ocr.record_source                              AS ORF_SOURCE,
-    ocr.processing_status                          AS ORF_STATUS,
-    TO_CHAR(ocr.datetime_updated, 'YYYY-MM-DD HH24:MI:SS') AS ORF_MOD_DA,
-    (u_mod.first_name || ' ' || u_mod.last_name)   AS ORF_MOD_BY,
-    ocr.lodgement_date                             AS LODG_DATE,
-
-    -- Region / District
-    loc.region_name                                AS REGION,
-    loc.district_name                              AS DISTRICT,
 
     -- Habitat Composition
     habitat_composition.land_form                  AS LANDFORM,
@@ -393,6 +402,27 @@ SELECT
 
     -- Associated Species
     associated_species.scientific_names            AS ASSOC_SPECIES,
+    associated_species.comment                     AS AS_SP_COMM,
+
+    -- Fire History
+    fire_history.last_fire_estimate                AS FIRE_EST,
+    fire_history.intensity                         AS FIRE_INTEN,
+
+    -- Region / District
+    loc.region_name                                AS REGION,
+    loc.district_name                              AS DISTRICT,
+
+    -- Report metadata
+    ocr.record_source                                       AS ORF_SOURCE,
+    ocr.processing_status                                   AS ORF_STATUS,
+    plant_count.submitter                                   AS SUBMITTER,
+    plant_count.organisation                                AS SUMM_ORG,
+    TO_CHAR(ocr.datetime_created, 'YYYY-MM-DD HH24:MI:SS')  AS ORF_CRE_DA,    
+    TO_CHAR(ocr.datetime_updated, 'YYYY-MM-DD HH24:MI:SS')  AS ORF_MOD_DA,
+    (u_mod.first_name || ' ' || u_mod.last_name)            AS ORF_MOD_BY,
+    (u_app.first_name || ' ' || u_app.last_name)            AS APPROVER,
+    TO_CHAR(ocr.datetime_approved, 'YYYY-MM-DD HH24:MI:SS') AS APPROV_DAT,
+    ocr.lodgement_date                                      AS LODG_DATE,
 
     -- WISH fields
     'Occurrence Report Geometry'                   AS G_DATATYPE,
@@ -414,5 +444,7 @@ LEFT JOIN habitat_composition   ON ocr.id = habitat_composition.occurrence_repor
 LEFT JOIN habitat   ON ocr.id = habitat.occurrence_report_id
 LEFT JOIN vegetation_structure ON ocr.id = vegetation_structure.occurrence_report_id
 LEFT JOIN associated_species ON ocr.id = associated_species.occurrence_report_id
+LEFT JOIN fire_history ON ocr.id = fire_history.occurrence_report_id
 LEFT JOIN accounts_emailuser u_mod ON ocr.last_modified_by = u_mod.id
+LEFT JOIN accounts_emailuser u_app ON ocr.approved_by = u_app.id
 ORDER BY ocr.occurrence_report_number, geom.geom_id;
