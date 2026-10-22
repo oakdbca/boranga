@@ -317,8 +317,12 @@ SELECT
     approved_cs.wa_cons_code                       AS WACONSCODE,
     active_cs.commonwealth_conservation_code       AS COMWLTH_CS,
 
-    -- Dates & status
+    -- Observer
     ocr.observation_date                           AS OBS_DATE,
+    observer.observer_name                         AS OBS_NAME,
+    observer.organisation                          AS ORGANISTN,
+    observer.role                                  AS OBS_ROLE,
+    observer.contact                               AS OBS_CONTACT,
 
     -- Location
     loc.location_description                       AS LOC_DESC,
@@ -326,12 +330,6 @@ SELECT
     loc.boundary_description                       AS BOUND_DESC,
     loc.coordinate_source                          AS COORD_SRC,
     loc.location_accuracy                          AS LOC_ACC,
-
-    -- Observer
-    observer.observer_name                         AS OBS_NAME,
-    observer.organisation                          AS ORGANISTN,
-    observer.role                                  AS OBS_ROLE,
-    observer.contact                               AS OBS_CONTACT,
 
     -- Observation Detail
     obs_detail.area_assessment                     AS AREA_ASSES,
@@ -345,13 +343,12 @@ SELECT
     plant_count.simple_alive                       AS PL_SMP_ALV,
     plant_count.simple_dead                        AS PL_SMP_DEA,
     plant_count.detailed_alive_mature              AS PL_ALV_MAT,    
-    plant_count.comment                            AS PLCNT_COMM,
     plant_count.detailed_dead_mature               AS PL_DEA_MAT,
     plant_count.detailed_alive_juvenile            AS PL_ALV_JUV,
     plant_count.detailed_dead_juvenile             AS PL_DEA_JUV,
     plant_count.detailed_alive_seedling            AS PL_ALV_SEE,
-    plant_count.detailed_dead_seedling             AS PL_DEA_SEE,    
-    plant_count.flower_present                     AS IN_FLOWER,
+    plant_count.detailed_dead_seedling             AS PL_DEA_SEE,  
+    plant_count.comment                            AS PLCNT_COMM,
     plant_count.plant_condition                    AS PLNT_COND,
     plant_count.flower_present                     AS IN_FLOWER,
     plant_count.flowering_plants_per               AS FLWR_PERCEN,
