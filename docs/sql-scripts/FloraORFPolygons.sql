@@ -56,11 +56,12 @@ species AS (
         s.id,
         s.species_number,
         t.scientific_name,
+        t.taxon_name_id,
         string_agg(DISTINCT tv.vernacular_name, '; ') AS vernacular_names
     FROM boranga_species s
     LEFT JOIN boranga_taxonomy t ON s.taxonomy_id = t.id
     LEFT JOIN boranga_taxonvernacular tv ON t.id = tv.taxonomy_id
-    GROUP BY s.id, t.scientific_name
+    GROUP BY s.id, t.scientific_name, t.taxon_name_id
 ),
 
 -- -- Active Conservation Status (approved + delisted) ------------------------
@@ -260,6 +261,7 @@ SELECT
     ocr.site                                       AS ENT_ORF_ST,
 
     -- Species
+    species.taxon_name_id                          AS NOMOS_ID,
     species.species_number                         AS SPECIE_NUM,
     species.scientific_name                        AS SPECIES,
     species.vernacular_names                       AS COMMON_NAM,
