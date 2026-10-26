@@ -7323,7 +7323,6 @@ class OccurrenceReportBulkImportTask(ArchivableModel):
         # any child model instance that has an obs_date field and was not given an
         # explicit value via the import schema (i.e. obs_date is still None).
         # Group by class so we issue one UPDATE per model rather than one per instance.
-        ocr_instance = model_instances.get(OccurrenceReport._meta.model_name)
         if ocr_instance and ocr_instance.observation_date:
             _obs_date_pks_by_class: dict[type, list] = {}
             for _child_instance in model_instances.values():
