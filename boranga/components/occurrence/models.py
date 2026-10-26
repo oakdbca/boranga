@@ -7309,6 +7309,16 @@ class OccurrenceReportBulkImportTask(ArchivableModel):
                 )
                 return
 
+        # Ensure ocr_instance is valid and exists in the database before running post-processing
+        ocr_instance = model_instances.get(OccurrenceReport._meta.model_name)
+        if ocr_instance and ocr_instance.pk:
+            try:
+                ocr_instance.refresh_from_db()
+            except OccurrenceReport.DoesNotExist:
+                return
+        else:
+            return
+
         # Post-processing: propagate OccurrenceReport.observation_date -> obs_date on
         # any child model instance that has an obs_date field and was not given an
         # explicit value via the import schema (i.e. obs_date is still None).
