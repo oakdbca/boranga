@@ -7470,7 +7470,7 @@ class OccurrenceReportBulkImportTask(ArchivableModel):
 
             # If new_occurrence_name was not provided in ORFAPP columns, but the submitter
             # populated `ocr_for_occ_name` on the OccurrenceReport, sync it across.
-            if not approval_instance.new_occurrence_name and getattr(ocr_instance, "ocr_for_occ_name", None):
+            if not approval_instance.new_occurrence_name and not approval_instance.occurrence and getattr(ocr_instance, "ocr_for_occ_name", None):
                 approval_instance.new_occurrence_name = ocr_instance.ocr_for_occ_name
                 approval_instance.save()
 
