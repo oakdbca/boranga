@@ -6632,6 +6632,32 @@ class OccurrenceReportBulkImportTask(ArchivableModel):
         if prefixed_migrated_from_id in ocr_migrated_from_ids or prefixed_migrated_from_id in existing_ocr_mids:
             mode = "update"
 
+        # Universal Check: If this row has NO OccurrenceReport fields populated in the spreadsheet,
+        # it is a child-only row. If the parent doesn't exist yet, it's an error because 
+        # a child cannot exist without a parent row preceding it!
+        has_ocr_fields = False
+        orc_ct = ct_models.ContentType.objects.get_for_model(OccurrenceReport)
+        for column_index, column in enumerate(schema_columns):
+            if column.django_import_content_type == orc_ct and column.django_import_field_name != "migrated_from_id":
+                if row[column_index] is not None:
+                    has_ocr_fields = True
+                    break
+
+        if not has_ocr_fields and mode == "create":
+            errors.append(
+                {
+                    "row_index": row_index,
+                    "error_type": "missing_parent_row",
+                    "data": row,
+                    "error_message": (
+                        f"Row {row_index} attempts to add child records for migrated_from_id "
+                        f"'{ocr_migrated_from_id}', but no parent OccurrenceReport row preceded it "
+                        "to create the parent record. Ensure a parent row with full details appears first."
+                    ),
+                }
+            )
+            return
+
         if prefixed_migrated_from_id not in ocr_migrated_from_ids:
             # Because this is happening in a transaction we need to keep track of
             # the ocr_migrated_from_ids that have been processed in this transaction
@@ -6676,11 +6702,6 @@ class OccurrenceReportBulkImportTask(ArchivableModel):
                         if cell_value is not None and column.django_import_field_name != "migrated_from_id":
                             ocr_fields_populated.append(column.django_import_field_name)
 
-                # If no OCR fields (other than migrated_from_id) are populated, this is a
-                # child-only row. Exclude OCR from validation to allow child records to be
-                # appended without requiring full OCR field population.
-                if len(ocr_fields_populated) == 0:
-                    required_content_types = [ct for ct in required_content_types if ct != orc_ct]
         except Exception:
             # Non-fatal: if anything goes wrong, fall back to existing behaviour.
             pass
