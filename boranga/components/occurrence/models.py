@@ -4691,73 +4691,78 @@ class Occurrence(DirtyFieldsMixin, LockableModel, RevisionedMixin):
 
         occurrence.save(no_revision=True)
 
-        # Clone all the associated models
+        group_type_name = getattr(occurrence_report.group_type, "name", None)
 
-        location = clone_model(
-            OCRLocation,
-            OCCLocation,
-            occurrence_report.location,
-        )
-        if location:
-            location.occurrence = occurrence
-            location.copied_ocr_location = occurrence_report.location
-            location.save()
+        # List of 1-to-1 child relations to clone:
+        # (rel_name, source_model, target_model, allowed_group_type)
+        one_to_one_relations = [
+            ("location", OCRLocation, OCCLocation, None),
+            ("habitat_composition", OCRHabitatComposition, OCCHabitatComposition, None),
+            ("habitat_condition", OCRHabitatCondition, OCCHabitatCondition, None),
+            ("vegetation_structure", OCRVegetationStructure, OCCVegetationStructure, None),
+            ("fire_history", OCRFireHistory, OCCFireHistory, None),
+            ("associated_species", OCRAssociatedSpecies, OCCAssociatedSpecies, None),
+            ("observation_detail", OCRObservationDetail, OCCObservationDetail, None),
+            ("identification", OCRIdentification, OCCIdentification, None),
+            ("plant_count", OCRPlantCount, OCCPlantCount, GroupType.GROUP_TYPE_FLORA),
+            ("animal_observation", OCRAnimalObservation, OCCAnimalObservation, GroupType.GROUP_TYPE_FAUNA),
+        ]
 
-        habitat_composition = clone_model(
-            OCRHabitatComposition,
-            OCCHabitatComposition,
-            occurrence_report.habitat_composition,
-        )
-        if habitat_composition:
-            habitat_composition.occurrence = occurrence
-            habitat_composition.copied_ocr_habitat_composition = occurrence_report.habitat_composition
-            habitat_composition.save()
+        # ---------------------------------------------------------------------
+        # 1. Clone 1-to-1 Child Models
+        # ---------------------------------------------------------------------
+        for rel_name, source_cls, target_cls, required_group_type in one_to_one_relations:
+            # Skip if restricted to another group type
+            if required_group_type and group_type_name != required_group_type:
+                continue
 
-        habitat_condition = clone_model(
-            OCRHabitatCondition,
-            OCCHabitatCondition,
-            occurrence_report.habitat_condition,
-        )
-        if habitat_condition:
-            habitat_condition.occurrence = occurrence
-            habitat_condition.copied_ocr_habitat_condition = occurrence_report.habitat_condition
-            habitat_condition.save()
+            # getattr safely handles reverse OneToOne without raising RelatedObjectDoesNotExist
+            try:
+                ocr_child = getattr(occurrence_report, rel_name, None)
+            except Exception:
+                ocr_child = None
 
-        vegetation_structure = clone_model(
-            OCRVegetationStructure,
-            OCCVegetationStructure,
-            occurrence_report.vegetation_structure,
-        )
-        if vegetation_structure:
-            vegetation_structure.occurrence = occurrence
-            vegetation_structure.copied_ocr_vegetation_structure = occurrence_report.vegetation_structure
-            vegetation_structure.save()
+            if not ocr_child:
+                continue
 
-        fire_history = clone_model(OCRFireHistory, OCCFireHistory, occurrence_report.fire_history)
-        if fire_history:
-            fire_history.occurrence = occurrence
-            fire_history.copied_ocr_fire_history = occurrence_report.fire_history
-            fire_history.save()
+            occ_child = clone_model(source_cls, target_cls, ocr_child)
+            if not occ_child:
+                continue
 
-        associated_species = clone_model(
-            OCRAssociatedSpecies,
-            OCCAssociatedSpecies,
-            occurrence_report.associated_species,
-        )
-        if associated_species:
-            associated_species.occurrence = occurrence
-            associated_species.copied_ocr_associated_species = occurrence_report.associated_species
-            associated_species.save()
-            # copy over related species separately
-            # Duplicate each AssociatedSpeciesTaxonomy so the OCC has its own
-            # association records (preserving per-association metadata).
-            for ast in occurrence_report.associated_species.related_species.all():
-                new_ast = AssociatedSpeciesTaxonomy.objects.create(
-                    taxonomy=ast.taxonomy,
-                    species_role=ast.species_role,
-                    comments=ast.comments,
-                )
-                associated_species.related_species.add(new_ast)
+            occ_child.occurrence = occurrence
+            copied_attr = f"copied_ocr_{rel_name}"
+            if hasattr(occ_child, copied_attr):
+                setattr(occ_child, copied_attr, ocr_child)
+
+            occ_child.save()
+
+            # Special case: Geometries belong to the Location component
+            if rel_name == "location":
+                ocr_geoms = getattr(occurrence_report, "ocr_geometries", None)
+                if ocr_geoms is None and hasattr(ocr_child, "ocr_geometries"):
+                    ocr_geoms = ocr_child.ocr_geometries
+
+                if ocr_geoms is not None:
+                    for ocr_geom in ocr_geoms.all():
+                        occ_geom = OccurrenceGeometry(
+                            occurrence=occurrence,
+                            geometry=ocr_geom.geometry,
+                        )
+                        if hasattr(occ_geom, "location"):
+                            occ_geom.location = occ_child
+                        if hasattr(occ_geom, "copied_ocr_geometry"):
+                            occ_geom.copied_ocr_geometry = ocr_geom
+                        occ_geom.save()
+
+            # Special case: AssociatedSpecies has nested taxonomy links
+            elif rel_name == "associated_species" and hasattr(ocr_child, "related_species"):
+                for ast in ocr_child.related_species.all():
+                    new_ast = AssociatedSpeciesTaxonomy.objects.create(
+                        taxonomy=ast.taxonomy,
+                        species_role=ast.species_role,
+                        comments=ast.comments,
+                    )
+                    occ_child.related_species.add(new_ast)
 
         observation_detail = clone_model(
             OCRObservationDetail,
