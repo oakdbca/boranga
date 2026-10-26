@@ -7388,7 +7388,6 @@ class OccurrenceReportBulkImportTask(ArchivableModel):
         # Post-processing: auto-fill SubmitterInformation for bulk imports.
         # The record is auto-created (name + contact_details from Ledger) when the OCR is
         # saved; here we additionally assign the "DBCA S&C" submitter category.
-        ocr_instance = model_instances.get(OccurrenceReport._meta.model_name)
         if ocr_instance and ocr_instance.submitter_information_id:
             try:
                 _dbca_sc_category = SubmitterCategory.objects.get(name="DBCA S&C")
@@ -7412,7 +7411,6 @@ class OccurrenceReportBulkImportTask(ArchivableModel):
         # Post-processing: Ensure OccurrenceReportApprovalDetails exists for
         # OCRs at the approver stage (with_approver or approved) even if all
         # ORFAPP columns were left blank in the spreadsheet.
-        ocr_instance = model_instances.get(OccurrenceReport._meta.model_name)
         if (
             ocr_instance
             and ocr_instance.processing_status in (
@@ -7447,7 +7445,6 @@ class OccurrenceReportBulkImportTask(ArchivableModel):
                     pass
 
         # Post-processing: Occurrence resolution, cloning, and linking
-        ocr_instance = model_instances.get(OccurrenceReport._meta.model_name)
         approval_instance = model_instances.get(OccurrenceReportApprovalDetails._meta.model_name)
 
         if (
