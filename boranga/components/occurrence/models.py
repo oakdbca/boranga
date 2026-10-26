@@ -6533,11 +6533,21 @@ class OccurrenceReportBulkImportTask(ArchivableModel):
                                 error_lines.append(f"{prefix}Error: {msg}")
                             else:
                                 error_lines.append(str(e))
-                        self.error_message = "Errors occurred during processing:\n" + "\n".join(error_lines)
+
+                        # Retrieve schema name safely (fallback to string representation or 'Unknown' if missing)
+                        schema_name = getattr(self.schema, "name", None) or str(self.schema) if self.schema else "Unknown Schema"
+                        
+                        self.error_message = (
+                            f"Errors occurred during processing using schema '{schema_name}':\n\n" 
+                            + "\n".join(error_lines)
+                        )
+
                     except Exception:
                         # Fallback to concise message if building the string fails
+                        schema_name = getattr(self.schema, "name", None) or str(self.schema) if self.schema else "Unknown Schema"
                         self.error_message = (
-                            failure_summary.get("error_message") if failure_summary else f"{len(errors)} rows failed"
+                            f"Errors occurred during processing using schema '{schema_name}':\n\n"
+                            + (failure_summary.get("error_message") if failure_summary else f"{len(errors)} rows failed")
                         )
                 else:
                     self.error_message = (
