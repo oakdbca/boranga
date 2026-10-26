@@ -7409,6 +7409,43 @@ class OccurrenceReportBulkImportTask(ArchivableModel):
                 )
                 return
 
+        # Post-processing: Ensure OccurrenceReportApprovalDetails exists for
+        # OCRs at the approver stage (with_approver or approved) even if all
+        # ORFAPP columns were left blank in the spreadsheet.
+        ocr_instance = model_instances.get(OccurrenceReport._meta.model_name)
+        if (
+            ocr_instance
+            and ocr_instance.processing_status in (
+                OccurrenceReport.PROCESSING_STATUS_WITH_APPROVER,
+                OccurrenceReport.PROCESSING_STATUS_APPROVED,
+            )
+        ):
+            approval_instance = model_instances.get(OccurrenceReportApprovalDetails._meta.model_name)
+            if not approval_instance:
+                # Check if it already exists (e.g. in update mode) or create a fresh record
+                approval_instance = getattr(ocr_instance, "approval_details", None)
+                if not approval_instance:
+                    approval_instance = OccurrenceReportApprovalDetails.objects.create(
+                        occurrence_report=ocr_instance
+                    )
+                model_instances[OccurrenceReportApprovalDetails._meta.model_name] = approval_instance
+
+            # If new_occurrence_name was not provided in ORFAPP columns, but the submitter
+            # populated `ocr_for_occ_name` on the OccurrenceReport, sync it across.
+            if not approval_instance.new_occurrence_name and getattr(ocr_instance, "ocr_for_occ_name", None):
+                approval_instance.new_occurrence_name = ocr_instance.ocr_for_occ_name
+                approval_instance.save()
+
+            # If occurrence was not provided in ORFAPP columns, but `ocr_for_occ_number`
+            # was specified on the OccurrenceReport, resolve and link it.
+            if not approval_instance.occurrence_id and getattr(ocr_instance, "ocr_for_occ_number", None):
+                try:
+                    existing_occ = Occurrence.objects.get(occurrence_number=ocr_instance.ocr_for_occ_number)
+                    approval_instance.occurrence = existing_occ
+                    approval_instance.save()
+                except Occurrence.DoesNotExist:
+                    pass
+
         # Post-processing: Occurrence resolution, cloning, and linking
         ocr_instance = model_instances.get(OccurrenceReport._meta.model_name)
         approval_instance = model_instances.get(OccurrenceReportApprovalDetails._meta.model_name)
