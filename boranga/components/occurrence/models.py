@@ -6661,8 +6661,9 @@ class OccurrenceReportBulkImportTask(ArchivableModel):
                     "data": row,
                     "error_message": (
                         f"Row {row_index} attempts to add child records for migrated_from_id "
-                        f"'{ocr_migrated_from_id}', but no parent OccurrenceReport row preceded it "
-                        "to create the parent record. Ensure a parent row with full details appears first."
+                        f"'{ocr_migrated_from_id}', but its parent OccurrenceReport record is missing. "
+                        f"This usually happens if the parent row failed validation, was skipped as a duplicate, "
+                        f"or was omitted from the spreadsheet. Please ensure a valid parent row appears first."
                     ),
                 }
             )
