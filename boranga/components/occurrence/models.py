@@ -7507,12 +7507,14 @@ class OccurrenceReportBulkImportTask(ArchivableModel):
                 occurrence_number = occ_model_data.pop("occurrence_number", None)
 
                 if occ_migrated_from_id and occurrence_number:
-                    errors.append({
-                        "row_index": row_index,
-                        "error_type": "ambiguous_occurrence_identifier",
-                        "data": occ_model_data,
-                        "error_message": "Both migrated_from_id and occurrence_number were provided. Please provide only one.",
-                    })
+                    errors.append(
+                        {
+                            "row_index": row_index,
+                            "error_type": "ambiguous_occurrence_identifier",
+                            "data": occ_model_data,
+                            "error_message": "Both migrated_from_id and occurrence_number were provided. Please provide only one.",
+                        }
+                    )
                     return
 
                 if occ_migrated_from_id:
